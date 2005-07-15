@@ -19,7 +19,7 @@ package org.gavrog.box;
 /**
  * A class for hashable pairs of objects.
  * @author delgado
- * @version $Id: Pair.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Pair.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Pair {
 	private Object first, second;

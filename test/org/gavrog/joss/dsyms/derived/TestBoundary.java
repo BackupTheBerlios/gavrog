@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class Boundary.
  * @author Olaf Delgado
- * @version $Id: TestBoundary.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestBoundary.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestBoundary extends TestCase {
     private DelaneySymbol ds;

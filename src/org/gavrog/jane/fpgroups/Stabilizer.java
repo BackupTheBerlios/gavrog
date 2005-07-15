@@ -32,7 +32,7 @@ import org.gavrog.box.Pair;
  * Represents and computes a stabilizer subgroup in a finite group action.
  * 
  * @author Olaf Delgado
- * @version $Id: Stabilizer.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Stabilizer.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Stabilizer {
     // --- set to true to enable logging

@@ -25,7 +25,7 @@ import org.gavrog.joss.dsyms.generators.IsohedralPartial;
  * Delaney symbol.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateIsohedralPartial.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: GenerateIsohedralPartial.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 
 public class GenerateIsohedralPartial {

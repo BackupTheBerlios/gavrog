@@ -19,7 +19,7 @@ package org.gavrog.jane.fpgroups;
 /**
  * Defines a translation between abstract letters and their names.
  * @author Olaf Delgado
- * @version $Id: Alphabet.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Alphabet.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface Alphabet {
     /**

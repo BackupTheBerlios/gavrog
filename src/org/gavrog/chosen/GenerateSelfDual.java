@@ -39,7 +39,7 @@ import org.gavrog.joss.dsyms.generators.Utils;
  * Generates all minimal, self-dual euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateSelfDual.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: GenerateSelfDual.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class GenerateSelfDual {
     /*

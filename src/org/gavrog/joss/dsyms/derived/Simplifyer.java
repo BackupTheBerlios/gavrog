@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * groups.
  * 
  * @author Olaf Delgado
- * @version $Id: Simplifyer.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: Simplifyer.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Simplifyer {
     private static final int LOGGING_LEVEL = 0;

@@ -26,7 +26,7 @@ import org.gavrog.joss.dsyms.generators.TileKTransitive;
  * spherical 2d Delaney symbol.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateTileKTransitive.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: GenerateTileKTransitive.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 
 public class GenerateTileKTransitive {

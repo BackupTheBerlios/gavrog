@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestGenericParser.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: TestGenericParser.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestGenericParser extends TestCase {
     public void testParseBlock() {

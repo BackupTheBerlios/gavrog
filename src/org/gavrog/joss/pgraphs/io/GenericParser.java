@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: GenericParser.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;

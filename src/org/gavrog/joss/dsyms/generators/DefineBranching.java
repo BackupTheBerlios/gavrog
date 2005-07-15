@@ -49,7 +49,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: DefineBranching.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class DefineBranching extends IteratorAdapter {
     // --- set to true to enable logging

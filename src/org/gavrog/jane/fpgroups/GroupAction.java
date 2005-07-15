@@ -21,7 +21,7 @@ import java.util.Iterator;
 /**
  * Interface for group action (from the right).
  * @author Olaf Delgado
- * @version $Id: GroupAction.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: GroupAction.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface GroupAction {
     /**

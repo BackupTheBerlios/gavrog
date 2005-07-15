@@ -24,7 +24,7 @@ import java.util.Iterator;
  * should only need to override {@link #applyGenerator(Object, int, int)}.
  * 
  * @author Olaf Delgado
- * @version $Id: FiniteGroupAction.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: FiniteGroupAction.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public abstract class FiniteGroupAction implements GroupAction {
     private FpGroup group;

@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 /**
  * Tests class UndirectedGraph.
  * @author Olaf Delgado
- * @version $Id: TestUndirectedGraph.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestUndirectedGraph.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestUndirectedGraph extends TestCase {
     private UndirectedGraph G;

@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestExtendTo3d.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestExtendTo3d.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestExtendTo3d extends TestCase {
     /*

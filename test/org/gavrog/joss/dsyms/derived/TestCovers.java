@@ -37,7 +37,7 @@ import junit.framework.TestCase;
  * Unit test for class Covers.
  * 
  * @author Olaf Delgado
- * @version $Id: TestCovers.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestCovers.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestCovers extends TestCase {
     private List z2;

@@ -22,7 +22,7 @@ package org.gavrog.joss.pgraphs.basic;
  * graph, this means that the reverse edge is by definition always present.
  * 
  * @author Olaf Delgado
- * @version $Id: IEdge.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: IEdge.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface IEdge extends IGraphElement {
     /**

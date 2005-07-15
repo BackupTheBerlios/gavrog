@@ -21,7 +21,7 @@ package org.gavrog.joss.pgraphs.io;
  * string.
  * 
  * @author Olaf Delgado
- * @version $Id: DataFormatException.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: DataFormatException.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
  */
 public class DataFormatException extends IllegalArgumentException {
     public DataFormatException(final String msg) {

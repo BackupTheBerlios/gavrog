@@ -32,7 +32,7 @@ import junit.framework.TestCase;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;

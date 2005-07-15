@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FilteredIterator, also using class IntegerInterator.
  * @author Olaf Delgado
- * @version $Id: TestFilteredIterator.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestFilteredIterator.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestFilteredIterator extends TestCase {
     FilteredIterator iter;

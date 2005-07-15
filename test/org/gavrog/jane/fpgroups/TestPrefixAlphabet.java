@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class PrefixAlphabet.
  * @author Olaf Delgado
- * @version $Id: TestPrefixAlphabet.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestPrefixAlphabet.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestPrefixAlphabet extends TestCase {
     public void testGeneral() {

@@ -35,7 +35,7 @@ import org.gavrog.box.Iterators;
  * actions, one obtains all conjugacy classes of subgroups of the group.
  * 
  * @author Olaf Delgado
- * @version $Id: SmallActionsIterator.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: SmallActionsIterator.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class SmallActionsIterator extends IteratorAdapter {
     // --- set to true to enable logging

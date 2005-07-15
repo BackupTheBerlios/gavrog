@@ -29,7 +29,7 @@ import junit.framework.TestCase;
  * Unit test for SmallActionsIterator.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSmallActionsIterator.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestSmallActionsIterator.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestSmallActionsIterator extends TestCase {
     private FiniteAlphabet A;

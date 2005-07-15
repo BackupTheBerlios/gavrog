@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Unit tests for class Patterns.
  * @author Olaf Delgado
- * @version $Id: TestPatterns.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestPatterns.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestPatterns extends TestCase {
     public void testIsDoubleRing() {

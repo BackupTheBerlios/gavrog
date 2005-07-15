@@ -41,7 +41,7 @@ import org.gavrog.box.Pair;
  * may be arbitrary.
  * 
  * @author Olaf Delgado
- * @version $Id: Cover.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: Cover.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public abstract class Cover extends AbstractDelaneySymbol {
     protected DelaneySymbol base;

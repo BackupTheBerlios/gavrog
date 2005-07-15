@@ -19,7 +19,7 @@ package org.gavrog.box;
 /**
  * A proxy for Pair which forms pairs of ints.
  * @author Olaf Delgado
- * @version $Id: IntPair.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: IntPair.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class IntPair {
     final private Pair pair;

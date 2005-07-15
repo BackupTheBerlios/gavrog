@@ -48,7 +48,7 @@ import org.gavrog.box.Iterators;
  * of group elements.
  * 
  * @author Olaf Delgado
- * @version $Id: CosetAction.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: CosetAction.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class CosetAction implements GroupAction {
     // --- set to true to enable logging

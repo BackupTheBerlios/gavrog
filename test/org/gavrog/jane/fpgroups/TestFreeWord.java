@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FreeWord.
  * @author Olaf Delgado
- * @version $Id: TestFreeWord.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestFreeWord.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestFreeWord extends TestCase {
 	private FiniteAlphabet A;

@@ -21,7 +21,7 @@ package org.gavrog.joss.dsyms.basic;
  * nonspherical one.
  * 
  * @author Olaf Delgado
- * @version $Id: NonSphericalException.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: NonSphericalException.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class NonSphericalException extends RuntimeException {
 

@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * A finite alphabet to be used in abstract words and groups.
  * @author Olaf Delgado
- * @version $Id: FiniteAlphabet.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: FiniteAlphabet.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class FiniteAlphabet implements Alphabet {
 	private final List nameList;

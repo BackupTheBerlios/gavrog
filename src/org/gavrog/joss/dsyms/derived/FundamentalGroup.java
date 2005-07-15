@@ -39,7 +39,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * The fundamental group of a {@link org.gavrog.joss.dsyms.basic.DelaneySymbol}.
  * 
  * @author Olaf Delgado
- * @version $Id: FundamentalGroup.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: FundamentalGroup.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class FundamentalGroup {
 

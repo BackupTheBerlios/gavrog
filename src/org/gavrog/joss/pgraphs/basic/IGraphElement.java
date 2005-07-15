@@ -22,7 +22,7 @@ import java.util.Iterator;
  * A common interface for all the nodes and edges of a graph.
  * 
  * @author Olaf Delgado
- * @version $Id: IGraphElement.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: IGraphElement.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface IGraphElement {
     /**

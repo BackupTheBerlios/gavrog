@@ -18,7 +18,7 @@ package org.gavrog.jane.numbers;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Imaginary.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Imaginary.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Imaginary extends Complex {
 	

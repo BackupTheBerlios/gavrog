@@ -22,7 +22,7 @@ package org.gavrog.jane.fpgroups;
  * inverse - in which no pair of consecutive entries are just inverses of each
  * other.
  * @author Olaf Delgado
- * @version $Id: FreeWord.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: FreeWord.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class FreeWord implements Comparable {
 

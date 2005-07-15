@@ -20,7 +20,7 @@ package org.gavrog.jane.fpgroups;
  * An infinite alphabet in which letters names consist of a common prefix and a
  * number.
  * @author Olaf Delgado
- * @version $Id: PrefixAlphabet.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: PrefixAlphabet.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class PrefixAlphabet implements Alphabet {
     

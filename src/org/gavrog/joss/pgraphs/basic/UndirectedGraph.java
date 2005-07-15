@@ -43,7 +43,7 @@ import org.gavrog.box.Pair;
  * reverse.
  * 
  * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: UndirectedGraph.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;

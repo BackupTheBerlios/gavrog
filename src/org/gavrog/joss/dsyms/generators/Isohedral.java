@@ -29,7 +29,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * Generates all minimal, locally euclidean, isohedral tilings by a given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: Isohedral.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Isohedral.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Isohedral extends IteratorAdapter {
     private final int verbosityLevel;

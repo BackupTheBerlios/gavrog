@@ -41,7 +41,7 @@ import org.gavrog.jane.numbers.Rational;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: Morphism.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;

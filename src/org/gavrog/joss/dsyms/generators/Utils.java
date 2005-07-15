@@ -31,7 +31,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * A collection of utility methods to be used by the generator classes in this package.
  * 
  * @author Olaf Delgado
- * @version $Id: Utils.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Utils.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Utils {
     /**

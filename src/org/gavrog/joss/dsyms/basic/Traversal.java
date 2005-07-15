@@ -32,7 +32,7 @@ import org.gavrog.box.Iterators;
  * There is also an option to have every edge visited exactly once.
  * 
  * @author Olaf Delgado
- * @version $Id: Traversal.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: Traversal.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Traversal extends IteratorAdapter {
 

@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;

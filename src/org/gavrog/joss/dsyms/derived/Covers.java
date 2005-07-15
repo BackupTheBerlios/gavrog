@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: Covers.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;

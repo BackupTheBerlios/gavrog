@@ -23,7 +23,7 @@ import java.util.List;
  * Helper class to hold a Delaney symbol invariant.
  * 
  * @author Olaf Delgado
- * @version $Id: Invariant.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Invariant.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Invariant extends ArrayList implements Comparable {
 

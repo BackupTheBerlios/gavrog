@@ -33,7 +33,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FundamentalEdges.
  * @author Olaf Delgado
- * @version $Id: TestFundamentalEdges.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestFundamentalEdges.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestFundamentalEdges extends TestCase {
     final static private Integer one = new Integer(1);

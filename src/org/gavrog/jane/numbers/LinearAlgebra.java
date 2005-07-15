@@ -21,7 +21,7 @@ package org.gavrog.jane.numbers;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class LinearAlgebra {
     /**

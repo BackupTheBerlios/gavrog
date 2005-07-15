@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class javaDSym.util.Pair
  * @author Olaf Delgado
- * @version $Id: TestPair.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestPair.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestPair extends TestCase {
     private Pair p1;

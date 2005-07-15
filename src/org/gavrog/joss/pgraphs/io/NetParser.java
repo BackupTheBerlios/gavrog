@@ -40,7 +40,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: NetParser.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)

@@ -19,7 +19,7 @@ package org.gavrog.joss.dsyms.derived;
 /**
  * Helper class to encode sides and (oriented) ridges.
  * @author Olaf Delgado
- * @version $Id: Face.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: Face.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 class Face {
     int i;

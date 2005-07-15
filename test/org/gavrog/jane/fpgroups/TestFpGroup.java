@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FpGroup.
  * @author Olaf Delgado
- * @version $Id: TestFpGroup.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestFpGroup.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestFpGroup extends TestCase {
     private FiniteAlphabet A;

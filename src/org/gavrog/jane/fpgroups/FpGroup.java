@@ -35,7 +35,7 @@ import org.gavrog.jane.numbers.Whole;
  * over the same alphabet.
  * 
  * @author Olaf Delgado
- * @version $Id: FpGroup.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: FpGroup.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class FpGroup {
     final private FiniteAlphabet alphabet;

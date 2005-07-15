@@ -24,15 +24,15 @@ package org.gavrog.jane.numbers;
  * superclass, an exception is thrown.
  * 
  * @author delgado
- * @version $Id: IArithmetic.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 /**
  * @author Olaf Delgado
- * @version $Id: IArithmetic.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 /**
  * @author Olaf Delgado
- * @version $Id: IArithmetic.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface IArithmetic extends Comparable {
     

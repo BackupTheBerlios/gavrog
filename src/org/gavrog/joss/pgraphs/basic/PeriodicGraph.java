@@ -46,7 +46,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";

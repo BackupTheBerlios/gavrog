@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;

@@ -22,7 +22,7 @@ import java.util.Iterator;
  * Common interface for graph classes (not necessarily simple).
  * 
  * @author Olaf Delgado
- * @version $Id: IGraph.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: IGraph.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface IGraph {
     /**

@@ -21,7 +21,7 @@ import org.gavrog.box.Pair;
 /**
  * This class represents edges in a Delaney symbol.
  * @author Olaf Delgado
- * @version $Id: Edge.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: Edge.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Edge extends Pair {
 

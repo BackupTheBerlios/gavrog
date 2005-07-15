@@ -41,7 +41,7 @@ import junit.framework.TestCase;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;

@@ -33,7 +33,7 @@ import org.gavrog.box.Pair;
  * This class contains some utility methods for group actions.
  * 
  * @author Olaf Delgado
- * @version $Id: GroupActions.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: GroupActions.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 final public class GroupActions {
     /**

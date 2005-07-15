@@ -22,7 +22,7 @@ import java.util.Iterator;
 /**
  * Convenience class to represent lists of Delaney symbol indices.
  * @author Olaf Delgado
- * @version $Id: IndexList.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: IndexList.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class IndexList extends ArrayList {
 	

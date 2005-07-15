@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * A proxy for class Partitition which only works with int entries.
  * @author Olaf Delgado
- * @version $Id: IntPartition.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: IntPartition.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class IntPartition {
 

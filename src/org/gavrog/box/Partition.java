@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Represents a partition of some finite set into equivalence classes.
  * @author Olaf Delgado
- * @version $Id: Partition.java,v 1.1 2005/07/15 21:08:13 odf Exp $
+ * @version $Id: Partition.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Partition {
 	private class IntList extends ArrayList implements Cloneable {

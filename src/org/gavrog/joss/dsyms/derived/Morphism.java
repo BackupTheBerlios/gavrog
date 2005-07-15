@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * neighbor relations and m-values.
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: Morphism.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 
 public class Morphism implements Map {

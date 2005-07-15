@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class DSymbol.
  * @author Olaf Delgado
- * @version $Id: TestDSymbol.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: TestDSymbol.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestDSymbol extends TestCase {
 	private DSymbol ds1;

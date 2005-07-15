@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class Alphabet.
  * @author Olaf Delgado
- * @version $Id: TestFiniteAlphabet.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: TestFiniteAlphabet.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestFiniteAlphabet extends TestCase {
 	private FiniteAlphabet A;

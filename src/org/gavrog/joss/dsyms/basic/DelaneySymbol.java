@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Rational;
  * Rich interface for Delaney symbol (or D-symbol for short) classes.
  * 
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 
 public interface DelaneySymbol extends Comparable {

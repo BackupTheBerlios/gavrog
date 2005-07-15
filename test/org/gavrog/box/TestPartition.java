@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class Partition.
  * @author Olaf Delgado
- * @version $Id: TestPartition.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestPartition.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestPartition extends TestCase {
     private Partition P;

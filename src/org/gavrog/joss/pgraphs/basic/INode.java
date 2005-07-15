@@ -20,7 +20,7 @@ package org.gavrog.joss.pgraphs.basic;
  * Interface for the representation of nodes in a graph.
  * 
  * @author Olaf Delgado
- * @version $Id: INode.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: INode.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface INode extends IGraphElement {
     /**

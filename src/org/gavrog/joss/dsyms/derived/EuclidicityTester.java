@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
  * 
  * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: EuclidicityTester.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;

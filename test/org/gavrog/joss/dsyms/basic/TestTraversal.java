@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTraversal.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: TestTraversal.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestTraversal extends TestCase {
     final static private Integer one = new Integer(1);

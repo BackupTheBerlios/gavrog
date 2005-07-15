@@ -24,7 +24,7 @@ import org.gavrog.box.Iterators;
 /**
  * A cover with finitely many layers, indexed by integers.
  * @author Olaf Delgado
- * @version $Id: FiniteCover.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: FiniteCover.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public abstract class FiniteCover extends Cover {
 	private int nLayers;

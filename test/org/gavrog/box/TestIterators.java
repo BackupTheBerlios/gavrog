@@ -36,7 +36,7 @@ import junit.framework.TestCase;
  * Unit test for class Iterators.
  * 
  * @author Olaf Delgado
- * @version $Id: TestIterators.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: TestIterators.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
 public class TestIterators extends TestCase {
     private Object x;

@@ -94,7 +94,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.1 2005/07/15 21:12:51 odf Exp $
+ * @version $Id: NetViewer.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants

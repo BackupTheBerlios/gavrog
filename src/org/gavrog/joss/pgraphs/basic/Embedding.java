@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Matrix;
  * Represents an embedding of a finite graph.
  * 
  * @author Olaf Delgado
- * @version $Id: Embedding.java,v 1.1 2005/07/15 21:12:50 odf Exp $
+ * @version $Id: Embedding.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Embedding {
     final private IGraph G;

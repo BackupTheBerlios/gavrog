@@ -29,7 +29,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Contains static method to recognize tilings or certain patterns in a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Patterns.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: Patterns.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Patterns {
     

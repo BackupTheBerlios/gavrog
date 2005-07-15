@@ -29,7 +29,7 @@ import org.gavrog.joss.dsyms.basic.Edge;
  * Represents the boundary complex of a topological realization of a Delaney
  * symbol with facet identifications only performed partially.
  * @author Olaf Delgado
- * @version $Id: Boundary.java,v 1.1 2005/07/15 21:08:14 odf Exp $
+ * @version $Id: Boundary.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class Boundary {
     private DelaneySymbol ds;
