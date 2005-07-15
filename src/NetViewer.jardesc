@@ -9,8 +9,6 @@
 </sealing>
 </manifest>
 <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-<file path="/Gavrog/.project"/>
-<file path="/Gavrog/.classpath"/>
 <javaElement handleIdentifier="=Gavrog/src"/>
 </selectedElements>
 </jardesc>
