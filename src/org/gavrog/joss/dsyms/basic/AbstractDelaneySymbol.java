@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.FilteredIterator;
-import org.gavrog.box.Invariant;
+import org.gavrog.box.NiceIntList;
 import org.gavrog.box.Iterators;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.2 2005/07/18 23:03:54 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 
@@ -441,7 +441,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#invariant()
      */
-    public Invariant invariant() {
+    public NiceIntList invariant() {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
@@ -461,7 +461,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
             for (final Iterator iter = invariants.iterator(); iter.hasNext();) {
                 result.addAll((List) iter.next());
             }
-            return new Invariant(result);
+            return new NiceIntList(result);
         }
         
         /* --- Preparations. */
@@ -593,7 +593,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
         }
         
         /* --- Return it. */
-        return new Invariant(result);
+        return new NiceIntList(result);
     }
 
     /* (non-Javadoc)

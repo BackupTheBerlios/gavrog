@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import org.gavrog.box.Invariant;
+import org.gavrog.box.NiceIntList;
 import org.gavrog.box.IteratorAdapter;
 import org.gavrog.box.Iterators;
 import org.gavrog.box.Pair;
@@ -46,7 +46,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.2 2005/07/18 23:03:56 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
@@ -1206,8 +1206,8 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the invariant.
      */
-    public Invariant invariant() {
-        final Invariant cached = (Invariant) cache.get(INVARIANT);
+    public NiceIntList invariant() {
+        final NiceIntList cached = (NiceIntList) cache.get(INVARIANT);
         if (cached != null) {
             return cached;
         }
@@ -1414,9 +1414,9 @@ public class PeriodicGraph extends UndirectedGraph {
 
         // --- cache the results
         cache.put(CANONICAL, canonical);
-        cache.put(INVARIANT, new Invariant(invariant));
+        cache.put(INVARIANT, new NiceIntList(invariant));
         
-        return new Invariant(invariant);
+        return new NiceIntList(invariant);
     }
     
     /**

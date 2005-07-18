@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.Invariant;
+import org.gavrog.box.NiceIntList;
 import org.gavrog.jane.numbers.Rational;
 
 
@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Rational;
  * Rich interface for Delaney symbol (or D-symbol for short) classes.
  * 
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.2 2005/07/18 23:03:54 odf Exp $
  */
 
 public interface DelaneySymbol extends Comparable {
@@ -209,7 +209,7 @@ public interface DelaneySymbol extends Comparable {
      * the two symbols are isomorphic.
      * @return the invariant integer list of this symbol.
      */
-    public Invariant invariant();
+    public NiceIntList invariant();
     
     /**
      * Produces canonical form for this symbol. A canonical form is a symbol

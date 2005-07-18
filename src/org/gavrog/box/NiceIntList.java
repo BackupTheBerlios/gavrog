@@ -20,18 +20,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Helper class to hold a Delaney symbol invariant.
+ * Helper class to hold a list of integers and make it hashable, comparable and printable
+ * in a nice useful way.
  * 
  * @author Olaf Delgado
- * @version $Id: Invariant.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: NiceIntList.java,v 1.1 2005/07/18 23:03:56 odf Exp $
  */
-public class Invariant extends ArrayList implements Comparable {
+public class NiceIntList extends ArrayList implements Comparable {
 
     /**
      * Construct an instance.
      * @param model the contents of the new instance.
      */
-    public Invariant(final List model) {
+    public NiceIntList(final List model) {
         super(model);
     }
     
@@ -39,10 +40,10 @@ public class Invariant extends ArrayList implements Comparable {
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo(final Object arg) {
-        if (!(arg instanceof Invariant)) {
+        if (!(arg instanceof NiceIntList)) {
             throw new IllegalArgumentException("argument must be of type Invariant");
         }
-        final Invariant other = (Invariant) arg;
+        final NiceIntList other = (NiceIntList) arg;
         for (int i = 0; i < Math.min(this.size(), other.size()); ++i) {
             final int a = ((Integer) this.get(i)).intValue();
             final int b = ((Integer) other.get(i)).intValue();
