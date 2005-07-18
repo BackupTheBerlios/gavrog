@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestIsohedral.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestIsohedral.java,v 1.2 2005/07/18 21:34:58 odf Exp $
  */
 public class TestIsohedral extends TestCase {
     
@@ -85,7 +85,7 @@ public class TestIsohedral extends TestCase {
     }
     
     public void testTetra() {
-        doTest(new DSymbol("1:1,1,1:3,3"), -1);
+        doTest(new DSymbol("1:1,1,1:3,3"), 74);
     }
     
     public void xtestTrigonalBipyramid() {
@@ -101,7 +101,7 @@ public class TestIsohedral extends TestCase {
     }
     
     public void doTest(final DSymbol ds, final int xCount) {
-        final Iterator iter = new Isohedral(ds, 3);
+        final Iterator iter = new Isohedral(ds, 0);
         int count = 0;
         while (iter.hasNext()) {
             final DSymbol out = (DSymbol) iter.next();
