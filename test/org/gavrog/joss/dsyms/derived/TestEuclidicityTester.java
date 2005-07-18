@@ -19,23 +19,23 @@ package org.gavrog.joss.dsyms.derived;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.gavrog.box.Pair;
-import org.gavrog.joss.dsyms.basic.DSymbol;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.derived.EuclidicityTester;
-import org.gavrog.joss.dsyms.generators.InputIterator;
-
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+import org.gavrog.box.Pair;
+import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.generators.InputIterator;
+
 /**
  * @author Olaf Delgado
- * @version $Id: TestEuclidicityTester.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestEuclidicityTester.java,v 1.2 2005/07/18 21:28:58 odf Exp $
  */
 public class TestEuclidicityTester extends TestCase {
 
@@ -166,20 +166,20 @@ public class TestEuclidicityTester extends TestCase {
     }
     
     public void testSmallList() {
-        testMany("TestResources/ftmax.ds", 1, 1000);
+        final int[] good = new int[] { 11, 65, 69, 71, 78, 89, 125 };
+        testMany("TestResources/ftmax.ds", 1, 1000, good, new int[] {});
     }
     
-    public void xtestLargeList() {
-        testMany("TestResources/simple_16_good.ds", 1, 100000);
-    }
-    
-    public void testMany(final String filename, final int start, final int stop) {
+    public void testMany(final String filename, final int start, final int stop,
+            int[] expectedGood, int[] expectedAmbiguous) {
+        
         final InputStream in = ClassLoader.getSystemResourceAsStream(filename);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         final InputIterator input = new InputIterator(reader);
         
         final List good = new LinkedList();
         final List ambiguous = new LinkedList();
+        final boolean trace = (expectedGood == null && expectedAmbiguous == null);
         
         int count = 0;
         
@@ -192,33 +192,51 @@ public class TestEuclidicityTester extends TestCase {
             final DelaneySymbol ds = (DSymbol) input.next();
             
             final EuclidicityTester tester = new EuclidicityTester(ds);
-            if (tester.isGood()) {
-                System.out.println("Symbol " + count + " is good: "
-                                   + tester.getCause());
-                good.add(new Integer(count));
-            } else if (tester.isBad()) {
-                System.out.println("Symbol " + count + " is bad: "
-                                   + tester.getCause());
-            } else {
-                System.out.println("Symbol " + count + " is ambiguous: "
+            if (trace) {
+                final String result = tester.isGood() ? "good" : tester.isBad() ? "bad"
+                        : "ambiguous";
+                System.out.println("Symbol " + count + " is " + result + ": "
                         + tester.getCause());
+            }
+            if (tester.isGood()) {
+                good.add(new Integer(count));
+            } else if (!tester.isBad()) {
                 ambiguous.add(new Pair(new Integer(count), tester.getOutcome()));
             }
         }
         
-        System.out.print(good.size() + " good symbols:");
-        for (final Iterator iter = good.iterator(); iter.hasNext();) {
-            System.out.print(" " + iter.next());
+        if (trace) {
+            System.out.print(good.size() + " good symbols:");
+            for (final Iterator iter = good.iterator(); iter.hasNext();) {
+                System.out.print(" " + iter.next());
+            }
+            System.out.println();
+
+            System.out.println(ambiguous.size() + " ambiguous symbols:");
+            for (final Iterator iter = ambiguous.iterator(); iter.hasNext();) {
+                final Pair pair = (Pair) iter.next();
+                System.out.println("  " + pair.getFirst() + " - " + pair.getSecond());
+                // + ((DelaneySymbol) pair.getSecond()).tabularDisplay());
+            }
+            System.out.println();
         }
-        System.out.println();
         
-        System.out.println(ambiguous.size() + " ambiguous symbols:");
-        for (final Iterator iter = ambiguous.iterator(); iter.hasNext();) {
-            final Pair pair = (Pair) iter.next();
-            System.out.println("  " + pair.getFirst() + " - "
-                    + pair.getSecond());
-            //      + ((DelaneySymbol) pair.getSecond()).tabularDisplay());
+        if (expectedGood != null) {
+            final List expected = new ArrayList();
+            for (int i = 0; i < expectedGood.length; ++i) {
+                expected.add(new Integer(expectedGood[i]));
+            }
+            Collections.sort(expected);
+            assertEquals(good, expected);
         }
-        System.out.println();
+        
+        if (expectedAmbiguous != null) {
+            final List expected = new ArrayList();
+            for (int i = 0; i < expectedAmbiguous.length; ++i) {
+                expected.add(new Integer(expectedAmbiguous[i]));
+            }
+            Collections.sort(expected);
+            assertEquals(ambiguous, expected);
+        }
     }
 }
