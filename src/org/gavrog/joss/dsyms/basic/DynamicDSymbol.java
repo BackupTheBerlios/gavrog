@@ -24,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 
 
 /**
@@ -34,7 +34,7 @@ import org.gavrog.box.Iterators;
  * sequence of elements produced by {@link #elements()} is strictly growing.
  * 
  * @author Olaf Delgado
- * @version $Id: DynamicDSymbol.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: DynamicDSymbol.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public class DynamicDSymbol extends AbstractDelaneySymbol {
     final private int dim;

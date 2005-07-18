@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Partition;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -51,7 +51,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * TODO test symbols (unfinished and finished) for being locally euclidean
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // --- set to true to enable logging

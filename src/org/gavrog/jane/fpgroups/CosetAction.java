@@ -24,10 +24,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.FilteredIterator;
-import org.gavrog.box.IntPair;
-import org.gavrog.box.IntPartition;
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.IntPair;
+import org.gavrog.box.collections.IntPartition;
+import org.gavrog.box.collections.Iterators;
 
 
 /**
@@ -48,7 +48,7 @@ import org.gavrog.box.Iterators;
  * of group elements.
  * 
  * @author Olaf Delgado
- * @version $Id: CosetAction.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: CosetAction.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class CosetAction implements GroupAction {
     // --- set to true to enable logging

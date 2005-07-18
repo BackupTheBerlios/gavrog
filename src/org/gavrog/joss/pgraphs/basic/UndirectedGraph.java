@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.gavrog.box.FilteredIterator;
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Pair;
 
 
 /**
@@ -43,7 +43,7 @@ import org.gavrog.box.Pair;
  * reverse.
  * 
  * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
+ * @version $Id: UndirectedGraph.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;

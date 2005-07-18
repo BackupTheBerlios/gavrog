@@ -19,7 +19,7 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.Iterator;
 import java.util.List;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 /**
  * Tests class UndirectedGraph.
  * @author Olaf Delgado
- * @version $Id: TestUndirectedGraph.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestUndirectedGraph.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class TestUndirectedGraph extends TestCase {
     private UndirectedGraph G;

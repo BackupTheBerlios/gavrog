@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
  * A collection of methods that return special iterators.
  * 
  * @author Olaf Delgado
- * @version $Id: Iterators.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Iterators.java,v 1.1 2005/07/18 23:32:58 odf Exp $
  */
 final public class Iterators {
     /**

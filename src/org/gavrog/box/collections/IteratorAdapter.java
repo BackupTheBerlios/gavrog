@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
  * An abstract base class for iterators with single element cacheing. Derived
  * classes need only implement the method <code>findNext</code>.
  * @author Olaf Delgado
- * @version $Id: IteratorAdapter.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: IteratorAdapter.java,v 1.1 2005/07/18 23:32:58 odf Exp $
  */
 public abstract class IteratorAdapter implements Iterator {
     private LinkedList cache = new LinkedList();

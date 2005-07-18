@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -37,7 +37,7 @@ import junit.framework.TestCase;
  * Unit test for class Covers.
  * 
  * @author Olaf Delgado
- * @version $Id: TestCovers.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestCovers.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class TestCovers extends TestCase {
     private List z2;

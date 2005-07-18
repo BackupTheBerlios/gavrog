@@ -14,12 +14,12 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 /**
  * A class for hashable pairs of objects.
  * @author delgado
- * @version $Id: Pair.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Pair.java,v 1.1 2005/07/18 23:32:58 odf Exp $
  */
 public class Pair {
 	private Object first, second;

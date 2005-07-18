@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.List;
  * in a nice useful way.
  * 
  * @author Olaf Delgado
- * @version $Id: NiceIntList.java,v 1.1 2005/07/18 23:03:56 odf Exp $
+ * @version $Id: NiceIntList.java,v 1.1 2005/07/18 23:32:58 odf Exp $
  */
 public class NiceIntList extends ArrayList implements Comparable {
 

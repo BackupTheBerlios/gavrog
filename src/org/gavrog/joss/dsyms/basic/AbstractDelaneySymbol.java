@@ -24,16 +24,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.FilteredIterator;
-import org.gavrog.box.NiceIntList;
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.NiceIntList;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.2 2005/07/18 23:03:54 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.3 2005/07/18 23:32:57 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 

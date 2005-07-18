@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.Iterators;
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Real;
@@ -41,7 +41,7 @@ import junit.framework.TestCase;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;

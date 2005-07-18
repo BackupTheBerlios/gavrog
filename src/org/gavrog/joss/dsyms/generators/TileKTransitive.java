@@ -20,8 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;

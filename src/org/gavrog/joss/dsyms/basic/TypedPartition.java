@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.Partition;
+import org.gavrog.box.collections.Partition;
 
 
 /**
@@ -41,7 +41,7 @@ import org.gavrog.box.Partition;
  * original symbol.
  * 
  * @author Olaf Delgado
- * @version $Id: TypedPartition.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: TypedPartition.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public class TypedPartition {
 	private DelaneySymbol ds;

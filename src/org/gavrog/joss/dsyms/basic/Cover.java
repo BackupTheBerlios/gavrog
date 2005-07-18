@@ -18,8 +18,8 @@ package org.gavrog.joss.dsyms.basic;
 
 import java.util.Iterator;
 
-import org.gavrog.box.Iterators;
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 
 
 /**
@@ -41,7 +41,7 @@ import org.gavrog.box.Pair;
  * may be arbitrary.
  * 
  * @author Olaf Delgado
- * @version $Id: Cover.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Cover.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public abstract class Cover extends AbstractDelaneySymbol {
     protected DelaneySymbol base;

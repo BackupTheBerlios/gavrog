@@ -19,7 +19,7 @@ package org.gavrog.joss.dsyms.basic;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 
@@ -30,7 +30,7 @@ import junit.framework.TestCase;
  * Unit test for class DynamicDSymbol.
  * 
  * @author Olaf Delgado
- * @version $Id: TestDynamicDSymbol.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestDynamicDSymbol.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class TestDynamicDSymbol extends TestCase {
     final static private Integer one = new Integer(1);

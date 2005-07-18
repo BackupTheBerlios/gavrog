@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.fpgroups.CosetAction;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.FreeWord;
@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Covers.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;

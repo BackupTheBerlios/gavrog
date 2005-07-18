@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Rational;
@@ -40,7 +40,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
+ * @version $Id: NetParser.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)

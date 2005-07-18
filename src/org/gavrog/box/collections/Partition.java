@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * Represents a partition of some finite set into equivalence classes.
  * @author Olaf Delgado
- * @version $Id: Partition.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Partition.java,v 1.1 2005/07/18 23:32:58 odf Exp $
  */
 public class Partition {
 	private class IntList extends ArrayList implements Cloneable {

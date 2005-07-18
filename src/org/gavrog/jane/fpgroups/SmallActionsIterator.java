@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Iterators;
 
 
 /**
@@ -35,7 +35,7 @@ import org.gavrog.box.Iterators;
  * actions, one obtains all conjugacy classes of subgroups of the group.
  * 
  * @author Olaf Delgado
- * @version $Id: SmallActionsIterator.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: SmallActionsIterator.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class SmallActionsIterator extends IteratorAdapter {
     // --- set to true to enable logging

@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.Iterators;
-import org.gavrog.box.Partition;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Partition;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class Partition.
  * @author Olaf Delgado
- * @version $Id: TestPartition.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestPartition.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class TestPartition extends TestCase {
     private Partition P;

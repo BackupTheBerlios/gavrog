@@ -19,7 +19,7 @@ package org.gavrog.joss.dsyms.derived;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.IteratorAdapter;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.Edge;
 import org.gavrog.joss.dsyms.basic.Traversal;
@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * edges of one possible abstract fundamental domain for the symbol.
  * 
  * @author Olaf Delgado
- * @version $Id: FundamentalEdges.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FundamentalEdges.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class FundamentalEdges extends IteratorAdapter {
 	final private DelaneySymbol ds;

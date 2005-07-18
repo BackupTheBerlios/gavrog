@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.fpgroups.Alphabet;
 import org.gavrog.jane.fpgroups.FiniteAlphabet;
 import org.gavrog.jane.fpgroups.FpGroup;
@@ -39,7 +39,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * The fundamental group of a {@link org.gavrog.joss.dsyms.basic.DelaneySymbol}.
  * 
  * @author Olaf Delgado
- * @version $Id: FundamentalGroup.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FundamentalGroup.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class FundamentalGroup {
 

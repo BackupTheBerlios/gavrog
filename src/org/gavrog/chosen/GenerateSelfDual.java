@@ -21,8 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.GroupAction;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
@@ -39,7 +39,7 @@ import org.gavrog.joss.dsyms.generators.Utils;
  * Generates all minimal, self-dual euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateSelfDual.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: GenerateSelfDual.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class GenerateSelfDual {
     /*

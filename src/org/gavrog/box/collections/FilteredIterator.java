@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
  * Utility class. Allows to modify an iterator on the fly by specifying a
  * filter method in a derived class (which might be anonymous).
  * @author Olaf Delgado
- * @version $Id: FilteredIterator.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FilteredIterator.java,v 1.1 2005/07/18 23:32:58 odf Exp $
  */
 public abstract class FilteredIterator extends IteratorAdapter {
 

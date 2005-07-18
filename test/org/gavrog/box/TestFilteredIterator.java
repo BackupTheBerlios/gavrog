@@ -18,8 +18,8 @@ package org.gavrog.box;
 
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.FilteredIterator;
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.Iterators;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FilteredIterator, also using class IntegerInterator.
  * @author Olaf Delgado
- * @version $Id: TestFilteredIterator.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestFilteredIterator.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class TestFilteredIterator extends TestCase {
     FilteredIterator iter;

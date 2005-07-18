@@ -23,8 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.gavrog.box.Iterators;
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.fpgroups.FiniteAlphabet;
 import org.gavrog.jane.fpgroups.FiniteGroupAction;
 import org.gavrog.jane.fpgroups.FpGroup;
@@ -39,7 +39,7 @@ import junit.framework.TestCase;
  * Unit test for class GroupActions.
  * 
  * @author Olaf Delgado
- * @version $Id: TestGroupActions.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestGroupActions.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class TestGroupActions extends TestCase {
     private FiniteAlphabet A;

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.gavrog.box.IteratorAdapter;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -49,7 +49,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: DefineBranching.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class DefineBranching extends IteratorAdapter {
     // --- set to true to enable logging

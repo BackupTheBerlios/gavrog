@@ -18,13 +18,13 @@ package org.gavrog.joss.dsyms.basic;
 
 import java.util.Iterator;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 
 
 /**
  * A cover with finitely many layers, indexed by integers.
  * @author Olaf Delgado
- * @version $Id: FiniteCover.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FiniteCover.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public abstract class FiniteCover extends Cover {
 	private int nLayers;

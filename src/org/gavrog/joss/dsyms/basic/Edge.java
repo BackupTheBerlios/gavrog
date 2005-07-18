@@ -16,12 +16,12 @@
 
 package org.gavrog.joss.dsyms.basic;
 
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Pair;
 
 /**
  * This class represents edges in a Delaney symbol.
  * @author Olaf Delgado
- * @version $Id: Edge.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Edge.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public class Edge extends Pair {
 

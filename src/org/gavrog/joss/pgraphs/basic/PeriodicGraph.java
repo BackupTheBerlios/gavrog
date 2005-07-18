@@ -29,11 +29,11 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import org.gavrog.box.NiceIntList;
-import org.gavrog.box.IteratorAdapter;
-import org.gavrog.box.Iterators;
-import org.gavrog.box.Pair;
-import org.gavrog.box.Partition;
+import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.Pair;
+import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.LinearAlgebra;
@@ -46,7 +46,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.2 2005/07/18 23:03:56 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.3 2005/07/18 23:32:58 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";

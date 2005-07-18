@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.Iterators;
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 
@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * neighbor relations and m-values.
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Morphism.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 
 public class Morphism implements Map {

@@ -20,13 +20,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 
 
 /**
  * Represents subsymbols of Delaney symbols.
  * @author Olaf Delgado
- * @version $Id: Subsymbol.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Subsymbol.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public class Subsymbol extends AbstractDelaneySymbol {
 	private DelaneySymbol ds;

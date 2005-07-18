@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.fpgroups.Alphabet;
 import org.gavrog.jane.fpgroups.FiniteAlphabet;
 import org.gavrog.jane.fpgroups.FreeWord;
@@ -36,7 +36,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FundamentalGroup.
  * @author Olaf Delgado
- * @version $Id: TestFundamentalGroup.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestFundamentalGroup.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class TestFundamentalGroup extends TestCase {
     

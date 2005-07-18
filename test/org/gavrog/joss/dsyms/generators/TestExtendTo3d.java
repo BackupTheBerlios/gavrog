@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.generators.ExtendTo3d;
@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestExtendTo3d.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestExtendTo3d.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 public class TestExtendTo3d extends TestCase {
     /*

@@ -20,12 +20,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.gavrog.box.Iterators;
+import org.gavrog.box.collections.Iterators;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: DSymbol.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
     

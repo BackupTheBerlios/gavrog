@@ -28,14 +28,14 @@ import java.util.List;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestEuclidicityTester.java,v 1.2 2005/07/18 21:28:58 odf Exp $
+ * @version $Id: TestEuclidicityTester.java,v 1.3 2005/07/18 23:32:58 odf Exp $
  */
 public class TestEuclidicityTester extends TestCase {
 

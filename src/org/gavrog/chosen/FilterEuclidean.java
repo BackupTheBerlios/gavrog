@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.gavrog.box.Pair;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 import org.gavrog.joss.dsyms.generators.InputIterator;
@@ -28,7 +28,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class FilterEuclidean {
 

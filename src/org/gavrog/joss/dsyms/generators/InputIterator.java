@@ -22,7 +22,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.IteratorAdapter;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 
 
@@ -30,7 +30,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
  * An iterator that reads Delaney symbols from an input stream.
  * 
  * @author Olaf Delgado
- * @version $Id: InputIterator.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: InputIterator.java,v 1.2 2005/07/18 23:32:58 odf Exp $
  */
 public class InputIterator extends IteratorAdapter {
     final private BufferedReader reader;
