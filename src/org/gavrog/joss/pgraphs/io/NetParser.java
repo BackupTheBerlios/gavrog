@@ -22,13 +22,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -39,12 +40,11 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.4 2005/07/19 04:30:57 odf Exp $
+ * @version $Id: NetParser.java,v 1.5 2005/07/19 21:52:37 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -355,6 +355,7 @@ public class NetParser extends GenericParser {
         Matrix cellGram = null;
         final List nodes = new LinkedList();
         final Map nameToNode = new HashMap();
+        final double precision = 0.001;
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -408,11 +409,10 @@ public class NetParser extends GenericParser {
                     final String msg = "Connectivity must be a positive integer ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                final Matrix position = Matrix.zero(4, 4).mutableClone();
+                final Matrix position = Matrix.zero(1, 3).mutableClone();
                 for (int j = 0; j < 3; ++j) {
-                    position.set(3, j, (IArithmetic) row.get(j + 2));
+                    position.set(1, j, (IArithmetic) row.get(j + 2));
                 }
-                position.set(3, 3, Whole.ONE);
                 final int c = ((Whole) conn).intValue();
                 final NodeDescriptor node = new NodeDescriptor(name, c, position);
                 nodes.add(node);
@@ -420,26 +420,13 @@ public class NetParser extends GenericParser {
             }
         }
         
-        // --- map to primitive settings
-        // TODO implement conversions in class SpaceGroup
-        final SpaceGroup sg = new SpaceGroup(3, ops);
-        final Matrix pCell = sg.primitiveCell();
-        final Matrix toPrimitive = (Matrix) pCell.inverse();
-        final List pOps = new ArrayList();
-        for (final Iterator iter = sg.primitiveOperators().iterator(); iter.hasNext();) {
-            pOps.add(((Matrix) iter.next()).times(toPrimitive));
+        // --- apply group operators to generate all nodes
+        for (final Iterator it1 = nodes.iterator(); it1.hasNext();) {
+            final NodeDescriptor node = (NodeDescriptor) it1.next();
+            final Matrix site = node.site;
+            final Set stabilizer = stabilizer(site, ops, precision);
         }
-        final Matrix pGram = (Matrix) pCell.times(cellGram).times(pCell.transposed());
-        final List pNodes = new ArrayList();
-        final Map nameToPNode = new HashMap();
-        for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
-            final NodeDescriptor node = (NodeDescriptor) iter.next();
-            final NodeDescriptor pNode = new NodeDescriptor(node.name, node.connectivity,
-                    (Matrix) node.site.times(toPrimitive));
-            pNodes.add(pNode);
-            nameToPNode.put(node.name, pNode);
-        }
-        
+
         // TODO finish implementation
         
         return G;
@@ -462,6 +449,39 @@ public class NetParser extends GenericParser {
     private static Real cosine(final Real arg) {
         final double f = Math.PI / 180.0;
         return new FloatingPoint(Math.cos(arg.doubleValue() * f));
+    }
+    
+    private static Set stabilizer(final Matrix site, final List ops, final double precision) {
+        // --- compute the stabilizer of this node's translation class
+        final Set stabilizer = new HashSet();
+        
+        for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
+            final Matrix op = (Matrix) it2.next();
+            final Matrix mappedSite = (Matrix) site.times(op);
+            double maxD = 0.0;
+            for (int i = 0; i < 3; ++i) {
+                final Real d = (Real) site.get(0, i).minus(mappedSite.get(0, i));
+                final double diff = Math.abs((d.doubleValue()) % 1.0);
+                maxD = Math.max(maxD, Math.min(diff, 1.0 - diff));
+            }
+            if (maxD < precision) {
+                stabilizer.add(op);
+            }
+        }
+        
+        // --- check if stabilizer forms a group
+        for (final Iterator iter1 = stabilizer.iterator(); iter1.hasNext();) {
+            final Matrix A = (Matrix) iter1.next();
+            for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
+                final Matrix B = (Matrix) iter2.next();
+                final Matrix AB_ = normalizedOperator((Matrix) A.times(B.inverse()));
+                if (!stabilizer.contains(AB_)) {
+                    throw new RuntimeException("precision problem in stabilizer computation");
+                }
+            }
+        }
+
+        return stabilizer;
     }
     
     private static Matrix parsePosition(final List fields, final int startIndex) {
