@@ -30,9 +30,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -40,7 +42,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: NetParser.java,v 1.3 2005/07/19 02:40:47 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -111,6 +113,8 @@ public class NetParser extends GenericParser {
         final String type = lastBlockType().toLowerCase();
         if (type.equals("periodic_graph")) {
             return parsePeriodicGraph(block);
+        } else if (type.equals("crystal")) {
+            return parseCrystal3D(block);
         } else if (type.equals("net")) {
             return parseNet3D(block);
         } else {
@@ -319,7 +323,124 @@ public class NetParser extends GenericParser {
         return G;
     }
 
-    private Matrix parsePosition(final List fields, final int startIndex) {
+    /**
+     * 
+     * Example:
+     * 
+     * <code>
+     * CRYSTAL
+     *   GROUP Fd-3m
+     *   CELL         2.3094 2.3094 2.3094  90.0 90.0 90.00000
+     *   ATOM  1  4   5/8 5/8 5/8
+     * END
+     * </code>
+     * 
+     * @param block the pre-parsed input.
+     * @return the periodic graph constructed from the input.
+     */
+    private PeriodicGraph parseCrystal3D(final Entry[] block) {
+        final PeriodicGraph G = new PeriodicGraph(3);
+        String group = null;
+        List ops = null;
+        Real cellA = null;
+        Real cellB = null;
+        Real cellC = null;
+        Real cellAlpha = null;
+        Real cellBeta = null;
+        Real cellGamma = null;
+        Matrix cellGram = null;
+        final List nodes = new LinkedList();
+        final Map nameToNode = new HashMap();
+        
+        // --- collect data from the input
+        for (int i = 0; i < block.length; ++i) {
+            final List row = block[i].values;
+            if (block[i].key.equals("group")) {
+                if (group == null) {
+                    if (row.size() < 1) {
+                        final String msg = "Missing argument at line ";
+                        throw new DataFormatException(msg + block[i].lineNumber);
+                    }
+                    group = (String) row.get(0);
+                    ops = operators(group);
+                    if (ops == null) {
+                        final String msg = "Space group not recognized at line ";
+                        throw new DataFormatException(msg + block[i].lineNumber);
+                    }
+                } else {
+                    final String msg = "Group specified twice at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+            } else if (block[i].key.equals("cell")) {
+                if (row.size() != 6) {
+                    final String msg = "Expected 6 arguments at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+                for (int j = 0; j < 6; ++j) {
+                    if (!(row.get(i) instanceof Real)) {
+                        final String msg = "Arguments must be real numbers at line ";
+                        throw new DataFormatException(msg + block[i].lineNumber);
+                    }
+                }
+                cellA = (Real) row.get(0);
+                cellB = (Real) row.get(0);
+                cellC = (Real) row.get(0);
+                cellAlpha = (Real) row.get(0);
+                cellBeta = (Real) row.get(0);
+                cellGamma = (Real) row.get(0);
+                cellGram = gramMatrix(cellA, cellB, cellC, cellAlpha, cellBeta, cellGamma);
+            } else if (block[i].key.equals("node")) {
+                if (row.size() != 5) {
+                    final String msg = "Expected 5 arguments at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+                final Object name = row.get(0);
+                if (nameToNode.containsKey(name)) {
+                    final String msg = "Node specified twice at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+                final Object conn = row.get(1);
+                if (!(conn instanceof Whole && ((Whole) conn).isPositive())) {
+                    final String msg = "Connectivity must be a positive integer ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+                final Matrix position = Matrix.zero(4, 4).mutableClone();
+                for (int j = 0; j < 3; ++j) {
+                    position.set(3, j, (IArithmetic) row.get(j + 2));
+                }
+                position.set(3, 3, Whole.ONE);
+                final int c = ((Whole) conn).intValue();
+                final NodeDescriptor node = new NodeDescriptor(name, c, position);
+                nodes.add(node);
+                nameToNode.put(name, node);
+            }
+        }
+        
+        // TODO finish implementation
+        
+        return G;
+    }
+    
+    private static Matrix gramMatrix(final Real a, final Real b, final Real c,
+            final Real alpha, final Real beta, final Real gamma) {
+
+        final Real alphaG = (Real) cosine(alpha).times(b).times(c);
+        final Real betaG = (Real) cosine(beta).times(a).times(c);
+        final Real gammaG = (Real) cosine(gamma).times(a).times(b);
+
+        return new Matrix(new IArithmetic[][] {
+                { a.raisedTo(2), gammaG, betaG },
+                { gammaG, b.raisedTo(2), alphaG },
+                { betaG, alphaG, c.raisedTo(2) }
+        });
+    }
+    
+    private static Real cosine(final Real arg) {
+        final double f = Math.PI / 180.0;
+        return new FloatingPoint(Math.cos(arg.doubleValue() * f));
+    }
+    
+    private static Matrix parsePosition(final List fields, final int startIndex) {
         if (fields.size() <= startIndex) {
             return Matrix.one(4);
         } else {
