@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,11 +39,12 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.3 2005/07/19 02:40:47 odf Exp $
+ * @version $Id: NetParser.java,v 1.4 2005/07/19 04:30:57 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -324,6 +326,8 @@ public class NetParser extends GenericParser {
     }
 
     /**
+     * Parses a crystal descriptor and constructs the corresponding atom-bond
+     * network.
      * 
      * Example:
      * 
@@ -340,7 +344,7 @@ public class NetParser extends GenericParser {
      */
     private PeriodicGraph parseCrystal3D(final Entry[] block) {
         final PeriodicGraph G = new PeriodicGraph(3);
-        String group = null;
+        String groupname = null;
         List ops = null;
         Real cellA = null;
         Real cellB = null;
@@ -356,13 +360,13 @@ public class NetParser extends GenericParser {
         for (int i = 0; i < block.length; ++i) {
             final List row = block[i].values;
             if (block[i].key.equals("group")) {
-                if (group == null) {
+                if (groupname == null) {
                     if (row.size() < 1) {
                         final String msg = "Missing argument at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
-                    group = (String) row.get(0);
-                    ops = operators(group);
+                    groupname = (String) row.get(0);
+                    ops = operators(groupname);
                     if (ops == null) {
                         final String msg = "Space group not recognized at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
@@ -414,6 +418,26 @@ public class NetParser extends GenericParser {
                 nodes.add(node);
                 nameToNode.put(name, node);
             }
+        }
+        
+        // --- map to primitive settings
+        // TODO implement conversions in class SpaceGroup
+        final SpaceGroup sg = new SpaceGroup(3, ops);
+        final Matrix pCell = sg.primitiveCell();
+        final Matrix toPrimitive = (Matrix) pCell.inverse();
+        final List pOps = new ArrayList();
+        for (final Iterator iter = sg.primitiveOperators().iterator(); iter.hasNext();) {
+            pOps.add(((Matrix) iter.next()).times(toPrimitive));
+        }
+        final Matrix pGram = (Matrix) pCell.times(cellGram).times(pCell.transposed());
+        final List pNodes = new ArrayList();
+        final Map nameToPNode = new HashMap();
+        for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
+            final NodeDescriptor node = (NodeDescriptor) iter.next();
+            final NodeDescriptor pNode = new NodeDescriptor(node.name, node.connectivity,
+                    (Matrix) node.site.times(toPrimitive));
+            pNodes.add(pNode);
+            nameToPNode.put(node.name, pNode);
         }
         
         // TODO finish implementation
