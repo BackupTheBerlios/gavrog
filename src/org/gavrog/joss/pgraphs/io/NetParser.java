@@ -35,7 +35,6 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Matrix;
-import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -44,7 +43,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.5 2005/07/19 21:52:37 odf Exp $
+ * @version $Id: NetParser.java,v 1.6 2005/07/20 20:41:17 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -578,7 +577,7 @@ public class NetParser extends GenericParser {
         final Matrix result = op.mutableClone();
         final int d = op.numberOfRows() - 1;
         for (int i = 0; i < d; ++i) {
-            result.set(d, i, ((Rational) op.get(d, i)).mod(1));
+            result.set(d, i, op.get(d, i).mod(Whole.ONE));
         }
         return result;
     }

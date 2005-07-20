@@ -24,7 +24,7 @@ package org.gavrog.jane.numbers;
  * superclass, an exception is thrown.
  * 
  * @author delgado
- * @version $Id: IArithmetic.java,v 1.2 2005/07/20 20:34:35 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.3 2005/07/20 20:41:17 odf Exp $
  */
 public interface IArithmetic extends Comparable {
     
@@ -93,6 +93,22 @@ public interface IArithmetic extends Comparable {
      * @return the result of the division.
      */
     public IArithmetic dividedBy(Object other);
+
+    /**
+     * Truncated division: returns the largest whole number not smaller than the quotient.
+     * 
+     * @param other the object to divide by.
+     * @return the result of the truncated division.
+     */
+    public IArithmetic div(Object other);
+
+    /**
+     * Returns the remainder of a truncated division operation.
+     * 
+     * @param other the object to divide by.
+     * @return the remainder.
+     */
+    public IArithmetic mod(Object other);
 
     /**
      * Raises this arithmetic object to a certain power.
