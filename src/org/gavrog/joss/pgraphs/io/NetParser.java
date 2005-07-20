@@ -43,7 +43,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.6 2005/07/20 20:41:17 odf Exp $
+ * @version $Id: NetParser.java,v 1.7 2005/07/20 21:52:52 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -354,6 +354,7 @@ public class NetParser extends GenericParser {
         Matrix cellGram = null;
         final List nodes = new LinkedList();
         final Map nameToNode = new HashMap();
+        final Map nodeToPosition = new HashMap();
         final double precision = 0.001;
         
         // --- collect data from the input
@@ -408,10 +409,11 @@ public class NetParser extends GenericParser {
                     final String msg = "Connectivity must be a positive integer ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                final Matrix position = Matrix.zero(1, 3).mutableClone();
+                final Matrix position = Matrix.zero(1, 4).mutableClone();
                 for (int j = 0; j < 3; ++j) {
-                    position.set(1, j, (IArithmetic) row.get(j + 2));
+                    position.set(0, j, ((Real) row.get(j + 2)).mod(1));
                 }
+                position.set(0, 3, Whole.ONE);
                 final int c = ((Whole) conn).intValue();
                 final NodeDescriptor node = new NodeDescriptor(name, c, position);
                 nodes.add(node);
@@ -420,11 +422,21 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all nodes
-        for (final Iterator it1 = nodes.iterator(); it1.hasNext();) {
-            final NodeDescriptor node = (NodeDescriptor) it1.next();
-            final Matrix site = node.site;
+        for (final Iterator itNodes = nodes.iterator(); itNodes.hasNext();) {
+            final Matrix site = ((NodeDescriptor) itNodes.next()).site;
             final Set stabilizer = stabilizer(site, ops, precision);
-        }
+            final Set opsSeen = new HashSet();
+            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                final Matrix op = (Matrix) itOps.next();
+                if (!opsSeen.contains(op)) {
+                    final INode v = G.newNode();
+                    nodeToPosition.put(v, mod1((Matrix) site.times(op)));
+                }
+                for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
+                    opsSeen.add(normalizedOperator((Matrix) op.times(itStab.next())));
+                }
+            }
+       }
 
         // TODO finish implementation
         
@@ -453,25 +465,25 @@ public class NetParser extends GenericParser {
     private static Set stabilizer(final Matrix site, final List ops, final double precision) {
         // --- compute the stabilizer of this node's translation class
         final Set stabilizer = new HashSet();
+        final Whole one = Whole.ONE;
         
         for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
             final Matrix op = (Matrix) it2.next();
-            final Matrix mappedSite = (Matrix) site.times(op);
+            final Matrix diff = (Matrix) site.minus(site.times(op));
             double maxD = 0.0;
             for (int i = 0; i < 3; ++i) {
-                final Real d = (Real) site.get(0, i).minus(mappedSite.get(0, i));
-                final double diff = Math.abs((d.doubleValue()) % 1.0);
-                maxD = Math.max(maxD, Math.min(diff, 1.0 - diff));
+                final double d = ((Real) diff.get(0, i).mod(one)).doubleValue();
+                maxD = Math.max(maxD, Math.min(d, 1.0 - d));
             }
             if (maxD < precision) {
-                stabilizer.add(op);
+                stabilizer.add(normalizedOperator(op));
             }
         }
         
         // --- check if stabilizer forms a group
         for (final Iterator iter1 = stabilizer.iterator(); iter1.hasNext();) {
             final Matrix A = (Matrix) iter1.next();
-            for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
+            for (final Iterator iter2 = stabilizer.iterator(); iter2.hasNext();) {
                 final Matrix B = (Matrix) iter2.next();
                 final Matrix AB_ = normalizedOperator((Matrix) A.times(B.inverse()));
                 if (!stabilizer.contains(AB_)) {
@@ -578,6 +590,16 @@ public class NetParser extends GenericParser {
         final int d = op.numberOfRows() - 1;
         for (int i = 0; i < d; ++i) {
             result.set(d, i, op.get(d, i).mod(Whole.ONE));
+        }
+        return result;
+    }
+    
+    private static Matrix mod1(final Matrix op) {
+        final Matrix result = op.mutableClone();
+        for (int i = 0; i < op.numberOfRows(); ++i) {
+            for (int j = 0; j < op.numberOfColumns(); ++j) {
+                result.set(i, j, op.get(i, j).mod(Whole.ONE));
+            }
         }
         return result;
     }

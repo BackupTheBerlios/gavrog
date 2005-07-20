@@ -16,22 +16,18 @@
 
 package org.gavrog.joss.pgraphs.io;
 
-import java.util.Iterator;
 import java.util.List;
+
+import junit.framework.TestCase;
 
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.io.DataFormatException;
-import org.gavrog.joss.pgraphs.io.NetParser;
-
-
-import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.2 2005/07/20 21:52:47 odf Exp $
  */
 public class TestNetParser extends TestCase {
 
@@ -76,7 +72,7 @@ public class TestNetParser extends TestCase {
         }
     }
     
-    public void testParseNet() {
+    public void testParsePeriodicGraph() {
         final PeriodicGraph G = NetParser.stringToNet(""
                 + "PERIODIC_GRAPH\n"
                 + " # the diamond net, of course\n"
@@ -86,7 +82,9 @@ public class TestNetParser extends TestCase {
                 + " 1 2 0 0 1\n"
                 + "END\n");
         assertEquals("(1,2,[0,0,0])(1,2,[1,0,0])(1,2,[0,1,0])(1,2,[0,0,1])", G.toString());
+    }
 
+    public void testParseNet3D() {
         final PeriodicGraph H = NetParser.stringToNet(""
                 + "NET # primitive cubic\n"
                 + "  Group P432\n"
@@ -106,19 +104,24 @@ public class TestNetParser extends TestCase {
                 + "  Node 1 3/8,3/8,3/8\n"
                 + "  Edge 1 1 1-x,1-y,1-z\n"
                 + "END\n").minimalImage();
-        final INode w = (INode) D.nodes().next();
-        final Iterator cs = D.coordinationSequence(w);
-        assertEquals(new Integer(1), cs.next());
-        assertEquals(new Integer(4), cs.next());
-        assertEquals(new Integer(12), cs.next());
-        assertEquals(new Integer(24), cs.next());
-        assertEquals(new Integer(42), cs.next());
-        assertEquals(new Integer(64), cs.next());
-        assertEquals(new Integer(92), cs.next());
-        assertEquals(new Integer(124), cs.next());
-        assertEquals(new Integer(162), cs.next());
-        assertEquals(new Integer(204), cs.next());
-        assertEquals(new Integer(252), cs.next());
+
+        final PeriodicGraph diamond = new PeriodicGraph(3);
+        final INode v1 = diamond.newNode();
+        final INode v2 = diamond.newNode();
+        diamond.newEdge(v1, v2, new int[] { 0, 0, 0 });
+        diamond.newEdge(v1, v2, new int[] { 1, 0, 0 });
+        diamond.newEdge(v1, v2, new int[] { 0, 1, 0 });
+        diamond.newEdge(v1, v2, new int[] { 0, 0, 1 });
+        assertEquals(diamond, D);
+    }
+    
+    public void testParseCrystal3D() {
+        final PeriodicGraph G = NetParser.stringToNet(""
+                + "CRYSTAL # diamond again\n"
+                + "  Group Fd-3m\n"
+                + "  Node 1 4 5/8 5/8 5/8\n"
+                + "END\n");
+        System.out.println(G);
     }
     
     public void testOperators() {
