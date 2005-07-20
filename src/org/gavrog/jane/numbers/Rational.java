@@ -58,6 +58,10 @@ public abstract class Rational extends Real {
     	return this.denominator().equals(Whole.ONE);
     }
     
+    public IArithmetic floor() {
+        return numerator().div(denominator());
+    }
+    
     public int sign() {
         return numerator().sign();
     }
@@ -183,25 +187,6 @@ public abstract class Rational extends Real {
     	}
     }
     
-    /* --- Truncated division */
-    
-    public Whole div(Rational other) {
-        final Rational q = (Rational) this.dividedBy(other);
-        return q.numerator().div(q.denominator());
-    }
-
-    public Whole div(long other) {
-        return this.div(new Whole(other));
-    }
-
-    public IArithmetic mod(Rational other) {
-        return this.minus(this.div(other).times(other));
-    }
-
-    public IArithmetic mod(long other) {
-        return this.mod(new Whole(other));
-    }
-
     /* --- Exponentiation */
     
     public IArithmetic raisedTo(Whole e) {

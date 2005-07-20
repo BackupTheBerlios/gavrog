@@ -131,24 +131,15 @@ public class Whole extends Rational {
     /* --- Truncated division */
     
     public Whole div(Whole other) {
+        // IMPORTANT: We need to override the implementation in ArithmeticBase, because
+        // Rational.div() (= ArithmeticBase.div()) calls Rational.floor() which calls
+        // Whole.div().
         final Whole tmp = new Whole(this.val.divide(other.val));
         if (tmp.times(other).isGreaterThan(this)) {
             return (Whole) tmp.minus(Whole.ONE);
         } else {
             return tmp;
         }
-    }
-
-    public Whole div(long other) {
-        return this.div(new Whole(other));
-    }
-
-    public Whole mod(Whole other) {
-        return (Whole) this.minus(this.div(other).times(other));
-    }
-
-    public IArithmetic mod(long other) {
-        return this.mod(new Whole(other));
     }
 
     /* --- Greatest common divisor */

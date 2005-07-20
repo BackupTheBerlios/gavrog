@@ -33,6 +33,7 @@ public abstract class ArithmeticBase implements IArithmetic {
     public abstract IArithmetic times(Object other);
 
     public abstract int compareTo(Object other);
+    public abstract IArithmetic floor();
 
     public abstract String toString();
     public abstract int hashCode();
@@ -105,6 +106,30 @@ public abstract class ArithmeticBase implements IArithmetic {
         return this.inverse().times(other);
     }
 
+    public IArithmetic div(long n) {
+        return this.div(new Whole(n));
+    }
+
+    public IArithmetic div(double n) {
+        return this.div(new FloatingPoint(n));
+    }
+
+    public IArithmetic div(Object other) {
+        return this.dividedBy(other).floor();
+    }
+    
+    public IArithmetic mod(long n) {
+        return this.mod(new Whole(n));
+    }
+
+    public IArithmetic mod(double n) {
+        return this.mod(new FloatingPoint(n));
+    }
+
+    public IArithmetic mod(Object other) {
+        return this.minus(this.div(other).times(other));
+    }
+    
     public IArithmetic raisedTo(Object other) {
         return power(this, (Real) other);
     }

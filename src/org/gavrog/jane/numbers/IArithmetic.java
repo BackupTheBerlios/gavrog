@@ -24,15 +24,7 @@ package org.gavrog.jane.numbers;
  * superclass, an exception is thrown.
  * 
  * @author delgado
- * @version $Id: IArithmetic.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
- */
-/**
- * @author Olaf Delgado
- * @version $Id: IArithmetic.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
- */
-/**
- * @author Olaf Delgado
- * @version $Id: IArithmetic.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.2 2005/07/20 20:34:35 odf Exp $
  */
 public interface IArithmetic extends Comparable {
     
@@ -165,6 +157,12 @@ public interface IArithmetic extends Comparable {
      * @return a number indicating the relative order of the compared objects.
      */
     public int compareTo(Object other);
+    
+    /**
+     * Constructs the largest whole number not larger than this number.
+     * @return the largest whole number not larger than this number.
+     */
+    public IArithmetic floor();
     
     /**
      * Tests if this object is smaller than another.

@@ -459,7 +459,7 @@ public class Matrix extends ArithmeticBase {
                     cleared = false;
                     final IArithmetic f;
                     if (useTruncatedDivision) {
-                        f = ((Rational) A.get(i, col)).div((Rational) A.get(row, col));
+                        f = ((Rational) A.get(i, col)).div(A.get(row, col));
                     } else {
                         f = A.get(i, col).dividedBy(A.get(row, col));
                     }
@@ -501,7 +501,7 @@ public class Matrix extends ArithmeticBase {
                     }
                     final IArithmetic f;
                     if (useTruncatedDivision) {
-                        f = ((Rational) A.get(i, col)).div((Rational) A.get(row, col));
+                        f = ((Rational) A.get(i, col)).div(A.get(row, col));
                     } else {
                         f = A.get(i, col).dividedBy(A.get(row, col));
                     }
@@ -788,6 +788,10 @@ public class Matrix extends ArithmeticBase {
 	public int compareTo(Object other) {
 	    throw new ArithmeticException("matrices are not ordered");
 	}
+
+    public IArithmetic floor() {
+        throw new ArithmeticException("matrices are not ordered");
+    }
 
 	/* Convenience methods for use with Jython. */
 

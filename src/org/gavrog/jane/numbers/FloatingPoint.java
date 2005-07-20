@@ -39,6 +39,10 @@ public class FloatingPoint extends Real {
         return ONE;
     }
 
+    public IArithmetic floor() {
+        return new FloatingPoint(Math.floor(this.val));
+    }
+    
     public int sign() {
         return (this.val == 0) ? 0 : ((this.val > 0) ? 1 : -1);
     }

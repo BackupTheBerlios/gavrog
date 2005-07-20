@@ -46,8 +46,6 @@ public abstract class Real extends Complex implements Comparable {
         return (byte) longValue();
     }
 
-    /* Comparison method. */
-
     public int compareTo(Object other) {
         return (this.minus(other)).sign();
     }
