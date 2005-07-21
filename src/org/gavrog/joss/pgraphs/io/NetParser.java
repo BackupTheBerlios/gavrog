@@ -45,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.9 2005/07/21 04:59:51 odf Exp $
+ * @version $Id: NetParser.java,v 1.10 2005/07/21 21:18:11 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -359,6 +359,7 @@ public class NetParser extends GenericParser {
         final Map nodeToPosition = new HashMap();
         final Map nodeToDescriptor = new HashMap();
         
+        final Matrix I = Matrix.one(3);
         final double precision = 0.001;
         
         // --- collect data from the input
@@ -426,12 +427,11 @@ public class NetParser extends GenericParser {
         }
         
         if (cellGram == null) {
-            cellGram = Matrix.one(3);
+            cellGram = I;
         }
         
         // --- construct a Dirichlet domain for the translation group
-        final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(Matrix.one(3),
-                cellGram);
+        final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(I, cellGram);
         final Matrix t1 = reducedBasis.getRow(0);
         final Matrix t2 = reducedBasis.getRow(1);
         final Matrix t3 = reducedBasis.getRow(2);
@@ -456,31 +456,12 @@ public class NetParser extends GenericParser {
                 final Matrix op = (Matrix) itOps.next();
                 if (!opsSeen.contains(op)) {
                     // --- compute mapped node position
-                    Matrix pos = mod1(((Matrix) site.times(op)).getSubMatrix(0, 0, 1, 3));
-                    // --- shift mapped node into Dirichlet domain
-                    while (true) {
-                        boolean changed = false;
-                        for (int i = 0; i < 6; ++i) {
-                            final IArithmetic half = new Fraction(1, 2);
-                            final Matrix v = (Matrix) dirichletVectors[i];
-                            final IArithmetic c = dirichletSquaredLengths[i];
-                            final IArithmetic h = LinearAlgebra.dotRows(pos, v, cellGram);
-                            final IArithmetic q = h.dividedBy(c);
-                            if (q.isGreaterThan(half)) {
-                                pos = (Matrix) pos.minus(v.times(q.floor()
-                                        .plus(Whole.ONE)));
-                                changed = true;
-                                break;
-                            } else if (q.isLessOrEqual(half.negative())) {
-                                pos = (Matrix) pos.minus(v.times(q.floor()));
-                                changed = true;
-                                break;
-                            }
-                        }
-                        if (!changed) {
-                            break;
-                        }
-                    }
+                    Matrix p = (Matrix) site.times(op);
+                    p = p.getSubMatrix(0, 0, 1, 3);
+                    // --- shift into Dirichlet domain
+                    final Matrix shift = dirichletShift(p, dirichletVectors,
+                            dirichletSquaredLengths, cellGram, Whole.ONE);
+                    final Matrix pos = (Matrix) p.plus(shift);
                     // --- construct a new node
                     final INode v = G.newNode();
                     // --- store some data for it
@@ -494,6 +475,7 @@ public class NetParser extends GenericParser {
         }
 
         // TODO compute nodes in two times extended Dirichlet domain
+        
         
         // TODO compute the edges using nearest neighbors
         
@@ -550,6 +532,42 @@ public class NetParser extends GenericParser {
         }
 
         return stabilizer;
+    }
+    
+    private static Matrix dirichletShift(final Matrix pos,
+            final IArithmetic dirichletVectors[],
+            final IArithmetic dirichletSquaredLengths[], final Matrix cellGram,
+            final IArithmetic factor) {
+
+        final IArithmetic one = Whole.ONE;
+        final IArithmetic squaredFactor = factor.times(factor);
+        Matrix shift = Matrix.zero(1, 3);
+        
+        while (true) {
+            boolean changed = false;
+            for (int i = 0; i < 6; ++i) {
+                final IArithmetic half = new Fraction(1, 2);
+                final Matrix v = (Matrix) dirichletVectors[i].times(factor);
+                final IArithmetic c = dirichletSquaredLengths[i].times(squaredFactor);
+                final Matrix p = (Matrix) pos.plus(shift);
+                final IArithmetic h = LinearAlgebra.dotRows(p, v, cellGram);
+                final IArithmetic q = h.dividedBy(c);
+                if (q.isGreaterThan(half)) {
+                    shift = (Matrix) shift.minus(v.times(q.floor().plus(one)));
+                    changed = true;
+                    break;
+                } else if (q.isLessOrEqual(half.negative())) {
+                    shift = (Matrix) shift.minus(v.times(q.floor()));
+                    changed = true;
+                    break;
+                }
+            }
+            if (!changed) {
+                break;
+            }
+        }
+        
+        return shift;
     }
     
     private static Matrix parsePosition(final List fields, final int startIndex) {
@@ -647,16 +665,6 @@ public class NetParser extends GenericParser {
         final int d = op.numberOfRows() - 1;
         for (int i = 0; i < d; ++i) {
             result.set(d, i, op.get(d, i).mod(Whole.ONE));
-        }
-        return result;
-    }
-    
-    private static Matrix mod1(final Matrix op) {
-        final Matrix result = op.mutableClone();
-        for (int i = 0; i < op.numberOfRows(); ++i) {
-            for (int j = 0; j < op.numberOfColumns(); ++j) {
-                result.set(i, j, op.get(i, j).mod(Whole.ONE));
-            }
         }
         return result;
     }
