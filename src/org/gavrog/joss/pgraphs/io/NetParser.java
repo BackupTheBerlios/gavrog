@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +36,7 @@ import java.util.Set;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.LinearAlgebra;
 import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
@@ -43,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.7 2005/07/20 21:52:52 odf Exp $
+ * @version $Id: NetParser.java,v 1.8 2005/07/21 02:12:18 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -355,7 +358,10 @@ public class NetParser extends GenericParser {
         final List nodes = new LinkedList();
         final Map nameToNode = new HashMap();
         final Map nodeToPosition = new HashMap();
+        final Map nodeToDescriptor = new HashMap();
+        
         final double precision = 0.001;
+        final Matrix I = Matrix.one(3);
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -421,24 +427,43 @@ public class NetParser extends GenericParser {
             }
         }
         
+        // --- construct a Dirichlet domain for the translation group
+        final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(I, cellGram);
+        final Matrix t1 = reducedBasis.getRow(0);
+        final Matrix t2 = reducedBasis.getRow(1);
+        final Matrix t3 = reducedBasis.getRow(2);
+        final IArithmetic dirichletVectors[] = new IArithmetic[] {
+                t1, t2, t3, t1.plus(t2), t1.plus(t3), t2.plus(t3), t1.plus(t2).plus(t3)
+        };
+        final IArithmetic dirichletSquaredLengths[] = new IArithmetic[7];
+        for (int i = 0; i < 6; ++i) {
+            final Matrix v = (Matrix) dirichletVectors[i];
+            dirichletSquaredLengths[i] = LinearAlgebra.dotRows(v, v, cellGram);
+        }
+        
         // --- apply group operators to generate all nodes
         for (final Iterator itNodes = nodes.iterator(); itNodes.hasNext();) {
-            final Matrix site = ((NodeDescriptor) itNodes.next()).site;
+            final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
+            final Matrix site = desc.site;
             final Set stabilizer = stabilizer(site, ops, precision);
             final Set opsSeen = new HashSet();
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
                 final Matrix op = (Matrix) itOps.next();
                 if (!opsSeen.contains(op)) {
                     final INode v = G.newNode();
+                    // --- shift point into Dirichlet domain
                     nodeToPosition.put(v, mod1((Matrix) site.times(op)));
+                    nodeToDescriptor.put(v, desc);
                 }
                 for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
                     opsSeen.add(normalizedOperator((Matrix) op.times(itStab.next())));
                 }
             }
-       }
+        }
 
-        // TODO finish implementation
+        // TODO compute nodes in two times extended Dirichlet domain
+        
+        // TODO compute the edges using nearest neighbors
         
         return G;
     }
