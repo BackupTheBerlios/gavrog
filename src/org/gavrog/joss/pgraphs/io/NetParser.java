@@ -22,8 +22,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +33,7 @@ import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.FloatingPoint;
+import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.LinearAlgebra;
 import org.gavrog.jane.numbers.Matrix;
@@ -46,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.8 2005/07/21 02:12:18 odf Exp $
+ * @version $Id: NetParser.java,v 1.9 2005/07/21 04:59:51 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -361,7 +360,6 @@ public class NetParser extends GenericParser {
         final Map nodeToDescriptor = new HashMap();
         
         final double precision = 0.001;
-        final Matrix I = Matrix.one(3);
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -427,8 +425,13 @@ public class NetParser extends GenericParser {
             }
         }
         
+        if (cellGram == null) {
+            cellGram = Matrix.one(3);
+        }
+        
         // --- construct a Dirichlet domain for the translation group
-        final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(I, cellGram);
+        final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(Matrix.one(3),
+                cellGram);
         final Matrix t1 = reducedBasis.getRow(0);
         final Matrix t2 = reducedBasis.getRow(1);
         final Matrix t3 = reducedBasis.getRow(2);
@@ -446,13 +449,42 @@ public class NetParser extends GenericParser {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
             final Matrix site = desc.site;
             final Set stabilizer = stabilizer(site, ops, precision);
+            // --- loop through the cosets of the stabilizer
             final Set opsSeen = new HashSet();
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                // --- get the next coset representative
                 final Matrix op = (Matrix) itOps.next();
                 if (!opsSeen.contains(op)) {
+                    // --- compute mapped node position
+                    Matrix pos = mod1(((Matrix) site.times(op)).getSubMatrix(0, 0, 1, 3));
+                    // --- shift mapped node into Dirichlet domain
+                    while (true) {
+                        boolean changed = false;
+                        for (int i = 0; i < 6; ++i) {
+                            final IArithmetic half = new Fraction(1, 2);
+                            final Matrix v = (Matrix) dirichletVectors[i];
+                            final IArithmetic c = dirichletSquaredLengths[i];
+                            final IArithmetic h = LinearAlgebra.dotRows(pos, v, cellGram);
+                            final IArithmetic q = h.dividedBy(c);
+                            if (q.isGreaterThan(half)) {
+                                pos = (Matrix) pos.minus(v.times(q.floor()
+                                        .plus(Whole.ONE)));
+                                changed = true;
+                                break;
+                            } else if (q.isLessOrEqual(half.negative())) {
+                                pos = (Matrix) pos.minus(v.times(q.floor()));
+                                changed = true;
+                                break;
+                            }
+                        }
+                        if (!changed) {
+                            break;
+                        }
+                    }
+                    // --- construct a new node
                     final INode v = G.newNode();
-                    // --- shift point into Dirichlet domain
-                    nodeToPosition.put(v, mod1((Matrix) site.times(op)));
+                    // --- store some data for it
+                    nodeToPosition.put(v, pos);
                     nodeToDescriptor.put(v, desc);
                 }
                 for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
@@ -478,7 +510,7 @@ public class NetParser extends GenericParser {
         return new Matrix(new IArithmetic[][] {
                 { a.raisedTo(2), gammaG, betaG },
                 { gammaG, b.raisedTo(2), alphaG },
-                { betaG, alphaG, c.raisedTo(2) }
+                { betaG, alphaG, c.raisedTo(2) },
         });
     }
     
