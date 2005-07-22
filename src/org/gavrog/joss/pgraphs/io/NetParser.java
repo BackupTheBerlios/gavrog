@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.10 2005/07/21 21:18:11 odf Exp $
+ * @version $Id: NetParser.java,v 1.11 2005/07/22 05:30:12 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -445,6 +446,8 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all nodes
+        // TODO bug here: some node positions are generated twice
+        final List nodePositions = new ArrayList();
         for (final Iterator itNodes = nodes.iterator(); itNodes.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
             final Matrix site = desc.site;
@@ -467,15 +470,44 @@ public class NetParser extends GenericParser {
                     // --- store some data for it
                     nodeToPosition.put(v, pos);
                     nodeToDescriptor.put(v, desc);
-                }
-                for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
-                    opsSeen.add(normalizedOperator((Matrix) op.times(itStab.next())));
+                    nodePositions.add(pos.toString());
+                    for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
+                        opsSeen.add(normalizedOperator((Matrix) op.times(itStab.next())));
+                    }
                 }
             }
         }
 
-        // TODO compute nodes in two times extended Dirichlet domain
+        // --- compute nodes in two times extended Dirichlet domain
+        final List extraNodePositions = new ArrayList();
+        final Map addressToPosition = new HashMap();
+        final Matrix zero = Matrix.zero(1, 3);
+        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            final Matrix pv = (Matrix) nodeToPosition.get(v);
+            addressToPosition.put(new Pair(v, zero), pv);
+            extraNodePositions.add(pv.toString());
+            for (int i = 0; i < 7; ++i) {
+                final Matrix vec = (Matrix) dirichletVectors[i];
+                final Matrix p = (Matrix) pv.plus(vec);
+                final Matrix shift = dirichletShift(p, dirichletVectors,
+                        dirichletSquaredLengths, cellGram, new Whole(2));
+                addressToPosition.put(new Pair(v, vec.plus(shift)), p.plus(shift));
+                extraNodePositions.add(p.plus(shift).toString());
+            }
+        }
         
+        // --- Test outputs (temporary code)
+        Collections.sort(nodePositions);
+        System.out.println("Nodes in Dirichlet domain:");
+        for (final Iterator iter = nodePositions.iterator(); iter.hasNext();) {
+            System.out.println(iter.next());
+        }
+        Collections.sort(extraNodePositions);
+        System.out.println("Nodes in extendedDirichlet domain:");
+        for (final Iterator iter = extraNodePositions.iterator(); iter.hasNext();) {
+            System.out.println(iter.next());
+        }
         
         // TODO compute the edges using nearest neighbors
         
@@ -537,10 +569,10 @@ public class NetParser extends GenericParser {
     private static Matrix dirichletShift(final Matrix pos,
             final IArithmetic dirichletVectors[],
             final IArithmetic dirichletSquaredLengths[], final Matrix cellGram,
-            final IArithmetic factor) {
+            final Whole factor) {
 
-        final IArithmetic one = Whole.ONE;
-        final IArithmetic squaredFactor = factor.times(factor);
+        final Whole one = Whole.ONE;
+        final Whole squaredFactor = (Whole) factor.times(factor);
         Matrix shift = Matrix.zero(1, 3);
         
         while (true) {
