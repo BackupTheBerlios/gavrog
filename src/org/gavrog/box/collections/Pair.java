@@ -19,9 +19,9 @@ package org.gavrog.box.collections;
 /**
  * A class for hashable pairs of objects.
  * @author delgado
- * @version $Id: Pair.java,v 1.1 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: Pair.java,v 1.2 2005/07/22 19:51:48 odf Exp $
  */
-public class Pair {
+public class Pair implements Comparable {
 	private Object first, second;
 	
 	public Pair(Object first, Object second) {
@@ -66,4 +66,19 @@ public class Pair {
 	public String toString() {
 		return "("  + first + ", " + second + ")";
 	}
+
+    /* (non-Javadoc)
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo(final Object arg) {
+        if (!(arg instanceof Pair)) {
+            throw new IllegalArgumentException("argument must be of type Pair");
+        }
+        final Pair other = (Pair) arg;
+        int d = ((Comparable) this.getFirst()).compareTo(other.getFirst());
+        if (d == 0) {
+            d = ((Comparable) this.getSecond()).compareTo(other.getSecond());
+        }
+        return d;
+    }
 }
