@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class Partition.
  * @author Olaf Delgado
- * @version $Id: TestPartition.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: TestPartition.java,v 1.1 2005/07/22 19:44:34 odf Exp $
  */
 public class TestPartition extends TestCase {
     private Partition P;

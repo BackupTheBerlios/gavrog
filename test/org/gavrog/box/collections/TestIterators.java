@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -36,7 +36,7 @@ import junit.framework.TestCase;
  * Unit test for class Iterators.
  * 
  * @author Olaf Delgado
- * @version $Id: TestIterators.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: TestIterators.java,v 1.1 2005/07/22 19:44:34 odf Exp $
  */
 public class TestIterators extends TestCase {
     private Object x;

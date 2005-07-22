@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import java.util.NoSuchElementException;
 
@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FilteredIterator, also using class IntegerInterator.
  * @author Olaf Delgado
- * @version $Id: TestFilteredIterator.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: TestFilteredIterator.java,v 1.1 2005/07/22 19:44:34 odf Exp $
  */
 public class TestFilteredIterator extends TestCase {
     FilteredIterator iter;

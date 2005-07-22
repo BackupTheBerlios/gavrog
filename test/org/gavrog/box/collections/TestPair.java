@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.box;
+package org.gavrog.box.collections;
 
 import org.gavrog.box.collections.Pair;
 
@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class javaDSym.util.Pair
  * @author Olaf Delgado
- * @version $Id: TestPair.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: TestPair.java,v 1.1 2005/07/22 19:44:34 odf Exp $
  */
 public class TestPair extends TestCase {
     private Pair p1;
