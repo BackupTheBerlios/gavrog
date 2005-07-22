@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.11 2005/07/22 05:30:12 odf Exp $
+ * @version $Id: NetParser.java,v 1.12 2005/07/22 20:10:28 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -336,7 +336,7 @@ public class NetParser extends GenericParser {
      * <code>
      * CRYSTAL
      *   GROUP Fd-3m
-     *   CELL         2.3094 2.3094 2.3094  90.0 90.0 90.00000
+     *   CELL         2.3094 2.3094 2.3094  90.0 90.0 90.0
      *   ATOM  1  4   5/8 5/8 5/8
      * END
      * </code>
@@ -345,23 +345,26 @@ public class NetParser extends GenericParser {
      * @return the periodic graph constructed from the input.
      */
     private PeriodicGraph parseCrystal3D(final Entry[] block) {
-        final PeriodicGraph G = new PeriodicGraph(3);
         String groupname = null;
-        List ops = null;
         Real cellA = null;
         Real cellB = null;
         Real cellC = null;
         Real cellAlpha = null;
         Real cellBeta = null;
         Real cellGamma = null;
-        Matrix cellGram = null;
         final List nodes = new LinkedList();
+        double precision = 0.001;
+        double minEdgeLength = 0.95;
+        double maxEdgeLength = Double.MAX_VALUE;
+        
+        final PeriodicGraph G = new PeriodicGraph(3);
+        List ops = null;
+        Matrix cellGram = null;
         final Map nameToNode = new HashMap();
         final Map nodeToPosition = new HashMap();
         final Map nodeToDescriptor = new HashMap();
         
         final Matrix I = Matrix.one(3);
-        final double precision = 0.001;
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -446,8 +449,6 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all nodes
-        // TODO bug here: some node positions are generated twice
-        final List nodePositions = new ArrayList();
         for (final Iterator itNodes = nodes.iterator(); itNodes.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
             final Matrix site = desc.site;
@@ -456,7 +457,7 @@ public class NetParser extends GenericParser {
             final Set opsSeen = new HashSet();
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
                 // --- get the next coset representative
-                final Matrix op = (Matrix) itOps.next();
+                final Matrix op = normalizedOperator((Matrix) itOps.next());
                 if (!opsSeen.contains(op)) {
                     // --- compute mapped node position
                     Matrix p = (Matrix) site.times(op);
@@ -470,46 +471,51 @@ public class NetParser extends GenericParser {
                     // --- store some data for it
                     nodeToPosition.put(v, pos);
                     nodeToDescriptor.put(v, desc);
-                    nodePositions.add(pos.toString());
                     for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
-                        opsSeen.add(normalizedOperator((Matrix) op.times(itStab.next())));
+                        final Matrix a = (Matrix) itStab.next();
+                        opsSeen.add(normalizedOperator((Matrix) a.times(op)));
                     }
                 }
             }
         }
 
         // --- compute nodes in two times extended Dirichlet domain
-        final List extraNodePositions = new ArrayList();
+        final List extended = new ArrayList();
         final Map addressToPosition = new HashMap();
         final Matrix zero = Matrix.zero(1, 3);
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Matrix pv = (Matrix) nodeToPosition.get(v);
             addressToPosition.put(new Pair(v, zero), pv);
-            extraNodePositions.add(pv.toString());
             for (int i = 0; i < 7; ++i) {
                 final Matrix vec = (Matrix) dirichletVectors[i];
                 final Matrix p = (Matrix) pv.plus(vec);
                 final Matrix shift = dirichletShift(p, dirichletVectors,
                         dirichletSquaredLengths, cellGram, new Whole(2));
-                addressToPosition.put(new Pair(v, vec.plus(shift)), p.plus(shift));
-                extraNodePositions.add(p.plus(shift).toString());
+                final Pair adr = new Pair(v, vec.plus(shift));
+                extended.add(adr);
+                addressToPosition.put(adr, p.plus(shift));
             }
         }
         
-        // --- Test outputs (temporary code)
-        Collections.sort(nodePositions);
-        System.out.println("Nodes in Dirichlet domain:");
-        for (final Iterator iter = nodePositions.iterator(); iter.hasNext();) {
-            System.out.println(iter.next());
-        }
-        Collections.sort(extraNodePositions);
-        System.out.println("Nodes in extendedDirichlet domain:");
-        for (final Iterator iter = extraNodePositions.iterator(); iter.hasNext();) {
-            System.out.println(iter.next());
-        }
-        
         // TODO compute the edges using nearest neighbors
+        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            final Matrix pv = (Matrix) nodeToPosition.get(v);
+            final List distances = new ArrayList();
+            for (int i = 0; i < extended.size(); ++i) {
+                final Pair adr = (Pair) extended.get(i);
+                final Matrix pos = (Matrix) addressToPosition.get(adr);
+                final Matrix diff = (Matrix) pos.minus(pv);
+                final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
+                distances.add(new Pair(dist, new Integer(i)));
+            }
+            Collections.sort(distances);
+            for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
+                System.out.println(it2.next());
+            }
+            System.out.println();
+        }
         
         return G;
     }
