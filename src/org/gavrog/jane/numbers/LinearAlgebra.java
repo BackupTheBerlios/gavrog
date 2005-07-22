@@ -21,7 +21,7 @@ package org.gavrog.jane.numbers;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.2 2005/07/22 20:47:15 odf Exp $
  */
 public class LinearAlgebra {
     /**
@@ -317,9 +317,9 @@ public class LinearAlgebra {
         }
         
         final Matrix v[] = new Matrix[4];
-        v[0] = M.getRow(0);
-        v[1] = M.getRow(1);
-        v[2] = M.getRow(2);
+        v[0] = B.getRow(0);
+        v[1] = B.getRow(1);
+        v[2] = B.getRow(2);
         v[3] = (Matrix) v[0].plus(v[1]).plus(v[2]).negative();
         
         while (sellingStep(v, M)) {
