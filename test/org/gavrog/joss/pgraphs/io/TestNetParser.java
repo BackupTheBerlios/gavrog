@@ -27,7 +27,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.3 2005/07/22 20:10:26 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.4 2005/07/22 20:20:37 odf Exp $
  */
 public class TestNetParser extends TestCase {
 
@@ -119,7 +119,7 @@ public class TestNetParser extends TestCase {
         final PeriodicGraph G = NetParser.stringToNet(""
                 + "CRYSTAL # diamond again\n"
                 + "  Group Fd-3m\n"
-                //+ "  Cell  2.3094 2.3094 2.3094  90.0 90.0 90.0\n"
+                + "  Cell  2.3094 2.3094 2.3094  90.0 90.0 90.0\n"
                 + "  Node  1 4 5/8 5/8 5/8\n"
                 + "END\n");
         System.out.println(G);

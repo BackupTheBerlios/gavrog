@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.12 2005/07/22 20:10:28 odf Exp $
+ * @version $Id: NetParser.java,v 1.13 2005/07/22 20:20:39 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -397,11 +397,11 @@ public class NetParser extends GenericParser {
                     }
                 }
                 cellA = (Real) row.get(0);
-                cellB = (Real) row.get(0);
-                cellC = (Real) row.get(0);
-                cellAlpha = (Real) row.get(0);
-                cellBeta = (Real) row.get(0);
-                cellGamma = (Real) row.get(0);
+                cellB = (Real) row.get(1);
+                cellC = (Real) row.get(2);
+                cellAlpha = (Real) row.get(3);
+                cellBeta = (Real) row.get(4);
+                cellGamma = (Real) row.get(5);
                 cellGram = gramMatrix(cellA, cellB, cellC, cellAlpha, cellBeta, cellGamma);
             } else if (block[i].key.equals("node")) {
                 if (row.size() != 5) {
@@ -486,6 +486,7 @@ public class NetParser extends GenericParser {
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Matrix pv = (Matrix) nodeToPosition.get(v);
+            extended.add(new Pair(v, zero));
             addressToPosition.put(new Pair(v, zero), pv);
             for (int i = 0; i < 7; ++i) {
                 final Matrix vec = (Matrix) dirichletVectors[i];
@@ -499,6 +500,7 @@ public class NetParser extends GenericParser {
         }
         
         // TODO compute the edges using nearest neighbors
+        // TODO there seems to be a problem with applying the metric
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Matrix pv = (Matrix) nodeToPosition.get(v);
@@ -511,8 +513,13 @@ public class NetParser extends GenericParser {
                 distances.add(new Pair(dist, new Integer(i)));
             }
             Collections.sort(distances);
+            int k = 0;
             for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
                 System.out.println(it2.next());
+                if (++k >= 8) {
+                    System.out.println("...");
+                    break;
+                }
             }
             System.out.println();
         }
