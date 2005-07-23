@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.15 2005/07/23 01:52:04 odf Exp $
+ * @version $Id: NetParser.java,v 1.16 2005/07/23 01:57:27 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -531,7 +531,6 @@ public class NetParser extends GenericParser {
                 final int index = ((Integer) entry.getSecond()).intValue();
                 final Pair adr = (Pair) extended.get(index);
                 final INode w = (INode) adr.getFirst();
-                // TODO why has the following floating point entries?
                 final Matrix s = (Matrix) adr.getSecond();
                 if (dist < minEdgeLength) {
                     final String msg = "found points closer than minimal edge length of ";

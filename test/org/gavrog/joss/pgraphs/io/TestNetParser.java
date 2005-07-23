@@ -27,10 +27,27 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.4 2005/07/22 20:20:37 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.5 2005/07/23 01:57:26 odf Exp $
  */
 public class TestNetParser extends TestCase {
+    PeriodicGraph diamond;
+    
+    public void setUp() throws Exception {
+        super.setUp();
+        diamond = new PeriodicGraph(3);
+        final INode v1 = diamond.newNode();
+        final INode v2 = diamond.newNode();
+        diamond.newEdge(v1, v2, new int[] { 0, 0, 0 });
+        diamond.newEdge(v1, v2, new int[] { 1, 0, 0 });
+        diamond.newEdge(v1, v2, new int[] { 0, 1, 0 });
+        diamond.newEdge(v1, v2, new int[] { 0, 0, 1 });
+    }
 
+    public void tearDown() throws Exception {
+        diamond = null;
+        super.tearDown();
+    }
+    
     public void testParseOperator() {
         String s;
         Matrix M;
@@ -105,24 +122,18 @@ public class TestNetParser extends TestCase {
                 + "  Edge 1 1 1-x,1-y,1-z\n"
                 + "END\n").minimalImage();
 
-        final PeriodicGraph diamond = new PeriodicGraph(3);
-        final INode v1 = diamond.newNode();
-        final INode v2 = diamond.newNode();
-        diamond.newEdge(v1, v2, new int[] { 0, 0, 0 });
-        diamond.newEdge(v1, v2, new int[] { 1, 0, 0 });
-        diamond.newEdge(v1, v2, new int[] { 0, 1, 0 });
-        diamond.newEdge(v1, v2, new int[] { 0, 0, 1 });
         assertEquals(diamond, D);
     }
     
     public void testParseCrystal3D() {
-        final PeriodicGraph G = NetParser.stringToNet(""
+        final PeriodicGraph D = NetParser.stringToNet(""
                 + "CRYSTAL # diamond again\n"
                 + "  Group Fd-3m\n"
                 + "  Cell  2.3094 2.3094 2.3094  90.0 90.0 90.0\n"
                 + "  Node  1 4 5/8 5/8 5/8\n"
-                + "END\n");
-        System.out.println(G);
+                + "END\n").minimalImage();
+
+        assertEquals(diamond, D);
     }
     
     public void testOperators() {
