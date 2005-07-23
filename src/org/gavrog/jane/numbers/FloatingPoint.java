@@ -40,7 +40,7 @@ public class FloatingPoint extends Real {
     }
 
     public IArithmetic floor() {
-        return new FloatingPoint(Math.floor(this.val));
+        return new Whole((long) Math.floor(this.val));
     }
     
     public int sign() {
