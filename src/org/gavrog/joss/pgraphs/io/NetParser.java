@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.13 2005/07/22 20:20:39 odf Exp $
+ * @version $Id: NetParser.java,v 1.14 2005/07/23 01:06:34 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -500,7 +500,6 @@ public class NetParser extends GenericParser {
         }
         
         // TODO compute the edges using nearest neighbors
-        // TODO there seems to be a problem with applying the metric
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Matrix pv = (Matrix) nodeToPosition.get(v);
@@ -512,7 +511,10 @@ public class NetParser extends GenericParser {
                 final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
                 distances.add(new Pair(dist, new Integer(i)));
             }
+
             Collections.sort(distances);
+
+            // --- print the results so far - temporary code
             int k = 0;
             for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
                 System.out.println(it2.next());
