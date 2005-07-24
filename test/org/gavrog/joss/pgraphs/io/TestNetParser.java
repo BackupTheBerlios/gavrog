@@ -27,24 +27,33 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.5 2005/07/23 01:57:26 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.6 2005/07/24 20:14:31 odf Exp $
  */
 public class TestNetParser extends TestCase {
-    PeriodicGraph diamond;
+    PeriodicGraph dia, srs, hms;
     
     public void setUp() throws Exception {
         super.setUp();
-        diamond = new PeriodicGraph(3);
-        final INode v1 = diamond.newNode();
-        final INode v2 = diamond.newNode();
-        diamond.newEdge(v1, v2, new int[] { 0, 0, 0 });
-        diamond.newEdge(v1, v2, new int[] { 1, 0, 0 });
-        diamond.newEdge(v1, v2, new int[] { 0, 1, 0 });
-        diamond.newEdge(v1, v2, new int[] { 0, 0, 1 });
+        dia = new PeriodicGraph(3);
+        final INode v1 = dia.newNode();
+        final INode v2 = dia.newNode();
+        dia.newEdge(v1, v2, new int[] { 0, 0, 0 });
+        dia.newEdge(v1, v2, new int[] { 1, 0, 0 });
+        dia.newEdge(v1, v2, new int[] { 0, 1, 0 });
+        dia.newEdge(v1, v2, new int[] { 0, 0, 1 });
+        srs = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "  1 2  0 0 0\n"
+                + "  1 3  0 0 0\n"
+                + "  1 4  0 0 0\n"
+                + "  2 3  1 0 0\n"
+                + "  2 4  0 1 0\n"
+                + "  3 4  0 0 1\n"
+                + "END\n");
     }
 
     public void tearDown() throws Exception {
-        diamond = null;
+        dia = srs = null;
         super.tearDown();
     }
     
@@ -122,7 +131,7 @@ public class TestNetParser extends TestCase {
                 + "  Edge 1 1 1-x,1-y,1-z\n"
                 + "END\n").minimalImage();
 
-        assertEquals(diamond, D);
+        assertEquals(dia, D);
     }
     
     public void testParseCrystal3D() {
@@ -132,9 +141,18 @@ public class TestNetParser extends TestCase {
                 + "  Cell  2.3094 2.3094 2.3094  90.0 90.0 90.0\n"
                 + "  Node  1 4 5/8 5/8 5/8\n"
                 + "END\n").minimalImage();
-
-        assertEquals(diamond, D);
-    }
+        assertEquals(dia, D);
+        
+        final PeriodicGraph S = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "NAME srs\n"
+                + "GROUP I4132\n"
+                + "CELL 2.8284 2.8284 2.8284 90.0 90.0 90.0\n"
+                + "VERTICES\n"
+                + "  1 3 0.125 0.125 0.125\n"
+                + "END\n").minimalImage();
+        assertEquals(srs, S);
+}
     
     public void testOperators() {
         final List ops = NetParser.operators("Ia-3d");
