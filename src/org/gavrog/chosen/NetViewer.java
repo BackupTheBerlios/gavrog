@@ -94,7 +94,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: NetViewer.java,v 1.2 2005/07/24 20:14:00 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -191,11 +191,14 @@ public class NetViewer extends Applet {
         final Box buttonBox = Box.createVerticalBox();
         
         // --- add some buttons for selecting nets
+        buttonBox.add(makeButton(pcu(), "pcu"));
         buttonBox.add(makeButton(dia(), "dia"));
         buttonBox.add(makeButton(cds(), "cds"));
         buttonBox.add(makeButton(hms(), "hms"));
         buttonBox.add(makeButton(tfa(), "tfa"));
         buttonBox.add(makeButton(tfc(), "tfc"));
+        buttonBox.add(makeButton(srs(), "srs"));
+        buttonBox.add(makeButton(hms(), "hms"));
         
         buttonBox.add(Box.createVerticalGlue());
         
@@ -586,55 +589,88 @@ public class NetViewer extends Applet {
         shape.setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
     }
     
+    public String pcu() {
+        return ""
+        + "PERIODIC_GRAPH\n"
+        + "  1 1  1 0 0\n"
+        + "  1 1  0 1 0\n"
+        + "  1 1  0 0 1\n"
+        + "END\n";
+    }
+    
     public String dia() {
         return ""
         + "PERIODIC_GRAPH\n"
-        + "  1 2   0  0  0\n"
-        + "  1 2  -1  0  0\n"
-        + "  1 2   0 -1  0\n"
-        + "  1 2   0  0 -1\n"
+        + "  1 2  0 0 0\n"
+        + "  1 2  1 0 0\n"
+        + "  1 2  0 1 0\n"
+        + "  1 2  0 0 1\n"
         + "END\n";
     }
     
     public String cds() {
         return ""
         + "PERIODIC_GRAPH\n"
-        + "  1 2   0  0  0\n"
-        + "  1 2  -1  0  0\n"
-        + "  1 1   0 -1  0\n"
-        + "  2 2   0  0 -1\n"
+        + "  1 2  0 0 0\n"
+        + "  1 2  1 0 0\n"
+        + "  1 1  0 1 0\n"
+        + "  2 2  0 0 1\n"
         + "END\n";
     }
     
     public String hms() {
         return ""
         + "PERIODIC_GRAPH\n"
-        + "  1 2   0  0  0\n"
-        + "  1 2  -1  0  0\n"
-        + "  1 2   0 -1  0\n"
-        + "  2 2   0  0 -1\n"
+        + "  1 2  0 0 0\n"
+        + "  1 2  1 0 0\n"
+        + "  1 2  0 1 0\n"
+        + "  2 2  0 0 1\n"
         + "END\n";
     }
     
     public String tfa() {
         return ""
         + "PERIODIC_GRAPH\n"
-        + "  1 2   0  0  0\n"
-        + "  1 3   0  0  0\n"
-        + "  1 3  -1  0  0\n"
-        + "  2 3   0 -1  0\n"
-        + "  2 3   0  0 -1\n"
+        + "  1 2  0 0 0\n"
+        + "  1 3  0 0 0\n"
+        + "  1 3  1 0 0\n"
+        + "  2 3  0 1 0\n"
+        + "  2 3  0 0 1\n"
         + "END\n";
     }
     
     public String tfc() {
         return ""
         + "PERIODIC_GRAPH\n"
-        + "  1 2   0  0  0\n"
-        + "  1 3   0  0  0\n"
-        + "  1 2  -1  0  0\n"
-        + "  2 3   0 -1  0\n"
-        + "  3 3   0  0 -1\n"
+        + "  1 2  0 0 0\n"
+        + "  1 3  0 0 0\n"
+        + "  1 2  1 0 0\n"
+        + "  2 3  0 1 0\n"
+        + "  3 3  0 0 1\n"
+        + "END\n";
+    }
+    
+    public String srs() {
+        return ""
+        + "PERIODIC_GRAPH\n"
+        + "  1 2  0 0 0\n"
+        + "  1 3  0 0 0\n"
+        + "  1 4  0 0 0\n"
+        + "  2 3  1 0 0\n"
+        + "  2 4  0 1 0\n"
+        + "  3 4  0 0 1\n"
+        + "END\n";
+    }
+    
+    public String ths() {
+        return ""
+        + "PERIODIC_GRAPH\n"
+        + "  1 2  0 0 0\n"
+        + "  1 3  0 0 0\n"
+        + "  2 4  0 0 0\n"
+        + "  1 3  1 0 0\n"
+        + "  2 4  0 1 0\n"
+        + "  3 4  0 0 1\n"
         + "END\n";
     }
     
