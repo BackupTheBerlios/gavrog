@@ -27,10 +27,10 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.6 2005/07/24 20:14:31 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.7 2005/07/25 04:37:49 odf Exp $
  */
 public class TestNetParser extends TestCase {
-    PeriodicGraph dia, srs, hms;
+    PeriodicGraph dia, srs, ths, tfa;
     
     public void setUp() throws Exception {
         super.setUp();
@@ -50,10 +50,27 @@ public class TestNetParser extends TestCase {
                 + "  2 4  0 1 0\n"
                 + "  3 4  0 0 1\n"
                 + "END\n");
+        ths = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "  1 2  0 0 0\n"
+                + "  1 3  0 0 0\n"
+                + "  2 4  0 0 0\n"
+                + "  1 3  1 0 0\n"
+                + "  2 4  0 1 0\n"
+                + "  3 4  0 0 1\n"
+                + "END\n");
+        tfa = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "  1 2  0 0 0\n"
+                + "  1 3  0 0 0\n"
+                + "  1 3  1 0 0\n"
+                + "  2 3  0 1 0\n"
+                + "  2 3  0 0 1\n"
+                + "END\n");
     }
 
     public void tearDown() throws Exception {
-        dia = srs = null;
+        dia = srs = tfa = null;
         super.tearDown();
     }
     
@@ -135,15 +152,15 @@ public class TestNetParser extends TestCase {
     }
     
     public void testParseCrystal3D() {
-        final PeriodicGraph D = NetParser.stringToNet(""
+        final PeriodicGraph _dia = NetParser.stringToNet(""
                 + "CRYSTAL # diamond again\n"
                 + "  Group Fd-3m\n"
                 + "  Cell  2.3094 2.3094 2.3094  90.0 90.0 90.0\n"
                 + "  Node  1 4 5/8 5/8 5/8\n"
                 + "END\n").minimalImage();
-        assertEquals(dia, D);
+        assertEquals(dia, _dia);
         
-        final PeriodicGraph S = NetParser.stringToNet(""
+        final PeriodicGraph _srs = NetParser.stringToNet(""
                 + "CRYSTAL\n"
                 + "NAME srs\n"
                 + "GROUP I4132\n"
@@ -151,8 +168,29 @@ public class TestNetParser extends TestCase {
                 + "VERTICES\n"
                 + "  1 3 0.125 0.125 0.125\n"
                 + "END\n").minimalImage();
-        assertEquals(srs, S);
-}
+        assertEquals(srs, _srs);
+        
+        final PeriodicGraph _ths = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "NAME ths\n"
+                + "GROUP I41/amd\n"
+                + "CELL 1.8856 1.8856 5.3344 90.0 90.0 90.0\n"
+                + "VERTICES\n"
+                + "  1 3 0.0 0.25 0.9687\n"
+                + "END\n").minimalImage();
+        assertEquals(ths.canonical().toString(), _ths.canonical().toString());
+        
+        final PeriodicGraph _tfa = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "NAME tfa\n"
+                + "GROUP I-4m2\n"
+                + "CELL 1.8016 1.8016 3.737 90.0 90.0 90.0\n"
+                + "VERTICES\n"
+                + "  1 3 0.0 0.5 0.3838\n"
+                + "  2 4 0.0 0.0 0.0\n"
+                + "END\n").minimalImage();
+        assertEquals(tfa, _tfa);
+    }
     
     public void testOperators() {
         final List ops = NetParser.operators("Ia-3d");
