@@ -46,10 +46,12 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.16 2005/07/23 01:57:27 odf Exp $
+ * @version $Id: NetParser.java,v 1.17 2005/07/26 06:45:05 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
+    
+    private final boolean DEBUG = false;
     
     private class NodeDescriptor {
         public final Object name;
@@ -434,6 +436,31 @@ public class NetParser extends GenericParser {
             cellGram = I;
         }
         
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Group name: " + groupname);
+            System.err.println("  operators:");
+            for (final Iterator iter = ops.iterator(); iter.hasNext();) {
+                System.err.println("    " + iter.next());
+            }
+            System.err.println();
+
+            System.err.println("Cell parameters:");
+            System.err.println("  a = " + cellA);
+            System.err.println("  b = " + cellB);
+            System.err.println("  c = " + cellC);
+            System.err.println("  alpha = " + cellAlpha);
+            System.err.println("  beta  = " + cellBeta);
+            System.err.println("  gamma = " + cellGamma);
+            System.err.println("  gram matrix = " + cellGram);
+            System.err.println();
+            
+            System.err.println("Nodes:");
+            for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
+                System.err.println("  " + iter.next());
+            }
+        }
+        
         // --- construct a Dirichlet domain for the translation group
         final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(I, cellGram);
         final Matrix t1 = reducedBasis.getRow(0);
@@ -442,10 +469,9 @@ public class NetParser extends GenericParser {
         final IArithmetic dirichletVectors[] = new IArithmetic[] {
                 t1, t2, t3, t1.plus(t2), t1.plus(t3), t2.plus(t3), t1.plus(t2).plus(t3)
         };
-        final IArithmetic dirichletSquaredLengths[] = new IArithmetic[7];
-        for (int i = 0; i < 6; ++i) {
-            final Matrix v = (Matrix) dirichletVectors[i];
-            dirichletSquaredLengths[i] = LinearAlgebra.dotRows(v, v, cellGram);
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Selling reduced basis: " + reducedBasis);
         }
         
         // --- apply group operators to generate all nodes
@@ -463,8 +489,8 @@ public class NetParser extends GenericParser {
                     Matrix p = (Matrix) site.times(op);
                     p = p.getSubMatrix(0, 0, 1, 3);
                     // --- shift into Dirichlet domain
-                    final Matrix shift = dirichletShift(p, dirichletVectors,
-                            dirichletSquaredLengths, cellGram, Whole.ONE);
+                    final Matrix shift = dirichletShift(p, dirichletVectors, cellGram,
+                            Whole.ONE);
                     final Matrix pos = (Matrix) p.plus(shift);
                     // --- construct a new node
                     final INode v = G.newNode();
@@ -491,8 +517,8 @@ public class NetParser extends GenericParser {
             for (int i = 0; i < 7; ++i) {
                 final Matrix vec = (Matrix) dirichletVectors[i];
                 final Matrix p = (Matrix) pv.plus(vec);
-                final Matrix shift = dirichletShift(p, dirichletVectors,
-                        dirichletSquaredLengths, cellGram, new Whole(2));
+                final Matrix shift = dirichletShift(p, dirichletVectors, cellGram,
+                        new Whole(2));
                 final Pair adr = new Pair(v, vec.plus(shift));
                 extended.add(adr);
                 addressToPosition.put(adr, p.plus(shift));
@@ -517,13 +543,30 @@ public class NetParser extends GenericParser {
             }
 
             Collections.sort(distances);
+            
+            if (DEBUG) {
+                System.err.println("Neighbors for " + v + " at " + nodeToPosition.get(v)
+                                   + ":");
+                for (int i = 0; i < 6 && i < distances.size(); ++i) {
+                    final Pair entry = (Pair) distances.get(i);
+                    final Object dist = entry.getFirst();
+                    final int index = ((Integer) entry.getSecond()).intValue();
+                    final Pair adr = (Pair) extended.get(index);
+                    System.err.println("  " + new Pair(dist, adr));
+                }
+                System.err.println();
+            }
 
             final NodeDescriptor desc = (NodeDescriptor) nodeToDescriptor.get(v);
             final int connectivity = desc.connectivity;
             int neighbors = 0;
             
             for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
-                if (neighbors >= connectivity) {
+                if (v.degree() >= connectivity) {
+                    if (v.degree() > connectivity) {
+                        final String msg = "too many neighbors found for node ";
+                        throw new DataFormatException(msg + v);
+                    }
                     break;
                 }
                 final Pair entry = (Pair) it2.next();
@@ -537,13 +580,20 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + minEdgeLength);
                 } else if (dist > maxEdgeLength) {
                     final String msg = "not enough neighbors found for node ";
-                    throw new DataFormatException(msg + w);
+                    throw new DataFormatException(msg + v);
                 }
                 if (G.getEdge(v, w, s) == null) {
                     G.newEdge(v, w, s);
                 }
                 ++neighbors;
+                if (w.equals(v)) {
+                    ++neighbors;
+                }
             }
+        }
+        
+        if (DEBUG) {
+            System.err.println("--------------------");
         }
         
         return G;
@@ -603,22 +653,19 @@ public class NetParser extends GenericParser {
     
     private static Matrix dirichletShift(final Matrix pos,
             final IArithmetic dirichletVectors[],
-            final IArithmetic dirichletSquaredLengths[], final Matrix cellGram,
-            final Whole factor) {
+            final Matrix cellGram, final Whole factor) {
 
         final Whole one = Whole.ONE;
-        final Whole squaredFactor = (Whole) factor.times(factor);
         Matrix shift = Matrix.zero(1, 3);
         
         while (true) {
             boolean changed = false;
-            for (int i = 0; i < 6; ++i) {
+            for (int i = 0; i < 7; ++i) {
                 final IArithmetic half = new Fraction(1, 2);
                 final Matrix v = (Matrix) dirichletVectors[i].times(factor);
-                final IArithmetic c = dirichletSquaredLengths[i].times(squaredFactor);
+                final IArithmetic c = LinearAlgebra.dotRows(v, v, cellGram);
                 final Matrix p = (Matrix) pos.plus(shift);
-                final IArithmetic h = LinearAlgebra.dotRows(p, v, cellGram);
-                final IArithmetic q = h.dividedBy(c);
+                final IArithmetic q = LinearAlgebra.dotRows(p, v, cellGram).dividedBy(c);
                 if (q.isGreaterThan(half)) {
                     shift = (Matrix) shift.minus(v.times(q.floor().plus(one)));
                     changed = true;

@@ -27,13 +27,19 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.7 2005/07/25 04:37:49 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.8 2005/07/26 06:45:04 odf Exp $
  */
 public class TestNetParser extends TestCase {
-    PeriodicGraph dia, srs, ths, tfa;
+    PeriodicGraph pcu, dia, srs, ths, tfa;
     
     public void setUp() throws Exception {
         super.setUp();
+        pcu = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "  1 1  1 0 0\n"
+                + "  1 1  0 1 0\n"
+                + "  1 1  0 0 1\n"
+                + "END\n");
         dia = new PeriodicGraph(3);
         final INode v1 = dia.newNode();
         final INode v2 = dia.newNode();
@@ -70,7 +76,7 @@ public class TestNetParser extends TestCase {
     }
 
     public void tearDown() throws Exception {
-        dia = srs = tfa = null;
+        pcu = dia = srs = tfa = null;
         super.tearDown();
     }
     
@@ -170,6 +176,15 @@ public class TestNetParser extends TestCase {
                 + "END\n").minimalImage();
         assertEquals(srs, _srs);
         
+        final PeriodicGraph _pcu = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "  Name pcu\n"
+                + "  Group P1\n"
+                + "  Cell 2.3 2.3 2.9 90.0 90.0 90.0\n"
+                + "  Node 1 6 0.345 0.128 0.743\n"
+                + "END\n");
+        assertEquals(pcu, _pcu);
+        
         final PeriodicGraph _ths = NetParser.stringToNet(""
                 + "CRYSTAL\n"
                 + "NAME ths\n"
@@ -178,7 +193,7 @@ public class TestNetParser extends TestCase {
                 + "VERTICES\n"
                 + "  1 3 0.0 0.25 0.9687\n"
                 + "END\n").minimalImage();
-        assertEquals(ths.canonical().toString(), _ths.canonical().toString());
+        assertEquals(ths, _ths);
         
         final PeriodicGraph _tfa = NetParser.stringToNet(""
                 + "CRYSTAL\n"
