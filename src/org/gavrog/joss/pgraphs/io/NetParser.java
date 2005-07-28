@@ -42,16 +42,17 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.17 2005/07/26 06:45:05 odf Exp $
+ * @version $Id: NetParser.java,v 1.18 2005/07/28 02:54:11 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
     
-    private final boolean DEBUG = false;
+    private final static boolean DEBUG = false;
     
     private class NodeDescriptor {
         public final Object name;
@@ -347,47 +348,52 @@ public class NetParser extends GenericParser {
      * @return the periodic graph constructed from the input.
      */
     private PeriodicGraph parseCrystal3D(final Entry[] block) {
-        String groupname = null;
-        Real cellA = null;
-        Real cellB = null;
-        Real cellC = null;
-        Real cellAlpha = null;
-        Real cellBeta = null;
-        Real cellGamma = null;
-        final List nodes = new LinkedList();
+        final Matrix I = Matrix.one(3);        
+
+        final Set seen = new HashSet();
+        
+        String groupname = "P1";
+        List ops = new ArrayList();
+        
+        Real cellA = FloatingPoint.ONE;
+        Real cellB = FloatingPoint.ONE;
+        Real cellC = FloatingPoint.ONE;
+        Real cellAlpha = new FloatingPoint(90.0);
+        Real cellBeta = cellAlpha;
+        Real cellGamma = cellAlpha;
+        Matrix cellGram = I;
+        
         double precision = 0.001;
         double minEdgeLength = 0.95;
         double maxEdgeLength = Double.MAX_VALUE;
         
-        final PeriodicGraph G = new PeriodicGraph(3);
-        List ops = null;
-        Matrix cellGram = null;
-        final Map nameToNode = new HashMap();
-        final Map nodeToPosition = new HashMap();
-        final Map nodeToDescriptor = new HashMap();
-        
-        final Matrix I = Matrix.one(3);
+        final List nodeDescriptors = new LinkedList();
+        final Map nodeNameToDesc = new HashMap();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
             final List row = block[i].values;
-            if (block[i].key.equals("group")) {
-                if (groupname == null) {
-                    if (row.size() < 1) {
-                        final String msg = "Missing argument at line ";
-                        throw new DataFormatException(msg + block[i].lineNumber);
-                    }
-                    groupname = (String) row.get(0);
-                    ops = operators(groupname);
-                    if (ops == null) {
-                        final String msg = "Space group not recognized at line ";
-                        throw new DataFormatException(msg + block[i].lineNumber);
-                    }
-                } else {
+            final String key = block[i].key;
+            if (key.equals("group")) {
+                if (seen.contains(key)) {
                     final String msg = "Group specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-            } else if (block[i].key.equals("cell")) {
+                if (row.size() < 1) {
+                    final String msg = "Missing argument at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+                groupname = (String) row.get(0);
+                ops.addAll(operators(groupname));
+                if (ops == null) {
+                    final String msg = "Space group not recognized at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+            } else if (key.equals("cell")) {
+                if (seen.contains(key)) {
+                    final String msg = "Cell specified twice at line ";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
                 if (row.size() != 6) {
                     final String msg = "Expected 6 arguments at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -411,7 +417,7 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final Object name = row.get(0);
-                if (nameToNode.containsKey(name)) {
+                if (nodeNameToDesc.containsKey(name)) {
                     final String msg = "Node specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
@@ -427,13 +433,10 @@ public class NetParser extends GenericParser {
                 position.set(0, 3, Whole.ONE);
                 final int c = ((Whole) conn).intValue();
                 final NodeDescriptor node = new NodeDescriptor(name, c, position);
-                nodes.add(node);
-                nameToNode.put(name, node);
+                nodeDescriptors.add(node);
+                nodeNameToDesc.put(name, node);
             }
-        }
-        
-        if (cellGram == null) {
-            cellGram = I;
+            seen.add(key);
         }
         
         if (DEBUG) {
@@ -456,9 +459,39 @@ public class NetParser extends GenericParser {
             System.err.println();
             
             System.err.println("Nodes:");
-            for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
+            for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
                 System.err.println("  " + iter.next());
             }
+        }
+        
+        // --- convert to primitive setting
+        final SpaceGroup sg = new SpaceGroup(3, ops, false, false);
+        final Matrix primitiveCell = sg.primitiveCell();
+        final Set primitiveOps = sg.primitiveOperators();
+        final Matrix to = sg.transformationToPrimitive();
+        final Matrix from = (Matrix) to.inverse();
+        
+        ops.clear();
+        for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
+            final Matrix op = (Matrix) iter.next();
+            ops.add(normalizedOperator((Matrix) from.times(op).times(to)));
+        }
+        
+        final List nodeDescsTmp = new LinkedList();
+        for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
+            final NodeDescriptor desc = (NodeDescriptor) iter.next();
+            final Matrix site = (Matrix) desc.site.times(to);
+            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site));
+        }
+        nodeDescriptors.clear();
+        nodeDescriptors.addAll(nodeDescsTmp);
+        
+        cellGram = (Matrix) primitiveCell.times(cellGram).times(
+                primitiveCell.transposed());
+        
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Primitive cell: " + primitiveCell);
         }
         
         // --- construct a Dirichlet domain for the translation group
@@ -472,19 +505,37 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
             System.err.println();
             System.err.println("Selling reduced basis: " + reducedBasis);
+            System.err.println("  in terms of original cell: "
+                               + reducedBasis.times(primitiveCell));
         }
         
+        // TODO Important: shift origin as to avoid nodes close to Dirichlet boundaries
+        
         // --- apply group operators to generate all nodes
-        for (final Iterator itNodes = nodes.iterator(); itNodes.hasNext();) {
+        final PeriodicGraph G = new PeriodicGraph(3);
+        final Map nodeToPosition = new HashMap();
+        final Map nodeToDescriptor = new HashMap();
+        
+        for (final Iterator itNodes = nodeDescriptors.iterator(); itNodes.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
+            if (DEBUG) {
+                System.err.println();
+                System.err.println("Mapping node " + desc);
+            }
             final Matrix site = desc.site;
             final Set stabilizer = stabilizer(site, ops, precision);
+            if (DEBUG) {
+                System.err.println("  stabilizer has size " + stabilizer.size());
+            }
             // --- loop through the cosets of the stabilizer
             final Set opsSeen = new HashSet();
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
                 // --- get the next coset representative
                 final Matrix op = normalizedOperator((Matrix) itOps.next());
                 if (!opsSeen.contains(op)) {
+                    if (DEBUG) {
+                        System.err.println("  applying " + op);
+                    }
                     // --- compute mapped node position
                     Matrix p = (Matrix) site.times(op);
                     p = p.getSubMatrix(0, 0, 1, 3);
@@ -505,6 +556,11 @@ public class NetParser extends GenericParser {
             }
         }
 
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Generated " + G.numberOfNodes() + " nodes in unit cell.");
+        }
+        
         // --- compute nodes in two times extended Dirichlet domain
         final List extended = new ArrayList();
         final Map addressToPosition = new HashMap();
@@ -512,17 +568,33 @@ public class NetParser extends GenericParser {
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Matrix pv = (Matrix) nodeToPosition.get(v);
+            if (DEBUG) {
+                System.err.println();
+                System.err.println("Extending " + v + " at " + pv);
+            }
             extended.add(new Pair(v, zero));
             addressToPosition.put(new Pair(v, zero), pv);
             for (int i = 0; i < 7; ++i) {
                 final Matrix vec = (Matrix) dirichletVectors[i];
+                if (DEBUG) {
+                    System.err.println("  shifting by " + vec);
+                }
                 final Matrix p = (Matrix) pv.plus(vec);
                 final Matrix shift = dirichletShift(p, dirichletVectors, cellGram,
                         new Whole(2));
+                if (DEBUG) {
+                    System.err.println("    additional shift is " + shift);
+                }
                 final Pair adr = new Pair(v, vec.plus(shift));
                 extended.add(adr);
                 addressToPosition.put(adr, p.plus(shift));
             }
+        }
+        
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Generated " + extended.size()
+                               + " nodes in extended Dirichlet domain.");
         }
         
         // --- compute the edges using nearest neighbors
@@ -545,6 +617,7 @@ public class NetParser extends GenericParser {
             Collections.sort(distances);
             
             if (DEBUG) {
+                System.err.println();
                 System.err.println("Neighbors for " + v + " at " + nodeToPosition.get(v)
                                    + ":");
                 for (int i = 0; i < 6 && i < distances.size(); ++i) {
@@ -554,7 +627,6 @@ public class NetParser extends GenericParser {
                     final Pair adr = (Pair) extended.get(index);
                     System.err.println("  " + new Pair(dist, adr));
                 }
-                System.err.println();
             }
 
             final NodeDescriptor desc = (NodeDescriptor) nodeToDescriptor.get(v);
@@ -657,6 +729,8 @@ public class NetParser extends GenericParser {
 
         final Whole one = Whole.ONE;
         Matrix shift = Matrix.zero(1, 3);
+        final Set seen = new HashSet();
+        seen.add(shift);
         
         while (true) {
             boolean changed = false;
@@ -669,10 +743,17 @@ public class NetParser extends GenericParser {
                 if (q.isGreaterThan(half)) {
                     shift = (Matrix) shift.minus(v.times(q.floor().plus(one)));
                     changed = true;
-                    break;
                 } else if (q.isLessOrEqual(half.negative())) {
                     shift = (Matrix) shift.minus(v.times(q.floor()));
                     changed = true;
+                }
+                if (changed) {
+                    if (seen.contains(shift)) {
+                        System.err.println("Warning: Dirichlet shifting entered loop at "
+                                           + shift);
+                        return shift;
+                    }
+                    seen.add(shift);
                     break;
                 }
             }

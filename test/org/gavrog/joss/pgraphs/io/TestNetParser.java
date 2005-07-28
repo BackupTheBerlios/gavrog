@@ -27,7 +27,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.8 2005/07/26 06:45:04 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.9 2005/07/28 02:54:11 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -163,7 +163,7 @@ public class TestNetParser extends TestCase {
                 + "  Group Fd-3m\n"
                 + "  Cell  2.3094 2.3094 2.3094  90.0 90.0 90.0\n"
                 + "  Node  1 4 5/8 5/8 5/8\n"
-                + "END\n").minimalImage();
+                + "END\n");
         assertEquals(dia, _dia);
         
         final PeriodicGraph _srs = NetParser.stringToNet(""
@@ -173,7 +173,7 @@ public class TestNetParser extends TestCase {
                 + "CELL 2.8284 2.8284 2.8284 90.0 90.0 90.0\n"
                 + "VERTICES\n"
                 + "  1 3 0.125 0.125 0.125\n"
-                + "END\n").minimalImage();
+                + "END\n");
         assertEquals(srs, _srs);
         
         final PeriodicGraph _pcu = NetParser.stringToNet(""
@@ -192,7 +192,7 @@ public class TestNetParser extends TestCase {
                 + "CELL 1.8856 1.8856 5.3344 90.0 90.0 90.0\n"
                 + "VERTICES\n"
                 + "  1 3 0.0 0.25 0.9687\n"
-                + "END\n").minimalImage();
+                + "END\n");
         assertEquals(ths, _ths);
         
         final PeriodicGraph _tfa = NetParser.stringToNet(""
@@ -203,7 +203,7 @@ public class TestNetParser extends TestCase {
                 + "VERTICES\n"
                 + "  1 3 0.0 0.5 0.3838\n"
                 + "  2 4 0.0 0.0 0.0\n"
-                + "END\n").minimalImage();
+                + "END\n");
         assertEquals(tfa, _tfa);
     }
     
