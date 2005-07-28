@@ -19,20 +19,19 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
+import junit.framework.TestCase;
 
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Matrix;
-import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 import org.gavrog.joss.pgraphs.io.NetParser;
-
-
-import junit.framework.TestCase;
 
 /**
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.2 2005/07/28 02:53:00 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -127,6 +126,11 @@ public class TestSpaceGroup extends TestCase {
     }
     
     public void testPrimitiveOperators() {
-        assertEquals(8, Fddd.primitiveOperators().size());
+        final Set ops = Fddd.getOperators();
+        final Set prim = Fddd.primitiveOperators();
+        assertEquals(8, prim.size());
+        for (final Iterator iter = prim.iterator(); iter.hasNext();) {
+            assertTrue(ops.contains(iter.next()));
+        }
     }
 }

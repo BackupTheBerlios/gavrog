@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.2 2005/07/28 02:52:59 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -263,6 +263,20 @@ public class SpaceGroup {
     }
     
     /**
+     * Returns a matrix that, via multiplication from the right, transforms a
+     * row vector in unit cell coordinates into one using primitive cell
+     * coordinates.
+     * 
+     * @return the transformation matrix.
+     */
+    public Matrix transformationToPrimitive() {
+        final int d = getDimension();
+        final Matrix P = Matrix.one(d+1).mutableClone();
+        P.setSubMatrix(0, 0, primitiveCell());
+        return (Matrix) P.inverse();
+    }
+    
+    /**
      * Constructs a set of operators which is full with respect to a primitive
      * cell for the group, but still expressed in the coordinate system defined
      * by the original cell.
@@ -278,7 +292,9 @@ public class SpaceGroup {
         
         for (final Iterator iter = getOperators().iterator(); iter.hasNext();) {
             final Matrix op = (Matrix) iter.next();
-            result.add(normalizedOperator((Matrix) op.times(P_1)).times(P));
+            final Matrix tmp = normalizedOperator((Matrix) P.times(op).times(P_1));
+            final Matrix out = normalizedOperator((Matrix) P_1.times(tmp).times(P));
+            result.add(out);
         }
         
         return result;
