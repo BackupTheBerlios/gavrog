@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,7 +48,7 @@ import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.18 2005/07/28 02:54:11 odf Exp $
+ * @version $Id: NetParser.java,v 1.19 2005/07/29 03:17:50 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -509,8 +510,6 @@ public class NetParser extends GenericParser {
                                + reducedBasis.times(primitiveCell));
         }
         
-        // TODO Important: shift origin as to avoid nodes close to Dirichlet boundaries
-        
         // --- apply group operators to generate all nodes
         final PeriodicGraph G = new PeriodicGraph(3);
         final Map nodeToPosition = new HashMap();
@@ -537,12 +536,8 @@ public class NetParser extends GenericParser {
                         System.err.println("  applying " + op);
                     }
                     // --- compute mapped node position
-                    Matrix p = (Matrix) site.times(op);
-                    p = p.getSubMatrix(0, 0, 1, 3);
-                    // --- shift into Dirichlet domain
-                    final Matrix shift = dirichletShift(p, dirichletVectors, cellGram,
-                            Whole.ONE);
-                    final Matrix pos = (Matrix) p.plus(shift);
+                    final Matrix p = (Matrix) site.times(op);
+                    final Matrix pos = p.getSubMatrix(0, 0, 1, 3);
                     // --- construct a new node
                     final INode v = G.newNode();
                     // --- store some data for it
@@ -559,6 +554,28 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
             System.err.println();
             System.err.println("Generated " + G.numberOfNodes() + " nodes in unit cell.");
+        }
+        
+        // --- change origin as to avoid nodes close to Dirichlet boundaries
+        final Collection positions = nodeToPosition.values();
+        final Matrix adjustment = originAdjustment(positions, dirichletVectors, cellGram);
+        if (DEBUG) {
+            System.err.println("adjustment = " + adjustment);
+        }
+        for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            final Matrix p = (Matrix) nodeToPosition.get(v);
+            // --- apply adjustment
+            nodeToPosition.put(v, (Matrix) p.plus(adjustment));
+        }
+        
+        // --- shift generated nodes into the Dirichlet domain
+        for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            final Matrix p = (Matrix) nodeToPosition.get(v);
+            // --- shift into Dirichlet domain
+            final Matrix shift = dirichletShift(p, dirichletVectors, cellGram, Whole.ONE);
+            nodeToPosition.put(v, (Matrix) p.plus(shift));
         }
         
         // --- compute nodes in two times extended Dirichlet domain
@@ -721,6 +738,45 @@ public class NetParser extends GenericParser {
         }
 
         return stabilizer;
+    }
+    
+    // TODO make this correct
+    private static Matrix originAdjustment(final Collection positions,
+            final IArithmetic dirichletVectors[], final Matrix cellGram) {
+        
+        Matrix adjustment = Matrix.zero(1, 3);
+        
+        for (int i = 0; i < 7; ++i) {
+            final Matrix vec = (Matrix) dirichletVectors[i];
+            final IArithmetic c = LinearAlgebra.dotRows(vec, vec, cellGram);
+            final List values = new ArrayList();
+            for (final Iterator iter = positions.iterator(); iter.hasNext();) {
+                final Matrix p = (Matrix) iter.next();
+                final IArithmetic dot = LinearAlgebra.dotRows(p, vec, cellGram);
+                values.add(((Real) dot.dividedBy(c)).mod(1));
+            }
+            Collections.sort(values);
+            if (values.size() > 0) {
+                values.add(((Real) values.get(0)).plus(1));
+            }
+            Real dmax = null;
+            int jmax = -1;
+            for (int j = 0; j < values.size() - 1; ++j) {
+                final Real a = (Real) values.get(j);
+                final Real b = (Real) values.get(j+1);
+                final Real d = (Real) b.minus(a);
+                if (dmax == null || d.isGreaterThan(dmax)) {
+                    dmax = d;
+                    jmax = j;
+                }
+            }
+            final Real a = (Real) values.get(jmax);
+            final Real b = (Real) values.get(jmax+1);
+            final Real m = (Real) ((Real) a.plus(b)).dividedBy(2);
+            adjustment = (Matrix) adjustment.minus(vec.times(m));
+        }
+        
+        return adjustment;
     }
     
     private static Matrix dirichletShift(final Matrix pos,
