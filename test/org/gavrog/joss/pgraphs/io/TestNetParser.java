@@ -27,7 +27,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.9 2005/07/28 02:54:11 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.10 2005/07/29 21:14:50 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -152,7 +152,7 @@ public class TestNetParser extends TestCase {
                 + "  Group Fd-3m\n"
                 + "  Node 1 3/8,3/8,3/8\n"
                 + "  Edge 1 1 1-x,1-y,1-z\n"
-                + "END\n").minimalImage();
+                + "END\n");
 
         assertEquals(dia, D);
     }

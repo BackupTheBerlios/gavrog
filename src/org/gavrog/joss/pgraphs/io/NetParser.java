@@ -47,7 +47,7 @@ import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.20 2005/07/29 04:43:43 odf Exp $
+ * @version $Id: NetParser.java,v 1.21 2005/07/29 21:14:51 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -213,10 +213,10 @@ public class NetParser extends GenericParser {
     private PeriodicGraph parseNet3D(final Entry[] block) {
         final PeriodicGraph G = new PeriodicGraph(3);
         String group = null;
-        List ops = null;
-        final List nodes = new LinkedList();
-        final List edges = new LinkedList();
-        final Map nameToNode = new HashMap();
+        List ops = new ArrayList();
+        List nodeDescriptors = new LinkedList();
+        List edgeDescriptors = new LinkedList();
+        final Map nodeNameToDesc = new HashMap();
         final Map addressToNode = new HashMap();
         final Map addressToShift = new HashMap();
         
@@ -230,7 +230,7 @@ public class NetParser extends GenericParser {
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
                     group = (String) row.get(0);
-                    ops = operators(group);
+                    ops.addAll(operators(group));
                     if (ops == null) {
                         final String msg = "Space group not recognized at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
@@ -245,14 +245,14 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final Object name = row.get(0);
-                if (nameToNode.containsKey(name)) {
+                if (nodeNameToDesc.containsKey(name)) {
                     final String msg = "Node specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final Matrix position = parsePosition(row, 1);
                 final NodeDescriptor node = new NodeDescriptor(name, -1, position);
-                nodes.add(node);
-                nameToNode.put(name, node);
+                nodeDescriptors.add(node);
+                nodeNameToDesc.put(name, node);
             } else if (block[i].key.equals("edge")) {
                 if (row.size() < 2) {
                     final String msg = "Not enough arguments at line ";
@@ -266,14 +266,44 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final EdgeDescriptor edge = new EdgeDescriptor(sourceName, targetName, shift);
-                edges.add(edge);
+                edgeDescriptors.add(edge);
             }
         }
+        
+        // --- convert to primitive setting
+        final SpaceGroup sg = new SpaceGroup(3, ops, false, false);
+        final Set primitiveOps = sg.primitiveOperators();
+        final Matrix to = sg.transformationToPrimitive();
+        final Matrix from = (Matrix) to.inverse();
+        
+        ops.clear();
+        for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
+            final Matrix op = (Matrix) iter.next();
+            ops.add(normalizedOperator((Matrix) from.times(op).times(to)));
+        }
+        
+        final List nodeDescsTmp = new LinkedList();
+        for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
+            final NodeDescriptor desc = (NodeDescriptor) iter.next();
+            final Matrix site = (Matrix) desc.site.times(to);
+            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site));
+        }
+        nodeDescriptors.clear();
+        nodeDescriptors.addAll(nodeDescsTmp);
+        
+        final List edgeDescsTmp = new LinkedList();
+        for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
+            final EdgeDescriptor desc = (EdgeDescriptor) iter.next();
+            final Matrix shift = (Matrix) from.times(desc.shift).times(to);
+            edgeDescsTmp.add(new EdgeDescriptor(desc.source, desc.target, shift));
+        }
+        edgeDescriptors.clear();
+        edgeDescriptors.addAll(edgeDescsTmp);
         
         // TODO provide better error handling in the following
         
         // --- apply group operators to generate all nodes
-        for (final Iterator it1 = nodes.iterator(); it1.hasNext();) {
+        for (final Iterator it1 = nodeDescriptors.iterator(); it1.hasNext();) {
             final NodeDescriptor node = (NodeDescriptor) it1.next();
             final Object name = node.name;
             final Matrix site = node.site;
@@ -296,7 +326,7 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all edges
-        for (final Iterator it1 = edges.iterator(); it1.hasNext();) {
+        for (final Iterator it1 = edgeDescriptors.iterator(); it1.hasNext();) {
             final EdgeDescriptor edge = (EdgeDescriptor) it1.next();
             final Object sourceName = edge.source;
             final Object targetName = edge.target;
@@ -561,7 +591,7 @@ public class NetParser extends GenericParser {
             final Matrix p = (Matrix) nodeToPosition.get(v);
             // --- shift into Dirichlet domain
             final Matrix shift = dirichletShift(p, dirichletVectors, cellGram, Whole.ONE);
-            nodeToPosition.put(v, (Matrix) p.plus(shift));
+            nodeToPosition.put(v, p.plus(shift));
         }
         
         // --- compute nodes in two times extended Dirichlet domain
