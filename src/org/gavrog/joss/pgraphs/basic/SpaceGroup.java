@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.gavrog.jane.numbers.Matrix;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.io.NetParser;
@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.2 2005/07/28 02:52:59 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.3 2005/07/31 19:44:58 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;

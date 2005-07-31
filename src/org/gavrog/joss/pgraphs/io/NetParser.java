@@ -33,11 +33,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.jane.compounds.LinearAlgebra;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.LinearAlgebra;
-import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -47,7 +47,7 @@ import org.gavrog.joss.pgraphs.basic.SpaceGroup;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.21 2005/07/29 21:14:51 odf Exp $
+ * @version $Id: NetParser.java,v 1.22 2005/07/31 19:44:59 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)

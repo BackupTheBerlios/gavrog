@@ -14,7 +14,14 @@
    limitations under the License.
 */
 
-package org.gavrog.jane.numbers;
+package org.gavrog.jane.compounds;
+
+import org.gavrog.jane.numbers.ArithmeticBase;
+import org.gavrog.jane.numbers.FloatingPoint;
+import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Real;
+import org.gavrog.jane.numbers.Whole;
 
 public class Matrix extends ArithmeticBase {
 

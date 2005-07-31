@@ -23,15 +23,15 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
-import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.2 2005/07/28 02:53:00 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.3 2005/07/31 19:44:59 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;

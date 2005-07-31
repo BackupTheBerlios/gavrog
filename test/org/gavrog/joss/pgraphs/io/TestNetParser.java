@@ -20,14 +20,14 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
-import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.10 2005/07/29 21:14:50 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.11 2005/07/31 19:44:59 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;

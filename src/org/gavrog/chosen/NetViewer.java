@@ -59,7 +59,7 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import org.gavrog.jane.numbers.Matrix;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.pgraphs.basic.Embedding;
 import org.gavrog.joss.pgraphs.basic.IEdge;
@@ -94,7 +94,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.2 2005/07/24 20:14:00 odf Exp $
+ * @version $Id: NetViewer.java,v 1.3 2005/07/31 19:44:59 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants

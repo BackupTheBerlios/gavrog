@@ -16,9 +16,9 @@
 
 package org.gavrog.jane.numbers;
 
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.2 2005/07/31 19:44:58 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;

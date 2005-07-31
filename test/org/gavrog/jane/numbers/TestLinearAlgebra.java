@@ -16,9 +16,9 @@
 
 package org.gavrog.jane.numbers;
 
+import org.gavrog.jane.compounds.LinearAlgebra;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
-import org.gavrog.jane.numbers.LinearAlgebra;
-import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  * Unit tests for class LinearAlgebra.
  * 
  * @author Olaf Delgado
- * @version $Id: TestLinearAlgebra.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestLinearAlgebra.java,v 1.2 2005/07/31 19:44:58 odf Exp $
  */
 public class TestLinearAlgebra extends TestCase {
     // TODO add tests for matrices with floating point entries.

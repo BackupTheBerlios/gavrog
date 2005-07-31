@@ -14,14 +14,19 @@
    limitations under the License.
 */
 
-package org.gavrog.jane.numbers;
+package org.gavrog.jane.compounds;
+
+import org.gavrog.jane.numbers.FloatingPoint;
+import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Real;
+import org.gavrog.jane.numbers.Whole;
 
 /**
  * Contains static methods implementing some of the classical algorithms from
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.2 2005/07/22 20:47:15 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.1 2005/07/31 19:44:59 odf Exp $
  */
 public class LinearAlgebra {
     /**

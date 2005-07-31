@@ -19,14 +19,14 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.gavrog.jane.numbers.Matrix;
+import org.gavrog.jane.compounds.Matrix;
 
 
 /**
  * Represents an embedding of a finite graph.
  * 
  * @author Olaf Delgado
- * @version $Id: Embedding.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Embedding.java,v 1.2 2005/07/31 19:44:58 odf Exp $
  */
 public class Embedding {
     final private IGraph G;

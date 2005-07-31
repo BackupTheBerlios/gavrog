@@ -22,8 +22,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
-import org.gavrog.jane.numbers.Matrix;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.IEdge;
@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMorphism.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestMorphism.java,v 1.2 2005/07/31 19:44:59 odf Exp $
  */
 public class TestMorphism extends TestCase {
     private PeriodicGraph cds, dia, x, y;
