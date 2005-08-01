@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.joss.symmetries;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,13 +25,14 @@ import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
-import org.gavrog.joss.pgraphs.io.NetParser;
+import org.gavrog.jane.numbers.Fraction;
+import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.3 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.1 2005/08/01 17:39:56 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -46,18 +47,18 @@ public class TestSpaceGroup extends TestCase {
     
     public void testSpaceGroupByName() {
         // --- read all IT settings without structural tests
-        for (final Iterator iter = NetParser.groupNames(); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroup.groupNames(); iter.hasNext();) {
             new SpaceGroup(3, (String) iter.next());
         }
     }
     
     public void testSpaceGroupByFullOpsList() {
         // --- do the full testing for one group
-        new SpaceGroup(3, NetParser.operators("Ia-3d"), false, true);
+        new SpaceGroup(3, SpaceGroup.operators("Ia-3d"), false, true);
         
         // --- try some illegal inputs
         final List L = new LinkedList();
-        L.add(NetParser.parseOperator("x,2y"));
+        L.add(SpaceGroup.parseOperator("x,2y"));
         try {
             new SpaceGroup(2, L, false, false);
             fail("should throw an IllegalArgumentException");
@@ -73,7 +74,7 @@ public class TestSpaceGroup extends TestCase {
         }
         
         L.clear();
-        L.add(NetParser.parseOperator("1/2x,y"));
+        L.add(SpaceGroup.parseOperator("1/2x,y"));
         try {
             new SpaceGroup(2, L, false, false);
             fail("should throw an IllegalArgumentException");
@@ -93,9 +94,9 @@ public class TestSpaceGroup extends TestCase {
     
     public void testSpaceGroupByGenerators() {
         final List L = new LinkedList();
-        L.add(NetParser.parseOperator("-x,y"));
-        L.add(NetParser.parseOperator("x,-y"));
-        L.add(NetParser.parseOperator("x-1/2,y-1/2"));
+        L.add(SpaceGroup.parseOperator("-x,y"));
+        L.add(SpaceGroup.parseOperator("x,-y"));
+        L.add(SpaceGroup.parseOperator("x-1/2,y-1/2"));
         final SpaceGroup G = new SpaceGroup(2, L, true, false);
         assertEquals(8, G.getOperators().size());
     }
@@ -107,17 +108,16 @@ public class TestSpaceGroup extends TestCase {
         assertEquals(2, G.getDimension());
     }
     
-    public void testNormalizedOperator() {
-        final SpaceGroup G = new SpaceGroup(3, "P1");
-        final Matrix A = NetParser.parseOperator("z,x,y+1/2");
-        final Matrix B = NetParser.parseOperator("z-2,x+1,y-3/2");
-        final Matrix C = NetParser.parseOperator("z,x,y");
-        assertEquals(G.normalizedOperator(A), G.normalizedOperator(B));
-        assertFalse(G.normalizedOperator(A).equals(G.normalizedOperator(C)));
+    public void testNormalized() {
+        final Matrix A = SpaceGroup.parseOperator("z,x,y+1/2");
+        final Matrix B = SpaceGroup.parseOperator("z-2,x+1,y-3/2");
+        final Matrix C = SpaceGroup.parseOperator("z,x,y");
+        assertEquals(SpaceGroup.normalized(A), SpaceGroup.normalized(B));
+        assertFalse(SpaceGroup.normalized(A).equals(SpaceGroup.normalized(C)));
     }
 
     public void testPrimitiveCell() {
-        final Matrix B = NetParser.parseOperator("1/2x,1/2y,1/2x+1/2y+z");
+        final Matrix B = SpaceGroup.parseOperator("1/2x,1/2y,1/2x+1/2y+z");
         assertEquals(B.getSubMatrix(0, 0, 3, 3), Fddd.primitiveCell());
     }
 
@@ -132,5 +132,58 @@ public class TestSpaceGroup extends TestCase {
         for (final Iterator iter = prim.iterator(); iter.hasNext();) {
             assertTrue(ops.contains(iter.next()));
         }
+    }
+
+    public void testParseOperator() {
+        String s;
+        Matrix M;
+        
+        s = "x-4y+7*z-10, +5/3y-8z+11-2x, +3*x+ 9z-6y - 12";
+        M = new Matrix(new int[][] {
+                {  1, -2,   3, 0},
+                { -4,  5,  -6, 0},
+                {  7, -8,   9, 0},
+                {-10, 11, -12, 1}}).mutableClone();
+        M.set(1, 1, new Fraction(5, 3));
+        assertEquals(M, SpaceGroup.parseOperator(s));
+        assertFalse(SpaceGroup.parseOperator(s).isMutable());
+        
+        assertEquals(Matrix.one(4), SpaceGroup.parseOperator("x,y,z"));
+        
+        try {
+            SpaceGroup.parseOperator("1,2,3,4");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+        
+        try {
+            SpaceGroup.parseOperator("a,2,3");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+        
+        try {
+            SpaceGroup.parseOperator("1,2/,3");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+        
+        try {
+            SpaceGroup.parseOperator("x+3x,2,3");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+    }
+    
+    public void testOperators() {
+        final List ops = SpaceGroup.operators("Ia-3d");
+        assertNotNull(ops);
+        assertEquals(96, ops.size());
+    }
+    
+    public void testTransform() {
+        final Matrix T = SpaceGroup.transform("Ia-3d");
+        assertNotNull(T);
+        assertEquals(Matrix.one(4), T);
     }
 }

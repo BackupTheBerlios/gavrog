@@ -17,9 +17,6 @@
 package org.gavrog.joss.pgraphs.io;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -42,12 +39,12 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.basic.SpaceGroup;
+import org.gavrog.joss.symmetries.SpaceGroup;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.22 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: NetParser.java,v 1.23 2005/08/01 17:41:14 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -230,7 +227,7 @@ public class NetParser extends GenericParser {
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
                     group = (String) row.get(0);
-                    ops.addAll(operators(group));
+                    ops.addAll(SpaceGroup.operators(group));
                     if (ops == null) {
                         final String msg = "Space group not recognized at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
@@ -261,11 +258,12 @@ public class NetParser extends GenericParser {
                 final Object sourceName = row.get(0);
                 final Object targetName = row.get(1);
                 final Matrix shift = parsePosition(row, 2);
-                if (!ops.contains(normalizedOperator(shift))) {
+                if (!ops.contains(SpaceGroup.normalized(shift))) {
                     final String msg = "Operator not in given group at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                final EdgeDescriptor edge = new EdgeDescriptor(sourceName, targetName, shift);
+                final EdgeDescriptor edge = new EdgeDescriptor(sourceName, targetName,
+                        shift);
                 edgeDescriptors.add(edge);
             }
         }
@@ -279,7 +277,7 @@ public class NetParser extends GenericParser {
         ops.clear();
         for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
             final Matrix op = (Matrix) iter.next();
-            ops.add(normalizedOperator((Matrix) from.times(op).times(to)));
+            ops.add(SpaceGroup.normalized((Matrix) from.times(op).times(to)));
         }
         
         final List nodeDescsTmp = new LinkedList();
@@ -311,7 +309,7 @@ public class NetParser extends GenericParser {
             for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
                 final Matrix op = (Matrix) it2.next();
                 final Matrix mappedSite = (Matrix) site.times(op);
-                final Matrix mappedSiteNormalized = normalizedOperator(mappedSite);
+                final Matrix mappedSiteNormalized = SpaceGroup.normalized(mappedSite);
                 final INode v;
                 final Pair address = new Pair(name, op);
                 if (siteToNode.containsKey(mappedSiteNormalized)) {
@@ -334,8 +332,8 @@ public class NetParser extends GenericParser {
             for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
                 final Matrix sourceOp = (Matrix) it2.next();
                 final Matrix targetOp = (Matrix) shift.times(sourceOp);
-                final Matrix sourceOpNormalized = normalizedOperator(sourceOp);
-                final Matrix targetOpNormalized = normalizedOperator(targetOp);
+                final Matrix sourceOpNormalized = SpaceGroup.normalized(sourceOp);
+                final Matrix targetOpNormalized = SpaceGroup.normalized(targetOp);
                 final Pair sourceAddress = new Pair(sourceName, sourceOpNormalized);
                 final Pair targetAddress = new Pair(targetName, targetOpNormalized);
                 final Matrix sourceShift = (Matrix) sourceOp.minus(sourceOpNormalized);
@@ -414,7 +412,7 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 groupname = (String) row.get(0);
-                ops.addAll(operators(groupname));
+                ops.addAll(SpaceGroup.operators(groupname));
                 if (ops == null) {
                     final String msg = "Space group not recognized at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -504,7 +502,7 @@ public class NetParser extends GenericParser {
         ops.clear();
         for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
             final Matrix op = (Matrix) iter.next();
-            ops.add(normalizedOperator((Matrix) from.times(op).times(to)));
+            ops.add(SpaceGroup.normalized((Matrix) from.times(op).times(to)));
         }
         
         final List nodeDescsTmp = new LinkedList();
@@ -559,7 +557,7 @@ public class NetParser extends GenericParser {
             final Set opsSeen = new HashSet();
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
                 // --- get the next coset representative
-                final Matrix op = normalizedOperator((Matrix) itOps.next());
+                final Matrix op = SpaceGroup.normalized((Matrix) itOps.next());
                 if (!opsSeen.contains(op)) {
                     if (DEBUG) {
                         System.err.println("  applying " + op);
@@ -574,7 +572,7 @@ public class NetParser extends GenericParser {
                     nodeToDescriptor.put(v, desc);
                     for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
                         final Matrix a = (Matrix) itStab.next();
-                        opsSeen.add(normalizedOperator((Matrix) a.times(op)));
+                        opsSeen.add(SpaceGroup.normalized((Matrix) a.times(op)));
                     }
                 }
             }
@@ -737,7 +735,7 @@ public class NetParser extends GenericParser {
                 maxD = Math.max(maxD, Math.min(d, 1.0 - d));
             }
             if (maxD < precision) {
-                stabilizer.add(normalizedOperator(op));
+                stabilizer.add(SpaceGroup.normalized(op));
             }
         }
         
@@ -746,7 +744,7 @@ public class NetParser extends GenericParser {
             final Matrix A = (Matrix) iter1.next();
             for (final Iterator iter2 = stabilizer.iterator(); iter2.hasNext();) {
                 final Matrix B = (Matrix) iter2.next();
-                final Matrix AB_ = normalizedOperator((Matrix) A.times(B.inverse()));
+                final Matrix AB_ = SpaceGroup.normalized((Matrix) A.times(B.inverse()));
                 if (!stabilizer.contains(AB_)) {
                     throw new RuntimeException("precision problem in stabilizer computation");
                 }
@@ -797,229 +795,7 @@ public class NetParser extends GenericParser {
                 buf.append(' ');
                 buf.append(fields.get(i));
             }
-            return parseOperator(buf.toString());
-        }
-    }
-    
-    public static Matrix parseOperator(final String s) {
-        final String msg = "Bad operator format for \"" + s + "\": "; // just in case
-        
-        final String parts[] = s.replaceAll("\\s+", "").split(",");
-        if (parts.length > 3) {
-            throw new DataFormatException(msg + "more than 3 coordinates.");
-        }
-        final int d = parts.length;
-        final String varNames = "xyz".substring(0, d) + "#";
-        final Matrix M = new Matrix(d+1, d+1);
-        M.setColumn(d, Matrix.zero(d+1, 1));
-        M.set(d, d, new Whole(1));
-        
-        for (int i = 0; i < d; ++i) {
-            final String term = parts[i] + "#";
-            final int m = term.length() - 1;
-            int k = 0;
-            while (k < m) {
-                IArithmetic f = new Whole(1);
-                if (term.charAt(k) == '-') {
-                    f = f.negative();
-                    ++k;
-                } else if (term.charAt(k) == '+') {
-                    ++k;
-                }
-                int j = k;
-                while (Character.isDigit(term.charAt(k))) {
-                    ++k;
-                }
-                if (k > j) {
-                    final int z = Integer.parseInt(term.substring(j, k));
-                    f = f.times(new Whole(z));
-                }
-                if (term.charAt(k) == '/') {
-                    ++k;
-                    j = k;
-                    while (Character.isDigit(term.charAt(k))) {
-                        ++k;
-                    }
-                    if (k > j) {
-                        final int z = Integer.parseInt(term.substring(j, k));
-                        f = f.dividedBy(new Whole(z));
-                    } else {
-                        throw new DataFormatException(msg + "fraction has no denominator");
-                    }
-                }
-                if (term.charAt(k) == '*') {
-                    ++k;
-                }
-                final char c = term.charAt(k);
-                j = varNames.indexOf(c);
-                if (j >= 0) {
-                    ++k;
-                } else if (Character.isDigit(c) || "+-".indexOf(c) >= 0) {
-                    j = d;
-                } else {
-                    throw new DataFormatException(msg + "illegal variable name " + c);
-                }
-                if (M.get(j, i) != null) {
-                    throw new DataFormatException(msg + "variable used twice");
-                } else {
-                    M.set(j, i, f);
-                }
-            }
-        }
-        for (int i = 0; i < d+1; ++i) {
-            for (int j = 0; j < d+1; ++j) {
-                if (M.get(i, j) == null) {
-                    M.set(i, j, Whole.ZERO);
-                }
-            }
-        }
-        M.makeImmutable();
-        
-        return M;
-    }
-    
-    private static Matrix normalizedOperator(final Matrix op) {
-        final Matrix result = op.mutableClone();
-        final int d = op.numberOfRows() - 1;
-        for (int i = 0; i < d; ++i) {
-            result.set(d, i, op.get(d, i).mod(Whole.ONE));
-        }
-        return result;
-    }
-    
-    private static Map nameToOps = null;
-    private static Map nameToTransform = null;
-    private static Map translationTable = null;
-        
-    private static void parseGroups(final String filename) {
-        final ClassLoader classLoader = NetParser.class.getClassLoader();
-        final InputStream inStream = classLoader.getResourceAsStream(filename);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-
-        nameToOps = new HashMap();
-        nameToTransform = new HashMap();
-        
-        String currentName = null;
-        
-        while (true) {
-            final String line;
-            try {
-                line = reader.readLine();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-            if (line == null) {
-                break;
-            }
-            if (line.length() == 0) {
-                continue;
-            }
-            final int i = line.indexOf(' ');
-            if (i > 0) {
-                currentName = line.substring(0, i);
-                nameToOps.put(currentName, new LinkedList());
-                final Matrix T = NetParser.parseOperator(line
-                        .substring(i + 1));
-                nameToTransform.put(currentName, T);
-            } else if (currentName != null) {
-                Matrix op = NetParser.parseOperator(line);
-                op = NetParser.normalizedOperator(op);
-                ((List) nameToOps.get(currentName)).add(op);
-            } else {
-                throw new DataFormatException("error in space group table file");
-            }
-        }
-        
-        for (final Iterator iter = nameToOps.keySet().iterator(); iter.hasNext();) {
-            final Object key = iter.next();
-            nameToOps.put(key, Collections.unmodifiableList((List) nameToOps.get(key)));
-        }
-    }
-    
-    public static Iterator groupNames() {
-        if (nameToOps == null) {
-            parseGroups("javaPGraphs/IO/sgtable.data");
-        }
-
-        return nameToOps.keySet().iterator();
-    }
-    
-    private static Object retrieve(final String name, final boolean getOps) {
-        if (translationTable == null) {
-            translationTable = new HashMap();
-            translationTable.put("P2", "P121");
-            translationTable.put("P21", "P1211");
-            translationTable.put("C2", "C121");
-            translationTable.put("Pm", "P1m1");
-            translationTable.put("Pc", "P1c1");
-            translationTable.put("Cm", "C1m1");
-            translationTable.put("Cc", "C1c1");
-            translationTable.put("P2/m", "P12/m1");
-            translationTable.put("P21/m", "P121/m1");
-            translationTable.put("C2/m", "C12/m1");
-            translationTable.put("P2/c", "P12/c1");
-            translationTable.put("P21/c", "P121/c1");
-            translationTable.put("C2/c", "C12/c1");
-        }
-        
-        if (nameToOps == null) {
-            parseGroups("org/gavrog/joss/pgraphs/io/sgtable.data");
-        }
-
-        final String parts[] = name.split(":");
-        String base = capitalized(parts[0]);
-        if (translationTable.containsKey(base)) {
-            base = (String) translationTable.get(base);
-        }
-        final String ext = parts.length > 1 ? capitalized(parts[1]) : "";
-        
-        final String candidates[];
-        if (base.charAt(0) == 'R') {
-            if (ext.equals("R")) {
-                candidates = new String[] { base + ":R" };
-            } else {
-                candidates = new String[] { base + ":H", base + ":R" };
-            }
-        } else if (ext.equals("1")) {
-            candidates = new String[] { base + ":1", base };
-        } else {
-            candidates = new String[] { base, base + ":2", base + ":1" };
-        }
-        
-        for (int i = 0; i < candidates.length; ++i) {
-            final String key = candidates[i];
-            if (getOps) {
-                if (nameToOps.containsKey(key)) {
-                    return nameToOps.get(key);
-                }
-            } else {
-                if (nameToTransform.containsKey(key)) {
-                    return nameToTransform.get(key);
-                }
-            }
-        }
-
-        return null;
-    }
-    
-    public static List operators(final String name) {
-        return (List) retrieve(name, true);
-    }
-    
-    public static Matrix transform(final String name) {
-        return (Matrix) retrieve(name, false);
-    }
-    
-    /**
-     * Turn a string's first letter to upper case.
-     * @param s the source string.
-     * @return the capitalized version.
-     */
-    private static String capitalized(String s) {
-        if (s.length() > 1) {
-            return s.substring(0, 1).toUpperCase() + s.substring(1);
-        } else {
-            return s.toUpperCase();
+            return SpaceGroup.parseOperator(buf.toString());
         }
     }
 }

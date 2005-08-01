@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.jane.numbers;
+package org.gavrog.jane.compounds;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.2 2005/07/31 19:44:58 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.1 2005/08/01 17:39:56 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;

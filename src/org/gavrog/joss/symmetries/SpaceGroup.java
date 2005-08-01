@@ -14,20 +14,28 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.joss.symmetries;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.pgraphs.io.DataFormatException;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 
@@ -60,11 +68,15 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.3 2005/07/31 19:44:58 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.1 2005/08/01 17:39:56 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
     private final Set operators;
+    
+    private static Map nameToOps = null;
+    private static Map nameToTransform = null;
+    private static Map translationTable = null;
     
     /**
      * Constructs a new instance.
@@ -84,7 +96,7 @@ public class SpaceGroup {
     public SpaceGroup(final int dimension, final Collection operators,
             final boolean generate, boolean check) {
         
-        // --- set the dimension here - needed by normalizedOperator()
+        // --- set the dimension here
         this.dimension = dimension;
         
         // --- check the individual operators
@@ -128,7 +140,7 @@ public class SpaceGroup {
         // --- copy operators and normalize their translational parts
         final Set ops = new HashSet();
         for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            ops.add(normalizedOperator((Matrix) iter.next()));
+            ops.add(normalized((Matrix) iter.next()));
         }
         
         // --- generate a full set of operators, if required
@@ -143,7 +155,7 @@ public class SpaceGroup {
                 final Matrix A = (Matrix) queue.removeFirst();
                 for (final Iterator iter = gens.iterator(); iter.hasNext();) {
                     final Matrix B = (Matrix) iter.next();
-                    final Matrix AB = normalizedOperator((Matrix) A.times(B));
+                    final Matrix AB = normalized((Matrix) A.times(B));
                     if (!ops.contains(AB)) {
                         ops.add(AB);
                         queue.addLast(AB);
@@ -158,7 +170,7 @@ public class SpaceGroup {
                 final Matrix A = (Matrix) iter1.next();
                 for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
                     final Matrix B = (Matrix) iter2.next();
-                    final Matrix AB_ = normalizedOperator((Matrix) A.times(B.inverse()));
+                    final Matrix AB_ = normalized((Matrix) A.times(B.inverse()));
                     if (!ops.contains(AB_)) {
                         throw new IllegalArgumentException("operators don't form a group");
                     }
@@ -177,7 +189,7 @@ public class SpaceGroup {
      * @param name the Hermann-Maugain symbol for the group.
      */
     public SpaceGroup(final int dimension, final String name) {
-        this(dimension, NetParser.operators(name), false, false);
+        this(dimension, operators(name), false, false);
     }
     
     /**
@@ -188,23 +200,6 @@ public class SpaceGroup {
      */
     public SpaceGroup(final int dimension, final Collection generators) {
         this(dimension, generators, true, false);
-    }
-    
-    /**
-     * Reduces the coordinates of the translational part of the given operator
-     * modulo 1.
-     * 
-     * @param op the input operator.
-     * @return the normalized operator.
-     */
-    public Matrix normalizedOperator(final Matrix op) {
-        final Matrix A = op.mutableClone();
-        final int d = getDimension();
-        for (int j = 0; j < d; ++j) {
-            A.set(d, j, ((Rational) A.get(d, j)).mod(1));
-        }
-        A.makeImmutable();
-        return A;
     }
     
     /**
@@ -263,6 +258,22 @@ public class SpaceGroup {
     }
     
     /**
+     * Normalize the translational component of an operator by reducing its
+     * entries modulo 1, yielding values in the half-open interval [0,1).
+     * 
+     * @param op the original operator.
+     * @return the normalized operator.
+     */
+    public static Matrix normalized(final Matrix op) {
+        final Matrix result = op.mutableClone();
+        final int d = op.numberOfRows() - 1;
+        for (int i = 0; i < d; ++i) {
+            result.set(d, i, op.get(d, i).mod(Whole.ONE));
+        }
+        return result;
+    }
+
+    /**
      * Returns a matrix that, via multiplication from the right, transforms a
      * row vector in unit cell coordinates into one using primitive cell
      * coordinates.
@@ -292,11 +303,223 @@ public class SpaceGroup {
         
         for (final Iterator iter = getOperators().iterator(); iter.hasNext();) {
             final Matrix op = (Matrix) iter.next();
-            final Matrix tmp = normalizedOperator((Matrix) P.times(op).times(P_1));
-            final Matrix out = normalizedOperator((Matrix) P_1.times(tmp).times(P));
+            final Matrix tmp = normalized((Matrix) P.times(op).times(P_1));
+            final Matrix out = normalized((Matrix) P_1.times(tmp).times(P));
             result.add(out);
         }
         
         return result;
+    }
+
+    // --- IO operations for operators and groups
+    // TODO document the IO methods
+    
+    public static Matrix parseOperator(final String s) {
+        final String msg = "Bad operator format for \"" + s + "\": "; // just in case
+        
+        final String parts[] = s.replaceAll("\\s+", "").split(",");
+        if (parts.length > 3) {
+            throw new DataFormatException(msg + "more than 3 coordinates.");
+        }
+        final int d = parts.length;
+        final String varNames = "xyz".substring(0, d) + "#";
+        final Matrix M = new Matrix(d+1, d+1);
+        M.setColumn(d, Matrix.zero(d+1, 1));
+        M.set(d, d, new Whole(1));
+        
+        for (int i = 0; i < d; ++i) {
+            final String term = parts[i] + "#";
+            final int m = term.length() - 1;
+            int k = 0;
+            while (k < m) {
+                IArithmetic f = new Whole(1);
+                if (term.charAt(k) == '-') {
+                    f = f.negative();
+                    ++k;
+                } else if (term.charAt(k) == '+') {
+                    ++k;
+                }
+                int j = k;
+                while (Character.isDigit(term.charAt(k))) {
+                    ++k;
+                }
+                if (k > j) {
+                    final int z = Integer.parseInt(term.substring(j, k));
+                    f = f.times(new Whole(z));
+                }
+                if (term.charAt(k) == '/') {
+                    ++k;
+                    j = k;
+                    while (Character.isDigit(term.charAt(k))) {
+                        ++k;
+                    }
+                    if (k > j) {
+                        final int z = Integer.parseInt(term.substring(j, k));
+                        f = f.dividedBy(new Whole(z));
+                    } else {
+                        throw new DataFormatException(msg + "fraction has no denominator");
+                    }
+                }
+                if (term.charAt(k) == '*') {
+                    ++k;
+                }
+                final char c = term.charAt(k);
+                j = varNames.indexOf(c);
+                if (j >= 0) {
+                    ++k;
+                } else if (Character.isDigit(c) || "+-".indexOf(c) >= 0) {
+                    j = d;
+                } else {
+                    throw new DataFormatException(msg + "illegal variable name " + c);
+                }
+                if (M.get(j, i) != null) {
+                    throw new DataFormatException(msg + "variable used twice");
+                } else {
+                    M.set(j, i, f);
+                }
+            }
+        }
+        for (int i = 0; i < d+1; ++i) {
+            for (int j = 0; j < d+1; ++j) {
+                if (M.get(i, j) == null) {
+                    M.set(i, j, Whole.ZERO);
+                }
+            }
+        }
+        M.makeImmutable();
+        
+        return M;
+    }
+
+    private static void parseGroups(final String filename) {
+        final ClassLoader classLoader = NetParser.class.getClassLoader();
+        final InputStream inStream = classLoader.getResourceAsStream(filename);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
+    
+        nameToOps = new HashMap();
+        nameToTransform = new HashMap();
+        
+        String currentName = null;
+        
+        while (true) {
+            final String line;
+            try {
+                line = reader.readLine();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            if (line == null) {
+                break;
+            }
+            if (line.length() == 0) {
+                continue;
+            }
+            final int i = line.indexOf(' ');
+            if (i > 0) {
+                currentName = line.substring(0, i);
+                nameToOps.put(currentName, new LinkedList());
+                final Matrix T = SpaceGroup.parseOperator(line
+                        .substring(i + 1));
+                nameToTransform.put(currentName, T);
+            } else if (currentName != null) {
+                Matrix op = SpaceGroup.parseOperator(line);
+                op = normalized(op);
+                ((List) nameToOps.get(currentName)).add(op);
+            } else {
+                throw new DataFormatException("error in space group table file");
+            }
+        }
+        
+        for (final Iterator iter = nameToOps.keySet().iterator(); iter.hasNext();) {
+            final Object key = iter.next();
+            nameToOps.put(key, Collections.unmodifiableList((List) nameToOps.get(key)));
+        }
+    }
+
+    public static Iterator groupNames() {
+        if (nameToOps == null) {
+            parseGroups("org/gavrog/joss/symmetries/sgtable.data");
+        }
+    
+        return nameToOps.keySet().iterator();
+    }
+
+    private static Object retrieve(final String name, final boolean getOps) {
+        if (translationTable == null) {
+            translationTable = new HashMap();
+            translationTable.put("P2", "P121");
+            translationTable.put("P21", "P1211");
+            translationTable.put("C2", "C121");
+            translationTable.put("Pm", "P1m1");
+            translationTable.put("Pc", "P1c1");
+            translationTable.put("Cm", "C1m1");
+            translationTable.put("Cc", "C1c1");
+            translationTable.put("P2/m", "P12/m1");
+            translationTable.put("P21/m", "P121/m1");
+            translationTable.put("C2/m", "C12/m1");
+            translationTable.put("P2/c", "P12/c1");
+            translationTable.put("P21/c", "P121/c1");
+            translationTable.put("C2/c", "C12/c1");
+        }
+        
+        if (nameToOps == null) {
+            parseGroups("org/gavrog/joss/symmetries/sgtable.data");
+        }
+    
+        final String parts[] = name.split(":");
+        String base = capitalized(parts[0]);
+        if (translationTable.containsKey(base)) {
+            base = (String) translationTable.get(base);
+        }
+        final String ext = parts.length > 1 ? capitalized(parts[1]) : "";
+        
+        final String candidates[];
+        if (base.charAt(0) == 'R') {
+            if (ext.equals("R")) {
+                candidates = new String[] { base + ":R" };
+            } else {
+                candidates = new String[] { base + ":H", base + ":R" };
+            }
+        } else if (ext.equals("1")) {
+            candidates = new String[] { base + ":1", base };
+        } else {
+            candidates = new String[] { base, base + ":2", base + ":1" };
+        }
+        
+        for (int i = 0; i < candidates.length; ++i) {
+            final String key = candidates[i];
+            if (getOps) {
+                if (nameToOps.containsKey(key)) {
+                    return nameToOps.get(key);
+                }
+            } else {
+                if (nameToTransform.containsKey(key)) {
+                    return nameToTransform.get(key);
+                }
+            }
+        }
+    
+        return null;
+    }
+
+    public static List operators(final String name) {
+        return (List) retrieve(name, true);
+    }
+
+    public static Matrix transform(final String name) {
+        return (Matrix) retrieve(name, false);
+    }
+
+    /**
+     * Turn a string's first letter to upper case.
+     * @param s the source string.
+     * @return the capitalized version.
+     */
+    private static String capitalized(String s) {
+        if (s.length() > 1) {
+            return s.substring(0, 1).toUpperCase() + s.substring(1);
+        } else {
+            return s.toUpperCase();
+        }
     }
 }

@@ -16,18 +16,15 @@
 
 package org.gavrog.joss.pgraphs.io;
 
-import java.util.List;
-
 import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.11 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.12 2005/08/01 17:39:56 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -78,47 +75,6 @@ public class TestNetParser extends TestCase {
     public void tearDown() throws Exception {
         pcu = dia = srs = tfa = null;
         super.tearDown();
-    }
-    
-    public void testParseOperator() {
-        String s;
-        Matrix M;
-        
-        s = "x-4y+7*z-10, +5/3y-8z+11-2x, +3*x+ 9z-6y - 12";
-        M = new Matrix(new int[][] {
-                {  1, -2,   3, 0},
-                { -4,  5,  -6, 0},
-                {  7, -8,   9, 0},
-                {-10, 11, -12, 1}}).mutableClone();
-        M.set(1, 1, new Fraction(5, 3));
-        assertEquals(M, NetParser.parseOperator(s));
-        assertFalse(NetParser.parseOperator(s).isMutable());
-        
-        assertEquals(Matrix.one(4), NetParser.parseOperator("x,y,z"));
-        
-        try {
-            NetParser.parseOperator("1,2,3,4");
-            fail("should throw an DataFormatException");
-        } catch (DataFormatException success) {
-        }
-        
-        try {
-            NetParser.parseOperator("a,2,3");
-            fail("should throw an DataFormatException");
-        } catch (DataFormatException success) {
-        }
-        
-        try {
-            NetParser.parseOperator("1,2/,3");
-            fail("should throw an DataFormatException");
-        } catch (DataFormatException success) {
-        }
-        
-        try {
-            NetParser.parseOperator("x+3x,2,3");
-            fail("should throw an DataFormatException");
-        } catch (DataFormatException success) {
-        }
     }
     
     public void testParsePeriodicGraph() {
@@ -205,17 +161,5 @@ public class TestNetParser extends TestCase {
                 + "  2 4 0.0 0.0 0.0\n"
                 + "END\n");
         assertEquals(tfa, _tfa);
-    }
-    
-    public void testOperators() {
-        final List ops = NetParser.operators("Ia-3d");
-        assertNotNull(ops);
-        assertEquals(96, ops.size());
-    }
-    
-    public void testTransform() {
-        final Matrix T = NetParser.transform("Ia-3d");
-        assertNotNull(T);
-        assertEquals(Matrix.one(4), T);
     }
 }
