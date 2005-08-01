@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.symmetries;
+package org.gavrog.joss.geometry;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -68,7 +68,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.1 2005/08/01 17:39:56 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.1 2005/08/01 22:53:44 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -436,9 +436,12 @@ public class SpaceGroup {
         }
     }
 
+    final private static String pkg = SpaceGroup.class.getPackage().getName();
+    final private static String tableName = pkg.replaceAll("\\.", "/") + "/sgtable.data";
+    
     public static Iterator groupNames() {
         if (nameToOps == null) {
-            parseGroups("org/gavrog/joss/symmetries/sgtable.data");
+            parseGroups(tableName);
         }
     
         return nameToOps.keySet().iterator();
@@ -463,7 +466,7 @@ public class SpaceGroup {
         }
         
         if (nameToOps == null) {
-            parseGroups("org/gavrog/joss/symmetries/sgtable.data");
+            parseGroups(tableName);
         }
     
         final String parts[] = name.split(":");

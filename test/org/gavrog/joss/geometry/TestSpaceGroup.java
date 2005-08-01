@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.symmetries;
+package org.gavrog.joss.geometry;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -26,13 +26,14 @@ import junit.framework.TestCase;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Fraction;
+import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.1 2005/08/01 17:39:56 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.1 2005/08/01 22:53:44 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
