@@ -36,7 +36,6 @@ import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.io.DataFormatException;
-import org.gavrog.joss.pgraphs.io.NetParser;
 
 
 
@@ -68,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.1 2005/08/01 22:53:44 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.2 2005/08/02 00:04:22 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -392,8 +391,7 @@ public class SpaceGroup {
     }
 
     private static void parseGroups(final String filename) {
-        final ClassLoader classLoader = NetParser.class.getClassLoader();
-        final InputStream inStream = classLoader.getResourceAsStream(filename);
+        final InputStream inStream = ClassLoader.getSystemResourceAsStream(filename);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
     
         nameToOps = new HashMap();
