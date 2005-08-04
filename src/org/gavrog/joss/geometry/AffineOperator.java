@@ -24,34 +24,21 @@ import org.gavrog.jane.numbers.Whole;
  * An operator acting by linear transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearOperator.java,v 1.3 2005/08/04 07:29:00 odf Exp $
+ * @version $Id: AffineOperator.java,v 1.1 2005/08/04 07:29:00 odf Exp $
  */
-public class LinearOperator extends Matrix implements IOperator {
+public class AffineOperator extends Matrix implements IOperator {
     final int dimension;
 
     /**
      * Creates a new operator.
      * 
-     * @param M the matrix representation.
-     */
-    public LinearOperator(final Matrix M) {
-        super(M);
-        this.dimension = M.numberOfRows();
-        if (M.numberOfColumns() != this.dimension) {
-            throw new IllegalArgumentException("argument must be square");
-        }
-    }
-    
-    /**
-     * Creates a new operator.
-     * 
      * @param A coordinates for the matrix representation.
      */
-    public LinearOperator(final IArithmetic[][] A) {
+    public AffineOperator(final IArithmetic[][] A) {
         super(A);
-        this.dimension = A.length;
+        this.dimension = A.length - 1;
         if (A[0].length != this.dimension) {
-            throw new IllegalArgumentException("argument must be square");
+            throw new IllegalArgumentException("bad shape");
         }
     }
 
@@ -66,9 +53,11 @@ public class LinearOperator extends Matrix implements IOperator {
      * @see org.gavrog.joss.geometry.IOperator#getLinearPart()
      */
     public IOperator getLinearPart() {
-        return this;
+        final int d = getDimension();
+        return new LinearOperator(getSubMatrix(0, 0, d, d));
     }
 
+    // TODO fix the methods below this point
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
      */
