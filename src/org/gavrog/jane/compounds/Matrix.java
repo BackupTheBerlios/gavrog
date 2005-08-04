@@ -37,6 +37,17 @@ public class Matrix extends ArithmeticBase {
         this.mutable = true;
     }
 
+    public Matrix(final Matrix M) {
+        this.nrows = M.nrows;
+        this.ncols = M.ncols;
+        if (M.mutable) {
+            this.data = (IArithmetic[]) M.data.clone();
+        } else {
+            this.data = M.data;
+        }
+        this.mutable = M.mutable;
+    }
+    
     public Matrix(IArithmetic[][] A) {
         this.nrows = A.length;
         this.ncols = A[0].length;
