@@ -24,11 +24,24 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: PointHomogeneous.java,v 1.1 2005/08/04 03:54:38 odf Exp $
+ * @version $Id: PointHomogeneous.java,v 1.2 2005/08/04 06:06:46 odf Exp $
  */
 public class PointHomogeneous extends Matrix implements IPoint {
     final int dimension;
 
+    /**
+     * Create a new point.
+     * 
+     * @param M contains the coordinates for the point.
+     */
+    public PointHomogeneous(final Matrix M) {
+        super(M);
+        if (M.numberOfRows() != 1) {
+            throw new IllegalArgumentException("matrix must have exactly 1 row");
+        }
+        this.dimension = M.numberOfColumns() - 1;
+    }
+    
     /**
      * Create a new point from its coordinates.
      * 
@@ -47,24 +60,21 @@ public class PointHomogeneous extends Matrix implements IPoint {
      * Create a new point from a given one.
      * @param p the point to copy.
      */
-    public PointHomogeneous(final PointHomogeneous p) {
+    public PointHomogeneous(final IPoint p) {
         super(1, p.getDimension());
         this.dimension = p.getDimension();
-        setRow(0, p.getRow(0));
-        makeImmutable();
-    }
-    
-    /**
-     * Create a new point from one given in cartesian coordinates.
-     * @param p the point to copy.
-     */
-    public PointHomogeneous(final PointCartesian p) {
-        super(1, p.getDimension() + 1);
-        this.dimension = p.getDimension();
-        for (int i = 0; i < this.dimension; ++i) {
-            set(0, i, p.get(0, i));
+        if (p instanceof PointHomogeneous) {
+            setRow(0, ((PointHomogeneous) p).getRow(0));
+        } else if (p instanceof  PointCartesian) {
+            final Matrix P = (Matrix) p;
+            for (int i = 0; i < this.dimension; ++i) {
+                set(0, i, P.get(0, i));
+            }
+            set(0, this.dimension, Whole.ONE);
+        } else {
+            final String msg = "not supported for " + p.getClass().getName();
+            throw new UnsupportedOperationException(msg);
         }
-        set(0, this.dimension, Whole.ONE);
         makeImmutable();
     }
     

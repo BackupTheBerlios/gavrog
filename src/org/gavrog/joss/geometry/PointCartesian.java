@@ -23,11 +23,24 @@ import org.gavrog.jane.numbers.IArithmetic;
  * A d-dimensional point in cartesian coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: PointCartesian.java,v 1.1 2005/08/04 03:54:38 odf Exp $
+ * @version $Id: PointCartesian.java,v 1.2 2005/08/04 06:06:46 odf Exp $
  */
 public class PointCartesian extends Matrix implements IPoint {
     final int dimension;
 
+    /**
+     * Create a new point.
+     * 
+     * @param M contains the coordinates for the point.
+     */
+    public PointCartesian(final Matrix M) {
+        super(M);
+        if (M.numberOfRows() != 1) {
+            throw new IllegalArgumentException("matrix must have exactly 1 row");
+        }
+        this.dimension = M.numberOfColumns();
+    }
+    
     /**
      * Create a new point.
      * 
@@ -46,26 +59,23 @@ public class PointCartesian extends Matrix implements IPoint {
      * Create a new point from a given one.
      * @param p the point to copy.
      */
-    public PointCartesian(final PointCartesian p) {
+    public PointCartesian(final IPoint p) {
         super(1, p.getDimension());
         this.dimension = p.getDimension();
-        setRow(0, p.getRow(0));
-        makeImmutable();
-    }
-    
-    /**
-     * Create a new point from one given in homogeneous coordinates.
-     * @param p the point to copy.
-     */
-    public PointCartesian(final PointHomogeneous p) {
-        super(1, p.getDimension());
-        this.dimension = p.getDimension();
-        final IArithmetic f = p.get(0, this.dimension);
-        if (f.isZero()) {
-            throw new IllegalArgumentException("point at infinity");
-        }
-        for (int i = 0; i < this.dimension; ++i) {
-            set(0, i, p.get(0, i).dividedBy(f));
+        if (p instanceof PointCartesian) {
+            setRow(0, ((PointCartesian) p).getRow(0));
+        } else if (p instanceof PointHomogeneous) {
+            final Matrix P = (Matrix) p;
+            final IArithmetic f = P.get(0, this.dimension);
+            if (f.isZero()) {
+                throw new IllegalArgumentException("point at infinity");
+            }
+            for (int i = 0; i < this.dimension; ++i) {
+                set(0, i, P.get(0, i).dividedBy(f));
+            }
+        } else {
+            final String msg = "not supported for " + p.getClass().getName();
+            throw new UnsupportedOperationException(msg);
         }
         makeImmutable();
     }

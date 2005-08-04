@@ -24,7 +24,7 @@ import org.gavrog.jane.numbers.Whole;
  * An operator acting by linear transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearOperator.java,v 1.1 2005/08/04 03:54:38 odf Exp $
+ * @version $Id: LinearOperator.java,v 1.2 2005/08/04 06:06:46 odf Exp $
  */
 public class LinearOperator extends Matrix implements IOperator {
     final int dimension;
@@ -70,8 +70,16 @@ public class LinearOperator extends Matrix implements IOperator {
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#applyTo(org.gavrog.joss.geometry.IPoint)
      */
-    public IPoint applyTo(IPoint p) {
-        // TODO Auto-generated method stub
-        return null;
+    public IPoint applyTo(final IPoint p) {
+        if (p instanceof PointCartesian) {
+            return new PointCartesian((Matrix) p.times(this));
+        } else if (p instanceof PointHomogeneous) {
+            final IPoint a = new PointCartesian(p);
+            final IPoint b = new PointCartesian((Matrix) a.times(this));
+            return new PointHomogeneous(b);
+        } else {
+            final String msg = "not supported for " + p.getClass().getName();
+            throw new UnsupportedOperationException(msg);
+        }
     }
 }
