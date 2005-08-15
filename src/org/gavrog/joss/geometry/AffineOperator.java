@@ -18,13 +18,12 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.Whole;
 
 /**
  * An operator acting by linear transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: AffineOperator.java,v 1.1 2005/08/04 07:29:00 odf Exp $
+ * @version $Id: AffineOperator.java,v 1.2 2005/08/15 18:33:56 odf Exp $
  */
 public class AffineOperator extends Matrix implements IOperator {
     final int dimension;
@@ -57,16 +56,11 @@ public class AffineOperator extends Matrix implements IOperator {
         return new LinearOperator(getSubMatrix(0, 0, d, d));
     }
 
-    // TODO fix the methods below this point
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
      */
     public IPoint getImageOfOrigin() {
-        final IArithmetic v[] = new IArithmetic[getDimension()];
-        for (int i = 0; i < getDimension(); ++i) {
-            v[i] = Whole.ZERO;
-        }
-        return new PointCartesian(v);
+        return new PointCartesian(getRow(getDimension()));
     }
 
     /* (non-Javadoc)
@@ -74,11 +68,9 @@ public class AffineOperator extends Matrix implements IOperator {
      */
     public IPoint applyTo(final IPoint p) {
         if (p instanceof PointCartesian) {
-            return new PointCartesian((Matrix) p.times(this));
+            return new PointCartesian((Matrix) p.times(getLinearPart()).plus(getImageOfOrigin()));
         } else if (p instanceof PointHomogeneous) {
-            final IPoint a = new PointCartesian(p);
-            final IPoint b = new PointCartesian((Matrix) a.times(this));
-            return new PointHomogeneous(b);
+            return new PointHomogeneous((Matrix) p.times(this));
         } else {
             final String msg = "not supported for " + p.getClass().getName();
             throw new UnsupportedOperationException(msg);
