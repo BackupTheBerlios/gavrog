@@ -24,11 +24,9 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in cartesian coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: PointCartesian.java,v 1.3 2005/08/16 19:43:59 odf Exp $
+ * @version $Id: PointCartesian.java,v 1.4 2005/08/16 20:22:36 odf Exp $
  */
 public class PointCartesian extends PointHomogeneous {
-    final int dimension;
-
     /**
      * Extends a matrix as to be suitable as input for the super constructor.
      * More precisely, the output has a 1 added as its last column.
@@ -74,7 +72,6 @@ public class PointCartesian extends PointHomogeneous {
      */
     public PointCartesian(final Matrix M) {
         super(extended(M));
-        this.dimension = M.numberOfColumns();
     }
     
     /**
@@ -84,7 +81,6 @@ public class PointCartesian extends PointHomogeneous {
      */
     public PointCartesian(final IArithmetic[] coords) {
         super(extended(coords));
-        this.dimension = coords.length;
     }
     
     /**
@@ -93,20 +89,5 @@ public class PointCartesian extends PointHomogeneous {
      */
     public PointCartesian(final PointHomogeneous p) {
         super(p.normalized());
-        this.dimension = p.getDimension();
-    }
-    
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IPoint#getDimension()
-     */
-    public int getDimension() {
-        return this.dimension;
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IPoint#apply(org.gavrog.joss.geometry.IOperator)
-     */
-    public IPoint apply(final IOperator op) {
-        return op.applyTo(this);
     }
 }

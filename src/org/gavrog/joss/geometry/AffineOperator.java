@@ -18,62 +18,50 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Whole;
 
 /**
- * An operator acting by linear transformation.
+ * An operator acting by affine transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: AffineOperator.java,v 1.2 2005/08/15 18:33:56 odf Exp $
+ * @version $Id: AffineOperator.java,v 1.3 2005/08/16 20:22:36 odf Exp $
  */
-public class AffineOperator extends Matrix implements IOperator {
-    final int dimension;
-
+public class AffineOperator extends ProjectiveOperator {
+    /**
+     * Extends a matrix as to be suitable as input for the super constructor.
+     * More precisely, the output has a suitable last column added.
+     * 
+     * @param M the input matrix.
+     * @return the extended matrix.
+     */
+    private static Matrix extended(final Matrix M) {
+        final int d = M.numberOfColumns();
+        if (M.numberOfRows() != d + 1) {
+            throw new IllegalArgumentException("must have a (d+1, d) shape");
+        }
+        final Matrix out = new Matrix(d+1, d+1);
+        out.setSubMatrix(0, 0, M);
+        out.setColumn(d, Matrix.zero(d+1, 1));
+        out.set(d, d, Whole.ONE);
+        out.makeImmutable();
+        return out;
+    }
+    
     /**
      * Creates a new operator.
      * 
-     * @param A coordinates for the matrix representation.
+     * @param M the matrix representation.
      */
-    public AffineOperator(final IArithmetic[][] A) {
-        super(A);
-        this.dimension = A.length - 1;
-        if (A[0].length != this.dimension) {
-            throw new IllegalArgumentException("bad shape");
-        }
+    public AffineOperator(final Matrix M) {
+        super(extended(M));
     }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getDimension()
+    
+    /**
+     * Creates a new operator.
+     * 
+     * @param coords coordinates for the matrix representation.
      */
-    public int getDimension() {
-        return this.dimension;
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getLinearPart()
-     */
-    public IOperator getLinearPart() {
-        final int d = getDimension();
-        return new LinearOperator(getSubMatrix(0, 0, d, d));
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
-     */
-    public IPoint getImageOfOrigin() {
-        return new PointCartesian(getRow(getDimension()));
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#applyTo(org.gavrog.joss.geometry.IPoint)
-     */
-    public IPoint applyTo(final IPoint p) {
-        if (p instanceof PointCartesian) {
-            return new PointCartesian((Matrix) p.times(getLinearPart()).plus(getImageOfOrigin()));
-        } else if (p instanceof PointHomogeneous) {
-            return new PointHomogeneous((Matrix) p.times(this));
-        } else {
-            final String msg = "not supported for " + p.getClass().getName();
-            throw new UnsupportedOperationException(msg);
-        }
+    public AffineOperator(final IArithmetic[][] coords) {
+        super(extended(new Matrix(coords)));
     }
 }

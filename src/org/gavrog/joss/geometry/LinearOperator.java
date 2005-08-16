@@ -18,28 +18,40 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.Whole;
 
 /**
  * An operator acting by linear transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearOperator.java,v 1.4 2005/08/16 19:43:59 odf Exp $
+ * @version $Id: LinearOperator.java,v 1.5 2005/08/16 20:22:36 odf Exp $
  */
-public class LinearOperator extends Matrix implements IOperator {
-    final int dimension;
-
+public class LinearOperator extends AffineOperator {
+    /**
+     * Extends a matrix as to be suitable as input for the super constructor.
+     * More precisely, the output has a suitable (all zero) last row added.
+     * 
+     * @param M the input matrix.
+     * @return the extended matrix.
+     */
+    private static Matrix extended(final Matrix M) {
+        final int d = M.numberOfColumns();
+        if (M.numberOfRows() != d) {
+            throw new IllegalArgumentException("must have a square shape");
+        }
+        final Matrix out = new Matrix(d+1, d);
+        out.setSubMatrix(0, 0, M);
+        out.setRow(d, Matrix.zero(1, d));
+        out.makeImmutable();
+        return out;
+    }
+    
     /**
      * Creates a new operator.
      * 
      * @param M the matrix representation.
      */
     public LinearOperator(final Matrix M) {
-        super(M);
-        this.dimension = M.numberOfRows();
-        if (M.numberOfColumns() != this.dimension) {
-            throw new IllegalArgumentException("argument must be square");
-        }
+        super(extended(M));
     }
     
     /**
@@ -48,51 +60,6 @@ public class LinearOperator extends Matrix implements IOperator {
      * @param A coordinates for the matrix representation.
      */
     public LinearOperator(final IArithmetic[][] A) {
-        super(A);
-        this.dimension = A.length;
-        if (A[0].length != this.dimension) {
-            throw new IllegalArgumentException("argument must be square");
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getDimension()
-     */
-    public int getDimension() {
-        return this.dimension;
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getLinearPart()
-     */
-    public IOperator getLinearPart() {
-        return this;
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
-     */
-    public IPoint getImageOfOrigin() {
-        final IArithmetic v[] = new IArithmetic[getDimension()];
-        for (int i = 0; i < getDimension(); ++i) {
-            v[i] = Whole.ZERO;
-        }
-        return new PointCartesian(v);
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#applyTo(org.gavrog.joss.geometry.IPoint)
-     */
-    public IPoint applyTo(final IPoint p) {
-        if (p instanceof PointCartesian) {
-            return new PointCartesian((Matrix) p.times(this));
-        } else if (p instanceof PointHomogeneous) {
-            final IPoint a = new PointCartesian((PointHomogeneous) p);
-            final PointCartesian b = new PointCartesian((Matrix) a.times(this));
-            return new PointHomogeneous(b);
-        } else {
-            final String msg = "not supported for " + p.getClass().getName();
-            throw new UnsupportedOperationException(msg);
-        }
+        super(extended(new Matrix(A)));
     }
 }
