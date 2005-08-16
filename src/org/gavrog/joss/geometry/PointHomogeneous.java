@@ -18,13 +18,12 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.Whole;
 
 /**
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: PointHomogeneous.java,v 1.2 2005/08/04 06:06:46 odf Exp $
+ * @version $Id: PointHomogeneous.java,v 1.3 2005/08/16 19:43:59 odf Exp $
  */
 public class PointHomogeneous extends Matrix implements IPoint {
     final int dimension;
@@ -60,22 +59,9 @@ public class PointHomogeneous extends Matrix implements IPoint {
      * Create a new point from a given one.
      * @param p the point to copy.
      */
-    public PointHomogeneous(final IPoint p) {
-        super(1, p.getDimension());
+    public PointHomogeneous(final PointHomogeneous p) {
+        super(p);
         this.dimension = p.getDimension();
-        if (p instanceof PointHomogeneous) {
-            setRow(0, ((PointHomogeneous) p).getRow(0));
-        } else if (p instanceof  PointCartesian) {
-            final Matrix P = (Matrix) p;
-            for (int i = 0; i < this.dimension; ++i) {
-                set(0, i, P.get(0, i));
-            }
-            set(0, this.dimension, Whole.ONE);
-        } else {
-            final String msg = "not supported for " + p.getClass().getName();
-            throw new UnsupportedOperationException(msg);
-        }
-        makeImmutable();
     }
     
     /* (non-Javadoc)
@@ -90,5 +76,27 @@ public class PointHomogeneous extends Matrix implements IPoint {
      */
     public IPoint apply(final IOperator op) {
         return op.applyTo(this);
+    }
+
+    /**
+     * Normalizes a point by dividing its representation by the last coordinate.
+     * @return the normalized point.
+     */
+    public PointHomogeneous normalized() {
+        final IArithmetic f = this.get(0, getDimension());
+        if (f.isZero()) {
+            throw new IllegalArgumentException("point is at infinity");
+        }
+        return new PointHomogeneous((Matrix) this.dividedBy(f));
+    }
+    
+    /**
+     * Checks if this point is at infinity, which is reflected by its last
+     * coordinate being 0.
+     * 
+     * @return true if this point is at infinity.
+     */
+    public boolean isAtInfinity() {
+        return this.get(0, getDimension()).isZero();
     }
 }

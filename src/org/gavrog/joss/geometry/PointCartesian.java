@@ -18,66 +18,82 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Whole;
 
 /**
  * A d-dimensional point in cartesian coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: PointCartesian.java,v 1.2 2005/08/04 06:06:46 odf Exp $
+ * @version $Id: PointCartesian.java,v 1.3 2005/08/16 19:43:59 odf Exp $
  */
-public class PointCartesian extends Matrix implements IPoint {
+public class PointCartesian extends PointHomogeneous {
     final int dimension;
 
+    /**
+     * Extends a matrix as to be suitable as input for the super constructor.
+     * More precisely, the output has a 1 added as its last column.
+     * 
+     * @param M the input matrix.
+     * @return the extended matrix.
+     */
+    private static Matrix extended(final Matrix M) {
+        if (M.numberOfRows() != 1) {
+            throw new IllegalArgumentException("matrix must have exactly 1 row");
+        }
+        final int d = M.numberOfColumns();
+        final Matrix out = new Matrix(1, d + 1);
+        out.setSubMatrix(0, 0, M);
+        out.set(0, d, new Whole(1));
+        out.makeImmutable();
+        return out;
+    }
+    
+    /**
+     * Extends an array as to be suitable as input for the super constructor.
+     * More precisely, the output is converted to a matrix (not strictly
+     * necessary) and has a 1 added as its last column.
+     * 
+     * @param coords the input array.
+     * @return the extended array as a matrix.
+     */
+    private static Matrix extended(final IArithmetic[] coords) {
+        final int d = coords.length;
+        final Matrix out = new Matrix(1, d + 1);
+        for (int i = 0; i < d; ++i) {
+            out.set(0, i, coords[i]);
+        }
+        out.set(0, d, new Whole(1));
+        out.makeImmutable();
+        return out;
+    }
+    
     /**
      * Create a new point.
      * 
      * @param M contains the coordinates for the point.
      */
     public PointCartesian(final Matrix M) {
-        super(M);
-        if (M.numberOfRows() != 1) {
-            throw new IllegalArgumentException("matrix must have exactly 1 row");
-        }
+        super(extended(M));
         this.dimension = M.numberOfColumns();
     }
     
     /**
      * Create a new point.
      * 
-     * @param coordinates the coordinates for the point.
+     * @param coords the coordinates for the point.
      */
-    public PointCartesian(final IArithmetic[] coordinates) {
-        super(1, coordinates.length);
-        this.dimension = coordinates.length;
-        for (int i = 0; i < this.dimension; ++i) {
-            set(0, i, coordinates[i]);
-        }
-        makeImmutable();
+    public PointCartesian(final IArithmetic[] coords) {
+        super(extended(coords));
+        this.dimension = coords.length;
     }
     
     /**
      * Create a new point from a given one.
      * @param p the point to copy.
      */
-    public PointCartesian(final IPoint p) {
-        super(1, p.getDimension());
+    public PointCartesian(final PointHomogeneous p) {
+        super(p.normalized());
         this.dimension = p.getDimension();
-        if (p instanceof PointCartesian) {
-            setRow(0, ((PointCartesian) p).getRow(0));
-        } else if (p instanceof PointHomogeneous) {
-            final Matrix P = (Matrix) p;
-            final IArithmetic f = P.get(0, this.dimension);
-            if (f.isZero()) {
-                throw new IllegalArgumentException("point at infinity");
-            }
-            for (int i = 0; i < this.dimension; ++i) {
-                set(0, i, P.get(0, i).dividedBy(f));
-            }
-        } else {
-            final String msg = "not supported for " + p.getClass().getName();
-            throw new UnsupportedOperationException(msg);
-        }
-        makeImmutable();
     }
     
     /* (non-Javadoc)
