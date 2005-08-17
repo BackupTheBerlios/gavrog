@@ -24,9 +24,9 @@ import org.gavrog.jane.numbers.Whole;
  * An operator acting by affine transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: AffineOperator.java,v 1.3 2005/08/16 20:22:36 odf Exp $
+ * @version $Id: AffineOperator.java,v 1.4 2005/08/17 02:50:12 odf Exp $
  */
-public class AffineOperator extends ProjectiveOperator {
+public class AffineOperator extends Operator {
     /**
      * Extends a matrix as to be suitable as input for the super constructor.
      * More precisely, the output has a suitable last column added.

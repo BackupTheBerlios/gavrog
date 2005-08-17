@@ -17,15 +17,18 @@ limitations under the License.
 package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
 
 /**
  * An operator acting by projective transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: ProjectiveOperator.java,v 1.2 2005/08/17 02:01:17 odf Exp $
+ * @version $Id: Operator.java,v 1.1 2005/08/17 02:50:12 odf Exp $
  */
-public class ProjectiveOperator extends Matrix implements IOperator {
+public class Operator extends ArithmeticBase implements IArithmetic {
+    //TODO some methods will require the operator to be normalized
+    final Matrix coords;
     final int dimension;
 
     /**
@@ -33,12 +36,12 @@ public class ProjectiveOperator extends Matrix implements IOperator {
      * 
      * @param M the matrix representation.
      */
-    public ProjectiveOperator(final Matrix M) {
-        super(M);
+    public Operator(final Matrix M) {
         this.dimension = M.numberOfRows() - 1;
         if (M.numberOfColumns() != this.dimension + 1) {
             throw new IllegalArgumentException("bad shape");
         }
+        this.coords = new Matrix(M);
     }
 
     /**
@@ -46,7 +49,7 @@ public class ProjectiveOperator extends Matrix implements IOperator {
      * 
      * @param A coordinates for the matrix representation.
      */
-    public ProjectiveOperator(final IArithmetic[][] A) {
+    public Operator(final IArithmetic[][] A) {
         this(new Matrix(A));
     }
 
@@ -60,28 +63,63 @@ public class ProjectiveOperator extends Matrix implements IOperator {
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#getLinearPart()
      */
-    public IOperator getLinearPart() {
+    public Operator getLinearPart() {
+        //TODO reimplement this
         final int d = getDimension();
-        return new LinearOperator(getSubMatrix(0, 0, d, d));
+        return new LinearOperator(coords.getSubMatrix(0, 0, d, d));
     }
 
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
      */
     public Point getImageOfOrigin() {
+        //TODO reimplement this
         final int d = getDimension();
-        return new Point(getSubMatrix(d, 0, 1, d+1));
+        return new Point(coords.getSubMatrix(d, 0, 1, d+1));
     }
 
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#applyTo(org.gavrog.joss.geometry.IPoint)
-     */
-    public Point applyTo(final Point p) {
-        if (p instanceof Point) {
-            return new Point((Matrix) p.times(this));
-        } else {
-            final String msg = "not supported for " + p.getClass().getName();
-            throw new UnsupportedOperationException(msg);
-        }
+    //TODO make all the remaining methods make sense
+    public int compareTo(Object other) {
+        return coords.compareTo(other);
+    }
+
+    public IArithmetic floor() {
+        return coords.floor();
+    }
+
+    public int hashCode() {
+        return coords.hashCode();
+    }
+
+    public IArithmetic inverse() {
+        return coords.inverse();
+    }
+
+    public boolean isExact() {
+        return coords.isExact();
+    }
+
+    public IArithmetic negative() {
+        return coords.negative();
+    }
+
+    public IArithmetic one() {
+        return coords.one();
+    }
+
+    public IArithmetic plus(Object other) {
+        return coords.plus(other);
+    }
+
+    public IArithmetic times(Object other) {
+        return coords.times(other);
+    }
+
+    public String toString() {
+        return coords.toString();
+    }
+
+    public IArithmetic zero() {
+        return coords.zero();
     }
 }
