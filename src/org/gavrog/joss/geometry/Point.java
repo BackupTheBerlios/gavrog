@@ -26,9 +26,10 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.1 2005/08/17 02:01:17 odf Exp $
+ * @version $Id: Point.java,v 1.2 2005/08/17 02:29:29 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
+    //TODO handle points at infinity gracefully
     Matrix coords;
     final int dimension;
     boolean normalized;
@@ -70,15 +71,29 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
     
     /**
+     * Creates a new point from homogeneous coordinates.
+     * 
+     * @param M contains the coordinates for the point.
+     * @param dummy tag parameter, value is ignored.
+     */
+    Point(final Matrix M, final boolean dummy) {
+        if (M.numberOfRows() != 1) {
+            throw new IllegalArgumentException("matrix must have exactly 1 row");
+        }
+        this.dimension = M.numberOfColumns() - 1;
+        this.coords = new Matrix(M);
+        final IArithmetic f = M.get(0, this.dimension);
+        this.normalized = f.isZero() || f.isOne();
+    }
+    
+    /**
      * Normalizes the representation of this point by dividing it by the final
      * coordinate.
      */
     private void normalize() {
         if (!this.normalized) {
             final IArithmetic f = this.coords.get(0, getDimension());
-            if (!f.isOne() && !f.isZero()) {
-                this.coords = (Matrix) this.coords.dividedBy(f);
-            }
+            this.coords = (Matrix) this.coords.dividedBy(f);
             this.normalized = true;
         }
     }
@@ -89,28 +104,69 @@ public class Point extends ArithmeticBase implements IArithmetic {
     public int getDimension() {
         return this.dimension;
     }
+    
+    /**
+     * Retrieves a cartesian coordinate value for this point.
+     * 
+     * @param i the index of the coordinate to retrieve.
+     * @return the coordinate value.
+     */
+    public IArithmetic get(final int i) {
+        if (i < 0 || i > getDimension()) {
+            throw new IllegalArgumentException("index out of range");
+        }
+        normalize();
+        return this.coords.get(0, i);
+    }
+    
+    /**
+     * Retrieves all cartesian coordinate values for this point.
+     * 
+     * @return the coordinates as a row matrix.
+     */
+    public Matrix getCoordinates() {
+        normalize();
+        return this.coords.getSubMatrix(0, 0, 1, getDimension());
+    }
 
     /* (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo(final Object other) {
-        //TODO compare points lexicographically
-        return 0;
+        if (other instanceof Point) {
+            final Point p = (Point) other;
+            if (getDimension() != p.getDimension()) {
+                throw new IllegalArgumentException("dimensions must be equal");
+            }
+            for (int i = 0; i < getDimension(); ++i) {
+                final int d = get(i).compareTo(p.get(i));
+                if (d != 0) {
+                    return d;
+                }
+            }
+            return 0;
+        } else {
+            throw new IllegalArgumentException("can only compare two points");
+        }
     }
 
     /* (non-Javadoc)
      * @see org.gavrog.jane.numbers.IArithmetic#floor()
      */
     public IArithmetic floor() {
-        //TODO implement by taking floor of every coordinate
-        return null;
+        final int d = getDimension();
+        final Matrix M = new Matrix(1, d);
+        for (int i = 0; i < d; ++i) {
+            M.set(0, i, get(i).floor());
+        }
+        return new Point(M);
     }
 
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        return coords.hashCode();
+        return getCoordinates().hashCode();
     }
 
     /* (non-Javadoc)
@@ -131,7 +187,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#negative()
      */
     public IArithmetic negative() {
-        return new Point((Matrix) coords.negative());
+        return new Point((Matrix) getCoordinates().negative());
     }
 
     /* (non-Javadoc)
@@ -152,11 +208,9 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
      */
     public IArithmetic times(final Object other) {
-        if (other instanceof IOperator) {
-            return ((IOperator) other).applyTo(this);
-        } else if (other instanceof Complex){
-            return new Point((Matrix) coords.times(other));
-        } else if (other instanceof IArithmetic){
+        if (other instanceof Complex){
+            return new Point((Matrix) getCoordinates().times(other));
+        } else if (other instanceof IArithmetic) {
             return ((IArithmetic) other).rtimes(this);
         } else {
             throw new UnsupportedOperationException("operation not defined");
@@ -167,18 +221,17 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        normalize();
         final StringBuffer tmp = new StringBuffer(1000);
-        tmp.append("Point([");
-        for (int j = 0; j < getDimension(); ++j) {
-            if (j > 0) {
+        tmp.append("Point(");
+        for (int i = 0; i < getDimension(); ++i) {
+            if (i > 0) {
                 tmp.append(",");
             }
-            if (coords.get(0, j) != null) {
-                tmp.append(coords.get(0, j).toString());
+            if (get(i) != null) {
+                tmp.append(get(i).toString());
             }
         }
-        tmp.append("])");
+        tmp.append(")");
         return tmp.toString();
     }
 
@@ -188,20 +241,6 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#zero()
      */
     public IArithmetic zero() {
-        return new Point((Matrix) coords.zero());
-    }
-    
-    /**
-     * Retrieves a coordinate value from this point's representation.
-     * 
-     * @param i the index of the coordinate to retrieve.
-     * @return the coordinate value.
-     */
-    public IArithmetic get(final int i) {
-        if (i < 0 || i > getDimension()) {
-            throw new IllegalArgumentException("index out of range");
-        }
-        normalize();
-        return this.coords.get(0, i);
+        return new Point((Matrix) getCoordinates().zero());
     }
 }
