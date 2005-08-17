@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.2 2005/08/17 02:29:29 odf Exp $
+ * @version $Id: Point.java,v 1.3 2005/08/17 05:10:59 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -71,21 +71,23 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * Creates a new point from homogeneous coordinates.
+     * This constructor applies a matrix to a point. It is used by operator to
+     * apply an operator to a point.
      * 
-     * @param M contains the coordinates for the point.
-     * @param dummy tag parameter, value is ignored.
+     * @param p the original point.
+     * @param M the operator to apply as a matrix.
      */
-    Point(final Matrix M, final boolean dummy) {
-        if (M.numberOfRows() != 1) {
-            throw new IllegalArgumentException("matrix must have exactly 1 row");
+    Point(final Point p, final Matrix M) {
+        final int d = p.getDimension();
+        if (d != M.numberOfRows() || d != M.numberOfColumns()) {
+            throw new IllegalArgumentException("dimensions don't match");
         }
-        this.dimension = M.numberOfColumns() - 1;
-        this.coords = new Matrix(M);
+        this.dimension = d;
+        this.coords = (Matrix) p.coords.times(M);
         final IArithmetic f = M.get(0, this.dimension);
         this.normalized = f.isZero() || f.isOne();
     }
-    
+
     /**
      * Normalizes the representation of this point by dividing it by the final
      * coordinate.
@@ -95,6 +97,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
             final IArithmetic f = this.coords.get(0, getDimension());
             this.coords = (Matrix) this.coords.dividedBy(f);
             this.normalized = true;
+            this.coords.makeImmutable();
         }
     }
     
@@ -150,8 +153,10 @@ public class Point extends ArithmeticBase implements IArithmetic {
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.gavrog.jane.numbers.IArithmetic#floor()
+    /**
+     * This implementation of floor computes the floor component-wise.
+     * 
+     * @return a new point with all coordinates set to the floor of the originals.
      */
     public IArithmetic floor() {
         final int d = getDimension();

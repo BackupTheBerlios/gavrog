@@ -24,12 +24,12 @@ import org.gavrog.jane.numbers.IArithmetic;
  * An operator acting by projective transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.1 2005/08/17 02:50:12 odf Exp $
+ * @version $Id: Operator.java,v 1.2 2005/08/17 05:10:59 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
-    //TODO some methods will require the operator to be normalized
-    final Matrix coords;
+    Matrix coords;
     final int dimension;
+    boolean normalized;
 
     /**
      * Creates a new operator.
@@ -37,11 +37,14 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @param M the matrix representation.
      */
     public Operator(final Matrix M) {
-        this.dimension = M.numberOfRows() - 1;
-        if (M.numberOfColumns() != this.dimension + 1) {
+        final int d = M.numberOfRows() - 1;
+        if (M.numberOfColumns() != d + 1) {
             throw new IllegalArgumentException("bad shape");
         }
         this.coords = new Matrix(M);
+        this.dimension = d;
+        final IArithmetic f = M.get(d, d);
+        this.normalized = f.isZero() || f.isOne();
     }
 
     /**
@@ -60,66 +63,190 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         return this.dimension;
     }
 
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getLinearPart()
+    /**
+     * Normalizes the representation of this operator by dividing it by the
+     * final coordinate.
+     */
+    private void normalize() {
+        if (!this.normalized) {
+            final int d = getDimension();
+            final IArithmetic f = this.coords.get(d, d);
+            this.coords = (Matrix) this.coords.dividedBy(f);
+            this.normalized = true;
+            this.coords.makeImmutable();
+        }
+    }
+    
+    /**
+     * Retrieves an entry the normalized matrix representation of this operator.
+     * 
+     * @param i the row index.
+     * @param j the column index.
+     * @return the coordinate value.
+     */
+    public IArithmetic get(final int i, final int j) {
+        if (i < 0 || i > getDimension() + 1) {
+            throw new IllegalArgumentException("row index out of range");
+        }
+        if (j < 0 || j > getDimension() + 1) {
+            throw new IllegalArgumentException("column index out of range");
+        }
+        normalize();
+        return this.coords.get(i, j);
+    }
+    
+    /**
+     * Retrieves all cartesian coordinate values for this point.
+     * 
+     * @return the coordinates as a row matrix.
+     */
+    public Matrix getCoordinates() {
+        normalize();
+        return this.coords;
+    }
+
+    /**
+     * Creates an operator representing the linear portion of this one.
+     * 
+     * @return the linear operator.
      */
     public Operator getLinearPart() {
-        //TODO reimplement this
+        normalize();
         final int d = getDimension();
-        return new LinearOperator(coords.getSubMatrix(0, 0, d, d));
+        final Matrix M = this.coords.mutableClone();
+        M.setSubMatrix(d, 0, Matrix.zero(1, d));
+        M.setSubMatrix(0, d, Matrix.zero(d, 1));
+        return new Operator(M);
+    }
+
+    /**
+     * Returns the image of the coordinate origin, or, in other words, the
+     * translational component of this operator.
+     * 
+     * @return the translation component represented as a point.
+     */
+    public Point getImageOfOrigin() {
+        normalize();
+        final int d = getDimension();
+        return new Point(this.coords.getSubMatrix(d, 0, 1, d));
     }
 
     /* (non-Javadoc)
-     * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public Point getImageOfOrigin() {
-        //TODO reimplement this
-        final int d = getDimension();
-        return new Point(coords.getSubMatrix(d, 0, 1, d+1));
+    public int compareTo(final Object other) {
+        if (other instanceof Operator) {
+            final Operator op = (Operator) other;
+            final int dim = getDimension();
+            if (dim != op.getDimension()) {
+                throw new IllegalArgumentException("dimensions must be equal");
+            }
+            for (int i = 0; i < dim+1; ++i) {
+                for (int j = 0; j < dim+1; ++j) {
+                    final int d = get(i, j).compareTo(op.get(i, j));
+                    if (d != 0) {
+                        return d;
+                    }
+                }
+            }
+            return 0;
+        } else {
+            throw new IllegalArgumentException("can only compare two points");
+        }
     }
 
-    //TODO make all the remaining methods make sense
-    public int compareTo(Object other) {
-        return coords.compareTo(other);
-    }
-
+    /**
+     * This implementation of floor computes the floor component-wise, but only
+     * for the translational portion of the operator.
+     * 
+     * @return the modified operator.
+     */
     public IArithmetic floor() {
-        return coords.floor();
+        normalize();
+        final int d = getDimension();
+        final Matrix M = this.coords.mutableClone();
+        for (int i = 0; i < d; ++i) {
+            M.set(d, i, get(d, i).floor());
+        }
+        return new Operator(M);
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     public int hashCode() {
-        return coords.hashCode();
+        return getCoordinates().hashCode();
     }
 
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#inverse()
+     */
     public IArithmetic inverse() {
-        return coords.inverse();
+        return new Operator((Matrix) this.coords.inverse());
     }
 
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#isExact()
+     */
     public boolean isExact() {
-        return coords.isExact();
+        return this.coords.isExact();
     }
 
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#negative()
+     */
     public IArithmetic negative() {
-        return coords.negative();
+        throw new UnsupportedOperationException("operation not defined");
     }
 
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#one()
+     */
     public IArithmetic one() {
-        return coords.one();
+        return new Operator((Matrix) this.coords.one());
     }
 
-    public IArithmetic plus(Object other) {
-        return coords.plus(other);
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#plus(java.lang.Object)
+     */
+    public IArithmetic plus(final Object other) {
+        throw new UnsupportedOperationException("operation not defined");
     }
 
-    public IArithmetic times(Object other) {
-        return coords.times(other);
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
+     */
+    public IArithmetic times(final Object other) {
+        if (other instanceof Operator) {
+            final Matrix M = ((Operator) other).coords;
+            return new Operator((Matrix) this.coords.times(M));
+        } else {
+            throw new UnsupportedOperationException("operation not defined");
+        }
     }
 
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
+     */
+    public IArithmetic rtimes(final Object other) {
+        if (other instanceof Point) {
+            return new Point((Point) other, this.coords);
+        } else {
+            throw new UnsupportedOperationException("operation not defined");
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     public String toString() {
-        return coords.toString();
+        return this.coords.toString().replaceFirst("Matrix", "Operator");
     }
 
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#zero()
+     */
     public IArithmetic zero() {
-        return coords.zero();
+        throw new UnsupportedOperationException("operation not defined");
     }
 }
