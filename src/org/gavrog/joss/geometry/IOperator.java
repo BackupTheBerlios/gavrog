@@ -20,11 +20,11 @@ import org.gavrog.jane.numbers.IArithmetic;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IOperator.java,v 1.1 2005/08/04 03:54:38 odf Exp $
+ * @version $Id: IOperator.java,v 1.2 2005/08/17 02:01:17 odf Exp $
  */
 public interface IOperator extends IArithmetic {
     public int getDimension();
     public IOperator getLinearPart();
-    public IPoint getImageOfOrigin();
-    public IPoint applyTo(IPoint p);
+    public Point getImageOfOrigin();
+    public Point applyTo(Point p);
 }

@@ -23,7 +23,7 @@ import org.gavrog.jane.numbers.IArithmetic;
  * An operator acting by projective transformation.
  * 
  * @author Olaf Delgado
- * @version $Id: ProjectiveOperator.java,v 1.1 2005/08/16 20:22:36 odf Exp $
+ * @version $Id: ProjectiveOperator.java,v 1.2 2005/08/17 02:01:17 odf Exp $
  */
 public class ProjectiveOperator extends Matrix implements IOperator {
     final int dimension;
@@ -68,17 +68,17 @@ public class ProjectiveOperator extends Matrix implements IOperator {
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#getImageOfOrigin()
      */
-    public IPoint getImageOfOrigin() {
+    public Point getImageOfOrigin() {
         final int d = getDimension();
-        return new PointHomogeneous(getSubMatrix(d, 0, 1, d+1));
+        return new Point(getSubMatrix(d, 0, 1, d+1));
     }
 
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#applyTo(org.gavrog.joss.geometry.IPoint)
      */
-    public IPoint applyTo(final IPoint p) {
-        if (p instanceof PointHomogeneous) {
-            return new PointHomogeneous((Matrix) p.times(this));
+    public Point applyTo(final Point p) {
+        if (p instanceof Point) {
+            return new Point((Matrix) p.times(this));
         } else {
             final String msg = "not supported for " + p.getClass().getName();
             throw new UnsupportedOperationException(msg);
