@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.IArithmetic;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.3 2005/08/18 02:00:42 odf Exp $
+ * @version $Id: Operator.java,v 1.4 2005/08/18 02:45:32 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     Matrix coords;
@@ -134,6 +134,16 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         return new Point(this.coords.getSubMatrix(d, 0, 1, d));
     }
 
+    /**
+     * Applies this operator to a point.
+     * 
+     * @param p the point to apply to.
+     * @return the resulting point.
+     */
+    public IArithmetic applyTo(final Point p) {
+        return new Point(p, this.coords);
+    }
+
     /* (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
@@ -223,17 +233,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         if (other instanceof Operator) {
             final Matrix M = ((Operator) other).coords;
             return new Operator((Matrix) this.coords.times(M));
-        } else {
-            throw new UnsupportedOperationException("operation not defined");
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
-     */
-    public IArithmetic rtimes(final Object other) {
-        if (other instanceof Point) {
-            return new Point((Point) other, this.coords);
         } else {
             throw new UnsupportedOperationException("operation not defined");
         }

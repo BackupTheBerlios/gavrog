@@ -26,11 +26,17 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Point class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPoint.java,v 1.1 2005/08/18 02:00:42 odf Exp $
+ * @version $Id: TestPoint.java,v 1.2 2005/08/18 02:45:32 odf Exp $
  */
 public class TestPoint extends TestCase {
     final Point p = new Point(new Matrix(new int[][] {{1, 2, 3}}));
     final Point q = new Point(new Matrix(new double[][] {{1, 2, 4}}));
+    final Matrix M = new Matrix(new int[][] {
+            { 0, 1, 0, 0 },
+            { 0, 0, 1, 0 },
+            { 1, 0, 0, 0 },
+            { 1, 3, 2, 2 },
+            });
 
     public void testHashCode() {
         final Point a = new Point(new Matrix(new int[][] {{1, 2, 3}}));
@@ -81,11 +87,14 @@ public class TestPoint extends TestCase {
     public void testTimes() {
         final Point x = new Point(new Matrix(new double[][] {{3, 6, 9}}));
         assertEquals(x, p.times(3.0));
+        final Point a = new Point(new Matrix(new int[][] {{2, 2, 2}}));
+        assertEquals(a, p.times(new Operator(M)));
     }
 
     public void testCompareTo() {
         final Point a = new Point(new Matrix(new int[][] {{1, 2, 3}}));
         assertTrue(p.compareTo(q) < 0);
+        assertTrue(q.compareTo(p) > 0);
         assertTrue(p.compareTo(a) == 0);
     }
 
@@ -116,12 +125,6 @@ public class TestPoint extends TestCase {
     }
 
     public void testPointPointMatrix() {
-        final Matrix M = new Matrix(new int[][] {
-                { 0, 1, 0, 0 },
-                { 0, 0, 1, 0 },
-                { 1, 0, 0, 0 },
-                { 1, 3, 2, 2 },
-                });
         final Point a = new Point(new Matrix(new int[][] {{2, 2, 2}}));
         assertEquals(a, new Point(p, M));
     }
@@ -135,7 +138,7 @@ public class TestPoint extends TestCase {
     }
 
     public void testGetCoordinates() {
-        final Matrix M = new Matrix(new int[][] {{1, 2, 3}});
-        assertEquals(M, p.getCoordinates());
+        final Matrix A = new Matrix(new int[][] {{1, 2, 3}});
+        assertEquals(A, p.getCoordinates());
     }
 }

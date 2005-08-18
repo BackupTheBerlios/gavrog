@@ -19,12 +19,14 @@ package org.gavrog.joss.geometry;
 import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Whole;
 
 /**
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.1 2005/08/18 02:00:42 odf Exp $
+ * @version $Id: TestOperator.java,v 1.2 2005/08/18 02:45:32 odf Exp $
  */
 public class TestOperator extends TestCase {
     final Matrix M = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
@@ -39,93 +41,121 @@ public class TestOperator extends TestCase {
     }
 
     public void testIsExact() {
-        //TODO Implement isExact().
+        final Matrix A = new Matrix(new double[][] {{0, 1, 0}, {1, 0, 0}, {1, 0, 1}});
+        final Operator opA = new Operator(A);
+        assertTrue(op1.isExact());
+        assertFalse(opA.isExact());
     }
 
     public void testZero() {
-        //TODO Implement zero().
+        try {
+            op1.zero();
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
     public void testOne() {
-        //TODO Implement one().
+        assertEquals(op1, op1.times(op1.one()));
     }
 
     public void testNegative() {
-        //TODO Implement negative().
+        try {
+            op1.negative();
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
     public void testInverse() {
-        //TODO Implement inverse().
+        assertEquals(op1.one(), op1.times(op1.inverse()));
     }
 
-    /*
-     * Class under test for IArithmetic plus(Object)
-     */
-    public void testPlusObject() {
-        //TODO Implement plus().
+    public void testPlus() {
+        try {
+            op1.plus(op1);
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
-    /*
-     * Class under test for IArithmetic times(Object)
-     */
-    public void testTimesObject() {
-        //TODO Implement times().
+    public void testTimes() {
+        final Matrix A = new Matrix(new int[][] {{-1, 0, 0}, {0, -1, 0}, {1, 1, 1}});
+        final Operator opA = new Operator(new Matrix(A));
+        assertEquals(opA, op1.times(op1));
     }
 
     public void testCompareTo() {
-        //TODO Implement compareTo().
+        final Matrix A = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {2, 0, 1}});
+        final Matrix B = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
+        final Operator opA = new Operator(new Matrix(A));
+        final Operator opB = new Operator(new Matrix(B));
+        assertTrue(op1.compareTo(opA) < 0);
+        assertTrue(opA.compareTo(op1) > 0);
+        assertTrue(opB.compareTo(op1) == 0);
     }
 
     public void testFloor() {
-        //TODO Implement floor().
+        final Matrix A = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
+                { 1.1, 0, 1 } });
+        final Matrix B = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
+                { 1, 0, 1 } });
+        final Operator opA = new Operator(new Matrix(A));
+        final Operator opB = new Operator(new Matrix(B));
+        assertEquals(opB, opA.floor());
     }
 
-    /*
-     * Class under test for String toString()
-     */
     public void testToString() {
-        //TODO Implement toString().
+        final String s = "Operator([[0,1,0],[-1,0,0],[1,0,1]])";
+        assertEquals(s, op1.toString());
     }
 
-    /*
-     * Class under test for void Operator(Matrix)
-     */
     public void testOperatorMatrix() {
-        //TODO Implement Operator().
+        final Matrix A = new Matrix(new int[][] {{0, 2, 0}, {-2, 0, 0}, {2, 0, 2}});
+        final Operator opA = new Operator(A);
+        assertEquals(op1, opA);
     }
 
-    /*
-     * Class under test for void Operator(IArithmetic[][])
-     */
     public void testOperatorIArithmeticArrayArray() {
-        //TODO Implement Operator().
+        final IArithmetic A[][] = new IArithmetic[][] {
+                {Whole.ZERO, Whole.ONE, Whole.ZERO},
+                {new Whole(-1), Whole.ZERO, Whole.ZERO},
+                {Whole.ONE, Whole.ZERO, Whole.ONE}
+        };
+        final Operator opA = new Operator(A);
+        assertEquals(op1, opA);
     }
 
     public void testGetDimension() {
-        //TODO Implement getDimension().
+        assertEquals(2, op1.getDimension());
     }
 
     public void testGet() {
-        //TODO Implement get().
+        assertEquals(new Whole(-1), op1.get(1, 0));
     }
 
     public void testGetCoordinates() {
-        //TODO Implement getCoordinates().
+        assertEquals(M, op1.getCoordinates());
     }
 
     public void testGetLinearPart() {
-        //TODO Implement getLinearPart().
+        final Matrix A = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}});
+        final Operator opA = new Operator(A);
+        assertEquals(opA, op1.getLinearPart());
     }
 
     public void testGetImageOfOrigin() {
-        //TODO Implement getImageOfOrigin().
+        final Point p = new Point(new Matrix(new int[][] {{1, 0}}));
+        assertEquals(p, op1.getImageOfOrigin());
     }
 
-    /*
-     * Class under test for IArithmetic rtimes(Object)
-     */
-    public void testRtimesObject() {
-        //TODO Implement rtimes().
+    public void testApplyTo() {
+        final Point x = new Point(new Matrix(new int[][] {{1, 0}}));
+        final Point xy = new Point(new Matrix(new int[][] {{1, 1}}));
+        final Point y = new Point(new Matrix(new int[][] {{0, 1}}));
+        assertEquals(xy, op1.applyTo(x));
+        assertEquals(y, op1.applyTo(xy));
+        assertEquals(y.zero(), op1.applyTo(y));
+        assertEquals(x, op1.applyTo((Point) y.zero()));
     }
-
 }
