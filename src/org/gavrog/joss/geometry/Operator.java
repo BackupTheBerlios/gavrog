@@ -21,10 +21,12 @@ import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
 
 /**
- * An operator acting by projective transformation.
+ * An operator acting on d-dimensional space by projective transformation.
+ * Operators are represented by (d+1)x(d+1) matrices which are to be applied to
+ * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.2 2005/08/17 05:10:59 odf Exp $
+ * @version $Id: Operator.java,v 1.3 2005/08/18 02:00:42 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     Matrix coords;
@@ -34,7 +36,7 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     /**
      * Creates a new operator.
      * 
-     * @param M the matrix representation.
+     * @param M the (d+1)x(d+1) matrix representation.
      */
     public Operator(final Matrix M) {
         final int d = M.numberOfRows() - 1;
@@ -50,7 +52,7 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     /**
      * Creates a new operator.
      * 
-     * @param A coordinates for the matrix representation.
+     * @param A coordinates for the (d+1)x(d+1) matrix representation.
      */
     public Operator(final IArithmetic[][] A) {
         this(new Matrix(A));
@@ -78,7 +80,8 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * Retrieves an entry the normalized matrix representation of this operator.
+     * Retrieves an entry of the normalized matrix representation of this
+     * operator.
      * 
      * @param i the row index.
      * @param j the column index.
@@ -151,7 +154,7 @@ public class Operator extends ArithmeticBase implements IArithmetic {
             }
             return 0;
         } else {
-            throw new IllegalArgumentException("can only compare two points");
+            throw new IllegalArgumentException("can only compare two operators");
         }
     }
 

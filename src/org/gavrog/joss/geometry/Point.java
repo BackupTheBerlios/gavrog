@@ -26,16 +26,18 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.3 2005/08/17 05:10:59 odf Exp $
+ * @version $Id: Point.java,v 1.4 2005/08/18 02:00:42 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
-    Matrix coords;
+    final Matrix coords;
     final int dimension;
-    boolean normalized;
 
     /**
-     * Creates a new point.
+     * Creates a new point from a row matrix containing its cartesian
+     * coordinates. The dimension d of the point created will correspond to the
+     * number of columns in the given matrix. An extra coordinate of value 1
+     * will be added internally.
      * 
      * @param M contains the coordinates for the point.
      */
@@ -45,14 +47,16 @@ public class Point extends ArithmeticBase implements IArithmetic {
         }
         final int d = M.numberOfColumns();
         this.dimension = d;
-        this.coords = new Matrix(1, d+1);
+        this.coords = new Matrix(1, d + 1);
         this.coords.setSubMatrix(0, 0, M);
         this.coords.set(0, d, Whole.ONE);
-        this.normalized = true;
     }
-    
+
     /**
-     * Creates a new point from its coordinates.
+     * Creates a new point from its cartesian coordinates represented as an
+     * array. The dimension d of the point created will correspond to the number
+     * of an entries in the array. An extra coordinate of value 1 will be added
+     * internally.
      * 
      * @param coordinates the coordinates for the point.
      */
@@ -61,47 +65,46 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * Creates a new point from a given one.
-     * @param p the point to copy.
+     * Creates a new point as a copy of a given one.
+     * @param p the model point.
      */
     public Point(final Point p) {
         this.dimension = p.dimension;
         this.coords = p.coords;
-        this.normalized = p.normalized;
     }
     
     /**
-     * This constructor applies a matrix to a point. It is used by operator to
-     * apply an operator to a point.
+     * This constructor applies a matrix to a point. It is used by the Operator
+     * class to apply a general projective operator to a point.
      * 
      * @param p the original point.
-     * @param M the operator to apply as a matrix.
+     * @param M the operator to apply as a (d+1)x(d+1) matrix.
      */
     Point(final Point p, final Matrix M) {
-        final int d = p.getDimension();
-        if (d != M.numberOfRows() || d != M.numberOfColumns()) {
-            throw new IllegalArgumentException("dimensions don't match");
-        }
-        this.dimension = d;
-        this.coords = (Matrix) p.coords.times(M);
-        final IArithmetic f = M.get(0, this.dimension);
-        this.normalized = f.isZero() || f.isOne();
+        this(image(p, M));
     }
 
     /**
-     * Normalizes the representation of this point by dividing it by the final
-     * coordinate.
+     * Applies an operator to a point and normalizes the result by dividing
+     * through the last coordinate.
+     * 
+     * @param p the original point.
+     * @param M the operator to apply as a (d+1)x(d+1) matrix.
+     * @return the resulting normalized point coordinates.
      */
-    private void normalize() {
-        if (!this.normalized) {
-            final IArithmetic f = this.coords.get(0, getDimension());
-            this.coords = (Matrix) this.coords.dividedBy(f);
-            this.normalized = true;
-            this.coords.makeImmutable();
+    private static Matrix image(final Point p, final Matrix M) {
+        final int d = p.getDimension();
+        if (d != M.numberOfRows() - 1 || d != M.numberOfColumns() - 1) {
+            throw new IllegalArgumentException("dimensions don't match");
         }
+        final Matrix img = (Matrix) p.coords.times(M);
+        final IArithmetic f = img.get(0, d);
+        return ((Matrix) img.dividedBy(f)).getSubMatrix(0, 0, 1, d);
     }
     
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.gavrog.joss.geometry.IPoint#getDimension()
      */
     public int getDimension() {
@@ -118,7 +121,6 @@ public class Point extends ArithmeticBase implements IArithmetic {
         if (i < 0 || i > getDimension()) {
             throw new IllegalArgumentException("index out of range");
         }
-        normalize();
         return this.coords.get(0, i);
     }
     
@@ -128,7 +130,6 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @return the coordinates as a row matrix.
      */
     public Matrix getCoordinates() {
-        normalize();
         return this.coords.getSubMatrix(0, 0, 1, getDimension());
     }
 
