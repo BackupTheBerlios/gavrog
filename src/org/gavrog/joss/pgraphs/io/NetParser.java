@@ -37,6 +37,7 @@ import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -44,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.24 2005/08/01 22:53:44 odf Exp $
+ * @version $Id: NetParser.java,v 1.25 2005/08/18 22:07:05 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -795,7 +796,7 @@ public class NetParser extends GenericParser {
                 buf.append(' ');
                 buf.append(fields.get(i));
             }
-            return SpaceGroup.parseOperator(buf.toString());
+            return Operator.parse(buf.toString());
         }
     }
 }

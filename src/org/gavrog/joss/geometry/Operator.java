@@ -19,6 +19,8 @@ package org.gavrog.joss.geometry;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * An operator acting on d-dimensional space by projective transformation.
@@ -26,7 +28,7 @@ import org.gavrog.jane.numbers.IArithmetic;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.5 2005/08/18 20:50:42 odf Exp $
+ * @version $Id: Operator.java,v 1.6 2005/08/18 22:07:05 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -55,6 +57,15 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      */
     public Operator(final IArithmetic[][] A) {
         this(new Matrix(A));
+    }
+
+    /**
+     * Creates a new operator.
+     * 
+     * @param s a symbolic representation of the new operator.
+     */
+    public Operator(final String s) {
+        this(parse(s));
     }
 
     /* (non-Javadoc)
@@ -230,5 +241,93 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      */
     public IArithmetic zero() {
         throw new UnsupportedOperationException("operation not defined");
+    }
+
+    /**
+     * Parses an operator given in symbolic form, as in "y+x,-x,z+1/2", and returns the
+     * corresponding matrix, which can then be used as input to the constructor. In the
+     * symbolic form of the operator, the letters "x", "y" and "z" stand for the first
+     * three cartesian coordinates of the point the operator is to be applied to.
+     * 
+     * CAVEAT: currently, only affine operators and only dimensions up to 3 are supported.
+     * 
+     * @param s the input string.
+     * @return the operator matrix encoded by the input string.
+     */
+    public static Matrix parse(final String s) {
+        final String msg = "Bad operator format for \"" + s + "\": "; // just in case
+        
+        final String parts[] = s.replaceAll("\\s+", "").split(",");
+        if (parts.length > 3) {
+            throw new DataFormatException(msg + "more than 3 coordinates.");
+        }
+        final int d = parts.length;
+        final String varNames = "xyz".substring(0, d) + "#";
+        final Matrix M = new Matrix(d+1, d+1);
+        M.setColumn(d, Matrix.zero(d+1, 1));
+        M.set(d, d, new Whole(1));
+        
+        for (int i = 0; i < d; ++i) {
+            final String term = parts[i] + "#";
+            final int m = term.length() - 1;
+            int k = 0;
+            while (k < m) {
+                IArithmetic f = new Whole(1);
+                if (term.charAt(k) == '-') {
+                    f = f.negative();
+                    ++k;
+                } else if (term.charAt(k) == '+') {
+                    ++k;
+                }
+                int j = k;
+                while (Character.isDigit(term.charAt(k))) {
+                    ++k;
+                }
+                if (k > j) {
+                    final int z = Integer.parseInt(term.substring(j, k));
+                    f = f.times(new Whole(z));
+                }
+                if (term.charAt(k) == '/') {
+                    ++k;
+                    j = k;
+                    while (Character.isDigit(term.charAt(k))) {
+                        ++k;
+                    }
+                    if (k > j) {
+                        final int z = Integer.parseInt(term.substring(j, k));
+                        f = f.dividedBy(new Whole(z));
+                    } else {
+                        throw new DataFormatException(msg + "fraction has no denominator");
+                    }
+                }
+                if (term.charAt(k) == '*') {
+                    ++k;
+                }
+                final char c = term.charAt(k);
+                j = varNames.indexOf(c);
+                if (j >= 0) {
+                    ++k;
+                } else if (Character.isDigit(c) || "+-".indexOf(c) >= 0) {
+                    j = d;
+                } else {
+                    throw new DataFormatException(msg + "illegal variable name " + c);
+                }
+                if (M.get(j, i) != null) {
+                    throw new DataFormatException(msg + "variable used twice");
+                } else {
+                    M.set(j, i, f);
+                }
+            }
+        }
+        for (int i = 0; i < d+1; ++i) {
+            for (int j = 0; j < d+1; ++j) {
+                if (M.get(i, j) == null) {
+                    M.set(i, j, Whole.ZERO);
+                }
+            }
+        }
+        M.makeImmutable();
+        
+        return M;
     }
 }

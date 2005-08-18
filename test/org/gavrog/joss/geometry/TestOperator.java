@@ -19,14 +19,16 @@ package org.gavrog.joss.geometry;
 import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.2 2005/08/18 02:45:32 odf Exp $
+ * @version $Id: TestOperator.java,v 1.3 2005/08/18 22:07:05 odf Exp $
  */
 public class TestOperator extends TestCase {
     final Matrix M = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
@@ -126,6 +128,11 @@ public class TestOperator extends TestCase {
         assertEquals(op1, opA);
     }
 
+    public void testOperatorString() {
+        final Operator opA = new Operator("1-y,x");
+        assertEquals(op1, opA);
+    }
+    
     public void testGetDimension() {
         assertEquals(2, op1.getDimension());
     }
@@ -157,5 +164,46 @@ public class TestOperator extends TestCase {
         assertEquals(y, op1.applyTo(xy));
         assertEquals(y.zero(), op1.applyTo(y));
         assertEquals(x, op1.applyTo((Point) y.zero()));
+    }
+
+    public void testParseOperator() {
+        String s;
+        Matrix M;
+        
+        s = "x-4y+7*z-10, +5/3y-8z+11-2x, +3*x+ 9z-6y - 12";
+        M = new Matrix(new int[][] {
+                {  1, -2,   3, 0},
+                { -4,  5,  -6, 0},
+                {  7, -8,   9, 0},
+                {-10, 11, -12, 1}}).mutableClone();
+        M.set(1, 1, new Fraction(5, 3));
+        assertEquals(M, Operator.parse(s));
+        assertFalse(Operator.parse(s).isMutable());
+        
+        assertEquals(Matrix.one(4), Operator.parse("x,y,z"));
+        
+        try {
+            Operator.parse("1,2,3,4");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+        
+        try {
+            Operator.parse("a,2,3");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+        
+        try {
+            Operator.parse("1,2/,3");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
+        
+        try {
+            Operator.parse("x+3x,2,3");
+            fail("should throw an DataFormatException");
+        } catch (DataFormatException success) {
+        }
     }
 }
