@@ -26,12 +26,12 @@ import org.gavrog.jane.numbers.IArithmetic;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.4 2005/08/18 02:45:32 odf Exp $
+ * @version $Id: Operator.java,v 1.5 2005/08/18 20:50:42 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
-    Matrix coords;
+    //TODO handle zero scale entry gracefully
+    final Matrix coords;
     final int dimension;
-    boolean normalized;
 
     /**
      * Creates a new operator.
@@ -43,10 +43,9 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         if (M.numberOfColumns() != d + 1) {
             throw new IllegalArgumentException("bad shape");
         }
-        this.coords = new Matrix(M);
-        this.dimension = d;
         final IArithmetic f = M.get(d, d);
-        this.normalized = f.isZero() || f.isOne();
+        this.coords = (Matrix) M.dividedBy(f);
+        this.dimension = d;
     }
 
     /**
@@ -66,20 +65,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     }
 
     /**
-     * Normalizes the representation of this operator by dividing it by the
-     * final coordinate.
-     */
-    private void normalize() {
-        if (!this.normalized) {
-            final int d = getDimension();
-            final IArithmetic f = this.coords.get(d, d);
-            this.coords = (Matrix) this.coords.dividedBy(f);
-            this.normalized = true;
-            this.coords.makeImmutable();
-        }
-    }
-    
-    /**
      * Retrieves an entry of the normalized matrix representation of this
      * operator.
      * 
@@ -94,7 +79,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         if (j < 0 || j > getDimension() + 1) {
             throw new IllegalArgumentException("column index out of range");
         }
-        normalize();
         return this.coords.get(i, j);
     }
     
@@ -104,7 +88,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @return the coordinates as a row matrix.
      */
     public Matrix getCoordinates() {
-        normalize();
         return this.coords;
     }
 
@@ -114,7 +97,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @return the linear operator.
      */
     public Operator getLinearPart() {
-        normalize();
         final int d = getDimension();
         final Matrix M = this.coords.mutableClone();
         M.setSubMatrix(d, 0, Matrix.zero(1, d));
@@ -129,7 +111,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @return the translation component represented as a point.
      */
     public Point getImageOfOrigin() {
-        normalize();
         final int d = getDimension();
         return new Point(this.coords.getSubMatrix(d, 0, 1, d));
     }
@@ -175,7 +156,6 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @return the modified operator.
      */
     public IArithmetic floor() {
-        normalize();
         final int d = getDimension();
         final Matrix M = this.coords.mutableClone();
         for (int i = 0; i < d; ++i) {
