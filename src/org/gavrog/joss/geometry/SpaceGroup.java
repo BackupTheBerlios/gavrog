@@ -66,7 +66,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.3 2005/08/18 22:07:05 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.4 2005/08/19 22:43:41 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -101,9 +101,9 @@ public class SpaceGroup {
         final int d = dimension;
         
         for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            final Matrix op = (Matrix) iter.next();
-            if (op.numberOfRows() != d+1 || op.numberOfColumns() != d+1) {
-                throw new IllegalArgumentException("bad shape for operator " + op);
+            final Operator op = (Operator) iter.next();
+            if (op.getDimension() != d) {
+                throw new IllegalArgumentException("wrong dimension for operator " + op);
             }
             for (int i = 0; i < d; ++i) {
                 for (int j = 0; j < d; ++j) {
@@ -128,8 +128,8 @@ public class SpaceGroup {
                 throw new IllegalArgumentException(msg);
             }
             
-            final Matrix A = op.getSubMatrix(0, 0, d, d);
-            if (!A.determinant().abs().equals(Whole.ONE)) {
+            final Operator lin = op.getLinearPart();
+            if (!lin.getCoordinates().determinant().abs().equals(Whole.ONE)) {
                 final String msg = "linear part of operator " + op + " is not unimodular";
                 throw new IllegalArgumentException(msg);
             }
@@ -138,7 +138,7 @@ public class SpaceGroup {
         // --- copy operators and normalize their translational parts
         final Set ops = new HashSet();
         for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            ops.add(normalized((Matrix) iter.next()));
+            ops.add(((Operator) iter.next()).mod1());
         }
         
         // --- generate a full set of operators, if required
@@ -150,10 +150,10 @@ public class SpaceGroup {
             queue.addAll(gens);
             
             while (queue.size() > 0) {
-                final Matrix A = (Matrix) queue.removeFirst();
+                final Operator A = (Operator) queue.removeFirst();
                 for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-                    final Matrix B = (Matrix) iter.next();
-                    final Matrix AB = normalized((Matrix) A.times(B));
+                    final Operator B = (Operator) iter.next();
+                    final Operator AB = ((Operator) A.times(B)).mod1();
                     if (!ops.contains(AB)) {
                         ops.add(AB);
                         queue.addLast(AB);
@@ -165,10 +165,10 @@ public class SpaceGroup {
         // --- check products and inverses, if required
         if (check) {
             for (final Iterator iter1 = ops.iterator(); iter1.hasNext();) {
-                final Matrix A = (Matrix) iter1.next();
+                final Operator A = (Operator) iter1.next();
                 for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
-                    final Matrix B = (Matrix) iter2.next();
-                    final Matrix AB_ = normalized((Matrix) A.times(B.inverse()));
+                    final Operator B = (Operator) iter2.next();
+                    final Operator AB_ = ((Operator) A.times(B.inverse())).mod1();
                     if (!ops.contains(AB_)) {
                         throw new IllegalArgumentException("operators don't form a group");
                     }
@@ -226,21 +226,21 @@ public class SpaceGroup {
     public Matrix primitiveCell() {
         // --- some shortcuts
         final int d = getDimension();
-        final Matrix I = Matrix.one(d);
+        final Operator I = Operator.identity(d);
         
         // --- collect translation vectors
         final List vecs = new ArrayList();
         for (final Iterator iter = this.operators.iterator(); iter.hasNext();) {
-            final Matrix op = (Matrix) iter.next();
-            final Matrix A = op.getSubMatrix(0, 0, d, d);
+            final Operator op = (Operator) iter.next();
+            final Operator A = op.getLinearPart();
             if (A.equals(I)) {
-                vecs.add(op.getSubMatrix(d, 0, 1, d));
+                vecs.add(op.getImageOfOrigin().getCoordinates());
             }
         }
         
         // --- copy the vectors into a matrix
         final Matrix B = new Matrix(vecs.size() + d, d);
-        B.setSubMatrix(0, 0, I);
+        B.setSubMatrix(0, 0, Matrix.one(d));
         for (int i = 0; i < vecs.size(); ++i) {
             B.setRow(i + d, (Matrix) vecs.get(i));
         }
@@ -256,33 +256,16 @@ public class SpaceGroup {
     }
     
     /**
-     * Normalize the translational component of an operator by reducing its
-     * entries modulo 1, yielding values in the half-open interval [0,1).
-     * 
-     * @param op the original operator.
-     * @return the normalized operator.
-     */
-    public static Matrix normalized(final Matrix op) {
-        final Matrix result = op.mutableClone();
-        final int d = op.numberOfRows() - 1;
-        for (int i = 0; i < d; ++i) {
-            result.set(d, i, op.get(d, i).mod(Whole.ONE));
-        }
-        return result;
-    }
-
-    /**
      * Returns a matrix that, via multiplication from the right, transforms a
      * row vector in unit cell coordinates into one using primitive cell
      * coordinates.
      * 
      * @return the transformation matrix.
      */
-    public Matrix transformationToPrimitive() {
-        final int d = getDimension();
-        final Matrix P = Matrix.one(d+1).mutableClone();
+    public Operator transformationToPrimitive() {
+        final Matrix P = Matrix.one(getDimension()+1).mutableClone();
         P.setSubMatrix(0, 0, primitiveCell());
-        return (Matrix) P.inverse();
+        return (Operator) (new Operator(P)).inverse();
     }
     
     /**
@@ -294,15 +277,13 @@ public class SpaceGroup {
      */
     public Set primitiveOperators() {
         final Set result = new HashSet();
-        final int d = getDimension();
-        final Matrix P = Matrix.one(d+1).mutableClone();
-        P.setSubMatrix(0, 0, primitiveCell());
-        final Matrix P_1 = (Matrix) P.inverse();
+        final Operator T_1 = transformationToPrimitive();
+        final Operator T = (Operator) T_1.inverse();
         
         for (final Iterator iter = getOperators().iterator(); iter.hasNext();) {
-            final Matrix op = (Matrix) iter.next();
-            final Matrix tmp = normalized((Matrix) P.times(op).times(P_1));
-            final Matrix out = normalized((Matrix) P_1.times(tmp).times(P));
+            final Operator op = (Operator) iter.next();
+            final Operator tmp = ((Operator) T.times(op).times(T_1)).mod1();
+            final Operator out = ((Operator) T_1.times(tmp).times(T)).mod1();
             result.add(out);
         }
         
@@ -338,11 +319,10 @@ public class SpaceGroup {
             if (i > 0) {
                 currentName = line.substring(0, i);
                 nameToOps.put(currentName, new LinkedList());
-                final Matrix T = Operator.parse(line.substring(i + 1));
+                final Operator T = new Operator(line.substring(i + 1));
                 nameToTransform.put(currentName, T);
             } else if (currentName != null) {
-                Matrix op = Operator.parse(line);
-                op = normalized(op);
+                final Operator op = new Operator(line).mod1();
                 ((List) nameToOps.get(currentName)).add(op);
             } else {
                 throw new DataFormatException("error in space group table file");
@@ -429,8 +409,8 @@ public class SpaceGroup {
         return (List) retrieve(name, true);
     }
 
-    public static Matrix transform(final String name) {
-        return (Matrix) retrieve(name, false);
+    public static Operator transform(final String name) {
+        return (Operator) retrieve(name, false);
     }
 
     /**

@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.2 2005/08/18 22:07:05 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.3 2005/08/19 22:43:41 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -56,7 +56,7 @@ public class TestSpaceGroup extends TestCase {
         
         // --- try some illegal inputs
         final List L = new LinkedList();
-        L.add(Operator.parse("x,2y"));
+        L.add(new Operator("x,2y"));
         try {
             new SpaceGroup(2, L, false, false);
             fail("should throw an IllegalArgumentException");
@@ -64,7 +64,8 @@ public class TestSpaceGroup extends TestCase {
         }
         
         L.clear();
-        L.add(new Matrix(new int[][] { { 1, 0, 1 }, { 0, 1, 0 }, { 0, 0, 1 } }));
+        L.add(new Operator(new Matrix(
+                new int[][] { { 1, 0, 1 }, { 0, 1, 0 }, { 0, 0, 1 } })));
         try {
             new SpaceGroup(2, L, false, false);
             fail("should throw an IllegalArgumentException");
@@ -72,7 +73,7 @@ public class TestSpaceGroup extends TestCase {
         }
         
         L.clear();
-        L.add(Operator.parse("1/2x,y"));
+        L.add(new Operator("1/2x,y"));
         try {
             new SpaceGroup(2, L, false, false);
             fail("should throw an IllegalArgumentException");
@@ -82,7 +83,7 @@ public class TestSpaceGroup extends TestCase {
         L.clear();
         final Matrix B = Matrix.one(3).mutableClone();
         B.set(2, 1, new FloatingPoint(0.5));
-        L.add(B);
+        L.add(new Operator(B));
         try {
             new SpaceGroup(2, L, false, false);
             fail("should throw an IllegalArgumentException");
@@ -92,28 +93,20 @@ public class TestSpaceGroup extends TestCase {
     
     public void testSpaceGroupByGenerators() {
         final List L = new LinkedList();
-        L.add(Operator.parse("-x,y"));
-        L.add(Operator.parse("x,-y"));
-        L.add(Operator.parse("x-1/2,y-1/2"));
+        L.add(new Operator("-x,y"));
+        L.add(new Operator("x,-y"));
+        L.add(new Operator("x-1/2,y-1/2"));
         final SpaceGroup G = new SpaceGroup(2, L, true, false);
         assertEquals(8, G.getOperators().size());
     }
 
     public void testGetDimension() {
         final List L = new LinkedList();
-        L.add(Matrix.one(3));
+        L.add(Operator.identity(2));
         final SpaceGroup G = new SpaceGroup(2, L, false, false);
         assertEquals(2, G.getDimension());
     }
     
-    public void testNormalized() {
-        final Matrix A = Operator.parse("z,x,y+1/2");
-        final Matrix B = Operator.parse("z-2,x+1,y-3/2");
-        final Matrix C = Operator.parse("z,x,y");
-        assertEquals(SpaceGroup.normalized(A), SpaceGroup.normalized(B));
-        assertFalse(SpaceGroup.normalized(A).equals(SpaceGroup.normalized(C)));
-    }
-
     public void testPrimitiveCell() {
         final Matrix B = Operator.parse("1/2x,1/2y,1/2x+1/2y+z");
         assertEquals(B.getSubMatrix(0, 0, 3, 3), Fddd.primitiveCell());
@@ -139,8 +132,8 @@ public class TestSpaceGroup extends TestCase {
     }
     
     public void testTransform() {
-        final Matrix T = SpaceGroup.transform("Ia-3d");
+        final Operator T = SpaceGroup.transform("Ia-3d");
         assertNotNull(T);
-        assertEquals(Matrix.one(4), T);
+        assertEquals(Operator.identity(3), T);
     }
 }
