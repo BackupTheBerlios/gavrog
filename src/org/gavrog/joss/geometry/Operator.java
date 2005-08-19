@@ -19,6 +19,7 @@ package org.gavrog.joss.geometry;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.pgraphs.io.DataFormatException;
 
@@ -28,7 +29,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.6 2005/08/18 22:07:05 odf Exp $
+ * @version $Id: Operator.java,v 1.7 2005/08/19 22:42:51 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -68,6 +69,16 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         this(parse(s));
     }
 
+    /**
+     * Creates an identity operator.
+     * 
+     * @param dimension the dimension of the space to act on.
+     * @return the new operator.
+     */
+    public static Operator identity(final int dimension) {
+        return new Operator(Matrix.one(dimension + 1));
+    }
+    
     /* (non-Javadoc)
      * @see org.gavrog.joss.geometry.IOperator#getDimension()
      */
@@ -171,6 +182,21 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         final Matrix M = this.coords.mutableClone();
         for (int i = 0; i < d; ++i) {
             M.set(d, i, get(d, i).floor());
+        }
+        return new Operator(M);
+    }
+
+    /**
+     * Creates an operator in which every coordinate of the translational part is reduced
+     * modulo 1. Those coordinates must all be reals. 
+     * 
+     * @return the modified operator.
+     */
+    public Operator mod1() {
+        final int d = getDimension();
+        final Matrix M = this.coords.mutableClone();
+        for (int i = 0; i < d; ++i) {
+            M.set(d, i, ((Real) get(d, i)).mod(1));
         }
         return new Operator(M);
     }
