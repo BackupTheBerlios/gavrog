@@ -48,16 +48,20 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * </code>
  * 
  * where A is a d x d unimodular integer matrix and v is a d-dimensional vector
- * with rational entries.
+ * with rational entries. Rather than raw matrices, we use instances of the
+ * class {@link Operator}.
  * 
  * Each matrix encodes a d-dimensional affine transformation, where d is the
  * dimension of the group. These act from the right on (d+1)-dimensional row
  * vectors of the form (p 1), representing points in d-dimensional space, where
- * p is a d-dimensional vector. This convention is used in order to allow for an
- * easy encoding of the translational component of a symmetry. It could be
- * extended to enable general projective transformations, but these are not
- * needed in this package. Consequently, the last column of each operator matrix
- * must always be of the form shown above.
+ * p is a d-dimensional vector. Again, points are not given as raw matrices, but
+ * rather as instances of the class {@link Point}.
+ * 
+ * These convention are used in order to allow for an easy encoding of the
+ * translational component of a symmetry. It could be extended to enable general
+ * projective transformations, but these are not needed in this package.
+ * Consequently, the last column of each operator matrix must always be of the
+ * form shown above.
  * 
  * Operators are interpreted in terms of a unit cell for the group, which is
  * either a primitive cell or a centered cell. A full set of operators is formed
@@ -66,7 +70,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.4 2005/08/19 22:43:41 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.5 2005/08/20 04:59:02 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -80,7 +84,7 @@ public class SpaceGroup {
      * Constructs a new instance.
      * 
      * If the "generate" parameter is set, the given collection of operators is
-     * taken to generate the group together with the unit cell translations, and
+     * taken together with the unit cell translations to generate the group, and
      * a full set of normalized operators is generated from it.
      * 
      * If the "generate" parameter is not set, the given operators are assumed
@@ -112,7 +116,7 @@ public class SpaceGroup {
                         throw new IllegalArgumentException(msg);
                     }
                 }
-                if (!op.get(i, d).equals(Whole.ZERO)) {
+                if (!op.get(i, d).isZero()) {
                     final String msg = "bad last column for operator " + op;
                     throw new IllegalArgumentException(msg);
                 }
@@ -123,13 +127,13 @@ public class SpaceGroup {
                     throw new IllegalArgumentException(msg);
                 }
             }
-            if (!op.get(d, d).equals(Whole.ONE)) {
+            if (!op.get(d, d).isOne()) {
                 final String msg = "bad last column for operator " + op;
                 throw new IllegalArgumentException(msg);
             }
             
             final Operator lin = op.getLinearPart();
-            if (!lin.getCoordinates().determinant().abs().equals(Whole.ONE)) {
+            if (!lin.getCoordinates().determinant().abs().isOne()) {
                 final String msg = "linear part of operator " + op + " is not unimodular";
                 throw new IllegalArgumentException(msg);
             }
@@ -138,7 +142,7 @@ public class SpaceGroup {
         // --- copy operators and normalize their translational parts
         final Set ops = new HashSet();
         for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            ops.add(((Operator) iter.next()).mod1());
+            ops.add(((Operator) iter.next()).mod(1));
         }
         
         // --- generate a full set of operators, if required
@@ -153,7 +157,7 @@ public class SpaceGroup {
                 final Operator A = (Operator) queue.removeFirst();
                 for (final Iterator iter = gens.iterator(); iter.hasNext();) {
                     final Operator B = (Operator) iter.next();
-                    final Operator AB = ((Operator) A.times(B)).mod1();
+                    final Operator AB = (Operator) ((Operator) A.times(B)).mod(1);
                     if (!ops.contains(AB)) {
                         ops.add(AB);
                         queue.addLast(AB);
@@ -168,9 +172,9 @@ public class SpaceGroup {
                 final Operator A = (Operator) iter1.next();
                 for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
                     final Operator B = (Operator) iter2.next();
-                    final Operator AB_ = ((Operator) A.times(B.inverse())).mod1();
-                    if (!ops.contains(AB_)) {
-                        throw new IllegalArgumentException("operators don't form a group");
+                    final Operator AB_ = (Operator) A.times(B.inverse());
+                    if (!ops.contains(AB_.mod(1))) {
+                        throw new IllegalArgumentException("operators form no group");
                     }
                 }
             }
@@ -282,8 +286,8 @@ public class SpaceGroup {
         
         for (final Iterator iter = getOperators().iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
-            final Operator tmp = ((Operator) T.times(op).times(T_1)).mod1();
-            final Operator out = ((Operator) T_1.times(tmp).times(T)).mod1();
+            final Operator tmp = (Operator) ((Operator) T.times(op).times(T_1)).mod(1);
+            final Operator out = (Operator) ((Operator) T_1.times(tmp).times(T)).mod(1);
             result.add(out);
         }
         
@@ -322,7 +326,7 @@ public class SpaceGroup {
                 final Operator T = new Operator(line.substring(i + 1));
                 nameToTransform.put(currentName, T);
             } else if (currentName != null) {
-                final Operator op = new Operator(line).mod1();
+                final Operator op = (Operator) new Operator(line).mod(1);
                 ((List) nameToOps.get(currentName)).add(op);
             } else {
                 throw new DataFormatException("error in space group table file");

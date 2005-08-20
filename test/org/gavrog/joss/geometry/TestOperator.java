@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.4 2005/08/19 22:42:51 odf Exp $
+ * @version $Id: TestOperator.java,v 1.5 2005/08/20 04:59:02 odf Exp $
  */
 public class TestOperator extends TestCase {
     final Matrix M = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
@@ -119,7 +119,7 @@ public class TestOperator extends TestCase {
         final Operator opA = new Operator(new Matrix(A));
         final Operator opB = new Operator(new Matrix(B));
         //CAVEAT: this test only works if the numbers used can be represented precisely
-        assertEquals(opB, opA.mod1());
+        assertEquals(opB, opA.mod(1));
     }
 
     public void testToString() {

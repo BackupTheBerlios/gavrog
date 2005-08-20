@@ -45,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.26 2005/08/19 22:43:41 odf Exp $
+ * @version $Id: NetParser.java,v 1.27 2005/08/20 04:59:02 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -259,7 +259,7 @@ public class NetParser extends GenericParser {
                 final Object sourceName = row.get(0);
                 final Object targetName = row.get(1);
                 final Operator shift = parsePosition(row, 2);
-                if (!ops.contains(shift.mod1())) {
+                if (!ops.contains(shift.mod(1))) {
                     final String msg = "Operator not in given group at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
@@ -278,7 +278,7 @@ public class NetParser extends GenericParser {
         ops.clear();
         for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
-            ops.add(((Operator) from.times(op).times(to)).mod1());
+            ops.add(((Operator) from.times(op).times(to)).mod(1));
         }
         
         final List nodeDescsTmp = new LinkedList();
@@ -310,7 +310,7 @@ public class NetParser extends GenericParser {
             for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
                 final Operator op = (Operator) it2.next();
                 final Operator mappedSite = (Operator) site.times(op);
-                final Operator mappedSiteNormalized = mappedSite.mod1();
+                final Operator mappedSiteNormalized = (Operator) mappedSite.mod(1);
                 final INode v;
                 final Pair address = new Pair(name, op);
                 if (siteToNode.containsKey(mappedSiteNormalized)) {
@@ -334,8 +334,8 @@ public class NetParser extends GenericParser {
             for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
                 final Operator sourceOp = (Operator) it2.next();
                 final Operator targetOp = (Operator) shift.times(sourceOp);
-                final Operator sourceOpNormalized = sourceOp.mod1();
-                final Operator targetOpNormalized = targetOp.mod1();
+                final Operator sourceOpNormalized = (Operator) sourceOp.mod(1);
+                final Operator targetOpNormalized = (Operator) targetOp.mod(1);
                 final Pair sourceAddress = new Pair(sourceName, sourceOpNormalized);
                 final Pair targetAddress = new Pair(targetName, targetOpNormalized);
                 final Matrix sourceShift = (Matrix) sourceOp.getCoordinates().minus(
@@ -507,7 +507,7 @@ public class NetParser extends GenericParser {
         ops.clear();
         for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
-            ops.add(((Operator) from.times(op).times(to)).mod1());
+            ops.add(((Operator) from.times(op).times(to)).mod(1));
         }
         
         final List nodeDescsTmp = new LinkedList();
@@ -562,7 +562,7 @@ public class NetParser extends GenericParser {
             final Set opsSeen = new HashSet();
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
                 // --- get the next coset representative
-                final Operator op = ((Operator) itOps.next()).mod1();
+                final Operator op = (Operator) ((Operator) itOps.next()).mod(1);
                 if (!opsSeen.contains(op)) {
                     if (DEBUG) {
                         System.err.println("  applying " + op);
@@ -577,7 +577,7 @@ public class NetParser extends GenericParser {
                     nodeToDescriptor.put(v, desc);
                     for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
                         final Operator a = (Operator) itStab.next();
-                        opsSeen.add(((Operator) a.times(op)).mod1());
+                        opsSeen.add(((Operator) a.times(op)).mod(1));
                     }
                 }
             }
@@ -751,7 +751,7 @@ public class NetParser extends GenericParser {
                 maxD = Math.max(maxD, Math.min(d, 1.0 - d));
             }
             if (maxD < precision) {
-                stabilizer.add(op.mod1());
+                stabilizer.add(op.mod(1));
             }
         }
         
@@ -760,7 +760,7 @@ public class NetParser extends GenericParser {
             final Operator A = (Operator) iter1.next();
             for (final Iterator iter2 = stabilizer.iterator(); iter2.hasNext();) {
                 final Operator B = (Operator) iter2.next();
-                final Operator AB_ = ((Operator) A.times(B.inverse())).mod1();
+                final Operator AB_ = (Operator) ((Operator) A.times(B.inverse())).mod(1);
                 if (!stabilizer.contains(AB_)) {
                     throw new RuntimeException("precision problem in stabilizer computation");
                 }

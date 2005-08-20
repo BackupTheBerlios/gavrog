@@ -18,6 +18,7 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
+import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
@@ -29,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.7 2005/08/19 22:42:51 odf Exp $
+ * @version $Id: Operator.java,v 1.8 2005/08/20 04:59:02 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -171,32 +172,27 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         }
     }
 
-    /**
-     * This implementation of floor computes the floor component-wise, but only
-     * for the translational portion of the operator.
-     * 
-     * @return the modified operator.
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#floor()
      */
     public IArithmetic floor() {
-        final int d = getDimension();
-        final Matrix M = this.coords.mutableClone();
-        for (int i = 0; i < d; ++i) {
-            M.set(d, i, get(d, i).floor());
-        }
-        return new Operator(M);
+        throw new UnsupportedOperationException();
     }
 
+    //TODO does the following implementation make sense?
     /**
-     * Creates an operator in which every coordinate of the translational part is reduced
-     * modulo 1. Those coordinates must all be reals. 
+     * Creates an operator in which every coordinate of the translational part
+     * is reduced modulo some number. Those coordinates must all be of type
+     * {@link Real}.
      * 
+     * @param a the modulus.
      * @return the modified operator.
      */
-    public Operator mod1() {
+    public IArithmetic mod(final Object a) {
         final int d = getDimension();
         final Matrix M = this.coords.mutableClone();
         for (int i = 0; i < d; ++i) {
-            M.set(d, i, ((Real) get(d, i)).mod(1));
+            M.set(d, i, ((Real) get(d, i)).mod(a));
         }
         return new Operator(M);
     }
@@ -247,7 +243,9 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
      */
     public IArithmetic times(final Object other) {
-        if (other instanceof Operator) {
+        if (other instanceof Complex){
+            return new Operator((Matrix) getCoordinates().times(other));
+        } else if (other instanceof Operator) {
             final Matrix M = ((Operator) other).coords;
             return new Operator((Matrix) this.coords.times(M));
         } else {
