@@ -70,7 +70,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.5 2005/08/20 04:59:02 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.6 2005/08/20 05:06:50 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -260,9 +260,8 @@ public class SpaceGroup {
     }
     
     /**
-     * Returns a matrix that, via multiplication from the right, transforms a
-     * row vector in unit cell coordinates into one using primitive cell
-     * coordinates.
+     * Returns an operator that, via multiplication from the right, transforms a
+     * point in unit cell coordinates into one using primitive cell coordinates.
      * 
      * @return the transformation matrix.
      */
