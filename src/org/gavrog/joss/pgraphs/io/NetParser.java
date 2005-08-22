@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.30 2005/08/22 22:38:30 odf Exp $
+ * @version $Id: NetParser.java,v 1.31 2005/08/22 23:25:42 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -248,7 +248,7 @@ public class NetParser extends GenericParser {
                     final String msg = "Node specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                final Operator position = parsePosition(row, 1);
+                final Operator position = parseSiteOrOperator(row, 1);
                 final NodeDescriptor node = new NodeDescriptor(name, -1, position);
                 nodeDescriptors.add(node);
                 nodeNameToDesc.put(name, node);
@@ -259,7 +259,7 @@ public class NetParser extends GenericParser {
                 }
                 final Object sourceName = row.get(0);
                 final Object targetName = row.get(1);
-                final Operator shift = parsePosition(row, 2);
+                final Operator shift = parseSiteOrOperator(row, 2);
                 if (!ops.contains(shift.modZ())) {
                     final String msg = "Operator not in given group at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -805,7 +805,7 @@ public class NetParser extends GenericParser {
         return shift;
     }
     
-    private static Operator parsePosition(final List fields, final int startIndex) {
+    private static Operator parseSiteOrOperator(final List fields, final int startIndex) {
         if (fields.size() <= startIndex) {
             return Operator.identity(3);
         } else {
