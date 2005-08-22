@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.28 2005/08/22 06:37:47 odf Exp $
+ * @version $Id: NetParser.java,v 1.29 2005/08/22 22:28:27 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -304,24 +304,43 @@ public class NetParser extends GenericParser {
         
         // --- apply group operators to generate all nodes
         for (final Iterator it1 = nodeDescriptors.iterator(); it1.hasNext();) {
+            // --- find the next node
             final NodeDescriptor node = (NodeDescriptor) it1.next();
             final Object name = node.name;
             final Operator site = node.site;
-            final Map siteToNode = new HashMap();
-            for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
-                final Operator op = (Operator) it2.next();
-                final Operator image = (Operator) site.times(op);
-                final Operator imageModZ = image.modZ();
-                final INode v;
-                final Pair address = new Pair(name, op);
-                if (siteToNode.containsKey(imageModZ)) {
-                    v = (INode) siteToNode.get(imageModZ);
-                } else {
-                    v = G.newNode();
-                    siteToNode.put(imageModZ, v);
+            
+            // --- determine the stabilizer
+            final Set stabilizer = stabilizer(site, ops, 0);
+            if (DEBUG) {
+                System.err.println("  stabilizer has size " + stabilizer.size());
+            }
+            
+            // --- loop through the cosets of the stabilizer
+            final Set opsSeen = new HashSet();
+            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                // --- get the next coset representative
+                final Operator op = (Operator) itOps.next();
+                if (!opsSeen.contains(op.modZ())) {
+                    if (DEBUG) {
+                        System.err.println("  applying " + op);
+                    }
+                    
+                    // --- construct a new node
+                    final INode v = G.newNode();
+                    
+                    // --- mark coset as used and map symbolic images to the new node
+                    for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
+                        // --- compute next member of coset
+                        final Operator a = (Operator) itStab.next();
+                        final Operator b = ((Operator) a.times(op)).modZ();
+                        // --- mark it as used
+                        opsSeen.add(b);
+                        // --- remember the node and shift vector for applying b to site
+                        final Pair address = new Pair(name, b);
+                        addressToNode.put(address, v);
+                        addressToShift.put(address, ((Operator) site.times(b)).floorZ());
+                    }
                 }
-                addressToNode.put(address, v);
-                addressToShift.put(address, image.floorZ());
             }
         }
         
@@ -332,15 +351,11 @@ public class NetParser extends GenericParser {
             final Object targetName = edge.target;
             final Operator shift = edge.shift;
             for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
-                final Operator sourceOp = (Operator) it2.next();
-                final Operator targetOp = (Operator) shift.times(sourceOp);
-                final Operator sourceOpModZ = sourceOp.modZ();
-                final Operator targetOpModZ = targetOp.modZ();
-                final Pair sourceAddress = new Pair(sourceName, sourceOpModZ);
-                final Pair targetAddress = new Pair(targetName, targetOpModZ);
-                final Matrix sourceShift = sourceOp.floorZ();
-                final Matrix targetShift = targetOp.floorZ();
-                final Matrix edgeShift = (Matrix) targetShift.minus(sourceShift);
+                final Operator srcOp = (Operator) it2.next();
+                final Operator trgOp = (Operator) shift.times(srcOp);
+                final Pair sourceAddress = new Pair(sourceName, srcOp.modZ());
+                final Pair targetAddress = new Pair(targetName, trgOp.modZ());
+                final Matrix edgeShift = (Matrix) trgOp.floorZ().minus(srcOp.floorZ());
                 
                 final INode v = (INode) addressToNode.get(sourceAddress);
                 final INode w = (INode) addressToNode.get(targetAddress);
@@ -353,6 +368,9 @@ public class NetParser extends GenericParser {
             }
         }
         
+        if (DEBUG) {
+            System.err.println("generated " + G);
+        }
         return G;
     }
 
@@ -722,9 +740,11 @@ public class NetParser extends GenericParser {
     }
     
     /**
-     * Computes the stabilizer of a site. Currently only works for point sites. The
-     * infinity norm (largest absolute value of a matrix entry) is used to determine the
-     * distances between points.
+     * Computes the stabilizer of a site modulo lattice translations.The infinity norm
+     * (largest absolute value of a matrix entry) is used to determine the distances
+     * between points.
+     * 
+     * Currently only tested for point sites.
      * 
      * @param site the site.
      * @param ops operators forming the symmetry group.
@@ -732,7 +752,7 @@ public class NetParser extends GenericParser {
      * @return the set of operators forming the stabilizer
      */
     private static Set stabilizer(final Operator site, final List ops, final double precision) {
-        // --- compute the stabilizer of this node's translation class
+        final int dim = site.getDimension();
         final Set stabilizer = new HashSet();
         final Whole one = Whole.ONE;
         
@@ -741,11 +761,17 @@ public class NetParser extends GenericParser {
             final Matrix diff = (Matrix) site.getCoordinates().minus(
                     ((Operator) site.times(op)).getCoordinates());
             double maxD = 0.0;
-            for (int i = 0; i < 3; ++i) {
-                final double d = ((Real) diff.get(3, i).mod(one)).doubleValue();
+            for (int i = 0; i < dim-1; ++i) {
+                for (int j = 0; j < dim; ++j) {
+                    final double d = ((Real) diff.get(i, j)).doubleValue();
+                    maxD = Math.max(maxD, d);
+                }
+            }
+            for (int j = 0; j < dim; ++j) {
+                final double d = ((Real) diff.get(dim, j).mod(one)).doubleValue();
                 maxD = Math.max(maxD, Math.min(d, 1.0 - d));
             }
-            if (maxD < precision) {
+            if (maxD <= precision) { // using "<=" allows for precision 0
                 stabilizer.add(op.modZ());
             }
         }
