@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.5 2005/08/20 04:59:02 odf Exp $
+ * @version $Id: TestOperator.java,v 1.6 2005/08/22 06:37:47 odf Exp $
  */
 public class TestOperator extends TestCase {
     final Matrix M = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
@@ -102,16 +102,14 @@ public class TestOperator extends TestCase {
     }
 
     public void testFloor() {
-        final Matrix A = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
-                { 1.1, 0, 1 } });
-        final Matrix B = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
-                { 1, 0, 1 } });
-        final Operator opA = new Operator(new Matrix(A));
-        final Operator opB = new Operator(new Matrix(B));
-        assertEquals(opB, opA.floor());
+        try {
+            op1.floor();
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
-    public void testMod1() {
+    public void testModZ() {
         final Matrix A = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
                 { 1.25, 0, 1 } });
         final Matrix B = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
@@ -119,7 +117,15 @@ public class TestOperator extends TestCase {
         final Operator opA = new Operator(new Matrix(A));
         final Operator opB = new Operator(new Matrix(B));
         //CAVEAT: this test only works if the numbers used can be represented precisely
-        assertEquals(opB, opA.mod(1));
+        assertEquals(opB, opA.modZ());
+    }
+    
+    public void testFloorZ() {
+        final Matrix A = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
+                { -1.25, 0, 1 } });
+        final Operator opA = new Operator(new Matrix(A));
+        final Matrix B = new Matrix(new double[][] { { -2, 0 } });
+        assertEquals(B, opA.floorZ());
     }
 
     public void testToString() {
@@ -160,15 +166,15 @@ public class TestOperator extends TestCase {
         assertEquals(M, op1.getCoordinates());
     }
 
-    public void testGetLinearPart() {
+    public void testLinearPart() {
         final Matrix A = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}});
         final Operator opA = new Operator(A);
-        assertEquals(opA, op1.getLinearPart());
+        assertEquals(opA, op1.linearPart());
     }
 
-    public void testGetImageOfOrigin() {
-        final Point p = new Point(new Matrix(new int[][] {{1, 0}}));
-        assertEquals(p, op1.getImageOfOrigin());
+    public void testTranslationalPart() {
+        final Operator op = new Operator("x+1,y");
+        assertEquals(op, op1.translationalPart());
     }
 
     public void testApplyTo() {

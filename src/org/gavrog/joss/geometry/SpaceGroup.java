@@ -70,7 +70,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.6 2005/08/20 05:06:50 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.7 2005/08/22 06:37:46 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -132,7 +132,7 @@ public class SpaceGroup {
                 throw new IllegalArgumentException(msg);
             }
             
-            final Operator lin = op.getLinearPart();
+            final Operator lin = op.linearPart();
             if (!lin.getCoordinates().determinant().abs().isOne()) {
                 final String msg = "linear part of operator " + op + " is not unimodular";
                 throw new IllegalArgumentException(msg);
@@ -142,7 +142,7 @@ public class SpaceGroup {
         // --- copy operators and normalize their translational parts
         final Set ops = new HashSet();
         for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            ops.add(((Operator) iter.next()).mod(1));
+            ops.add(((Operator) iter.next()).modZ());
         }
         
         // --- generate a full set of operators, if required
@@ -157,7 +157,7 @@ public class SpaceGroup {
                 final Operator A = (Operator) queue.removeFirst();
                 for (final Iterator iter = gens.iterator(); iter.hasNext();) {
                     final Operator B = (Operator) iter.next();
-                    final Operator AB = (Operator) ((Operator) A.times(B)).mod(1);
+                    final Operator AB = ((Operator) A.times(B)).modZ();
                     if (!ops.contains(AB)) {
                         ops.add(AB);
                         queue.addLast(AB);
@@ -173,7 +173,7 @@ public class SpaceGroup {
                 for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
                     final Operator B = (Operator) iter2.next();
                     final Operator AB_ = (Operator) A.times(B.inverse());
-                    if (!ops.contains(AB_.mod(1))) {
+                    if (!ops.contains(AB_.modZ())) {
                         throw new IllegalArgumentException("operators form no group");
                     }
                 }
@@ -231,14 +231,16 @@ public class SpaceGroup {
         // --- some shortcuts
         final int d = getDimension();
         final Operator I = Operator.identity(d);
+        final Point origin = new Point(Matrix.zero(1, 3));
         
         // --- collect translation vectors
         final List vecs = new ArrayList();
         for (final Iterator iter = this.operators.iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
-            final Operator A = op.getLinearPart();
+            final Operator A = op.linearPart();
             if (A.equals(I)) {
-                vecs.add(op.getImageOfOrigin().getCoordinates());
+                final Point p = (Point) origin.times(op.translationalPart());
+                vecs.add(p.getCoordinates());
             }
         }
         
@@ -285,8 +287,8 @@ public class SpaceGroup {
         
         for (final Iterator iter = getOperators().iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
-            final Operator tmp = (Operator) ((Operator) T.times(op).times(T_1)).mod(1);
-            final Operator out = (Operator) ((Operator) T_1.times(tmp).times(T)).mod(1);
+            final Operator tmp = ((Operator) T.times(op).times(T_1)).modZ();
+            final Operator out = ((Operator) T_1.times(tmp).times(T)).modZ();
             result.add(out);
         }
         
@@ -325,7 +327,7 @@ public class SpaceGroup {
                 final Operator T = new Operator(line.substring(i + 1));
                 nameToTransform.put(currentName, T);
             } else if (currentName != null) {
-                final Operator op = (Operator) new Operator(line).mod(1);
+                final Operator op = new Operator(line).modZ();
                 ((List) nameToOps.get(currentName)).add(op);
             } else {
                 throw new DataFormatException("error in space group table file");

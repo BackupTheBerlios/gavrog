@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.8 2005/08/20 04:59:02 odf Exp $
+ * @version $Id: Operator.java,v 1.9 2005/08/22 06:37:46 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -119,7 +119,7 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * 
      * @return the linear operator.
      */
-    public Operator getLinearPart() {
+    public Operator linearPart() {
         final int d = getDimension();
         final Matrix M = this.coords.mutableClone();
         M.setSubMatrix(d, 0, Matrix.zero(1, d));
@@ -128,14 +128,16 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     }
 
     /**
-     * Returns the image of the coordinate origin, or, in other words, the
-     * translational component of this operator.
+     * Returns the translational component of this operator.
      * 
-     * @return the translation component represented as a point.
+     * @return the translation component.
      */
-    public Point getImageOfOrigin() {
+    public Operator translationalPart() {
         final int d = getDimension();
-        return new Point(this.coords.getSubMatrix(d, 0, 1, d));
+        final Matrix M = this.coords.mutableClone();
+        M.setSubMatrix(0, 0, Matrix.one(d));
+        M.setSubMatrix(0, d, Matrix.zero(d, 1));
+        return new Operator(M);
     }
 
     /**
@@ -179,22 +181,35 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         throw new UnsupportedOperationException();
     }
 
-    //TODO does the following implementation make sense?
     /**
      * Creates an operator in which every coordinate of the translational part
-     * is reduced modulo some number. Those coordinates must all be of type
-     * {@link Real}.
+     * is reduced modulo 1. Those coordinates must all be of type {@link Real}.
      * 
-     * @param a the modulus.
      * @return the modified operator.
      */
-    public IArithmetic mod(final Object a) {
+    public Operator modZ() {
         final int d = getDimension();
         final Matrix M = this.coords.mutableClone();
         for (int i = 0; i < d; ++i) {
-            M.set(d, i, ((Real) get(d, i)).mod(a));
+            M.set(d, i, ((Real) get(d, i)).mod(1));
         }
         return new Operator(M);
+    }
+
+    /**
+     * Creates a matrix which contains the difference between this operator and its
+     * modZ() image. In other words, the matrix contains the floor values of all the
+     * translation components.
+     * 
+     * @return the matrix of floor values.
+     */
+    public Matrix floorZ() {
+        final int d = getDimension();
+        final Matrix M = new Matrix(1, d);
+        for (int i = 0; i < d; ++i) {
+            M.set(0, i, ((Real) get(d, i)).div(1));
+        }
+        return M;
     }
 
     /* (non-Javadoc)
