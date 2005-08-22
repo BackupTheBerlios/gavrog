@@ -46,7 +46,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.29 2005/08/22 22:28:27 odf Exp $
+ * @version $Id: NetParser.java,v 1.30 2005/08/22 22:38:30 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -308,39 +308,21 @@ public class NetParser extends GenericParser {
             final NodeDescriptor node = (NodeDescriptor) it1.next();
             final Object name = node.name;
             final Operator site = node.site;
-            
-            // --- determine the stabilizer
-            final Set stabilizer = stabilizer(site, ops, 0);
-            if (DEBUG) {
-                System.err.println("  stabilizer has size " + stabilizer.size());
-            }
-            
-            // --- loop through the cosets of the stabilizer
-            final Set opsSeen = new HashSet();
-            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
-                // --- get the next coset representative
-                final Operator op = (Operator) itOps.next();
-                if (!opsSeen.contains(op.modZ())) {
-                    if (DEBUG) {
-                        System.err.println("  applying " + op);
-                    }
-                    
-                    // --- construct a new node
-                    final INode v = G.newNode();
-                    
-                    // --- mark coset as used and map symbolic images to the new node
-                    for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
-                        // --- compute next member of coset
-                        final Operator a = (Operator) itStab.next();
-                        final Operator b = ((Operator) a.times(op)).modZ();
-                        // --- mark it as used
-                        opsSeen.add(b);
-                        // --- remember the node and shift vector for applying b to site
-                        final Pair address = new Pair(name, b);
-                        addressToNode.put(address, v);
-                        addressToShift.put(address, ((Operator) site.times(b)).floorZ());
-                    }
+            final Map siteToNode = new HashMap();
+            for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
+                final Operator op = (Operator) it2.next();
+                final Operator image = (Operator) site.times(op);
+                final Operator imageModZ = image.modZ();
+                final INode v;
+                final Pair address = new Pair(name, op);
+                if (siteToNode.containsKey(imageModZ)) {
+                    v = (INode) siteToNode.get(imageModZ);
+                } else {
+                    v = G.newNode();
+                    siteToNode.put(imageModZ, v);
                 }
+                addressToNode.put(address, v);
+                addressToShift.put(address, image.floorZ());
             }
         }
         
