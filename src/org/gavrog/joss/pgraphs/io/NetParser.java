@@ -38,14 +38,16 @@ import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Operator;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
+import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.32 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: NetParser.java,v 1.33 2005/08/23 05:32:55 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -522,12 +524,14 @@ public class NetParser extends GenericParser {
         
         // --- construct a Dirichlet domain for the translation group
         final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(I, cellGram);
-        final Matrix t1 = reducedBasis.getRow(0);
-        final Matrix t2 = reducedBasis.getRow(1);
-        final Matrix t3 = reducedBasis.getRow(2);
-        final IArithmetic dirichletVectors[] = new IArithmetic[] {
-                t1, t2, t3, t1.plus(t2), t1.plus(t3), t2.plus(t3), t1.plus(t2).plus(t3)
-        };
+        final Vector t1 = new Vector(reducedBasis.getRow(0));
+        final Vector t2 = new Vector(reducedBasis.getRow(1));
+        final Vector t3 = new Vector(reducedBasis.getRow(2));
+        final Vector dirichletVectors[] = new Vector[] {
+                t1, t2, t3,
+                (Vector) t1.plus(t2), (Vector) t1.plus(t3), (Vector) t2.plus(t3),
+                (Vector) t1.plus(t2).plus(t3)
+                };
         if (DEBUG) {
             System.err.println();
             System.err.println("Selling reduced basis: " + reducedBasis);
@@ -583,19 +587,19 @@ public class NetParser extends GenericParser {
         // --- shift generated nodes into the Dirichlet domain
         for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
             final INode v = (INode) iter.next();
-            final Matrix p = (Matrix) nodeToPosition.get(v);
+            final Point p = new Point((Matrix) nodeToPosition.get(v));
             // --- shift into Dirichlet domain
-            final Matrix shift = dirichletShift(p, dirichletVectors, cellGram, Whole.ONE);
+            final Vector shift = dirichletShift(p, dirichletVectors, cellGram, Whole.ONE);
             nodeToPosition.put(v, p.plus(shift));
         }
         
         // --- compute nodes in two times extended Dirichlet domain
         final List extended = new ArrayList();
         final Map addressToPosition = new HashMap();
-        final Matrix zero = Matrix.zero(1, 3);
+        final Vector zero = new Vector(Matrix.zero(1, 3));
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
-            final Matrix pv = (Matrix) nodeToPosition.get(v);
+            final Point pv = (Point) nodeToPosition.get(v);
             if (DEBUG) {
                 System.err.println();
                 System.err.println("Extending " + v + " at " + pv);
@@ -603,12 +607,12 @@ public class NetParser extends GenericParser {
             extended.add(new Pair(v, zero));
             addressToPosition.put(new Pair(v, zero), pv);
             for (int i = 0; i < 7; ++i) {
-                final Matrix vec = (Matrix) dirichletVectors[i];
+                final Vector vec = dirichletVectors[i];
                 if (DEBUG) {
                     System.err.println("  shifting by " + vec);
                 }
-                final Matrix p = (Matrix) pv.plus(vec);
-                final Matrix shift = dirichletShift(p, dirichletVectors, cellGram,
+                final Point p = (Point) pv.plus(vec);
+                final Vector shift = dirichletShift(p, dirichletVectors, cellGram,
                         new Whole(2));
                 if (DEBUG) {
                     System.err.println("    additional shift is " + shift);
@@ -629,15 +633,16 @@ public class NetParser extends GenericParser {
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Pair adr0 = new Pair(v, zero);
-            final Matrix pv = (Matrix) nodeToPosition.get(v);
+            final Point pv = (Point) nodeToPosition.get(v);
             final List distances = new ArrayList();
             for (int i = 0; i < extended.size(); ++i) {
                 final Pair adr = (Pair) extended.get(i);
                 if (adr.equals(adr0)) {
                     continue;
                 }
-                final Matrix pos = (Matrix) addressToPosition.get(adr);
-                final Matrix diff = (Matrix) pos.minus(pv);
+                final Point pos = (Point) addressToPosition.get(adr);
+                final Vector diff0 = (Vector) pos.minus(pv);
+                final Matrix diff = diff0.getCoordinates();
                 final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
                 distances.add(new Pair(dist, new Integer(i)));
             }
@@ -674,7 +679,7 @@ public class NetParser extends GenericParser {
                 final int index = ((Integer) entry.getSecond()).intValue();
                 final Pair adr = (Pair) extended.get(index);
                 final INode w = (INode) adr.getFirst();
-                final Matrix s = (Matrix) adr.getSecond();
+                final Matrix s = ((Vector) adr.getSecond()).getCoordinates();
                 if (dist < minEdgeLength) {
                     final String msg = "found points closer than minimal edge length of ";
                     throw new DataFormatException(msg + minEdgeLength);
@@ -770,27 +775,30 @@ public class NetParser extends GenericParser {
         return stabilizer;
     }
     
-    private static Matrix dirichletShift(final Matrix pos,
-            final IArithmetic dirichletVectors[],
+    private static Vector dirichletShift(final Point pos,
+            final Vector dirichletVectors[],
             final Matrix cellGram, final Whole factor) {
 
         final Whole one = Whole.ONE;
         final Real half = new Fraction(1, 2);
         final Real eps = new FloatingPoint(1e-8);
-        Matrix shift = Matrix.zero(1, 3);
+        final Point origin = Point.origin(3);
+        Vector shift = new Vector(Matrix.zero(1, 3));
         
         while (true) {
             boolean changed = false;
             for (int i = 0; i < 7; ++i) {
-                final Matrix v = (Matrix) dirichletVectors[i].times(factor);
+                final Vector v0 = (Vector) dirichletVectors[i].times(factor);
+                final Matrix v = v0.getCoordinates();
                 final IArithmetic c = LinearAlgebra.dotRows(v, v, cellGram);
-                final Matrix p = (Matrix) pos.plus(shift);
+                final Vector p0 = (Vector) pos.plus(shift).minus(origin);
+                final Matrix p = p0.getCoordinates();
                 final IArithmetic q = LinearAlgebra.dotRows(p, v, cellGram).dividedBy(c);
                 if (q.isGreaterThan(half.plus(eps))) {
-                    shift = (Matrix) shift.minus(v.times(q.floor().plus(one)));
+                    shift = (Vector) shift.minus(v0.times(q.floor().plus(one)));
                     changed = true;
                 } else if (q.isLessOrEqual(half.negative())) {
-                    shift = (Matrix) shift.minus(v.times(q.floor()));
+                    shift = (Vector) shift.minus(v0.times(q.floor()));
                     changed = true;
                 }
             }
