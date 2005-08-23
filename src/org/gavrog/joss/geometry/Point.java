@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.6 2005/08/23 02:03:41 odf Exp $
+ * @version $Id: Point.java,v 1.7 2005/08/23 05:04:04 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -61,6 +61,30 @@ public class Point extends ArithmeticBase implements IArithmetic {
      */
     public Point(final IArithmetic[] coordinates) {
         this(new Matrix(new IArithmetic[][] {coordinates}));
+    }
+    
+    /**
+     * Creates a new point from its cartesian coordinates represented as an
+     * array. The dimension d of the point created will correspond to the number
+     * of an entries in the array. An extra coordinate of value 1 will be added
+     * internally.
+     * 
+     * @param coordinates the coordinates for the point.
+     */
+    public Point(final int[] coordinates) {
+        this(new Matrix(new int[][] {coordinates}));
+    }
+    
+    /**
+     * Creates a new point from its cartesian coordinates represented as an
+     * array. The dimension d of the point created will correspond to the number
+     * of an entries in the array. An extra coordinate of value 1 will be added
+     * internally.
+     * 
+     * @param coordinates the coordinates for the point.
+     */
+    public Point(final double[] coordinates) {
+        this(new Matrix(new double[][] {coordinates}));
     }
     
     /**

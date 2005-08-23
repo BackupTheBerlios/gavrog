@@ -70,7 +70,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.7 2005/08/22 06:37:46 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.8 2005/08/23 05:04:04 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -231,7 +231,6 @@ public class SpaceGroup {
         // --- some shortcuts
         final int d = getDimension();
         final Operator I = Operator.identity(d);
-        final Point origin = new Point(Matrix.zero(1, 3));
         
         // --- collect translation vectors
         final List vecs = new ArrayList();
@@ -239,8 +238,7 @@ public class SpaceGroup {
             final Operator op = (Operator) iter.next();
             final Operator A = op.linearPart();
             if (A.equals(I)) {
-                final Point p = (Point) origin.times(op.translationalPart());
-                vecs.add(p.getCoordinates());
+                vecs.add(op.translationalPart().getCoordinates());
             }
         }
         

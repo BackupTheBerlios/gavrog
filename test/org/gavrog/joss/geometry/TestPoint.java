@@ -26,11 +26,11 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Point class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPoint.java,v 1.4 2005/08/23 04:18:41 odf Exp $
+ * @version $Id: TestPoint.java,v 1.5 2005/08/23 05:04:04 odf Exp $
  */
 public class TestPoint extends TestCase {
-    final Point p = new Point(new Matrix(new int[][] {{1, 2, 3}}));
-    final Point q = new Point(new Matrix(new double[][] {{1, 2, 4}}));
+    final Point p = new Point(new int[] {1, 2, 3});
+    final Point q = new Point(new double[] {1, 2, 4});
     final Matrix M = new Matrix(new int[][] {
             { 0, 1, 0, 0 },
             { 0, 0, 1, 0 },
@@ -39,8 +39,8 @@ public class TestPoint extends TestCase {
             });
 
     public void testHashCode() {
-        final Point a = new Point(new Matrix(new int[][] {{1, 2, 3}}));
-        final Point b = new Point(new Matrix(new int[][] {{1, 2, 4}}));
+        final Point a = new Point(new int[] {1, 2, 3});
+        final Point b = new Point(new int[] {1, 2, 4});
         assertEquals(p.hashCode(), a.hashCode());
         assertFalse(p.hashCode() == b.hashCode());
     }
@@ -83,24 +83,24 @@ public class TestPoint extends TestCase {
     }
 
     public void testPlus() {
-        final Vector v = new Vector(new Matrix(new double[][] {{1, 2, 4}}));
-        final Point s = new Point(new Matrix(new double[][] {{2, 4, 7}}));
+        final Vector v = new Vector(new double[] {1, 2, 4});
+        final Point s = new Point(new double[] {2, 4, 7});
         assertEquals(s, p.plus(v));
     }
 
     public void testMinus() {
-        final Vector v = new Vector(new Matrix(new double[][] {{0, 0, 1}}));
+        final Vector v = new Vector(new double[] {0, 0, 1});
         assertEquals(v, q.minus(p));
         assertEquals(p, q.minus(v));
     }
 
     public void testTimes() {
-        final Point a = new Point(new Matrix(new int[][] {{2, 2, 2}}));
+        final Point a = new Point(new int[] {2, 2, 2});
         assertEquals(a, p.times(new Operator(M)));
     }
 
     public void testCompareTo() {
-        final Point a = new Point(new Matrix(new int[][] {{1, 2, 3}}));
+        final Point a = new Point(new int[] {1, 2, 3});
         assertTrue(p.compareTo(q) < 0);
         assertTrue(q.compareTo(p) > 0);
         assertTrue(p.compareTo(a) == 0);
@@ -120,7 +120,7 @@ public class TestPoint extends TestCase {
     }
 
     public void testPointMatrix() {
-        final Point a = new Point(new Matrix(new int[][] {{1, 2, 3}}));
+        final Point a = new Point(new int[] {1, 2, 3});
         assertEquals(p, a);
     }
 
@@ -128,6 +128,16 @@ public class TestPoint extends TestCase {
         final Point a = new Point(new IArithmetic[] { new Whole(1), new Whole(2),
                 new Whole(3) });
         assertEquals(p, a);
+    }
+
+    public void testPointIntArray() {
+        final Point a = new Point(new int[] { 1, 2, 3 });
+        assertEquals(p, a);
+    }
+
+    public void testPointDoubleArray() {
+        final Point a = new Point(new double[] { 1, 2, 4 });
+        assertEquals(q, a);
     }
 
     public void testPointPoint() {
@@ -149,7 +159,7 @@ public class TestPoint extends TestCase {
     }
     
     public void testOrigin() {
-        final Point z = new Point(new Matrix(new int[][] {{0, 0, 0}}));
+        final Point z = new Point(new int[] {0, 0, 0});
         assertEquals(z, Point.origin(3));
     }
 }

@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.2 2005/08/23 04:18:41 odf Exp $
+ * @version $Id: Vector.java,v 1.3 2005/08/23 05:04:04 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -62,6 +62,30 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public Vector(final IArithmetic[] coordinates) {
         this(new Matrix(new IArithmetic[][] {coordinates}));
+    }
+    
+    /**
+     * Creates a new vector from its cartesian coordinates represented as an
+     * array. The dimension d of the vector created will correspond to the
+     * number of an entries in the array. An extra coordinate of value 0 will be
+     * added internally.
+     * 
+     * @param coordinates the coordinates for the vector.
+     */
+    public Vector(final int[] coordinates) {
+        this(new Matrix(new int[][] {coordinates}));
+    }
+    
+    /**
+     * Creates a new vector from its cartesian coordinates represented as an
+     * array. The dimension d of the vector created will correspond to the
+     * number of an entries in the array. An extra coordinate of value 0 will be
+     * added internally.
+     * 
+     * @param coordinates the coordinates for the vector.
+     */
+    public Vector(final double[] coordinates) {
+        this(new Matrix(new double[][] {coordinates}));
     }
     
     /**

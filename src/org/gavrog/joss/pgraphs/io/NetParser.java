@@ -38,7 +38,6 @@ import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Operator;
-import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -46,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.31 2005/08/22 23:25:42 odf Exp $
+ * @version $Id: NetParser.java,v 1.32 2005/08/23 05:04:04 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -540,7 +539,6 @@ public class NetParser extends GenericParser {
         final PeriodicGraph G = new PeriodicGraph(3);
         final Map nodeToPosition = new HashMap();
         final Map nodeToDescriptor = new HashMap();
-        final Point origin = new Point(Matrix.zero(1, 3));
         
         for (final Iterator itNodes = nodeDescriptors.iterator(); itNodes.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
@@ -564,11 +562,10 @@ public class NetParser extends GenericParser {
                     }
                     // --- compute mapped node position
                     final Operator p = (Operator) site.times(op);
-                    final Point pos = (Point) origin.times(p.translationalPart());
                     // --- construct a new node
                     final INode v = G.newNode();
                     // --- store some data for it
-                    nodeToPosition.put(v, pos.getCoordinates());
+                    nodeToPosition.put(v, p.translationalPart().getCoordinates());
                     nodeToDescriptor.put(v, desc);
                     for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
                         final Operator a = (Operator) itStab.next();

@@ -29,7 +29,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.10 2005/08/23 02:03:41 odf Exp $
+ * @version $Id: Operator.java,v 1.11 2005/08/23 05:04:04 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -57,6 +57,24 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @param A coordinates for the (d+1)x(d+1) matrix representation.
      */
     public Operator(final IArithmetic[][] A) {
+        this(new Matrix(A));
+    }
+
+    /**
+     * Creates a new operator.
+     * 
+     * @param A coordinates for the (d+1)x(d+1) matrix representation.
+     */
+    public Operator(final int[][] A) {
+        this(new Matrix(A));
+    }
+
+    /**
+     * Creates a new operator.
+     * 
+     * @param A coordinates for the (d+1)x(d+1) matrix representation.
+     */
+    public Operator(final double[][] A) {
         this(new Matrix(A));
     }
 
@@ -129,14 +147,11 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     /**
      * Returns the translational component of this operator.
      * 
-     * @return the translation component.
+     * @return the translational part as a vector.
      */
-    public Operator translationalPart() {
+    public Vector translationalPart() {
         final int d = getDimension();
-        final Matrix M = this.coords.mutableClone();
-        M.setSubMatrix(0, 0, Matrix.one(d));
-        M.setSubMatrix(0, d, Matrix.zero(d, 1));
-        return new Operator(M);
+        return new Vector(this.coords.getSubMatrix(d, 0, 1, d));
     }
 
     /**

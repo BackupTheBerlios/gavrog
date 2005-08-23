@@ -26,11 +26,11 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.1 2005/08/23 04:18:41 odf Exp $
+ * @version $Id: TestVector.java,v 1.2 2005/08/23 05:04:04 odf Exp $
  */
 public class TestVector extends TestCase {
-    final Vector v = new Vector(new Matrix(new int[][] {{1, 2, 3}}));
-    final Vector w = new Vector(new Matrix(new double[][] {{1, 2, 4}}));
+    final Vector v = new Vector(new int[] {1, 2, 3});
+    final Vector w = new Vector(new double[] {1, 2, 4});
     final Matrix M = new Matrix(new int[][] {
             { 0, 1, 0, 0 },
             { 0, 0, 1, 0 },
@@ -39,8 +39,8 @@ public class TestVector extends TestCase {
             });
 
     public void testHashCode() {
-        final Vector a = new Vector(new Matrix(new int[][] {{1, 2, 3}}));
-        final Vector b = new Vector(new Matrix(new int[][] {{1, 2, 4}}));
+        final Vector a = new Vector(new int[] {1, 2, 3});
+        final Vector b = new Vector(new int[] {1, 2, 4});
         assertEquals(v.hashCode(), a.hashCode());
         assertFalse(v.hashCode() == b.hashCode());
     }
@@ -51,7 +51,7 @@ public class TestVector extends TestCase {
     }
 
     public void testZero() {
-        final Vector z = new Vector(new Matrix(new int[][] {{0, 0, 0}}));
+        final Vector z = new Vector(new int[] {0, 0, 0});
         assertEquals(z, v.zero());
     }
 
@@ -64,7 +64,7 @@ public class TestVector extends TestCase {
     }
 
     public void testNegative() {
-        final Vector n = new Vector(new Matrix(new int[][] {{-1, -2, -3}}));
+        final Vector n = new Vector(new int[] {-1, -2, -3});
         assertEquals(n, v.negative());
     }
 
@@ -77,20 +77,20 @@ public class TestVector extends TestCase {
     }
 
     public void testPlus() {
-        final Vector s = new Vector(new Matrix(new double[][] {{2, 4, 7}}));
-        final Point p = new Point(new Matrix(new double[][] {{1, 2, 4}}));
-        final Point q = new Point(new Matrix(new double[][] {{2, 4, 7}}));
+        final Vector s = new Vector(new double[] {2, 4, 7});
+        final Point p = new Point(new double[] {1, 2, 4});
+        final Point q = new Point(new double[] {2, 4, 7});
         assertEquals(s, v.plus(w));
         assertEquals(q, v.plus(p));
     }
 
     public void testTimes() {
-        final Vector a = new Vector(new Matrix(new double[][] {{1.5, 0.5, 1}}));
+        final Vector a = new Vector(new double[] {1.5, 0.5, 1});
         assertEquals(a, v.times(new Operator(M)));
     }
 
     public void testCompareTo() {
-        final Vector a = new Vector(new Matrix(new int[][] {{1, 2, 3}}));
+        final Vector a = new Vector(new int[] {1, 2, 3});
         assertTrue(v.compareTo(w) < 0);
         assertTrue(w.compareTo(v) > 0);
         assertTrue(v.compareTo(a) == 0);
@@ -110,7 +110,7 @@ public class TestVector extends TestCase {
     }
 
     public void testVectorMatrix() {
-        final Vector a = new Vector(new Matrix(new int[][] {{1, 2, 3}}));
+        final Vector a = new Vector(new int[] {1, 2, 3});
         assertEquals(v, a);
     }
 
@@ -118,6 +118,16 @@ public class TestVector extends TestCase {
         final Vector a = new Vector(new IArithmetic[] { new Whole(1), new Whole(2),
                 new Whole(3) });
         assertEquals(v, a);
+    }
+
+    public void testVectorIntArray() {
+        final Vector a = new Vector(new int[] { 1, 2, 3 });
+        assertEquals(v, a);
+    }
+
+    public void testVectorDoubleArray() {
+        final Vector a = new Vector(new double[] { 1, 2, 4 });
+        assertEquals(w, a);
     }
 
     public void testVectorVector() {

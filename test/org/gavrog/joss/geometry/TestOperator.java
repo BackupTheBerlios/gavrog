@@ -28,22 +28,23 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.7 2005/08/23 02:03:42 odf Exp $
+ * @version $Id: TestOperator.java,v 1.8 2005/08/23 05:04:04 odf Exp $
  */
 public class TestOperator extends TestCase {
-    final Matrix M = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
-    final Operator op1 = new Operator(new Matrix(M));
+    final int M[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
+    final Operator op1 = new Operator(M);
 
     public void testHashCode() {
-        final Matrix A = new Matrix(new int[][] {{0, 1, 0}, {1, 0, 0}, {1, 0, 1}});
-        final Operator opM = new Operator(M);
+        final int A[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
+        final int B[][] = new int[][] {{0, 1, 0}, { 1, 0, 0}, {1, 0, 1}};
         final Operator opA = new Operator(A);
-        assertEquals(op1.hashCode(), opM.hashCode());
-        assertFalse(op1.hashCode() == opA.hashCode());
+        final Operator opB = new Operator(B);
+        assertEquals(op1.hashCode(), opA.hashCode());
+        assertFalse(op1.hashCode() == opB.hashCode());
     }
 
     public void testIsExact() {
-        final Matrix A = new Matrix(new double[][] {{0, 1, 0}, {1, 0, 0}, {1, 0, 1}});
+        final double A[][] = new double[][] {{0, 1, 0}, {1, 0, 0}, {1, 0, 1}};
         final Operator opA = new Operator(A);
         assertTrue(op1.isExact());
         assertFalse(opA.isExact());
@@ -86,16 +87,16 @@ public class TestOperator extends TestCase {
     }
 
     public void testTimes() {
-        final Matrix A = new Matrix(new int[][] {{-1, 0, 0}, {0, -1, 0}, {1, 1, 1}});
-        final Operator opA = new Operator(new Matrix(A));
+        final int A[][] = new int[][] {{-1, 0, 0}, {0, -1, 0}, {1, 1, 1}};
+        final Operator opA = new Operator(A);
         assertEquals(opA, op1.times(op1));
     }
 
     public void testCompareTo() {
-        final Matrix A = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {2, 0, 1}});
-        final Matrix B = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
-        final Operator opA = new Operator(new Matrix(A));
-        final Operator opB = new Operator(new Matrix(B));
+        final int A[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {2, 0, 1}};
+        final int B[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
+        final Operator opA = new Operator(A);
+        final Operator opB = new Operator(B);
         assertTrue(op1.compareTo(opA) < 0);
         assertTrue(opA.compareTo(op1) > 0);
         assertTrue(opB.compareTo(op1) == 0);
@@ -110,20 +111,17 @@ public class TestOperator extends TestCase {
     }
 
     public void testModZ() {
-        final Matrix A = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
-                { 1.25, 0, 1 } });
-        final Matrix B = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
-                { .25, 0, 1 } });
-        final Operator opA = new Operator(new Matrix(A));
-        final Operator opB = new Operator(new Matrix(B));
+        final double A[][] = new double[][] {{0, 1.1, 0}, {-1, 0, 0}, {1.25, 0, 1}};
+        final double B[][] = new double[][] {{0, 1.1, 0}, {-1, 0, 0}, { .25, 0, 1}};
+        final Operator opA = new Operator(A);
+        final Operator opB = new Operator(B);
         //CAVEAT: this test only works if the numbers used can be represented precisely
         assertEquals(opB, opA.modZ());
     }
     
     public void testFloorZ() {
-        final Matrix A = new Matrix(new double[][] { { 0, 1.1, 0 }, { -1, 0, 0 },
-                { -1.25, 0, 1 } });
-        final Operator opA = new Operator(new Matrix(A));
+        final double[][] A = new double[][] {{0, 1.1, 0 }, {-1, 0, 0}, {-1.25, 0, 1}};
+        final Operator opA = new Operator(A);
         final Matrix B = new Matrix(new double[][] { { -2, 0 } });
         assertEquals(B, opA.floorZ());
     }
@@ -149,6 +147,18 @@ public class TestOperator extends TestCase {
         assertEquals(op1, opA);
     }
 
+    public void testOperatorIntArrayArray() {
+        final int A[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
+        final Operator opA = new Operator(A);
+        assertEquals(op1, opA);
+    }
+
+    public void testOperatorDoubleArrayArray() {
+        final double A[][] = new double[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
+        final Operator opA = new Operator(A);
+        assertEquals(op1, opA);
+    }
+
     public void testOperatorString() {
         final Operator opA = new Operator("1-y,x");
         assertEquals(op1, opA);
@@ -163,25 +173,25 @@ public class TestOperator extends TestCase {
     }
 
     public void testGetCoordinates() {
-        assertEquals(M, op1.getCoordinates());
+        assertEquals(new Matrix(M), op1.getCoordinates());
     }
 
     public void testLinearPart() {
-        final Matrix A = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}});
+        final int[][] A = new int[][] {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}};
         final Operator opA = new Operator(A);
         assertEquals(opA, op1.linearPart());
     }
 
     public void testTranslationalPart() {
-        final Operator op = new Operator("x+1,y");
-        assertEquals(op, op1.translationalPart());
+        final Vector v = new Vector(new int[] {1, 0});
+        assertEquals(v, op1.translationalPart());
     }
 
     public void testApplyTo() {
-        final Point x = new Point(new Matrix(new int[][] {{1, 0}}));
-        final Point xy = new Point(new Matrix(new int[][] {{1, 1}}));
-        final Point y = new Point(new Matrix(new int[][] {{0, 1}}));
-        final Point z = new Point(new Matrix(new int[][] {{0, 0}}));
+        final Point x = new Point(new int[] {1, 0});
+        final Point xy = new Point(new int[] {1, 1});
+        final Point y = new Point(new int[] {0, 1});
+        final Point z = new Point(new int[] {0, 0});
         assertEquals(xy, op1.applyTo(x));
         assertEquals(y, op1.applyTo(xy));
         assertEquals(z, op1.applyTo(y));
