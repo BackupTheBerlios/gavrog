@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.34 2005/08/23 22:02:49 odf Exp $
+ * @version $Id: NetParser.java,v 1.35 2005/08/23 22:11:27 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -174,14 +174,14 @@ public class NetParser extends GenericParser {
      * 
      * Example:
      * 
-     * <code>
+     * <pre>
      * PERIODIC_GRAPH # the diamond net
      *   1 2  0 0 0
      *   1 2  1 0 0
      *   1 2  0 1 0
      *   1 2  0 0 1
      * END
-     * </code>
+     * </pre>
      * 
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
@@ -235,13 +235,13 @@ public class NetParser extends GenericParser {
      * 
      * Example:
      * 
-     * <code>
+     * <pre>
      * NET # the diamond net
      *   Group Fd-3m
      *   Node 1 3/8,3/8,3/8
      *   Edge 1 1 1-x,1-y,1-z
      * END
-     * </code>
+     * </pre>
      * 
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
@@ -399,13 +399,13 @@ public class NetParser extends GenericParser {
      * 
      * Example:
      * 
-     * <code>
+     * <pre>
      * CRYSTAL
      *   GROUP Fd-3m
      *   CELL         2.3094 2.3094 2.3094  90.0 90.0 90.0
      *   ATOM  1  4   5/8 5/8 5/8
      * END
-     * </code>
+     * </pre>
      * 
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
