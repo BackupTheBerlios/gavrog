@@ -46,18 +46,24 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 
 /**
+ * Contains methods to parse a net specification in Systre format (file extension "cgd").
+ * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.33 2005/08/23 05:32:55 odf Exp $
+ * @version $Id: NetParser.java,v 1.34 2005/08/23 22:02:49 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
     
+    // --- used to enable or disable a log of the parsing process
     private final static boolean DEBUG = false;
     
+    /**
+     * Helper class - encapsulates the preliminary specification of a node.
+     */
     private class NodeDescriptor {
-        public final Object name;
-        public final int connectivity;
-        public final Operator site;
+        public final Object name;     // the node's name
+        public final int connectivity; // the node's connectivity
+        public final Operator site;     // the position or site of the node
         
         public NodeDescriptor(final Object name, final int connectivity, final Operator site) {
             this.name = name;
@@ -70,10 +76,13 @@ public class NetParser extends GenericParser {
         }
     }
     
+    /**
+     * Helper class - encapsulates the preliminary specification of an edge.
+     */
     private class EdgeDescriptor {
-        public final Object source;
-        public final Object target;
-        public final Operator shift;
+        public final Object source; // the edge's source node representative
+        public final Object target;   // the edge's target node representative
+        public final Operator shift;  // shift to be applied to the target representative
         
         public EdgeDescriptor(final Object source, final Object target, final Operator shift) {
             this.source = source;
@@ -86,16 +95,31 @@ public class NetParser extends GenericParser {
         }
     }
     
+    /**
+     * Constructs an instance.
+     * 
+     * @param input the input stream.
+     */
     public NetParser(final BufferedReader input) {
         super(input);
         this.synonyms = makeSynonyms();
         this.defaultKey = "edge";
     }
     
+    /**
+     * Constructs an instance.
+     * 
+     * @param input the input stream.
+     */
     public NetParser(final Reader input) {
         this(new BufferedReader(input));
     }
     
+    /**
+     * Sets up a keyword map to be used by {@link GenericParser#parseBlock()}.
+     * 
+     * @return the mapping of keywords.
+     */
     private Map makeSynonyms() {
         final Map result = new HashMap();
         result.put("vertex", "node");
@@ -111,10 +135,22 @@ public class NetParser extends GenericParser {
         return Collections.unmodifiableMap(result);
     }
     
+    /**
+     * Utility method - takes a string and directly returns the net specified by it.
+     * 
+     * @param s the specification string.
+     * @return the net constructed from the input string.
+     */
     public static PeriodicGraph stringToNet(final String s) {
         return new NetParser(new StringReader(s)).parseNet();
     }
     
+    /**
+     * Parses the input stream as specified in the constructor and returns the net
+     * specified by it.
+     * 
+     * @return the periodic net constructed from the input.
+     */
     public PeriodicGraph parseNet() {
         final Entry block[] = parseBlock();
         final String type = lastBlockType().toLowerCase();
@@ -596,7 +632,7 @@ public class NetParser extends GenericParser {
         // --- compute nodes in two times extended Dirichlet domain
         final List extended = new ArrayList();
         final Map addressToPosition = new HashMap();
-        final Vector zero = new Vector(Matrix.zero(1, 3));
+        final Vector zero = Vector.zero(3);
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Point pv = (Point) nodeToPosition.get(v);
@@ -704,6 +740,18 @@ public class NetParser extends GenericParser {
         return G;
     }
     
+    /**
+     * Constructs a gram matrix for the edge vectors of a unit cell which is specified by
+     * its cell parameters as according to crystallographic conventions.
+     * 
+     * @param a the length of the first vector.
+     * @param b the length of the second vector.
+     * @param c the length of the third vector.
+     * @param alpha the angle between the second and third vector.
+     * @param beta the angle between the first and third vector.
+     * @param gamma the angle between the first and second vector.
+     * @return the gram matrix for the vectors.
+     */
     private static Matrix gramMatrix(final Real a, final Real b, final Real c,
             final Real alpha, final Real beta, final Real gamma) {
 
@@ -718,6 +766,13 @@ public class NetParser extends GenericParser {
         });
     }
     
+    /**
+     * Computes the cosine of an angle given in degrees, using the {@link Real} type for
+     * the argument and return value.
+     * 
+     * @param arg the angle in degrees.
+     * @return the value of the cosine.
+     */
     private static Real cosine(final Real arg) {
         final double f = Math.PI / 180.0;
         return new FloatingPoint(Math.cos(arg.doubleValue() * f));
@@ -775,30 +830,41 @@ public class NetParser extends GenericParser {
         return stabilizer;
     }
     
+    /**
+     * Returns the vector by which a point has to be shifted in order to obtain a
+     * translationally equivalent point within the Dirichlet cell around the origin. All
+     * calculations are with respect to the unit lattice and an specific metric, which is
+     * passed as one of the arguments. An integral scaling factor can be specified, in
+     * which case both the unit lattice and its Dirchlet domain are taken to be scaled by
+     * that factor.
+     * 
+     * @param pos the original point position.
+     * @param dirichletVectors normals to the parallel face pairs of the Dirichlet cell.
+     * @param metric the underlying metric.
+     * @param factor a scaling factor.
+     * @return the shift vector needed to move the point inside.
+     */
     private static Vector dirichletShift(final Point pos,
-            final Vector dirichletVectors[],
-            final Matrix cellGram, final Whole factor) {
+            final Vector dirichletVectors[], final Matrix metric, final Whole factor) {
 
         final Whole one = Whole.ONE;
         final Real half = new Fraction(1, 2);
         final Real eps = new FloatingPoint(1e-8);
         final Point origin = Point.origin(3);
-        Vector shift = new Vector(Matrix.zero(1, 3));
+        Vector shift = Vector.zero(3);
         
         while (true) {
             boolean changed = false;
             for (int i = 0; i < 7; ++i) {
-                final Vector v0 = (Vector) dirichletVectors[i].times(factor);
-                final Matrix v = v0.getCoordinates();
-                final IArithmetic c = LinearAlgebra.dotRows(v, v, cellGram);
-                final Vector p0 = (Vector) pos.plus(shift).minus(origin);
-                final Matrix p = p0.getCoordinates();
-                final IArithmetic q = LinearAlgebra.dotRows(p, v, cellGram).dividedBy(c);
+                final Vector v = (Vector) dirichletVectors[i].times(factor);
+                final IArithmetic c = Vector.dot(v, v, metric);
+                final Vector p = (Vector) pos.plus(shift).minus(origin);
+                final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
                 if (q.isGreaterThan(half.plus(eps))) {
-                    shift = (Vector) shift.minus(v0.times(q.floor().plus(one)));
+                    shift = (Vector) shift.minus(v.times(q.floor().plus(one)));
                     changed = true;
                 } else if (q.isLessOrEqual(half.negative())) {
-                    shift = (Vector) shift.minus(v0.times(q.floor()));
+                    shift = (Vector) shift.minus(v.times(q.floor()));
                     changed = true;
                 }
             }
@@ -810,6 +876,16 @@ public class NetParser extends GenericParser {
         return shift;
     }
     
+    /**
+     * Utility method to parse an operator or site (same format) from a string
+     * specification which is broken up into fields. The specified fields are
+     * concatenated, using blanks as field separators, and the result is passed to the
+     * {@link Operator#Operator(String)} constructor.
+     * 
+     * @param fields a list of fields.
+     * @param startIndex the field index to start parsing at.
+     * @return the result as an {@link Operator}.
+     */
     private static Operator parseSiteOrOperator(final List fields, final int startIndex) {
         if (fields.size() <= startIndex) {
             return Operator.identity(3);
