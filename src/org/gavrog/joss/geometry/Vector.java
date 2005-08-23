@@ -18,29 +18,30 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
+import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
 
 /**
- * A d-dimensional point in homogeneous coordinates represented by a row vector.
+ * A d-dimensional vector represented by a row vector. To make interaction with
+ * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.6 2005/08/23 02:03:41 odf Exp $
+ * @version $Id: Vector.java,v 1.1 2005/08/23 02:03:41 odf Exp $
  */
-public class Point extends ArithmeticBase implements IArithmetic {
-    //TODO handle points at infinity gracefully
+public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
     final int dimension;
 
     /**
-     * Creates a new point from a row matrix containing its cartesian
-     * coordinates. The dimension d of the point created will correspond to the
-     * number of columns in the given matrix. An extra coordinate of value 1
+     * Creates a new vector from a row matrix containing its cartesian
+     * coordinates. The dimension d of the vector created will correspond to the
+     * number of columns in the given matrix. An extra coordinate of value 0
      * will be added internally.
      * 
-     * @param M contains the coordinates for the point.
+     * @param M contains the coordinates for the vector.
      */
-    public Point(final Matrix M) {
+    public Vector(final Matrix M) {
         if (M.numberOfRows() != 1) {
             throw new IllegalArgumentException("matrix must have exactly 1 row");
         }
@@ -48,69 +49,60 @@ public class Point extends ArithmeticBase implements IArithmetic {
         this.dimension = d;
         this.coords = new Matrix(1, d + 1);
         this.coords.setSubMatrix(0, 0, M);
-        this.coords.set(0, d, Whole.ONE);
+        this.coords.set(0, d, Whole.ZERO);
     }
 
     /**
-     * Creates a new point from its cartesian coordinates represented as an
-     * array. The dimension d of the point created will correspond to the number
-     * of an entries in the array. An extra coordinate of value 1 will be added
-     * internally.
+     * Creates a new vector from its cartesian coordinates represented as an
+     * array. The dimension d of the vector created will correspond to the
+     * number of an entries in the array. An extra coordinate of value 0 will be
+     * added internally.
      * 
-     * @param coordinates the coordinates for the point.
+     * @param coordinates the coordinates for the vector.
      */
-    public Point(final IArithmetic[] coordinates) {
+    public Vector(final IArithmetic[] coordinates) {
         this(new Matrix(new IArithmetic[][] {coordinates}));
     }
     
     /**
-     * Creates a new point as a copy of a given one.
-     * @param p the model point.
+     * Creates a new vector as a copy of a given one.
+     * @param v the model vector.
      */
-    public Point(final Point p) {
-        this.dimension = p.dimension;
-        this.coords = p.coords;
+    public Vector(final Vector v) {
+        this.dimension = v.dimension;
+        this.coords = v.coords;
     }
     
     /**
-     * This constructor applies a matrix to a point. It is used by the
-     * {@link #times(Object)}method to apply a general projective operator to a
-     * point.
+     * This constructor applies a matrix to a vector. It is used by the
+     * {@link #times(Object)} method to apply a general projective operator to
+     * a vector.
      * 
-     * @param p the original point.
+     * @param v the original vector.
      * @param M the operator to apply as a (d+1)x(d+1) matrix.
      */
-    private Point(final Point p, final Matrix M) {
-        this(image(p, M));
+    private Vector(final Vector v, final Matrix M) {
+        this(image(v, M));
     }
 
     /**
-     * Applies an operator to a point and normalizes the result by dividing
-     * through the last coordinate.
+     * Applies an operator to a vector.
      * 
-     * @param p the original point.
+     * @param v the original vector.
      * @param M the operator to apply as a (d+1)x(d+1) matrix.
-     * @return the resulting normalized point coordinates.
+     * @return the resulting vector coordinates.
      */
-    private static Matrix image(final Point p, final Matrix M) {
-        final int d = p.getDimension();
+    private static Matrix image(final Vector v, final Matrix M) {
+        final int d = v.getDimension();
         if (d != M.numberOfRows() - 1 || d != M.numberOfColumns() - 1) {
             throw new IllegalArgumentException("dimensions don't match");
         }
-        final Matrix img = (Matrix) p.coords.times(M);
-        final IArithmetic f = img.get(0, d);
-        return ((Matrix) img.dividedBy(f)).getSubMatrix(0, 0, 1, d);
-    }
-    
-    /**
-     * Returns the point at the coordinate origin for a space of a given
-     * dimension.
-     * 
-     * @param dimension the dimension of the space.
-     * @return the point of origin.
-     */
-    public static Point origin(final int dimension) {
-        return new Point(Matrix.zero(1, dimension));
+        final Matrix img = (Matrix) v.coords.times(M);
+        if (!img.get(0, d).isZero()) {
+            throw new UnsupportedOperationException(
+                    "the operation did not produce a vector");
+        }
+        return img;
     }
     
     /*
@@ -123,7 +115,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * Retrieves a cartesian coordinate value for this point.
+     * Retrieves a cartesian coordinate value for this vector.
      * 
      * @param i the index of the coordinate to retrieve.
      * @return the coordinate value.
@@ -136,7 +128,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * Retrieves all cartesian coordinate values for this point.
+     * Retrieves all cartesian coordinate values for this vector.
      * 
      * @return the coordinates as a row matrix.
      */
@@ -145,25 +137,25 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
 
     /**
-     * Compares two points lexicographically.
+     * Compares two vectors lexicographically.
      * 
-     * @param other the point to compare with.
+     * @param other the vector to compare with.
      */
     public int compareTo(final Object other) {
-        if (other instanceof Point) {
-            final Point p = (Point) other;
-            if (getDimension() != p.getDimension()) {
+        if (other instanceof Vector) {
+            final Vector v = (Vector) other;
+            if (getDimension() != v.getDimension()) {
                 throw new IllegalArgumentException("dimensions must be equal");
             }
             for (int i = 0; i < getDimension(); ++i) {
-                final int d = get(i).compareTo(p.get(i));
+                final int d = get(i).compareTo(v.get(i));
                 if (d != 0) {
                     return d;
                 }
             }
             return 0;
         } else {
-            throw new IllegalArgumentException("can only compare two points");
+            throw new IllegalArgumentException("can only compare two vectors");
         }
     }
 
@@ -171,7 +163,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#floor()
      */
     public IArithmetic floor() {
-        throw new UnsupportedOperationException("not defined on points");
+        throw new UnsupportedOperationException("not defined on vectors");
     }
 
     /* (non-Javadoc)
@@ -185,7 +177,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#inverse()
      */
     public IArithmetic inverse() {
-        throw new UnsupportedOperationException("not defined on points");
+        throw new UnsupportedOperationException("not defined on vectors");
     }
 
     /* (non-Javadoc)
@@ -199,14 +191,14 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#negative()
      */
     public IArithmetic negative() {
-        throw new UnsupportedOperationException("not defined on points");
+        return new Vector((Matrix) getCoordinates().negative());
     }
 
     /* (non-Javadoc)
      * @see org.gavrog.jane.numbers.IArithmetic#one()
      */
     public IArithmetic one() {
-        throw new UnsupportedOperationException("not defined on points");
+        throw new UnsupportedOperationException("not defined on vectors");
     }
 
     /* (non-Javadoc)
@@ -215,22 +207,10 @@ public class Point extends ArithmeticBase implements IArithmetic {
     public IArithmetic plus(final Object other) {
         if (other instanceof Vector) {
             final Vector v = (Vector) other;
-            return new Point((Matrix) this.getCoordinates().plus(v.getCoordinates()));
-        } else {
-            throw new UnsupportedOperationException("operation not defined");
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see org.gavrog.jane.numbers.IArithmetic#plus(java.lang.Object)
-     */
-    public IArithmetic minus(final Object other) {
-        if (other instanceof Vector) {
-            final Vector v = (Vector) other;
-            return new Point((Matrix) this.getCoordinates().minus(v.getCoordinates()));
-        } else if (other instanceof Point) {
+            return new Vector((Matrix) this.getCoordinates().plus(v.getCoordinates()));
+        } else if (other instanceof Point){
             final Point p = (Point) other;
-            return new Vector((Matrix) this.getCoordinates().minus(p.getCoordinates()));
+            return new Point((Matrix) this.getCoordinates().plus(p.getCoordinates()));
         } else {
             throw new UnsupportedOperationException("operation not defined");
         }
@@ -241,7 +221,20 @@ public class Point extends ArithmeticBase implements IArithmetic {
      */
     public IArithmetic times(final Object other) {
         if (other instanceof Operator) {
-            return new Point(this, ((Operator) other).getCoordinates());
+            return new Vector(this, ((Operator) other).getCoordinates());
+        } else if (other instanceof Complex) {
+            return new Vector((Matrix) getCoordinates().times(other));
+        } else {
+            throw new UnsupportedOperationException("operation not defined");
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
+     */
+    public IArithmetic rtimes(final IArithmetic other) {
+        if (other instanceof Complex) {
+            return new Vector((Matrix) getCoordinates().times(other));
         } else {
             throw new UnsupportedOperationException("operation not defined");
         }
@@ -252,7 +245,7 @@ public class Point extends ArithmeticBase implements IArithmetic {
      */
     public String toString() {
         final StringBuffer tmp = new StringBuffer(1000);
-        tmp.append("Point(");
+        tmp.append("Vector(");
         for (int i = 0; i < getDimension(); ++i) {
             if (i > 0) {
                 tmp.append(",");
@@ -271,6 +264,6 @@ public class Point extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#zero()
      */
     public IArithmetic zero() {
-        throw new UnsupportedOperationException("not defined on points");
+        return new Vector((Matrix) getCoordinates().zero());
     }
 }

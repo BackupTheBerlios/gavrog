@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Point class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPoint.java,v 1.2 2005/08/18 02:45:32 odf Exp $
+ * @version $Id: TestPoint.java,v 1.3 2005/08/23 02:03:42 odf Exp $
  */
 public class TestPoint extends TestCase {
     final Point p = new Point(new Matrix(new int[][] {{1, 2, 3}}));
@@ -51,8 +51,11 @@ public class TestPoint extends TestCase {
     }
 
     public void testZero() {
-        final Point z = new Point(new Matrix(new int[][] {{0, 0, 0}}));
-        assertEquals(z, p.zero());
+        try {
+            p.zero();
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
     public void testOne() {
@@ -64,8 +67,11 @@ public class TestPoint extends TestCase {
     }
 
     public void testNegative() {
-        final Point m = new Point(new Matrix(new int[][] {{-1, -2, -3}}));
-        assertEquals(m, p.negative());
+        try {
+            p.negative();
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
     public void testInverse() {
@@ -85,8 +91,6 @@ public class TestPoint extends TestCase {
     }
 
     public void testTimes() {
-        final Point x = new Point(new Matrix(new double[][] {{3, 6, 9}}));
-        assertEquals(x, p.times(3.0));
         final Point a = new Point(new Matrix(new int[][] {{2, 2, 2}}));
         assertEquals(a, p.times(new Operator(M)));
     }
@@ -99,8 +103,11 @@ public class TestPoint extends TestCase {
     }
 
     public void testFloor() {
-        final Point a = new Point(new Matrix(new double[][] {{1.1, 2.2, 3.3}}));
-        assertEquals(p, a.floor());
+        try {
+            p.floor();
+            fail("should throw an UnsupportedOperationException");
+        } catch (UnsupportedOperationException success) {
+        }
     }
 
     public void testToString() {
@@ -122,11 +129,6 @@ public class TestPoint extends TestCase {
     public void testPointPoint() {
         final Point a = new Point(p);
         assertEquals(p, a);
-    }
-
-    public void testPointPointMatrix() {
-        final Point a = new Point(new Matrix(new int[][] {{2, 2, 2}}));
-        assertEquals(a, new Point(p, M));
     }
 
     public void testGetDimension() {

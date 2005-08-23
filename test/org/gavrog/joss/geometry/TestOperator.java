@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.6 2005/08/22 06:37:47 odf Exp $
+ * @version $Id: TestOperator.java,v 1.7 2005/08/23 02:03:42 odf Exp $
  */
 public class TestOperator extends TestCase {
     final Matrix M = new Matrix(new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}});
@@ -181,10 +181,11 @@ public class TestOperator extends TestCase {
         final Point x = new Point(new Matrix(new int[][] {{1, 0}}));
         final Point xy = new Point(new Matrix(new int[][] {{1, 1}}));
         final Point y = new Point(new Matrix(new int[][] {{0, 1}}));
+        final Point z = new Point(new Matrix(new int[][] {{0, 0}}));
         assertEquals(xy, op1.applyTo(x));
         assertEquals(y, op1.applyTo(xy));
-        assertEquals(y.zero(), op1.applyTo(y));
-        assertEquals(x, op1.applyTo((Point) y.zero()));
+        assertEquals(z, op1.applyTo(y));
+        assertEquals(x, op1.applyTo(z));
     }
 
     public void testParseOperator() {

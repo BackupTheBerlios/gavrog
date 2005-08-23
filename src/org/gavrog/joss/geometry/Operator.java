@@ -18,7 +18,6 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
-import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
@@ -30,7 +29,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.9 2005/08/22 06:37:46 odf Exp $
+ * @version $Id: Operator.java,v 1.10 2005/08/23 02:03:41 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -147,7 +146,7 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @return the resulting point.
      */
     public IArithmetic applyTo(final Point p) {
-        return new Point(p, this.coords);
+        return p.times(this);
     }
 
     /* (non-Javadoc)
@@ -258,9 +257,7 @@ public class Operator extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.IArithmetic#times(java.lang.Object)
      */
     public IArithmetic times(final Object other) {
-        if (other instanceof Complex){
-            return new Operator((Matrix) getCoordinates().times(other));
-        } else if (other instanceof Operator) {
+        if (other instanceof Operator) {
             final Matrix M = ((Operator) other).coords;
             return new Operator((Matrix) this.coords.times(M));
         } else {
