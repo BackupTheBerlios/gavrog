@@ -19,6 +19,7 @@ package org.gavrog.joss.geometry;
 import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
 
@@ -26,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.2 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: TestVector.java,v 1.3 2005/08/23 22:01:56 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -146,5 +147,16 @@ public class TestVector extends TestCase {
     public void testGetCoordinates() {
         final Matrix A = new Matrix(new int[][] {{1, 2, 3}});
         assertEquals(A, v.getCoordinates());
+    }
+    
+    public void testStaticZero() {
+        final Vector z = new Vector(Matrix.zero(1, 5));
+        assertEquals(z, Vector.zero(5));
+    }
+    
+    public void testDot() {
+        assertEquals(new FloatingPoint(17), Vector.dot(v, w));
+        final Matrix form = new Matrix(new int[][] {{-1,0,0},{0,-1,0},{0,0,1}});
+        assertEquals(new FloatingPoint(7), Vector.dot(v, w, form));
     }
 }

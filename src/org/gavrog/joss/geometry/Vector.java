@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.3 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: Vector.java,v 1.4 2005/08/23 22:01:56 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -127,6 +127,54 @@ public class Vector extends ArithmeticBase implements IArithmetic {
                     "the operation did not produce a vector");
         }
         return img.getSubMatrix(0, 0, 1, d);
+    }
+    
+    /**
+     * Returns a zero vector of a certain dimension.
+     * 
+     * @param dimension the requested dimension of the vector.
+     * @return a zero vector of the requested dimension.
+     */
+    public static Vector zero(final int dimension) {
+        return new Vector(Matrix.zero(1, dimension));
+    }
+    
+    /**
+     * Computes the product of two vectors with respect to a given quadratic form.
+     * 
+     * @param v the first vector.
+     * @param w the second vector.
+     * @param form a matrix representing the quadratic form.
+     * @return the value of the product.
+     */
+    public static IArithmetic dot(final Vector v, final Vector w, final Matrix form) {
+        final int d = v.getDimension();
+        if (w.getDimension() != d || form.numberOfRows() != d
+                || form.numberOfColumns() != d) {
+            throw new IllegalArgumentException("dimensions do not match");
+        }
+        if (!form.equals(form.transposed())) {
+            throw new IllegalArgumentException("matrix must be symmetric");
+        }
+        final Matrix vc = v.getCoordinates();
+        final Matrix wc = w.getCoordinates();
+        return ((Matrix) vc.times(form).times(wc.transposed())).get(0, 0);
+    }
+    
+    /**
+     * Computes the standard dot product of two vectors.
+     * 
+     * @param v the first vector.
+     * @param w the second vector.
+     * @return the value of the product.
+     */
+    public static IArithmetic dot(final Vector v, final Vector w) {
+        if (v.getDimension() != w.getDimension()) {
+            throw new IllegalArgumentException("dimensions do not match");
+        }
+        final Matrix vc = v.getCoordinates();
+        final Matrix wc = w.getCoordinates();
+        return ((Matrix) vc.times(wc.transposed())).get(0, 0);
     }
     
     /*
