@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Point class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPoint.java,v 1.3 2005/08/23 02:03:42 odf Exp $
+ * @version $Id: TestPoint.java,v 1.4 2005/08/23 04:18:41 odf Exp $
  */
 public class TestPoint extends TestCase {
     final Point p = new Point(new Matrix(new int[][] {{1, 2, 3}}));
@@ -83,11 +83,15 @@ public class TestPoint extends TestCase {
     }
 
     public void testPlus() {
-        try {
-            p.plus(q);
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
+        final Vector v = new Vector(new Matrix(new double[][] {{1, 2, 4}}));
+        final Point s = new Point(new Matrix(new double[][] {{2, 4, 7}}));
+        assertEquals(s, p.plus(v));
+    }
+
+    public void testMinus() {
+        final Vector v = new Vector(new Matrix(new double[][] {{0, 0, 1}}));
+        assertEquals(v, q.minus(p));
+        assertEquals(p, q.minus(v));
     }
 
     public void testTimes() {
@@ -142,5 +146,10 @@ public class TestPoint extends TestCase {
     public void testGetCoordinates() {
         final Matrix A = new Matrix(new int[][] {{1, 2, 3}});
         assertEquals(A, p.getCoordinates());
+    }
+    
+    public void testOrigin() {
+        final Point z = new Point(new Matrix(new int[][] {{0, 0, 0}}));
+        assertEquals(z, Point.origin(3));
     }
 }
