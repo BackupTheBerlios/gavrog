@@ -42,10 +42,10 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * A representation of a crystallographic space group. Operators are given as
  * (d+1)x(d+1) matrices of the form
  * 
- * <code>
+ * <pre>
  *   A 0
  *   v 1
- * </code>
+ * </pre>
  * 
  * where A is a d x d unimodular integer matrix and v is a d-dimensional vector
  * with rational entries. Rather than raw matrices, we use instances of the
@@ -70,7 +70,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.8 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.9 2005/08/23 20:04:57 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;

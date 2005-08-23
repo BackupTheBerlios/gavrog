@@ -20,10 +20,12 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Utility class. Allows to modify an iterator on the fly by specifying a
- * filter method in a derived class (which might be anonymous).
+ * Provides a framework for modify an iterator on the fly. This is done by passing the
+ * iterator in question to the constructor of a derived class (possibly anonymous) which
+ * implements the {@link #filter(Object)} method.
+ * 
  * @author Olaf Delgado
- * @version $Id: FilteredIterator.java,v 1.1 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: FilteredIterator.java,v 1.2 2005/08/23 20:04:57 odf Exp $
  */
 public abstract class FilteredIterator extends IteratorAdapter {
 
@@ -40,6 +42,7 @@ public abstract class FilteredIterator extends IteratorAdapter {
 	/**
 	 * The filter method to be provided by derived classes. Returns a modified
 	 * object or <code>null</code> if the object should be skipped.
+     * 
 	 * @param x the object to inspect.
 	 * @return true if the object should be passed through.
 	 */
