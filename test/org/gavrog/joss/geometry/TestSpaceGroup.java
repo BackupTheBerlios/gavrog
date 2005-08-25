@@ -30,29 +30,37 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.3 2005/08/19 22:43:41 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.4 2005/08/25 21:57:55 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
+    private SpaceGroup c2mm;
 
     public void setUp() {
         Fddd = new SpaceGroup(3, "Fddd");
+        c2mm = new SpaceGroup(2, "c2mm");
     }
     
     public void tearDown() {
         Fddd = null;
+        c2mm = null;
     }
     
     public void testSpaceGroupByName() {
         // --- read all IT settings without structural tests
-        for (final Iterator iter = SpaceGroup.groupNames(); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroup.groupNames(3); iter.hasNext();) {
             new SpaceGroup(3, (String) iter.next());
+        }
+        for (final Iterator iter = SpaceGroup.groupNames(2); iter.hasNext();) {
+            new SpaceGroup(2, (String) iter.next());
         }
     }
     
     public void testSpaceGroupByFullOpsList() {
         // --- do the full testing for one group
-        new SpaceGroup(3, SpaceGroup.operators("Ia-3d"), false, true);
+        new SpaceGroup(3, SpaceGroup.operators(3, "Ia-3d"), false, true);
+        // --- also for a 2-dimensional one
+        new SpaceGroup(2, SpaceGroup.operators(2, "p4mg"));
         
         // --- try some illegal inputs
         final List L = new LinkedList();
@@ -108,8 +116,11 @@ public class TestSpaceGroup extends TestCase {
     }
     
     public void testPrimitiveCell() {
-        final Matrix B = Operator.parse("1/2x,1/2y,1/2x+1/2y+z");
-        assertEquals(B.getSubMatrix(0, 0, 3, 3), Fddd.primitiveCell());
+        final Matrix B = (Matrix) new Matrix(new int[][] { { 1, 0, 1 }, { 0, 1, 1 },
+                { 0, 0, 2 } }).dividedBy(2);
+        assertEquals(B, Fddd.primitiveCell());
+        final Matrix C = (Matrix) new Matrix(new int[][] {{1, 1}, {0, 2}}).dividedBy(2);
+        assertEquals(C, c2mm.primitiveCell());
     }
 
     public void testGetOperators() {
@@ -126,13 +137,13 @@ public class TestSpaceGroup extends TestCase {
     }
 
     public void testOperators() {
-        final List ops = SpaceGroup.operators("Ia-3d");
+        final List ops = SpaceGroup.operators(3, "Ia-3d");
         assertNotNull(ops);
         assertEquals(96, ops.size());
     }
     
     public void testTransform() {
-        final Operator T = SpaceGroup.transform("Ia-3d");
+        final Operator T = SpaceGroup.transform(3, "Ia-3d");
         assertNotNull(T);
         assertEquals(Operator.identity(3), T);
     }

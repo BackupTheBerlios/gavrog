@@ -70,15 +70,28 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.9 2005/08/23 20:04:57 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.10 2005/08/25 21:57:55 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
     private final Set operators;
     
-    private static Map nameToOps = null;
-    private static Map nameToTransform = null;
-    private static Map translationTable = null;
+    /**
+     * This class is used to represent a table of space group settings of a given dimension.
+     */
+    private static class Table {
+        final public int dimension;
+        final public Map nameToOps = new HashMap();
+        final public Map nameToTransform = new HashMap();
+        final public Map translationTable;
+        
+        public Table(final int dimension, final Map translationTable) {
+            this.dimension = dimension;
+            this.translationTable = translationTable;
+        }
+    }
+    
+    static private Table groupTables[] = new Table[5];
     
     /**
      * Constructs a new instance.
@@ -187,11 +200,19 @@ public class SpaceGroup {
     /**
      * Constructs a space group corresponding to a Hermann-Mauguin symbol.
      * 
+     * Currently, the matching of Hermann-Mauguin symbols is case sensitive. Thus, the
+     * centering letter must be lower-case for plane groups and upper-case for space
+     * groups. Everything else must be lowe-case.
+     * 
+     * Extension letters for the hexagonal (":H") or rhombohedral (":R) settings are
+     * case-insensitive. To explicitly specify first or second origin choice, use
+     * extensions ":1" or ":2", respectively. The second origin choice is the default.
+     * 
      * @param dimension the dimension of the group.
      * @param name the Hermann-Maugain symbol for the group.
      */
     public SpaceGroup(final int dimension, final String name) {
-        this(dimension, operators(name), false, false);
+        this(dimension, operators(dimension, name), false, false);
     }
     
     /**
@@ -300,9 +321,7 @@ public class SpaceGroup {
         final InputStream inStream = ClassLoader.getSystemResourceAsStream(filename);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
     
-        nameToOps = new HashMap();
-        nameToTransform = new HashMap();
-        
+        Table table = null;
         String currentName = null;
         
         while (true) {
@@ -315,26 +334,31 @@ public class SpaceGroup {
             if (line == null) {
                 break;
             }
-            if (line.length() == 0) {
+            if (line.length() == 0 || line.trim().charAt(0) == '#') {
                 continue;
             }
             final int i = line.indexOf(' ');
             if (i > 0) {
+                if (currentName != null) {
+                    final Map map = table.nameToOps;
+                    final String key = currentName;
+                    map.put(key, Collections.unmodifiableList((List) map.get(key)));
+                }
                 currentName = line.substring(0, i);
-                nameToOps.put(currentName, new LinkedList());
                 final Operator T = new Operator(line.substring(i + 1));
-                nameToTransform.put(currentName, T);
+                final int d = T.getDimension();
+                if (groupTables[d] == null) {
+                    groupTables[d] = new Table(d, makeTranslationTable(d));
+                }
+                table = groupTables[d];
+                table.nameToOps.put(currentName, new LinkedList());
+                table.nameToTransform.put(currentName, T);
             } else if (currentName != null) {
                 final Operator op = new Operator(line).modZ();
-                ((List) nameToOps.get(currentName)).add(op);
+                ((List) table.nameToOps.get(currentName)).add(op);
             } else {
                 throw new DataFormatException("error in space group table file");
             }
-        }
-        
-        for (final Iterator iter = nameToOps.keySet().iterator(); iter.hasNext();) {
-            final Object key = iter.next();
-            nameToOps.put(key, Collections.unmodifiableList((List) nameToOps.get(key)));
         }
     }
 
@@ -342,17 +366,17 @@ public class SpaceGroup {
     final private static String tableName = pkgName.replaceAll("\\.", "/")
             + "/sgtable.data";
     
-    public static Iterator groupNames() {
-        if (nameToOps == null) {
+    public static Iterator groupNames(final int dimension) {
+        if (groupTables[dimension] == null) {
             parseGroups(tableName);
         }
     
-        return nameToOps.keySet().iterator();
+        return groupTables[dimension].nameToOps.keySet().iterator();
     }
 
-    private static Object retrieve(final String name, final boolean getOps) {
-        if (translationTable == null) {
-            translationTable = new HashMap();
+    private static Map makeTranslationTable(final int dimension) {
+        final Map translationTable = new HashMap();
+        if (dimension == 3) {
             translationTable.put("P2", "P121");
             translationTable.put("P21", "P1211");
             translationTable.put("C2", "C121");
@@ -367,15 +391,20 @@ public class SpaceGroup {
             translationTable.put("P21/c", "P121/c1");
             translationTable.put("C2/c", "C12/c1");
         }
-        
-        if (nameToOps == null) {
+        return translationTable;
+    }
+    
+    private static Object retrieve(int dim, final boolean getOps, final String name) {
+        if (groupTables[dim] == null) {
             parseGroups(tableName);
         }
+        final Table table = groupTables[dim];
     
         final String parts[] = name.split(":");
-        String base = capitalized(parts[0]);
-        if (translationTable.containsKey(base)) {
-            base = (String) translationTable.get(base);
+        //String base = capitalized(parts[0]);
+        String base = parts[0];
+        if (table.translationTable.containsKey(base)) {
+            base = (String) table.translationTable.get(base);
         }
         final String ext = parts.length > 1 ? capitalized(parts[1]) : "";
         
@@ -395,12 +424,12 @@ public class SpaceGroup {
         for (int i = 0; i < candidates.length; ++i) {
             final String key = candidates[i];
             if (getOps) {
-                if (nameToOps.containsKey(key)) {
-                    return nameToOps.get(key);
+                if (table.nameToOps.containsKey(key)) {
+                    return table.nameToOps.get(key);
                 }
             } else {
-                if (nameToTransform.containsKey(key)) {
-                    return nameToTransform.get(key);
+                if (table.nameToTransform.containsKey(key)) {
+                    return table.nameToTransform.get(key);
                 }
             }
         }
@@ -408,12 +437,12 @@ public class SpaceGroup {
         return null;
     }
 
-    public static List operators(final String name) {
-        return (List) retrieve(name, true);
+    public static List operators(final int dim, final String name) {
+        return (List) retrieve(dim, true, name);
     }
 
-    public static Operator transform(final String name) {
-        return (Operator) retrieve(name, false);
+    public static Operator transform(final int dim, final String name) {
+        return (Operator) retrieve(dim, false, name);
     }
 
     /**

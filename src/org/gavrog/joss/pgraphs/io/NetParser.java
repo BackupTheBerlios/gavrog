@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.35 2005/08/23 22:11:27 odf Exp $
+ * @version $Id: NetParser.java,v 1.36 2005/08/25 21:57:55 odf Exp $
  */
 public class NetParser extends GenericParser {
     // TODO make things work for nets of dimension 2 as well (4 also?)
@@ -266,7 +266,7 @@ public class NetParser extends GenericParser {
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
                     group = (String) row.get(0);
-                    ops.addAll(SpaceGroup.operators(group));
+                    ops.addAll(SpaceGroup.operators(3, group));
                     if (ops == null) {
                         final String msg = "Space group not recognized at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
@@ -447,7 +447,7 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 groupname = (String) row.get(0);
-                ops.addAll(SpaceGroup.operators(groupname));
+                ops.addAll(SpaceGroup.operators(3, groupname));
                 if (ops == null) {
                     final String msg = "Space group not recognized at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
