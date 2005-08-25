@@ -49,18 +49,16 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.36 2005/08/25 21:57:55 odf Exp $
+ * @version $Id: NetParser.java,v 1.37 2005/08/25 23:36:02 odf Exp $
  */
 public class NetParser extends GenericParser {
-    // TODO make things work for nets of dimension 2 as well (4 also?)
-    
     // --- used to enable or disable a log of the parsing process
     private final static boolean DEBUG = false;
     
     /**
      * Helper class - encapsulates the preliminary specification of a node.
      */
-    private class NodeDescriptor {
+    private static class NodeDescriptor {
         public final Object name;     // the node's name
         public final int connectivity; // the node's connectivity
         public final Operator site;     // the position or site of the node
@@ -79,7 +77,7 @@ public class NetParser extends GenericParser {
     /**
      * Helper class - encapsulates the preliminary specification of an edge.
      */
-    private class EdgeDescriptor {
+    private static class EdgeDescriptor {
         public final Object source; // the edge's source node representative
         public final Object target;   // the edge's target node representative
         public final Operator shift;  // shift to be applied to the target representative
@@ -120,7 +118,7 @@ public class NetParser extends GenericParser {
      * 
      * @return the mapping of keywords.
      */
-    private Map makeSynonyms() {
+    private static Map makeSynonyms() {
         final Map result = new HashMap();
         result.put("vertex", "node");
         result.put("vertices", "node");
@@ -159,7 +157,7 @@ public class NetParser extends GenericParser {
         } else if (type.equals("crystal")) {
             return parseCrystal3D(block);
         } else if (type.equals("net")) {
-            return parseNet3D(block);
+            return parseSymmetricNet(block);
         } else {
             throw new UnsupportedOperationException("type " + type + " not supported");
         }
@@ -186,7 +184,7 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private PeriodicGraph parsePeriodicGraph(final Entry block[]) {
+    private static PeriodicGraph parsePeriodicGraph(final Entry block[]) {
         PeriodicGraph G = null;
         final Map nameToNode = new HashMap();
         
@@ -224,49 +222,56 @@ public class NetParser extends GenericParser {
     }
 
     /**
-     * Parses a 3-periodic net given in terms of a crystallographic group. Edges
-     * are specified in a similar way as in parsePeriodicGraph(), but instead of
-     * just lattice translation, any operator from the symmetry group may be
-     * used. Group operators are in symbolic form, as in "y,x,z+1/2". For nodes
-     * not in general position, i.e., with a non-trivial stabilizer, their
-     * respective special positions must be given in symbolic form, as e.g. in
-     * "x,y,x+1/2". Only the variables "x", "y" and "z" are recognized in
-     * symbolic forms for both group operators and special positions.
+     * Parses a periodic net given in terms of a crystallographic group. Edges are
+     * specified in a similar way as in parsePeriodicGraph(), but instead of just lattice
+     * translation, any operator from the symmetry group may be used.
+     * 
+     * Group operators are in symbolic form, as in "y,x,z+1/2". For nodes not in general
+     * position, i.e., with a non-trivial stabilizer, their respective special positions
+     * must be given in symbolic form, as e.g. in "x,y,x+1/2". Symbolic specifications for
+     * both operators and special positions are handled by {@link Operator#parse(String)}.
      * 
      * Example:
      * 
      * <pre>
-     * NET # the diamond net
-     *   Group Fd-3m
-     *   Node 1 3/8,3/8,3/8
-     *   Edge 1 1 1-x,1-y,1-z
-     * END
+     * 
+     *  NET # the diamond net
+     *    Group Fd-3m
+     *    Node 1 3/8,3/8,3/8
+     *    Edge 1 1 1-x,1-y,1-z
+     *  END
+     *  
      * </pre>
      * 
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private PeriodicGraph parseNet3D(final Entry[] block) {
-        final PeriodicGraph G = new PeriodicGraph(3);
-        String group = null;
+    private static PeriodicGraph parseSymmetricNet(final Entry[] block) {
+        String groupName = null;
+        int dimension = 0;
+        SpaceGroup group = null;
         List ops = new ArrayList();
         List nodeDescriptors = new LinkedList();
         List edgeDescriptors = new LinkedList();
         final Map nodeNameToDesc = new HashMap();
-        final Map addressToNode = new HashMap();
-        final Map addressToShift = new HashMap();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
             final List row = block[i].values;
             if (block[i].key.equals("group")) {
-                if (group == null) {
+                if (groupName == null) {
                     if (row.size() < 1) {
                         final String msg = "Missing argument at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
-                    group = (String) row.get(0);
-                    ops.addAll(SpaceGroup.operators(3, group));
+                    groupName = (String) row.get(0);
+                    if (Character.isLowerCase(groupName.charAt(0))) {
+                        dimension = 2;
+                    } else if (dimension == 0) {
+                        dimension = 3;
+                    }
+                    group = new SpaceGroup(dimension, groupName);
+                    ops.addAll(group.getOperators());
                     if (ops == null) {
                         final String msg = "Space group not recognized at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
@@ -308,9 +313,8 @@ public class NetParser extends GenericParser {
         }
         
         // --- convert to primitive setting
-        final SpaceGroup sg = new SpaceGroup(3, ops, false, false);
-        final Set primitiveOps = sg.primitiveOperators();
-        final Operator to = sg.transformationToPrimitive();
+        final Set primitiveOps = group.primitiveOperators();
+        final Operator to = group.transformationToPrimitive();
         final Operator from = (Operator) to.inverse();
         
         ops.clear();
@@ -340,6 +344,10 @@ public class NetParser extends GenericParser {
         // TODO provide better error handling in the following
         
         // --- apply group operators to generate all nodes
+        final PeriodicGraph G = new PeriodicGraph(dimension);
+        final Map addressToNode = new HashMap();
+        final Map addressToShift = new HashMap();
+        
         for (final Iterator it1 = nodeDescriptors.iterator(); it1.hasNext();) {
             // --- find the next node
             final NodeDescriptor node = (NodeDescriptor) it1.next();
@@ -394,6 +402,29 @@ public class NetParser extends GenericParser {
     }
 
     /**
+     * Utility method to parse an operator or site (same format) from a string
+     * specification which is broken up into fields. The specified fields are
+     * concatenated, using blanks as field separators, and the result is passed to the
+     * {@link Operator#Operator(String)} constructor.
+     * 
+     * @param fields a list of fields.
+     * @param startIndex the field index to start parsing at.
+     * @return the result as an {@link Operator}.
+     */
+    private static Operator parseSiteOrOperator(final List fields, final int startIndex) {
+        if (fields.size() <= startIndex) {
+            return Operator.identity(3);
+        } else {
+            final StringBuffer buf = new StringBuffer(40);
+            for (int i = startIndex; i < fields.size(); ++i) {
+                buf.append(' ');
+                buf.append(fields.get(i));
+            }
+            return new Operator(buf.toString());
+        }
+    }
+    
+    /**
      * Parses a crystal descriptor and constructs the corresponding atom-bond
      * network.
      * 
@@ -410,7 +441,8 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private PeriodicGraph parseCrystal3D(final Entry[] block) {
+    private static PeriodicGraph parseCrystal3D(final Entry[] block) {
+        // TODO make this work for general dimensions
         final Matrix I = Matrix.one(3);        
 
         final Set seen = new HashSet();
@@ -874,28 +906,5 @@ public class NetParser extends GenericParser {
         }
         
         return shift;
-    }
-    
-    /**
-     * Utility method to parse an operator or site (same format) from a string
-     * specification which is broken up into fields. The specified fields are
-     * concatenated, using blanks as field separators, and the result is passed to the
-     * {@link Operator#Operator(String)} constructor.
-     * 
-     * @param fields a list of fields.
-     * @param startIndex the field index to start parsing at.
-     * @return the result as an {@link Operator}.
-     */
-    private static Operator parseSiteOrOperator(final List fields, final int startIndex) {
-        if (fields.size() <= startIndex) {
-            return Operator.identity(3);
-        } else {
-            final StringBuffer buf = new StringBuffer(40);
-            for (int i = startIndex; i < fields.size(); ++i) {
-                buf.append(' ');
-                buf.append(fields.get(i));
-            }
-            return new Operator(buf.toString());
-        }
     }
 }

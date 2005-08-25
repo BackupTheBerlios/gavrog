@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.12 2005/08/01 17:39:56 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.13 2005/08/25 23:36:02 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -89,7 +89,7 @@ public class TestNetParser extends TestCase {
         assertEquals("(1,2,[0,0,0])(1,2,[1,0,0])(1,2,[0,1,0])(1,2,[0,0,1])", G.toString());
     }
 
-    public void testParseNet3D() {
+    public void testParseSymmetricNet() {
         final PeriodicGraph H = NetParser.stringToNet(""
                 + "NET # primitive cubic\n"
                 + "  Group P432\n"
@@ -111,6 +111,32 @@ public class TestNetParser extends TestCase {
                 + "END\n");
 
         assertEquals(dia, D);
+        
+        final PeriodicGraph sq = NetParser.stringToNet(""
+                + "NET # square lattice on the plane\n"
+                + "  Group p4mm\n"
+                + "  Node 1 0,0\n"
+                + "  Edge 1 1 x+1,y\n"
+                + "END\n");
+        assertEquals(1, sq.numberOfNodes());
+        assertEquals(2, sq.numberOfEdges());
+        final INode w = (INode) sq.nodes().next();
+        assertNotNull(sq.getEdge(w, w, new Matrix(new int[][] {{1,0}})));
+        assertNotNull(sq.getEdge(w, w, new Matrix(new int[][] {{0,1}})));
+        
+        final PeriodicGraph hex1 = NetParser.stringToNet(""
+                + "NET # planar honeycombs\n"
+                + "  Group p6mm\n"
+                + "  Node 1 2/3,1/3\n"
+                + "  Edge 1 1 y,y-x\n"
+                + "END\n");
+        final PeriodicGraph hex2 = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH # planar honeycombs\n"
+                + "  1 2  0 0\n"
+                + "  1 2  1 0\n"
+                + "  1 2  0 1\n"
+                + "END\n");
+        assertEquals(hex2, hex1);
     }
     
     public void testParseCrystal3D() {
