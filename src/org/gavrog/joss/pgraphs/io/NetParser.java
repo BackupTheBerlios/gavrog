@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.40 2005/08/26 03:43:13 odf Exp $
+ * @version $Id: NetParser.java,v 1.41 2005/08/26 06:04:47 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -155,7 +155,7 @@ public class NetParser extends GenericParser {
         if (type.equals("periodic_graph")) {
             return parsePeriodicGraph(block);
         } else if (type.equals("crystal")) {
-            return parseCrystal3D(block);
+            return parseCrystal(block);
         } else if (type.equals("net")) {
             return parseSymmetricNet(block);
         } else {
@@ -441,15 +441,15 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private static PeriodicGraph parseCrystal3D(final Entry[] block) {
+    private static PeriodicGraph parseCrystal(final Entry[] block) {
         // TODO make this work for general dimensions
-        final Matrix I = Matrix.one(3);        
-
         final Set seen = new HashSet();
         
-        String groupname = "P1";
+        String groupName = null;
+        int dim = 0;
+        SpaceGroup group = null;
         List ops = new ArrayList();
-        Matrix cellGram = I;
+        Matrix cellGram = null;
         
         double precision = 0.001;
         double minEdgeLength = 0.95;
@@ -471,8 +471,14 @@ public class NetParser extends GenericParser {
                     final String msg = "Missing argument at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                groupname = (String) row.get(0);
-                ops.addAll(SpaceGroup.operators(3, groupname));
+                groupName = (String) row.get(0);
+                if (Character.isLowerCase(groupName.charAt(0))) {
+                    dim = 2;
+                } else if (dim == 0) {
+                    dim = 3;
+                }
+                group = new SpaceGroup(dim, groupName);
+                ops.addAll(group.getOperators());
                 if (ops == null) {
                     final String msg = "Space group not recognized at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -482,20 +488,21 @@ public class NetParser extends GenericParser {
                     final String msg = "Cell specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                if (row.size() != 6) {
-                    final String msg = "Expected 6 arguments at line ";
+                final int m = dim + dim * (dim-1) / 2;
+                if (row.size() != m) {
+                    final String msg = "Expected " + m + " arguments at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                for (int j = 0; j < 6; ++j) {
+                for (int j = 0; j < m; ++j) {
                     if (!(row.get(i) instanceof Real)) {
                         final String msg = "Arguments must be real numbers at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
                 }
-                cellGram = gramMatrix(3, row);
+                cellGram = gramMatrix(dim, row);
             } else if (block[i].key.equals("node")) {
-                if (row.size() != 5) {
-                    final String msg = "Expected 5 arguments at line ";
+                if (row.size() != dim + 2) {
+                    final String msg = "Expected " + (dim + 2) + " arguments at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final Object name = row.get(0);
@@ -508,11 +515,11 @@ public class NetParser extends GenericParser {
                     final String msg = "Connectivity must be a positive integer ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                final Matrix position = Matrix.zero(4, 4).mutableClone();
-                for (int j = 0; j < 3; ++j) {
-                    position.set(3, j, (IArithmetic) row.get(j + 2));
+                final Matrix position = Matrix.zero(dim+1, dim+1).mutableClone();
+                for (int j = 0; j < dim; ++j) {
+                    position.set(dim, j, (IArithmetic) row.get(j + 2));
                 }
-                position.set(3, 3, Whole.ONE);
+                position.set(dim, dim, Whole.ONE);
                 final int c = ((Whole) conn).intValue();
                 final Operator op = new Operator(position).modZ();
                 final NodeDescriptor node = new NodeDescriptor(name, c, op);
@@ -524,7 +531,7 @@ public class NetParser extends GenericParser {
         
         if (DEBUG) {
             System.err.println();
-            System.err.println("Group name: " + groupname);
+            System.err.println("Group name: " + groupName);
             System.err.println("  operators:");
             for (final Iterator iter = ops.iterator(); iter.hasNext();) {
                 System.err.println("    " + iter.next());
@@ -541,10 +548,9 @@ public class NetParser extends GenericParser {
         }
         
         // --- convert to primitive setting
-        final SpaceGroup sg = new SpaceGroup(3, ops, false, false);
-        final Matrix primitiveCell = sg.primitiveCell();
-        final Set primitiveOps = sg.primitiveOperators();
-        final Operator to = sg.transformationToPrimitive();
+        final Matrix primitiveCell = group.primitiveCell();
+        final Set primitiveOps = group.primitiveOperators();
+        final Operator to = group.transformationToPrimitive();
         final Operator from = (Operator) to.inverse();
         
         ops.clear();
@@ -571,11 +577,11 @@ public class NetParser extends GenericParser {
         }
         
         // --- construct a Dirichlet domain for the translation group
-        final Vector dirichletVectors[] = Vector.dirichletVectors(Vector.rowVectors(I),
-                cellGram);
+        final Vector basis[] = Vector.rowVectors(Matrix.one(group.getDimension()));
+        final Vector dirichletVectors[] = Vector.dirichletVectors(basis, cellGram);
         
         // --- apply group operators to generate all nodes
-        final PeriodicGraph G = new PeriodicGraph(3);
+        final PeriodicGraph G = new PeriodicGraph(dim);
         final Map nodeToPosition = new HashMap();
         final Map nodeToDescriptor = new HashMap();
         
@@ -631,7 +637,7 @@ public class NetParser extends GenericParser {
         // --- compute nodes in two times extended Dirichlet domain
         final List extended = new ArrayList();
         final Map addressToPosition = new HashMap();
-        final Vector zero = Vector.zero(3);
+        final Vector zero = Vector.zero(dim);
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Point pv = (Point) nodeToPosition.get(v);
@@ -641,7 +647,7 @@ public class NetParser extends GenericParser {
             }
             extended.add(new Pair(v, zero));
             addressToPosition.put(new Pair(v, zero), pv);
-            for (int i = 0; i < 7; ++i) {
+            for (int i = 0; i < dirichletVectors.length; ++i) {
                 final Vector vec = dirichletVectors[i];
                 if (DEBUG) {
                     System.err.println("  shifting by " + vec);

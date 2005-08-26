@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.6 2005/08/26 03:43:13 odf Exp $
+ * @version $Id: Vector.java,v 1.7 2005/08/26 06:04:47 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -359,6 +359,27 @@ public class Vector extends ArithmeticBase implements IArithmetic {
     }
     
     /**
+     * Performs a gauss elimination on a lattice basis.
+     * 
+     * @param v the vectors forming the basis.
+     * @param M the quadratic form determining the metric.
+     * @return vectors forming a reduced basis.
+     */
+    private static Vector[] gaussReduced(Vector[] v, Matrix M) {
+        if (v.length != 2 || v[0].getDimension() != 2) {
+            final String msg = "first argument must contain 2 vectors of dimension 2";
+            throw new IllegalArgumentException(msg);
+        }
+        if (M.numberOfRows() != 2 || !M.equals(M.transposed())) {
+            final String msg = "second argument must be a symmetric 2x2 matrix";
+            throw new IllegalArgumentException(msg);
+        }
+        
+        //TODO implement
+        throw new UnsupportedOperationException("not yet implemented");
+    }
+    
+    /**
      * Performs a single step of the Selling reduction algorithm.
      * 
      * @param v the augmented list of basis vectors.
@@ -393,7 +414,7 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public static Vector[] sellingReduced(final Vector[] v, final Matrix M) {
         if (v.length != 3 || v[0].getDimension() != 3) {
-            final String msg = "first argument must be a 3x3 matrix";
+            final String msg = "first argument must contain 3 vectors of dimension 3";
             throw new IllegalArgumentException(msg);
         }
         if (M.numberOfRows() != 3 || !M.equals(M.transposed())) {
@@ -419,9 +440,26 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      * @return the normal vectors to the faces of the Dirichlet domain.
      */
     public static Vector[] dirichletVectors(final Vector[] b, final Matrix M) {
-        final Vector t[] = Vector.sellingReduced(b, M);
-        return new Vector[] { t[0], t[1], t[2], (Vector) t[0].plus(t[1]),
-                (Vector) t[0].plus(t[2]), (Vector) t[1].plus(t[2]),
-                (Vector) t[0].plus(t[1]).plus(t[2]) };
+        final int dim = b.length;
+        if (b[0].getDimension() != dim) {
+            final String msg = "illegal first argument";
+            throw new IllegalArgumentException(msg);
+        }
+        if (M.numberOfRows() != dim || !M.equals(M.transposed())) {
+            final String msg = "illegal second argument";
+            throw new IllegalArgumentException(msg);
+        }
+
+        if (dim == 2) {
+            final Vector t[] = Vector.gaussReduced(b, M);
+            return new Vector[] { t[0], t[1], (Vector) t[0].plus(t[1]) };
+        } else if (dim == 3) {
+            final Vector t[] = Vector.sellingReduced(b, M);
+            return new Vector[] { t[0], t[1], t[2], (Vector) t[0].plus(t[1]),
+                    (Vector) t[0].plus(t[2]), (Vector) t[1].plus(t[2]),
+                    (Vector) t[0].plus(t[1]).plus(t[2]) };
+        } else {
+            throw new UnsupportedOperationException("only dimensions 2 and 3 work");
+        }
     }
 }
