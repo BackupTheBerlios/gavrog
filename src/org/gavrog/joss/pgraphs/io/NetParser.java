@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.37 2005/08/25 23:36:02 odf Exp $
+ * @version $Id: NetParser.java,v 1.38 2005/08/26 00:09:16 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -449,13 +449,6 @@ public class NetParser extends GenericParser {
         
         String groupname = "P1";
         List ops = new ArrayList();
-        
-        Real cellA = FloatingPoint.ONE;
-        Real cellB = FloatingPoint.ONE;
-        Real cellC = FloatingPoint.ONE;
-        Real cellAlpha = new FloatingPoint(90.0);
-        Real cellBeta = cellAlpha;
-        Real cellGamma = cellAlpha;
         Matrix cellGram = I;
         
         double precision = 0.001;
@@ -499,13 +492,7 @@ public class NetParser extends GenericParser {
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
                 }
-                cellA = (Real) row.get(0);
-                cellB = (Real) row.get(1);
-                cellC = (Real) row.get(2);
-                cellAlpha = (Real) row.get(3);
-                cellBeta = (Real) row.get(4);
-                cellGamma = (Real) row.get(5);
-                cellGram = gramMatrix(cellA, cellB, cellC, cellAlpha, cellBeta, cellGamma);
+                cellGram = gramMatrix(3, row);
             } else if (block[i].key.equals("node")) {
                 if (row.size() != 5) {
                     final String msg = "Expected 5 arguments at line ";
@@ -544,14 +531,7 @@ public class NetParser extends GenericParser {
             }
             System.err.println();
 
-            System.err.println("Cell parameters:");
-            System.err.println("  a = " + cellA);
-            System.err.println("  b = " + cellB);
-            System.err.println("  c = " + cellC);
-            System.err.println("  alpha = " + cellAlpha);
-            System.err.println("  beta  = " + cellBeta);
-            System.err.println("  gamma = " + cellGamma);
-            System.err.println("  gram matrix = " + cellGram);
+            System.err.println("Cell gram matrix = " + cellGram);
             System.err.println();
             
             System.err.println("Nodes:");
@@ -776,26 +756,38 @@ public class NetParser extends GenericParser {
      * Constructs a gram matrix for the edge vectors of a unit cell which is specified by
      * its cell parameters as according to crystallographic conventions.
      * 
-     * @param a the length of the first vector.
-     * @param b the length of the second vector.
-     * @param c the length of the third vector.
-     * @param alpha the angle between the second and third vector.
-     * @param beta the angle between the first and third vector.
-     * @param gamma the angle between the first and second vector.
+     * @param dim the dimension of the cell.
+     * @param callParameters the list of cell parameters.
      * @return the gram matrix for the vectors.
      */
-    private static Matrix gramMatrix(final Real a, final Real b, final Real c,
-            final Real alpha, final Real beta, final Real gamma) {
+    private static Matrix gramMatrix(int dim, final List cellParameters) {
+        if (dim == 2) {
+            final Real a = (Real) cellParameters.get(0);
+            final Real b = (Real) cellParameters.get(1);
+            final Real angle = (Real) cellParameters.get(2);
+            final Real x = (Real) cosine(angle).times(a).times(b);
+            
+            return new Matrix(new IArithmetic[][] { { a.raisedTo(2), x },
+                    { x, b.raisedTo(2) } });
+        } else if (dim == 3) {
+            final Real a = (Real) cellParameters.get(0);
+            final Real b = (Real) cellParameters.get(1);
+            final Real c = (Real) cellParameters.get(2);
+            final Real alpha = (Real) cellParameters.get(3);
+            final Real beta = (Real) cellParameters.get(4);
+            final Real gamma = (Real) cellParameters.get(5);
+            
+            final Real alphaG = (Real) cosine(alpha).times(b).times(c);
+            final Real betaG = (Real) cosine(beta).times(a).times(c);
+            final Real gammaG = (Real) cosine(gamma).times(a).times(b);
 
-        final Real alphaG = (Real) cosine(alpha).times(b).times(c);
-        final Real betaG = (Real) cosine(beta).times(a).times(c);
-        final Real gammaG = (Real) cosine(gamma).times(a).times(b);
-
-        return new Matrix(new IArithmetic[][] {
-                { a.raisedTo(2), gammaG, betaG },
-                { gammaG, b.raisedTo(2), alphaG },
-                { betaG, alphaG, c.raisedTo(2) },
-        });
+            return new Matrix(
+                    new IArithmetic[][] { { a.raisedTo(2), gammaG, betaG },
+                            { gammaG, b.raisedTo(2), alphaG },
+                            { betaG, alphaG, c.raisedTo(2) }, });
+        } else {
+            throw new UnsupportedOperationException("supporting only dimensions 2 and 3");
+        }
     }
     
     /**
@@ -880,14 +872,15 @@ public class NetParser extends GenericParser {
             final Vector dirichletVectors[], final Matrix metric, final Whole factor) {
 
         final Whole one = Whole.ONE;
+        final int dim = pos.getDimension();
         final Real half = new Fraction(1, 2);
         final Real eps = new FloatingPoint(1e-8);
-        final Point origin = Point.origin(3);
-        Vector shift = Vector.zero(3);
+        final Point origin = Point.origin(dim);
+        Vector shift = Vector.zero(dim);
         
         while (true) {
             boolean changed = false;
-            for (int i = 0; i < 7; ++i) {
+            for (int i = 0; i < dirichletVectors.length; ++i) {
                 final Vector v = (Vector) dirichletVectors[i].times(factor);
                 final IArithmetic c = Vector.dot(v, v, metric);
                 final Vector p = (Vector) pos.plus(shift).minus(origin);
