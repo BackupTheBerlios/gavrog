@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.3 2005/08/23 22:01:56 odf Exp $
+ * @version $Id: TestVector.java,v 1.4 2005/08/26 03:10:20 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -158,5 +158,20 @@ public class TestVector extends TestCase {
         assertEquals(new FloatingPoint(17), Vector.dot(v, w));
         final Matrix form = new Matrix(new int[][] {{-1,0,0},{0,-1,0},{0,0,1}});
         assertEquals(new FloatingPoint(7), Vector.dot(v, w, form));
+    }
+
+    public void testSellingReducedRows() {
+        final Matrix G = new Matrix(new int[][] { { 4, 1, 3 }, { 1, 5, 2 }, { 3, 2, 6 } });
+        final Vector b[] = { new Vector(new int[] { 1, 2, 3 }),
+                new Vector(new int[] { 4, 5, 6 }), new Vector(new int[] { 7, 8, 8 }) };
+        final Vector v[] = Vector.sellingReduced(b, G);
+        // assertFalse(v.determinant().isZero());
+        final Vector w[] = new Vector[] { v[0], v[1], v[2],
+                (Vector) v[0].negative().minus(v[1]).minus(v[2]) };
+        for (int i = 0; i < 3; ++i) {
+            for (int j = i + 1; j < 4; ++j) {
+                assertFalse(Vector.dot(w[i], w[j], G).isPositive());
+            }
+        }
     }
 }

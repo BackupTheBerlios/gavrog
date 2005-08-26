@@ -19,7 +19,9 @@ package org.gavrog.joss.geometry;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
+import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
 /**
@@ -27,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.4 2005/08/23 22:01:56 odf Exp $
+ * @version $Id: Vector.java,v 1.5 2005/08/26 03:10:20 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -337,5 +339,57 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public IArithmetic zero() {
         return new Vector((Matrix) getCoordinates().zero());
+    }
+    
+    /**
+     * Performs a single step of the Selling reduction algorithm.
+     * 
+     * @param v the augmented list of basis vectors.
+     * @param M the quadratic form determining the metric.
+     * @return true if there was a change.
+     */
+    private static boolean sellingStep(final Vector v[], final Matrix M) {
+        final Real eps = new FloatingPoint(1e-12);
+        for (int i = 0; i < 3; ++i) {
+            for (int j = i+1; j < 4; ++j) {
+                if (dot(v[i], v[j], M).isGreaterThan(eps)) {
+                    for (int k = 0; k < 4; ++k) {
+                        if (k != i && k != j) {
+                            v[k] = (Vector) v[k].plus(v[i]);
+                        }
+                    }
+                    v[i] = (Vector) v[i].negative();
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Performs a Selling reduction on a lattice basis
+     * 
+     * @param v the vectors forming the basis.
+     * @param M the quadratic form determining the metric.
+     * @return vectors forming a reduced basis.
+     */
+    public static Vector[] sellingReduced(final Vector[] v, final Matrix M) {
+        if (v.length != 3 || v[0].getDimension() != 3) {
+            final String msg = "first argument must be a 3x3 matrix";
+            throw new IllegalArgumentException(msg);
+        }
+        if (M.numberOfRows() != 3 || !M.equals(M.transposed())) {
+            final String msg = "second argument must be a symmetric 3x3 matrix";
+            throw new IllegalArgumentException(msg);
+        }
+        
+        final Vector[] w = new Vector[] { v[0], v[1], v[2],
+                (Vector) v[0].plus(v[1]).plus(v[2]).negative() };
+        
+        while (sellingStep(w, M)) {
+        }
+        
+        return new Vector[] { w[0], w[1], w[2] };
     }
 }

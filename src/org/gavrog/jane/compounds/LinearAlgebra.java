@@ -16,7 +16,6 @@
 
 package org.gavrog.jane.compounds;
 
-import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
@@ -26,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.1 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.2 2005/08/26 03:10:20 odf Exp $
  */
 public class LinearAlgebra {
     /**
@@ -276,64 +275,5 @@ public class LinearAlgebra {
         }
         final Matrix t = (Matrix) v.times(M).times(w.transposed());
         return t.get(0, 0);
-    }
-    
-    /**
-     * Performs a single step of the Selling reduction algorithm.
-     * 
-     * @param v the augmented list of basis vectors.
-     * @param M the quadratic form determining the metric.
-     * @return true if there was a change.
-     */
-    private static boolean sellingStep(final Matrix v[], final Matrix M) {
-        final Real eps = new FloatingPoint(1e-12);
-        for (int i = 0; i < 3; ++i) {
-            for (int j = i+1; j < 4; ++j) {
-                if (dotRows(v[i], v[j], M).isGreaterThan(eps)) {
-                    for (int k = 0; k < 4; ++k) {
-                        if (k != i && k != j) {
-                            v[k] = (Matrix) v[k].plus(v[i]);
-                        }
-                    }
-                    v[i] = (Matrix) v[i].negative();
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Performs a Selling reduction on the row vectors of the given 3x3 matrix.
-     * 
-     * @param B the input matrix.
-     * @param M the quadratic form used to determine angles.
-     * @return a matrix with the reduced basis vectors as rows.
-     */
-    public static Matrix sellingReducedRows(final Matrix B, final Matrix M) {
-        if (B.numberOfRows() != 3 || B.numberOfColumns() != 3) {
-            final String msg = "first argument must be a 3x3 matrix";
-            throw new IllegalArgumentException(msg);
-        }
-        if (M.numberOfRows() != 3 || !M.equals(M.transposed())) {
-            final String msg = "second argument must be a symmetric 3x3 matrix";
-            throw new IllegalArgumentException(msg);
-        }
-        
-        final Matrix v[] = new Matrix[4];
-        v[0] = B.getRow(0);
-        v[1] = B.getRow(1);
-        v[2] = B.getRow(2);
-        v[3] = (Matrix) v[0].plus(v[1]).plus(v[2]).negative();
-        
-        while (sellingStep(v, M)) {
-        }
-        
-        final Matrix res = new Matrix(3, 3);
-        res.setRow(0, v[0]);
-        res.setRow(1, v[1]);
-        res.setRow(2, v[2]);
-        return res;
     }
 }

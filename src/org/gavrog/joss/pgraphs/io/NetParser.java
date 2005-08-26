@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.38 2005/08/26 00:09:16 odf Exp $
+ * @version $Id: NetParser.java,v 1.39 2005/08/26 03:10:20 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -571,21 +571,12 @@ public class NetParser extends GenericParser {
         }
         
         // --- construct a Dirichlet domain for the translation group
-        final Matrix reducedBasis = LinearAlgebra.sellingReducedRows(I, cellGram);
-        final Vector t1 = new Vector(reducedBasis.getRow(0));
-        final Vector t2 = new Vector(reducedBasis.getRow(1));
-        final Vector t3 = new Vector(reducedBasis.getRow(2));
-        final Vector dirichletVectors[] = new Vector[] {
-                t1, t2, t3,
-                (Vector) t1.plus(t2), (Vector) t1.plus(t3), (Vector) t2.plus(t3),
-                (Vector) t1.plus(t2).plus(t3)
-                };
-        if (DEBUG) {
-            System.err.println();
-            System.err.println("Selling reduced basis: " + reducedBasis);
-            System.err.println("  in terms of original cell: "
-                               + reducedBasis.times(primitiveCell));
-        }
+        final Vector b[] = new Vector[] { new Vector(new int[] { 1, 0, 0 }),
+                new Vector(new int[] { 0, 1, 0 }), new Vector(new int[] { 0, 0, 1 }) };
+        final Vector t[] = Vector.sellingReduced(b, cellGram);
+        final Vector dirichletVectors[] = new Vector[] { t[0], t[1], t[2],
+                (Vector) t[0].plus(t[1]), (Vector) t[0].plus(t[2]),
+                (Vector) t[1].plus(t[2]), (Vector) t[0].plus(t[1]).plus(t[2]) };
         
         // --- apply group operators to generate all nodes
         final PeriodicGraph G = new PeriodicGraph(3);
@@ -757,7 +748,7 @@ public class NetParser extends GenericParser {
      * its cell parameters as according to crystallographic conventions.
      * 
      * @param dim the dimension of the cell.
-     * @param callParameters the list of cell parameters.
+     * @param cellParameters the list of cell parameters.
      * @return the gram matrix for the vectors.
      */
     private static Matrix gramMatrix(int dim, final List cellParameters) {

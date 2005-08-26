@@ -16,19 +16,17 @@
 
 package org.gavrog.jane.compounds;
 
-import org.gavrog.jane.compounds.LinearAlgebra;
-import org.gavrog.jane.compounds.Matrix;
+import junit.framework.TestCase;
+
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
-
-import junit.framework.TestCase;
 
 /**
  * Unit tests for class LinearAlgebra.
  * 
  * @author Olaf Delgado
- * @version $Id: TestLinearAlgebra.java,v 1.1 2005/08/01 17:39:56 odf Exp $
+ * @version $Id: TestLinearAlgebra.java,v 1.2 2005/08/26 03:10:20 odf Exp $
  */
 public class TestLinearAlgebra extends TestCase {
     // TODO add tests for matrices with floating point entries.
@@ -179,22 +177,6 @@ public class TestLinearAlgebra extends TestCase {
             }
         } else {
             assertNull(x);
-        }
-    }
-
-    public void testSellingReducedRows() {
-        final Matrix B = LinearAlgebra.sellingReducedRows(A, M);
-        assertFalse(B.determinant().isZero());
-        final Matrix v[] = new Matrix[4];
-        v[0] = B.getRow(0);
-        v[1] = B.getRow(1);
-        v[2] = B.getRow(2);
-        v[3] = (Matrix) v[0].negative().minus(v[1]).minus(v[2]);
-        for (int i = 0; i < 3; ++i) {
-            for (int j = i + 1; j < 4; ++j) {
-                final Matrix T = (Matrix) v[i].times(M).times(v[j].transposed());
-                assertFalse(T.get(0, 0).isPositive());
-            }
         }
     }
 }
