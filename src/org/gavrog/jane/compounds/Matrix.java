@@ -200,6 +200,14 @@ public class Matrix extends ArithmeticBase {
         return row;
     }
     
+    public Matrix[] getRows() {
+        final Matrix rows[] = new Matrix[nrows];
+        for (int i = 0; i < nrows; ++i) {
+            rows[i] = getRow(i);
+        }
+        return rows;
+    }
+    
     public void setRow(final int i, final Matrix row) {
         if (row.numberOfRows() != 1 || row.numberOfColumns() != ncols) {
             throw new IllegalArgumentException("bad shape for row");

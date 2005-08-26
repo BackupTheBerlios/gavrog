@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.1 2005/08/01 17:39:56 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.2 2005/08/26 03:08:05 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;
@@ -373,6 +373,18 @@ public class TestMatrix extends TestCase {
     public void testGetRow() {
         final Matrix T = new Matrix(new int [][] {{13, 14, 15, 16}});
         assertEquals(T, A.getRow(3));
+    }
+    
+    public void testGetRows() {
+        final Matrix R0 = new Matrix(new int [][] {{ 1,  2,  3,  4}});
+        final Matrix R1 = new Matrix(new int [][] {{ 5,  6,  7,  8}});
+        final Matrix R2 = new Matrix(new int [][] {{ 9, 10, 11, 12}});
+        final Matrix R3 = new Matrix(new int [][] {{13, 14, 15, 16}});
+        final Matrix rows[] = A.getRows();
+        assertEquals(R0, rows[0]);
+        assertEquals(R1, rows[1]);
+        assertEquals(R2, rows[2]);
+        assertEquals(R3, rows[3]);
     }
     
     public void testSetRow() {
