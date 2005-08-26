@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.4 2005/08/26 03:10:20 odf Exp $
+ * @version $Id: TestVector.java,v 1.5 2005/08/26 03:43:13 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -160,6 +160,20 @@ public class TestVector extends TestCase {
         assertEquals(new FloatingPoint(7), Vector.dot(v, w, form));
     }
 
+    public void testRowVectors() {
+        final Matrix A = new Matrix(new int[][] { { 1, 2, 3, 4 }, { 5, 6, 7, 8 },
+                { 9, 10, 11, 12 }, { 13, 14, 15, 16 } });
+        final Vector r[] = new Vector[] { new Vector(new int[] { 1, 2, 3, 4 }),
+                new Vector(new int[] { 5, 6, 7, 8 }),
+                new Vector(new int[] { 9, 10, 11, 12 }),
+                new Vector(new int[] { 13, 14, 15, 16 }) };
+        final Vector rows[] = Vector.rowVectors(A);
+        assertEquals(r[0], rows[0]);
+        assertEquals(r[1], rows[1]);
+        assertEquals(r[2], rows[2]);
+        assertEquals(r[3], rows[3]);
+    }
+    
     public void testSellingReducedRows() {
         final Matrix G = new Matrix(new int[][] { { 4, 1, 3 }, { 1, 5, 2 }, { 3, 2, 6 } });
         final Vector b[] = { new Vector(new int[] { 1, 2, 3 }),

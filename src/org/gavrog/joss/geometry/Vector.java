@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.5 2005/08/26 03:10:20 odf Exp $
+ * @version $Id: Vector.java,v 1.6 2005/08/26 03:43:13 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -341,6 +341,23 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         return new Vector((Matrix) getCoordinates().zero());
     }
     
+    // TODO create a new class for things like the following?
+    
+    /**
+     * Constructs an array of vectors from the rows of the given matrix.
+     * 
+     * @param M the input matrix.
+     * @return the rows of M as vectors.
+     */
+    public static Vector[] rowVectors(final Matrix M) {
+        final int n = M.numberOfRows();
+        final Vector v[] = new Vector[n];
+        for (int i = 0; i < n; ++i) {
+            v[i] = new Vector(M.getRow(i));
+        }
+        return v;
+    }
+    
     /**
      * Performs a single step of the Selling reduction algorithm.
      * 
@@ -391,5 +408,20 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         }
         
         return new Vector[] { w[0], w[1], w[2] };
+    }
+    
+    /**
+     * Computes the Dirichlet domain for a given vector lattice and returns the
+     * set of normal vectors for the pairs of parallel planes that bound it.
+     * 
+     * @param b vectors forming a lattice basis.
+     * @param M the quadratic form determining the metric.
+     * @return the normal vectors to the faces of the Dirichlet domain.
+     */
+    public static Vector[] dirichletVectors(final Vector[] b, final Matrix M) {
+        final Vector t[] = Vector.sellingReduced(b, M);
+        return new Vector[] { t[0], t[1], t[2], (Vector) t[0].plus(t[1]),
+                (Vector) t[0].plus(t[2]), (Vector) t[1].plus(t[2]),
+                (Vector) t[0].plus(t[1]).plus(t[2]) };
     }
 }

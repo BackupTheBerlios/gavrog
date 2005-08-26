@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.39 2005/08/26 03:10:20 odf Exp $
+ * @version $Id: NetParser.java,v 1.40 2005/08/26 03:43:13 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -571,12 +571,8 @@ public class NetParser extends GenericParser {
         }
         
         // --- construct a Dirichlet domain for the translation group
-        final Vector b[] = new Vector[] { new Vector(new int[] { 1, 0, 0 }),
-                new Vector(new int[] { 0, 1, 0 }), new Vector(new int[] { 0, 0, 1 }) };
-        final Vector t[] = Vector.sellingReduced(b, cellGram);
-        final Vector dirichletVectors[] = new Vector[] { t[0], t[1], t[2],
-                (Vector) t[0].plus(t[1]), (Vector) t[0].plus(t[2]),
-                (Vector) t[1].plus(t[2]), (Vector) t[0].plus(t[1]).plus(t[2]) };
+        final Vector dirichletVectors[] = Vector.dirichletVectors(Vector.rowVectors(I),
+                cellGram);
         
         // --- apply group operators to generate all nodes
         final PeriodicGraph G = new PeriodicGraph(3);
