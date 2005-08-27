@@ -138,7 +138,16 @@ public abstract class ArithmeticBase implements IArithmetic {
         return power(this, new Whole(n));
     }
 
-
+    public IArithmetic round() {
+        final IArithmetic n = floor();
+        final IArithmetic m = n.plus(Whole.ONE);
+        if (this.minus(n).isLessThan(m.minus(this))) {
+            return n;
+        } else {
+            return m;
+        }
+    }
+    
     /* Static arithmetic methods. */
 
     public static IArithmetic power(IArithmetic arg, Real exp) {
