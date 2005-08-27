@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.7 2005/08/26 06:04:47 odf Exp $
+ * @version $Id: Vector.java,v 1.8 2005/08/27 04:33:02 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -358,6 +358,18 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         return v;
     }
     
+    public static boolean isBasis(Vector[] v) {
+        final int d = v.length;
+        final Matrix M = new Matrix(d, d);
+        for (int i = 0; i < d; ++i) {
+            if (v[i].getDimension() != d) {
+                return false;
+            }
+            M.setRow(i, v[i].getCoordinates());
+        }
+        return !M.determinant().isZero();
+    }
+    
     /**
      * Performs a gauss elimination on a lattice basis.
      * 
@@ -365,7 +377,7 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      * @param M the quadratic form determining the metric.
      * @return vectors forming a reduced basis.
      */
-    private static Vector[] gaussReduced(Vector[] v, Matrix M) {
+    public static Vector[] gaussReduced(Vector[] v, Matrix M) {
         if (v.length != 2 || v[0].getDimension() != 2) {
             final String msg = "first argument must contain 2 vectors of dimension 2";
             throw new IllegalArgumentException(msg);
@@ -375,8 +387,23 @@ public class Vector extends ArithmeticBase implements IArithmetic {
             throw new IllegalArgumentException(msg);
         }
         
-        //TODO implement
-        throw new UnsupportedOperationException("not yet implemented");
+        final Real eps = new FloatingPoint(1e-12);
+        IArithmetic sl[] = new IArithmetic[] { dot(v[0], v[0], M), dot(v[1], v[1], M) };
+        while (true) {
+            final int i = sl[0].isLessThan(sl[1]) ? 0 : 1;
+            final int j = 1 - i;
+            final IArithmetic t = dot(v[i], v[j], M).dividedBy(sl[i]).round();
+            v[j] = (Vector) v[j].minus(t.times(v[i]));
+            sl[j] = dot(v[j], v[j], M);
+            if (sl[j].isGreaterOrEqual(sl[i].minus(eps))) {
+                break;
+            }
+        }
+
+        if (dot(v[0], v[1], M).isPositive()) {
+            v[1] = (Vector) v[1].negative();
+        }
+        return v;
     }
     
     /**
