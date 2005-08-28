@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.13 2005/08/25 23:36:02 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.14 2005/08/28 23:24:40 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -187,5 +187,60 @@ public class TestNetParser extends TestCase {
                 + "  2 4 0.0 0.0 0.0\n"
                 + "END\n");
         assertEquals(tfa, _tfa);
+        
+        final PeriodicGraph tri1 = NetParser.stringToNet(""
+                + "CRYSTAL # regular triangle tiling\n"
+                + "GROUP p1\n"
+                + "CELL 1.0 1.0 60.0\n"
+                + "NODE 1 6 0 0\n"
+                + "END\n");
+        final PeriodicGraph tri2 = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH # regular triangle tiling\n"
+                + "  1 1  1 0\n"
+                + "  1 1  0 1\n"
+                + "  1 1  1 1\n"
+                + "END\n");
+        assertEquals(tri2, tri1);
+        
+        final PeriodicGraph bathroom1 = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "GROUP p4mm\n"
+                + "CELL 2.4142 2.4142 90.0\n"
+                + "NODE 1 3 0.2929 0.0\n"
+                + "END\n");
+        
+        final PeriodicGraph bathroom2 = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "  1 2  0 0\n"
+                + "  2 3  0 0\n"
+                + "  3 4  0 0\n"
+                + "  4 1  0 0\n"
+                + "  1 3  1 0\n"
+                + "  2 4  0 1\n"
+                + "END\n");
+        System.err.println(bathroom1);
+        System.err.println(bathroom1.barycentricPlacement());
+        System.err.println(bathroom1.characteristicBases());
+        System.err.println(bathroom1.invariant());
+        System.err.println(bathroom2);
+        System.err.println(bathroom2.barycentricPlacement());
+        System.err.println(bathroom2.characteristicBases());
+        System.err.println(bathroom2.invariant());
+        assertEquals(bathroom2, bathroom1);
+        
+        // TODO make the following work
+//        final PeriodicGraph hex1 = NetParser.stringToNet(""
+//                + "CRYSTAL # planar honeycombs\n"
+//                + "GROUP p6mm\n"
+//                + "CELL 1.732 1.732 120.0\n"
+//                + "VERTEX 1 3 2/3 1/3\n"
+//                + "END\n");
+//        final PeriodicGraph hex2 = NetParser.stringToNet(""
+//                + "PERIODIC_GRAPH # planar honeycombs\n"
+//                + "  1 2  0 0\n"
+//                + "  1 2  1 0\n"
+//                + "  1 2  0 1\n"
+//                + "END\n");
+//        assertEquals(hex2, hex1);
     }
 }
