@@ -43,7 +43,7 @@ import org.gavrog.box.collections.Pair;
  * reverse.
  * 
  * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: UndirectedGraph.java,v 1.3 2005/08/28 23:23:59 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;
@@ -334,11 +334,23 @@ public class UndirectedGraph implements IGraph {
          * @see java.lang.Object#toString()
          */
         public String toString() {
-            if (this.compareAsOriented) {
-                return "Edge " + Math.abs(((Long) id).longValue()) + (this.isReverse ? "-" : "+");
-            } else {
-                return "Edge " + Math.abs(((Long) id).longValue());
+//            if (this.compareAsOriented) {
+//                return "Edge " + Math.abs(((Long) id).longValue()) + (this.isReverse ? "-" : "+");
+//            } else {
+//                return "Edge " + Math.abs(((Long) id).longValue());
+//            }
+            final StringBuffer buf = new StringBuffer(20);
+            buf.append("(");
+            buf.append(this.source().id());
+            buf.append(",");
+            buf.append(this.target().id());
+            final String extra = formatEdgeInfo(this);
+            if (extra != null && extra.length() > 0) {
+                buf.append(",");
+                buf.append(extra);
             }
+            buf.append(")");
+            return  buf.toString();
         }
 
         /* (non-Javadoc)
