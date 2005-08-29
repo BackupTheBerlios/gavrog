@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.14 2005/08/28 23:24:40 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.15 2005/08/29 22:53:54 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -218,29 +218,21 @@ public class TestNetParser extends TestCase {
                 + "  1 3  1 0\n"
                 + "  2 4  0 1\n"
                 + "END\n");
-        System.err.println(bathroom1);
-        System.err.println(bathroom1.barycentricPlacement());
-        System.err.println(bathroom1.characteristicBases());
-        System.err.println(bathroom1.invariant());
-        System.err.println(bathroom2);
-        System.err.println(bathroom2.barycentricPlacement());
-        System.err.println(bathroom2.characteristicBases());
-        System.err.println(bathroom2.invariant());
         assertEquals(bathroom2, bathroom1);
         
         // TODO make the following work
-//        final PeriodicGraph hex1 = NetParser.stringToNet(""
-//                + "CRYSTAL # planar honeycombs\n"
-//                + "GROUP p6mm\n"
-//                + "CELL 1.732 1.732 120.0\n"
-//                + "VERTEX 1 3 2/3 1/3\n"
-//                + "END\n");
-//        final PeriodicGraph hex2 = NetParser.stringToNet(""
-//                + "PERIODIC_GRAPH # planar honeycombs\n"
-//                + "  1 2  0 0\n"
-//                + "  1 2  1 0\n"
-//                + "  1 2  0 1\n"
-//                + "END\n");
-//        assertEquals(hex2, hex1);
+        final PeriodicGraph hex1 = NetParser.stringToNet(""
+                + "CRYSTAL # planar honeycombs\n"
+                + "GROUP p6mm\n"
+                + "CELL 1.732 1.732 120.0\n"
+                + "VERTEX 1 3 2/3 1/3\n"
+                + "END\n");
+        final PeriodicGraph hex2 = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH # planar honeycombs\n"
+                + "  1 2  0 0\n"
+                + "  1 2  1 0\n"
+                + "  1 2  0 1\n"
+                + "END\n");
+        assertEquals(hex2, hex1);
     }
 }

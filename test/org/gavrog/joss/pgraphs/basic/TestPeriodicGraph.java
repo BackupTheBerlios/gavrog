@@ -23,25 +23,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import junit.framework.TestCase;
+
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
-import org.gavrog.joss.pgraphs.basic.Embedding;
-import org.gavrog.joss.pgraphs.basic.IEdge;
-import org.gavrog.joss.pgraphs.basic.IGraph;
-import org.gavrog.joss.pgraphs.basic.INode;
-import org.gavrog.joss.pgraphs.basic.Morphism;
-import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-
-import junit.framework.TestCase;
 
 /**
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.3 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.4 2005/08/29 22:53:54 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -445,6 +439,28 @@ public class TestPeriodicGraph extends TestCase {
     public void testInvariant() {
         assertEquals(G.invariant(), cds.minimalImage().invariant());
         assertFalse(G.invariant().equals(dia.invariant()));
+        assertEquals(makeTestGraph(2).invariant(), makeTestGraph(1).invariant());
+    }
+    
+    private PeriodicGraph makeTestGraph(final int type) {
+        final Matrix x = new Matrix(new int[][] { { 1, 0 } });
+        final Matrix y = new Matrix(new int[][] { { 0, 1 } });
+        final PeriodicGraph G = new PeriodicGraph(2);
+        final INode v1 = G.newNode();
+        final INode v2 = G.newNode();
+        final INode v3 = G.newNode();
+        final INode v4 = G.newNode();
+        G.newEdge(v1, v2);
+        G.newEdge(v1, v3);
+        G.newEdge(v1, v4);
+        G.newEdge(v2, v3, x);
+        if (type == 1) {
+            G.newEdge(v2, v4, x);
+        } else {
+            G.newEdge(v2, v4, y);
+        }
+        G.newEdge(v3, v4, y);
+        return G;
     }
     
     public void testEquals() {

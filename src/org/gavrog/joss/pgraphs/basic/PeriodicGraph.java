@@ -46,7 +46,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.4 2005/07/31 19:44:58 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.5 2005/08/29 22:53:54 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
@@ -57,6 +57,8 @@ public class PeriodicGraph extends UndirectedGraph {
     private static final String INVARIANT = "invariant";
     private static final String CANONICAL = "canonical";
 
+    private static final boolean DEBUG = false;
+    
     private final int dimension;
     private final Map edgeIdToShift = new HashMap();
     // === IMPORTANT: always check for a non-null return value of a cache.get() ===
@@ -1207,6 +1209,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the invariant.
      */
     public NiceIntList invariant() {
+        if (DEBUG) {
+            System.out.println("\nComputing invariant for " + this);
+        }
         final NiceIntList cached = (NiceIntList) cache.get(INVARIANT);
         if (cached != null) {
             return cached;
@@ -1250,13 +1255,37 @@ public class PeriodicGraph extends UndirectedGraph {
                     throw new IllegalArgumentException();
                 }
             }
+            
+            private String shiftAsString() {
+                final StringBuffer buf = new StringBuffer(10);
+                buf.append("[");
+                final Matrix A = this.shift;
+                for (int i = 0; i < A.numberOfColumns(); ++i) {
+                    if (i > 0) {
+                        buf.append(",");
+                    }
+                    buf.append(A.get(0, i));
+                }
+                buf.append("]");
+                return buf.toString();
+            }
+        
+            public String toString() {
+                return "(" + source + "," + target + "," + shiftAsString() + ")";
+            }
         }
         
         final EdgeCmd bestScript[] = new EdgeCmd[m];
         List bestBasis = null;
+        if (DEBUG) {
+            System.out.println("  Found " + bases.size() + " bases\n");
+        }
         
         for (int i = 0; i < bases.size(); ++i) {
             final List b = (List) bases.get(i);
+            if (DEBUG) {
+                System.out.println("  Checking basis " + b);
+            }
             final INode v0 = ((IEdge) b.get(0)).source();
             final Matrix B = differenceMatrix(b);
             final Matrix B_1 = (Matrix) B.inverse();
@@ -1324,19 +1353,42 @@ public class PeriodicGraph extends UndirectedGraph {
                         if (vn < wn || (vn == wn && signOfShift(shift) < 0)) {
                             // --- compare with the best result to date
                             final EdgeCmd newEdge = new EdgeCmd(vn, wn, shift);
+                            if (DEBUG) {
+                                System.out.print("    New edge " + newEdge);
+                            }
                             
                             if (equal) {
+                                if (DEBUG) {
+                                    System.out.print(" - compared to " + bestScript[edgesSoFar] + " at " + edgesSoFar + " -");
+                                }
                                 final int cmp = newEdge.compareTo(bestScript[edgesSoFar]);
                                 if (cmp < 0) {
+                                    if (DEBUG) {
+                                        System.out.print(" is a winner.");
+                                    }
                                     equal = false;
                                     bestBasis = b;
                                 } else if (cmp > 0) {
+                                    if (DEBUG) {
+                                        System.out.println(" is a loser.");
+                                    }
                                     throw new Break();
+                                } else {
+                                    if (DEBUG) {
+                                        System.out.print(" is equal.");
+                                    }
                                 }
                             }
-                            if (!equal) {
-                                bestScript[edgesSoFar++] = newEdge;
+                            if (DEBUG) {
+                                System.out.println("");
                             }
+                            if (!equal) {
+                                if (DEBUG) {
+                                    System.out.println("    Writing " + newEdge + " at position " + edgesSoFar);
+                                }
+                                bestScript[edgesSoFar] = newEdge;
+                            }
+                            edgesSoFar++;
                         }
                     }
                 }
