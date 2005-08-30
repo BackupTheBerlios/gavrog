@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.42 2005/08/30 23:13:56 odf Exp $
+ * @version $Id: NetParser.java,v 1.43 2005/08/30 23:16:56 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -878,7 +878,8 @@ public class NetParser extends GenericParser {
         final Whole one = Whole.ONE;
         final int dim = pos.getDimension();
         final Real half = new Fraction(1, 2);
-        final Real eps = new FloatingPoint(1e-8);
+        final Real minusHalf = new Fraction(-1, 2);
+        final double eps = 1e-8;
         final Vector posAsVector = (Vector) pos.minus(Point.origin(dim));
         Vector shift = Vector.zero(dim);
         
@@ -893,7 +894,7 @@ public class NetParser extends GenericParser {
                 if (q.isGreaterThan(half.plus(eps))) {
                     shift = (Vector) shift.minus(v.times(q.floor().plus(one)));
                     changed = true;
-                } else if (q.isLessOrEqual(half.negative())) {
+                } else if (q.isLessOrEqual(minusHalf)) {
                     shift = (Vector) shift.minus(v.times(q.floor()));
                     changed = true;
                 }
@@ -912,9 +913,9 @@ public class NetParser extends GenericParser {
             final Vector v = (Vector) dirichletVectors[i].times(factor);
             final IArithmetic c = Vector.dot(v, v, metric);
             final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
-            if (q.isGreaterThan(half.minus(eps))) {
+            if (q.isGreaterThan(half.minus(2*eps))) {
                 shifts.add(shift.minus(v));
-            } else if (q.isLessThan(half.negative().plus(eps))) {
+            } else if (q.isLessThan(minusHalf.plus(2*eps))) {
                 shifts.add(shift.plus(v));
             }
         }
