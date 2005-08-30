@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.41 2005/08/26 06:04:47 odf Exp $
+ * @version $Id: NetParser.java,v 1.42 2005/08/30 23:13:56 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -630,7 +630,7 @@ public class NetParser extends GenericParser {
             final INode v = (INode) iter.next();
             final Point p = new Point((Matrix) nodeToPosition.get(v));
             // --- shift into Dirichlet domain
-            final Vector shift = dirichletShift(p, dirichletVectors, cellGram, Whole.ONE);
+            final Vector shift = dirichletShifts(p, dirichletVectors, cellGram, 1)[0];
             nodeToPosition.put(v, p.plus(shift));
         }
         
@@ -653,14 +653,20 @@ public class NetParser extends GenericParser {
                     System.err.println("  shifting by " + vec);
                 }
                 final Point p = (Point) pv.plus(vec);
-                final Vector shift = dirichletShift(p, dirichletVectors, cellGram,
-                        new Whole(2));
+                final Vector shifts[] = dirichletShifts(p, dirichletVectors, cellGram, 2);
                 if (DEBUG) {
-                    System.err.println("    additional shift is " + shift);
+                    System.err
+                            .println("    induced " + shifts.length + " further shifts");
                 }
-                final Pair adr = new Pair(v, vec.plus(shift));
-                extended.add(adr);
-                addressToPosition.put(adr, p.plus(shift));
+                for (int k = 0; k < shifts.length; ++k) {
+                    final Vector shift = shifts[k];
+                    if (DEBUG) {
+                        System.err.println("      added with shift " + shift);
+                    }
+                    final Pair adr = new Pair(v, vec.plus(shift));
+                    extended.add(adr);
+                    addressToPosition.put(adr, p.plus(shift));
+                }
             }
         }
         
@@ -848,35 +854,41 @@ public class NetParser extends GenericParser {
     }
     
     /**
-     * Returns the vector by which a point has to be shifted in order to obtain a
-     * translationally equivalent point within the Dirichlet cell around the origin. All
-     * calculations are with respect to the unit lattice and an specific metric, which is
-     * passed as one of the arguments. An integral scaling factor can be specified, in
-     * which case both the unit lattice and its Dirchlet domain are taken to be scaled by
-     * that factor.
+     * Returns the vector(s) by which a point has to be shifted in order to
+     * obtain a translationally equivalent point within the Dirichlet cell
+     * around the origin. All calculations are with respect to the unit lattice
+     * and an specific metric, which is passed as one of the arguments. An
+     * integral scaling factor can be specified, in which case both the unit
+     * lattice and its Dirchlet domain are taken to be scaled by that factor.
+     * 
+     * If the shifted point is close to a boundary of the Dirichlet domain, more
+     * multiple shift vectors may be returned, namely all those that would place
+     * the original point close enough to the domain.
      * 
      * @param pos the original point position.
-     * @param dirichletVectors normals to the parallel face pairs of the Dirichlet cell.
+     * @param dirichletVectors normals to the parallel face pairs of the
+     *            Dirichlet cell.
      * @param metric the underlying metric.
      * @param factor a scaling factor.
      * @return the shift vector needed to move the point inside.
      */
-    private static Vector dirichletShift(final Point pos,
-            final Vector dirichletVectors[], final Matrix metric, final Whole factor) {
+    private static Vector[] dirichletShifts(final Point pos,
+            final Vector dirichletVectors[], final Matrix metric, final int factor) {
 
         final Whole one = Whole.ONE;
         final int dim = pos.getDimension();
         final Real half = new Fraction(1, 2);
         final Real eps = new FloatingPoint(1e-8);
-        final Point origin = Point.origin(dim);
+        final Vector posAsVector = (Vector) pos.minus(Point.origin(dim));
         Vector shift = Vector.zero(dim);
         
+        // --- compute the first shift
         while (true) {
             boolean changed = false;
             for (int i = 0; i < dirichletVectors.length; ++i) {
                 final Vector v = (Vector) dirichletVectors[i].times(factor);
                 final IArithmetic c = Vector.dot(v, v, metric);
-                final Vector p = (Vector) pos.plus(shift).minus(origin);
+                final Vector p = (Vector) posAsVector.plus(shift);
                 final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
                 if (q.isGreaterThan(half.plus(eps))) {
                     shift = (Vector) shift.minus(v.times(q.floor().plus(one)));
@@ -891,6 +903,25 @@ public class NetParser extends GenericParser {
             }
         }
         
-        return shift;
+        // --- compute further shifts
+        final Vector p = (Vector) posAsVector.plus(shift);
+        final Set shifts = new HashSet();
+        shifts.add(shift);
+        
+        for (int i = 0; i < dirichletVectors.length; ++i) {
+            final Vector v = (Vector) dirichletVectors[i].times(factor);
+            final IArithmetic c = Vector.dot(v, v, metric);
+            final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
+            if (q.isGreaterThan(half.minus(eps))) {
+                shifts.add(shift.minus(v));
+            } else if (q.isLessThan(half.negative().plus(eps))) {
+                shifts.add(shift.plus(v));
+            }
+        }
+
+        // --- conver results
+        final Vector results[] = new Vector[shifts.size()];
+        shifts.toArray(results);
+        return results;
     }
 }

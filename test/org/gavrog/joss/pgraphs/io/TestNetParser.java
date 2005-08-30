@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.15 2005/08/29 22:53:54 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.16 2005/08/30 23:13:56 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -139,7 +139,7 @@ public class TestNetParser extends TestCase {
         assertEquals(hex2, hex1);
     }
     
-    public void testParseCrystal3D() {
+    public void testParseCrystal() {
         final PeriodicGraph _dia = NetParser.stringToNet(""
                 + "CRYSTAL # diamond again\n"
                 + "  Group Fd-3m\n"
@@ -219,8 +219,7 @@ public class TestNetParser extends TestCase {
                 + "  2 4  0 1\n"
                 + "END\n");
         assertEquals(bathroom2, bathroom1);
-        
-        // TODO make the following work
+
         final PeriodicGraph hex1 = NetParser.stringToNet(""
                 + "CRYSTAL # planar honeycombs\n"
                 + "GROUP p6mm\n"
