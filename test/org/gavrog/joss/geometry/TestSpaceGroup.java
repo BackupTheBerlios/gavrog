@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.4 2005/08/25 21:57:55 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.5 2005/09/15 17:46:33 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -60,7 +60,7 @@ public class TestSpaceGroup extends TestCase {
         // --- do the full testing for one group
         new SpaceGroup(3, SpaceGroup.operators(3, "Ia-3d"), false, true);
         // --- also for a 2-dimensional one
-        new SpaceGroup(2, SpaceGroup.operators(2, "p4mg"));
+        new SpaceGroup(2, SpaceGroup.operators(2, "p4mg"), false, true);
         
         // --- try some illegal inputs
         final List L = new LinkedList();

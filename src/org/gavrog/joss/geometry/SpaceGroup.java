@@ -70,7 +70,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.10 2005/08/25 21:57:55 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.11 2005/09/15 17:46:33 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -314,8 +314,7 @@ public class SpaceGroup {
         return result;
     }
 
-    // --- IO operations for operators and groups
-    // TODO document the IO methods
+    // --- IO operations for groups
     
     private static void parseGroups(final String filename) {
         final InputStream inStream = ClassLoader.getSystemResourceAsStream(filename);
