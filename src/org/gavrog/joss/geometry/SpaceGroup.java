@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.simple.Strings;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
@@ -70,7 +71,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.11 2005/09/15 17:46:33 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.12 2005/09/15 18:33:06 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -316,6 +317,19 @@ public class SpaceGroup {
 
     // --- IO operations for groups
     
+    /**
+     * Parses space group settings from a file and stores them statically. Each setting is
+     * identified by a name and the transformation used to derive it from the canonical
+     * setting of the group, both given in the first input line. The following lines list
+     * the operators for the group.
+     * 
+     * CAVEAT: currently, due to the way the constructors are implemented, a full list of
+     * operators must be given. Just a set of generators is not sufficient.
+     * 
+     * TODO make this accept generator lists
+     * 
+     * @param filename
+     */
     private static void parseGroups(final String filename) {
         final InputStream inStream = ClassLoader.getSystemResourceAsStream(filename);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
@@ -361,10 +375,21 @@ public class SpaceGroup {
         }
     }
 
-    final private static String pkgName = SpaceGroup.class.getPackage().getName();
-    final private static String tableName = pkgName.replaceAll("\\.", "/")
-            + "/sgtable.data";
+    /**
+     * The name of the file to read space group settings from.
+     */
+    final private static String tableName =
+        SpaceGroup.class.getPackage().getName().replaceAll("\\.", "/") + "/sgtable.data";
     
+    /**
+     * Retrieves the list of all known names for group settings for a given dimension.
+     * 
+     * CAVEAT: a group may have multiple settings, so this method may return more than one
+     * name for each individual group.
+     * 
+     * @param dimension the common dimension of the space groups.
+     * @return an iterator over the names of space group settings.
+     */
     public static Iterator groupNames(final int dimension) {
         if (groupTables[dimension] == null) {
             parseGroups(tableName);
@@ -373,6 +398,15 @@ public class SpaceGroup {
         return groupTables[dimension].nameToOps.keySet().iterator();
     }
 
+    /**
+     * As some space group settings have more than one commonly used name, this method
+     * produces a map assigning "non-standard" to "standard" names.
+     * 
+     * TODO this should be part of the settings file.
+     * 
+     * @param dimension the common dimension of the space groups.
+     * @return the translation map.
+     */
     private static Map makeTranslationTable(final int dimension) {
         final Map translationTable = new HashMap();
         if (dimension == 3) {
@@ -393,6 +427,17 @@ public class SpaceGroup {
         return translationTable;
     }
     
+    /**
+     * Retrieves information about a given space group setting. The setting is identified
+     * by its name. Depending on the value of the <code>getOps</code> parameter, either
+     * the operator list for that setting or the transformation used to obtain it from the
+     * canonical setting is returned.
+     * 
+     * @param dim the dimension of the group.
+     * @param getOps if true, return the operator list, otherwise, the transformation.
+     * @param name the name of the group setting to retrieve.
+     * @return the data requested for the given space group setting.
+     */
     private static Object retrieve(int dim, final boolean getOps, final String name) {
         if (groupTables[dim] == null) {
             parseGroups(tableName);
@@ -405,7 +450,7 @@ public class SpaceGroup {
         if (table.translationTable.containsKey(base)) {
             base = (String) table.translationTable.get(base);
         }
-        final String ext = parts.length > 1 ? capitalized(parts[1]) : "";
+        final String ext = parts.length > 1 ? Strings.capitalized(parts[1]) : "";
         
         final String candidates[];
         if (base.charAt(0) == 'R') {
@@ -436,24 +481,26 @@ public class SpaceGroup {
         return null;
     }
 
+    /**
+     * Retrieves the list of operators for a given space group setting.
+     * 
+     * @param dim the dimension of the group.
+     * @param name the name of the group setting.
+     * @return the list of operators.
+     */
     public static List operators(final int dim, final String name) {
         return (List) retrieve(dim, true, name);
     }
 
+    /**
+     * Retrieves a transformation to obtain a space group setting from the canonical setting
+     * for that group.
+     * 
+     * @param dim the dimension of the group.
+     * @param name the name of the group setting.
+     * @return the transformation operator.
+     */
     public static Operator transform(final int dim, final String name) {
         return (Operator) retrieve(dim, false, name);
-    }
-
-    /**
-     * Turn a string's first letter to upper case.
-     * @param s the source string.
-     * @return the capitalized version.
-     */
-    private static String capitalized(String s) {
-        if (s.length() > 1) {
-            return s.substring(0, 1).toUpperCase() + s.substring(1);
-        } else {
-            return s.toUpperCase();
-        }
     }
 }
