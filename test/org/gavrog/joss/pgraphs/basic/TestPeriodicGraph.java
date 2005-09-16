@@ -35,7 +35,7 @@ import org.gavrog.jane.numbers.Real;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.4 2005/08/29 22:53:54 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.5 2005/09/16 21:30:14 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -434,6 +434,8 @@ public class TestPeriodicGraph extends TestCase {
                 dia.canonical().toString());
         assertEquals(G.canonical().toString(), cds.minimalImage().canonical().toString());
         assertFalse(G.canonical().toString().equals(dia.canonical().toString()));
+        assertEquals(makeTestGraph(2).canonical().toString(), makeTestGraph(1)
+                .canonical().toString());
     }
     
     public void testInvariant() {
@@ -468,6 +470,7 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(dia, dia);
         assertEquals(G, cds.minimalImage());
         assertFalse(dia.equals(G));
+        assertEquals(makeTestGraph(2), makeTestGraph(1));
     }
     
     public void testHashCode() {
