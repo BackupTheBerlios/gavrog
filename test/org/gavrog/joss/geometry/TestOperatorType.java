@@ -20,7 +20,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestOperatorType.java,v 1.2 2005/09/18 03:22:34 odf Exp $
+ * @version $Id: TestOperatorType.java,v 1.3 2005/09/18 03:27:46 odf Exp $
  */
 public class TestOperatorType extends TestCase {
     final OperatorType ot1 = new OperatorType(new Operator("-y,x"));
@@ -30,7 +30,7 @@ public class TestOperatorType extends TestCase {
     final OperatorType ot5 = new OperatorType(new Operator("x,y"));
     final OperatorType ot6 = new OperatorType(new Operator("x,y,z"));
     final OperatorType ot7 = new OperatorType(new Operator("y,-x"));
-    final OperatorType ot8 = new OperatorType(new Operator("y,z,x"));
+    final OperatorType ot8 = new OperatorType(new Operator("-y,-z,-x"));
 
     public void testGetAxis() {
         assertNull(ot1.getAxis());
@@ -45,7 +45,7 @@ public class TestOperatorType extends TestCase {
 
     public void testIsClockwise() {
         assertTrue(ot1.isClockwise());
-        // isClockwise() is irrelevant for ot2
+        assertFalse(ot2.isClockwise());
         assertTrue(ot3.isClockwise());
         assertFalse(ot4.isClockwise());
         assertTrue(ot5.isClockwise());
@@ -73,6 +73,6 @@ public class TestOperatorType extends TestCase {
         assertTrue(ot5.isOrientationPreserving());
         assertTrue(ot6.isOrientationPreserving());
         assertTrue(ot7.isOrientationPreserving());
-        assertTrue(ot8.isOrientationPreserving());
+        assertFalse(ot8.isOrientationPreserving());
     }
 }

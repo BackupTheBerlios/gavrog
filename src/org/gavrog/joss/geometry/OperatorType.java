@@ -24,7 +24,7 @@ import org.gavrog.jane.compounds.Matrix;
  * operator in a 2- or 3-dimensional crystallographic space group.
  *
  * @author Olaf Delgado
- * @version $Id: OperatorType.java,v 1.3 2005/09/18 03:22:21 odf Exp $
+ * @version $Id: OperatorType.java,v 1.4 2005/09/18 03:27:46 odf Exp $
  */
 public class OperatorType {
     final private boolean orientationPreserving;
@@ -42,6 +42,9 @@ public class OperatorType {
         Matrix M = op.getCoordinates().getSubMatrix(0, 0, d, d);
 
         this.orientationPreserving = M.determinant().isNonNegative();
+        if (d == 3 && !this.orientationPreserving) {
+            M = (Matrix) M.negative();
+        }
         this.order = matrixOrder(M, 6);
         this.axis = getAxis(M);
         
@@ -60,11 +63,7 @@ public class OperatorType {
                 }
             }
         } else if (d == 3) {
-            if (!this.orientationPreserving) {
-                M = (Matrix) M.negative();
-            }
-
-            if (this.order == 0 || this.order > 2) {
+            if ((this.order == 0 || this.order > 2) && axis != null) {
                 final Matrix a = axis.getCoordinates();
                 final Matrix v;
                 if (a.get(0, 1).isZero() && a.get(0, 2).isZero()) {
