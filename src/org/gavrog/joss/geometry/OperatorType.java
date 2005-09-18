@@ -24,7 +24,7 @@ import org.gavrog.jane.compounds.Matrix;
  * operator in a 2- or 3-dimensional crystallographic space group.
  *
  * @author Olaf Delgado
- * @version $Id: OperatorType.java,v 1.1 2005/09/18 02:33:20 odf Exp $
+ * @version $Id: OperatorType.java,v 1.2 2005/09/18 02:54:09 odf Exp $
  */
 public class OperatorType {
     final private boolean orientationPreserving;
@@ -64,9 +64,9 @@ public class OperatorType {
         } else if (d == 3) {
             if (M.determinant().isNegative()) {
                 M = (Matrix) M.negative();
-                this.orientationPreserving = true;
-            } else {
                 this.orientationPreserving = false;
+            } else {
+                this.orientationPreserving = true;
             }
 
             if (M.isOne()) {
@@ -107,7 +107,7 @@ public class OperatorType {
      * @param M the matrix to analyze.
      * @return the axis, if any, else <code>null</code>.
      */
-    public static Vector getAxis(final Matrix M) {
+    private static Vector getAxis(final Matrix M) {
         final Matrix Z = LinearAlgebra.rowNullSpace((Matrix) M.minus(M.one()), true);
         if (Z.numberOfRows() != 1) {
             return null;
@@ -128,7 +128,7 @@ public class OperatorType {
      * @param max the maximum order considered.
      * @return the order of the matrix or 0, if larger than the maximum.
      */
-    public static int matrixOrder(final Matrix M, final int max) {
+    private static int matrixOrder(final Matrix M, final int max) {
         Matrix A = M;
         for (int i = 1; i <= max; ++i) {
             if (A.isOne()) {
