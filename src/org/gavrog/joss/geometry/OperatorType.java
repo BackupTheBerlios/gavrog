@@ -24,7 +24,7 @@ import org.gavrog.jane.compounds.Matrix;
  * operator in a 2- or 3-dimensional crystallographic space group.
  *
  * @author Olaf Delgado
- * @version $Id: OperatorType.java,v 1.2 2005/09/18 02:54:09 odf Exp $
+ * @version $Id: OperatorType.java,v 1.3 2005/09/18 03:22:21 odf Exp $
  */
 public class OperatorType {
     final private boolean orientationPreserving;
@@ -41,17 +41,15 @@ public class OperatorType {
         final int d = op.getDimension();
         Matrix M = op.getCoordinates().getSubMatrix(0, 0, d, d);
 
+        this.orientationPreserving = M.determinant().isNonNegative();
+        this.order = matrixOrder(M, 6);
+        this.axis = getAxis(M);
+        
         if (d == 2) {
-            if (M.determinant().isNegative()) {
-                this.orientationPreserving = false;
-                this.order = 2;
-                this.axis = getAxis(M);
+            if (!this.isOrientationPreserving()) {
                 this.clockwise = false;
             } else {
-                this.orientationPreserving = true;
-                this.order = matrixOrder(M, 6);
-                this.axis = null;
-                if (order > 2) {
+                if (this.order == 0 || this.order > 2) {
                     final Matrix v = new Matrix(new int[][] { { 1, 0 } });
                     final Matrix A = new Matrix(2, 2);
                     A.setRow(0, v);
@@ -62,36 +60,25 @@ public class OperatorType {
                 }
             }
         } else if (d == 3) {
-            if (M.determinant().isNegative()) {
+            if (!this.orientationPreserving) {
                 M = (Matrix) M.negative();
-                this.orientationPreserving = false;
-            } else {
-                this.orientationPreserving = true;
             }
 
-            if (M.isOne()) {
-                this.order = 1;
-                this.axis = null;
-                this.clockwise = true;
-            } else {
-                this.order = matrixOrder(M, 6);
-                this.axis = getAxis(M);
-                if (order > 2) {
-                    final Matrix a = axis.getCoordinates();
-                    final Matrix v;
-                    if (a.get(0, 1).isZero() && a.get(0, 2).isZero()) {
-                        v = new Matrix(new int[][] { { 0, 1, 0 } });
-                    } else {
-                        v = new Matrix(new int[][] { { 1, 0, 0 } });
-                    }
-                    final Matrix A = new Matrix(3, 3);
-                    A.setRow(0, axis.getCoordinates());
-                    A.setRow(1, v);
-                    A.setRow(2, (Matrix) v.times(M));
-                    this.clockwise = A.determinant().isPositive();
+            if (this.order == 0 || this.order > 2) {
+                final Matrix a = axis.getCoordinates();
+                final Matrix v;
+                if (a.get(0, 1).isZero() && a.get(0, 2).isZero()) {
+                    v = new Matrix(new int[][] { { 0, 1, 0 } });
                 } else {
-                    this.clockwise = true;
+                    v = new Matrix(new int[][] { { 1, 0, 0 } });
                 }
+                final Matrix A = new Matrix(3, 3);
+                A.setRow(0, axis.getCoordinates());
+                A.setRow(1, v);
+                A.setRow(2, (Matrix) v.times(M));
+                this.clockwise = A.determinant().isPositive();
+            } else {
+                this.clockwise = true;
             }
         } else {
             final String msg = "operator dimension is " + d + ", must be 2 or 3";
