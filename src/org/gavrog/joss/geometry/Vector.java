@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.8 2005/08/27 04:33:02 odf Exp $
+ * @version $Id: Vector.java,v 1.9 2005/09/18 02:33:35 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -177,6 +177,17 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         final Matrix vc = v.getCoordinates();
         final Matrix wc = w.getCoordinates();
         return ((Matrix) vc.times(wc.transposed())).get(0, 0);
+    }
+    
+    /**
+     * Tests if this vector is collinear to another.
+     * 
+     * @param v the other vector.
+     * @return true if the two vectors are collinear.
+     */
+    public boolean isCollinearTo(final Vector v) {
+        final IArithmetic q = v.get(0).dividedBy(this.get(0));
+        return v.equals(this.times(q));
     }
     
     /*
