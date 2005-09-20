@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.1 2005/09/20 05:15:38 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.2 2005/09/20 05:25:36 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
@@ -43,5 +43,8 @@ public class TestSpaceGroupFinder extends TestCase {
     public void testOperatorsByType() {
         final Map map1 = c2mm.operatorsByType();
         final Map map2 = Fddd.operatorsByType();
+        
+        assertEquals(3, map1.size());
+        assertEquals(4, map2.size());
     }
 }
