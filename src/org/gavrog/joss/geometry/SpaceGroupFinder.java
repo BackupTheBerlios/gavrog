@@ -16,6 +16,12 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 
 /**
  * Takes a two- or three-dimensional crystallographic group and identifies it,
@@ -23,7 +29,7 @@ package org.gavrog.joss.geometry;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.2 2005/09/18 02:33:20 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.3 2005/09/20 05:14:17 odf Exp $
  */
 public class SpaceGroupFinder {
     private SpaceGroup G;
@@ -40,5 +46,25 @@ public class SpaceGroupFinder {
             throw new UnsupportedOperationException(msg);
         }
         this.G = G;
+    }
+    
+    /**
+     * Returns a map with the occuring operator types as keys and the sets of
+     * all operators of the respective types as values.
+     * 
+     * @return a map assigning operators types to operator sets.
+     */
+    Map operatorsByType() {
+        final Map res = new HashMap();
+        for (final Iterator iter = G.getOperators().iterator(); iter.hasNext();) {
+            final Operator op = (Operator) iter.next();
+            final OperatorType type = new OperatorType(op);
+            if (!res.containsKey(type)) {
+                res.put(type, new HashSet());
+            }
+            ((Set) res.get(type)).add(op);
+        }
+        
+        return res;
     }
 }
