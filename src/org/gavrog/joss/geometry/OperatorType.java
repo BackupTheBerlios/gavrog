@@ -20,13 +20,16 @@ import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 
 /**
- * Encodes and determines the characteristica of the linear part of an
- * operator in a 2- or 3-dimensional crystallographic space group.
- *
+ * Encodes and determines the characteristica of the linear part of an operator
+ * in a 2- or 3-dimensional crystallographic space group. When comparing two
+ * objects, only the fields <code>dimension</code>,<code>order</code>,
+ * <code>clockwise</code> and <code>orientationPreserving</code> are used.
+ * 
  * @author Olaf Delgado
- * @version $Id: OperatorType.java,v 1.4 2005/09/18 03:27:46 odf Exp $
+ * @version $Id: OperatorType.java,v 1.5 2005/09/20 04:19:18 odf Exp $
  */
 public class OperatorType {
+    final private int dimension;
     final private boolean orientationPreserving;
     final private int order;
     final private Vector axis;
@@ -38,7 +41,7 @@ public class OperatorType {
      * @param op the operator to analyze.
      */
     public OperatorType(final Operator op) {
-        final int d = op.getDimension();
+        final int d = this.dimension = op.getDimension();
         Matrix M = op.getCoordinates().getSubMatrix(0, 0, d, d);
 
         this.orientationPreserving = M.determinant().isNonNegative();
@@ -126,6 +129,13 @@ public class OperatorType {
     }
     
     /**
+     * @return the dimension of the operator.
+     */
+    public int getDimension() {
+        return dimension;
+    }
+    
+    /**
      * @return the rotation (dimension 3) or mirror (dimension 2) axis.
      */
     public Vector getAxis() {
@@ -151,5 +161,28 @@ public class OperatorType {
      */
     public boolean isOrientationPreserving() {
         return orientationPreserving;
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    public boolean equals(final Object other) {
+        if (other instanceof OperatorType) {
+            final OperatorType type = (OperatorType) other;
+            return this.dimension == type.dimension && this.clockwise == type.clockwise
+                   && this.order == type.order
+                   && this.orientationPreserving == type.orientationPreserving;
+        } else {
+            return false;
+        }
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        int res = dimension * 37 + order;
+        res = res * 37 + (clockwise ? 37 : 0) + (orientationPreserving ? 1 : 0);
+        return res;
     }
 }

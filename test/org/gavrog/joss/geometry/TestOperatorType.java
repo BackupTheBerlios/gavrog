@@ -20,7 +20,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestOperatorType.java,v 1.3 2005/09/18 03:27:46 odf Exp $
+ * @version $Id: TestOperatorType.java,v 1.4 2005/09/20 04:19:19 odf Exp $
  */
 public class TestOperatorType extends TestCase {
     final OperatorType ot1 = new OperatorType(new Operator("-y,x"));
@@ -31,7 +31,20 @@ public class TestOperatorType extends TestCase {
     final OperatorType ot6 = new OperatorType(new Operator("x,y,z"));
     final OperatorType ot7 = new OperatorType(new Operator("y,-x"));
     final OperatorType ot8 = new OperatorType(new Operator("-y,-z,-x"));
+    final OperatorType ot9 = new OperatorType(new Operator("-y,x-y,z"));
 
+    public void testGetDimension() {
+        assertEquals(2, ot1.getDimension());
+        assertEquals(2, ot2.getDimension());
+        assertEquals(3, ot3.getDimension());
+        assertEquals(3, ot4.getDimension());
+        assertEquals(2, ot5.getDimension());
+        assertEquals(3, ot6.getDimension());
+        assertEquals(2, ot7.getDimension());
+        assertEquals(3, ot8.getDimension());
+        assertEquals(3, ot9.getDimension());
+    }
+    
     public void testGetAxis() {
         assertNull(ot1.getAxis());
         assertTrue(ot2.getAxis().isCollinearTo(new Vector(new int[] {1, 1})));
@@ -41,6 +54,7 @@ public class TestOperatorType extends TestCase {
         assertNull(ot6.getAxis());
         assertNull(ot7.getAxis());
         assertTrue(ot8.getAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
+        assertTrue(ot9.getAxis().isCollinearTo(new Vector(new int[] {0, 0, 1})));
     }
 
     public void testIsClockwise() {
@@ -52,6 +66,7 @@ public class TestOperatorType extends TestCase {
         assertTrue(ot6.isClockwise());
         assertFalse(ot7.isClockwise());
         assertFalse(ot8.isClockwise());
+        assertTrue(ot9.isClockwise());
     }
 
     public void testGetOrder() {
@@ -63,6 +78,7 @@ public class TestOperatorType extends TestCase {
         assertEquals(1, ot6.getOrder());
         assertEquals(4, ot7.getOrder());
         assertEquals(3, ot8.getOrder());
+        assertEquals(3, ot9.getOrder());
     }
 
     public void testIsOrientationPreserving() {
@@ -74,5 +90,18 @@ public class TestOperatorType extends TestCase {
         assertTrue(ot6.isOrientationPreserving());
         assertTrue(ot7.isOrientationPreserving());
         assertFalse(ot8.isOrientationPreserving());
+        assertTrue(ot9.isOrientationPreserving());
+    }
+    
+    public void testEquals() {
+        assertFalse(ot1.equals(ot2));
+        assertFalse(ot3.equals(ot1));
+        assertFalse(ot3.equals(ot4));
+        assertFalse(ot3.equals(ot8));
+        assertTrue(ot3.equals(ot9));
+    }
+    
+    public void testHashCode() {
+        assertEquals(ot3.hashCode(), ot9.hashCode());
     }
 }
