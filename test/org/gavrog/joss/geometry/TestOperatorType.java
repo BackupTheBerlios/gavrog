@@ -20,7 +20,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestOperatorType.java,v 1.4 2005/09/20 04:19:19 odf Exp $
+ * @version $Id: TestOperatorType.java,v 1.5 2005/09/20 05:13:40 odf Exp $
  */
 public class TestOperatorType extends TestCase {
     final OperatorType ot1 = new OperatorType(new Operator("-y,x"));
@@ -45,18 +45,6 @@ public class TestOperatorType extends TestCase {
         assertEquals(3, ot9.getDimension());
     }
     
-    public void testGetAxis() {
-        assertNull(ot1.getAxis());
-        assertTrue(ot2.getAxis().isCollinearTo(new Vector(new int[] {1, 1})));
-        assertTrue(ot3.getAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
-        assertTrue(ot4.getAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
-        assertNull(ot5.getAxis());
-        assertNull(ot6.getAxis());
-        assertNull(ot7.getAxis());
-        assertTrue(ot8.getAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
-        assertTrue(ot9.getAxis().isCollinearTo(new Vector(new int[] {0, 0, 1})));
-    }
-
     public void testIsClockwise() {
         assertTrue(ot1.isClockwise());
         assertFalse(ot2.isClockwise());

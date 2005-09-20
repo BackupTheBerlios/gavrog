@@ -16,7 +16,6 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
-import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 
 /**
@@ -26,13 +25,12 @@ import org.gavrog.jane.compounds.Matrix;
  * <code>clockwise</code> and <code>orientationPreserving</code> are used.
  * 
  * @author Olaf Delgado
- * @version $Id: OperatorType.java,v 1.5 2005/09/20 04:19:18 odf Exp $
+ * @version $Id: OperatorType.java,v 1.6 2005/09/20 05:13:40 odf Exp $
  */
 public class OperatorType {
     final private int dimension;
     final private boolean orientationPreserving;
     final private int order;
-    final private Vector axis;
     final private boolean clockwise;
     
     /**
@@ -42,6 +40,7 @@ public class OperatorType {
      */
     public OperatorType(final Operator op) {
         final int d = this.dimension = op.getDimension();
+        final Vector axis = op.linearAxis();
         Matrix M = op.getCoordinates().getSubMatrix(0, 0, d, d);
 
         this.orientationPreserving = M.determinant().isNonNegative();
@@ -49,7 +48,6 @@ public class OperatorType {
             M = (Matrix) M.negative();
         }
         this.order = matrixOrder(M, 6);
-        this.axis = getAxis(M);
         
         if (d == 2) {
             if (!this.isOrientationPreserving()) {
@@ -89,28 +87,6 @@ public class OperatorType {
     }
     
     /**
-     * Given a matrix that leaves exactly a one-dimensional linear subspace
-     * point-wise fixed, this method returns a vector representing that
-     * subspace.
-     * 
-     * @param M the matrix to analyze.
-     * @return the axis, if any, else <code>null</code>.
-     */
-    private static Vector getAxis(final Matrix M) {
-        final Matrix Z = LinearAlgebra.rowNullSpace((Matrix) M.minus(M.one()), true);
-        if (Z.numberOfRows() != 1) {
-            return null;
-        } else {
-            final Vector v = new Vector(Z.getRow(0));
-            if (v.isNegative()) {
-                return (Vector) v.negative();
-            } else {
-                return v;
-            }
-        }
-    }
-    
-    /**
      * Determines the order of a matrix.
      * 
      * @param M the matrix.
@@ -133,13 +109,6 @@ public class OperatorType {
      */
     public int getDimension() {
         return dimension;
-    }
-    
-    /**
-     * @return the rotation (dimension 3) or mirror (dimension 2) axis.
-     */
-    public Vector getAxis() {
-        return axis;
     }
     
     /**
