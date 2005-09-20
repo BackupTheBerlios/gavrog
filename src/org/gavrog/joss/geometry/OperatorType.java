@@ -25,7 +25,7 @@ import org.gavrog.jane.compounds.Matrix;
  * <code>clockwise</code> and <code>orientationPreserving</code> are used.
  * 
  * @author Olaf Delgado
- * @version $Id: OperatorType.java,v 1.6 2005/09/20 05:13:40 odf Exp $
+ * @version $Id: OperatorType.java,v 1.7 2005/09/20 05:25:10 odf Exp $
  */
 public class OperatorType {
     final private int dimension;
@@ -34,7 +34,22 @@ public class OperatorType {
     final private boolean clockwise;
     
     /**
-     * Creates a new instance.
+     * Creates an instances with given characteristics.
+     * 
+     * @param d the dimension.
+     * @param ori is it orientation-preserving?
+     * @param n the order.
+     * @param cw is the rotational component clockwise?
+     */
+    public OperatorType(final int d, final boolean ori, final int n, final boolean cw) {
+        this.dimension = d;
+        this.orientationPreserving = ori;
+        this.order = n;
+        this.clockwise = cw;
+    }
+    
+    /**
+     * Creates a new instance by analysing an actual operator.
      * 
      * @param op the operator to analyze.
      */
