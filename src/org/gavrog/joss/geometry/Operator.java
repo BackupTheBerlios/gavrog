@@ -16,6 +16,7 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
@@ -29,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.11 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: Operator.java,v 1.12 2005/09/20 05:12:54 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -154,6 +155,32 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         return new Vector(this.coords.getSubMatrix(d, 0, 1, d));
     }
 
+    /**
+     * Returns a one-dimensional axis for the linear part of this operator, if
+     * any. This is probably only well-defined for operators of dimensions up to
+     * 3.
+     * 
+     * @return the axis, if any, else <code>null</code>.
+     */
+    public Vector linearAxis() {
+        final int d = getDimension();
+        Matrix M = getCoordinates().getSubMatrix(0, 0, d, d);
+        if (d % 2 != 0 && M.determinant().isNegative()) {
+            M = (Matrix) M.negative();
+        }
+        final Matrix Z = LinearAlgebra.rowNullSpace((Matrix) M.minus(M.one()), true);
+        if (Z.numberOfRows() != 1) {
+            return null;
+        } else {
+            final Vector v = new Vector(Z.getRow(0));
+            if (v.isNegative()) {
+                return (Vector) v.negative();
+            } else {
+                return v;
+            }
+        }
+    }
+    
     /**
      * Applies this operator to a point.
      * 

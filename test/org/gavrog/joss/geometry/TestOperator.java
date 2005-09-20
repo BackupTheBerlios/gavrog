@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.8 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: TestOperator.java,v 1.9 2005/09/20 05:12:54 odf Exp $
  */
 public class TestOperator extends TestCase {
     final int M[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
@@ -237,5 +237,27 @@ public class TestOperator extends TestCase {
             fail("should throw an DataFormatException");
         } catch (DataFormatException success) {
         }
+    }
+    
+    public void testLinearAxis() {
+        final Operator op1 = new Operator("-y,x");
+        final Operator op2 = new Operator("y,x");
+        final Operator op3 = new Operator("z,x,y");
+        final Operator op4 = new Operator("y,z,x");
+        final Operator op5 = new Operator("x,y");
+        final Operator op6 = new Operator("x,y,z");
+        final Operator op7 = new Operator("y,-x");
+        final Operator op8 = new Operator("-y,-z,-x");
+        final Operator op9 = new Operator("-y,x-y,z");
+        
+        assertNull(op1.linearAxis());
+        assertTrue(op2.linearAxis().isCollinearTo(new Vector(new int[] {1, 1})));
+        assertTrue(op3.linearAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
+        assertTrue(op4.linearAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
+        assertNull(op5.linearAxis());
+        assertNull(op6.linearAxis());
+        assertNull(op7.linearAxis());
+        assertTrue(op8.linearAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
+        assertTrue(op9.linearAxis().isCollinearTo(new Vector(new int[] {0, 0, 1})));
     }
 }
