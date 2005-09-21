@@ -31,22 +31,52 @@ import java.util.Set;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.5 2005/09/21 01:37:38 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.6 2005/09/21 22:24:56 odf Exp $
  */
 public class SpaceGroupFinder {
-    final public int CUBIC_SYSTEM = 432;
-    final public int ORTHORHOMBIC_SYSTEM = 222;
-    final public int HEXAGONAL_SYSTEM = 6;
-    final public int TETRAGONAL_SYSTEM = 4;
-    final public int TRIGONAL_SYSTEM = 3;
-    final public int MONOCLINIC_SYSTEM = 2;
-    final public int TRICLINIC_SYSTEM = 1;
+    final public static int CUBIC_SYSTEM = 432;
+    final public static int ORTHORHOMBIC_SYSTEM = 222;
+    final public static int HEXAGONAL_SYSTEM = 6;
+    final public static int TETRAGONAL_SYSTEM = 4;
+    final public static int TRIGONAL_SYSTEM = 3;
+    final public static int MONOCLINIC_SYSTEM = 2;
+    final public static int TRICLINIC_SYSTEM = 1;
     
     final private SpaceGroup G;
     
-    int crystalSystem;
-    Vector firstBasis[];
-    List generators;
+    final private int crystalSystem;
+    final private Vector firstBasis[];
+    final private List generators;
+    
+    /**
+     * Realizes a hash map in which the {@link #get(Object)}method installs a default
+     * value whenever it is passed a key with no associated value yet. The default value
+     * is specified by overriding the method {@link #makeDefault()}. This approach is
+     * used rather than copying a fixed object so that for example an empty container can
+     * be used as the default value without the risk of aliasing.
+     */
+    private abstract class HashMapWIthDefault extends HashMap {
+        /**
+         * This method must be overriden to produce a default value.
+         * 
+         * @return the default value.
+         */
+        public abstract Object makeDefault();
+        
+        /* (non-Javadoc)
+         * @see java.util.Map#get(java.lang.Object)
+         */
+        public Object get(final Object key) {
+            if (!containsKey(key)) {
+                try {
+                    put(key, makeDefault());
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            return super.get(key);
+        }
+    }
     
     /**
      * Constructs a new instance.
@@ -55,11 +85,18 @@ public class SpaceGroupFinder {
      */
     public SpaceGroupFinder(final SpaceGroup G) {
         final int d = G.getDimension();
-        if (d != 2 && d != 3) {
+        this.G = G;
+        if (d == 3) {
+            final Object res[] = analyzePointGroup3D();
+            crystalSystem = ((Integer) res[0]).intValue();
+            firstBasis = (Vector[]) res[1];
+            generators = (List) res[2];
+        } else if (d ==2) {
+            throw new UnsupportedOperationException("dimension 2 not yet supported");
+        } else {
             final String msg = "group dimension is " + d + ", must be 2 or 3";
             throw new UnsupportedOperationException(msg);
         }
-        this.G = G;
     }
     
     /**
@@ -69,13 +106,14 @@ public class SpaceGroupFinder {
      * @return a map assigning operators types to operator sets.
      */
     Map operatorsByType() {
-        final Map res = new HashMap();
+        final Map res = new HashMapWIthDefault() {
+            public Object makeDefault() {
+                return new HashSet();
+            }
+        };
         for (final Iterator iter = G.primitiveOperators().iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
             final OperatorType type = new OperatorType(op);
-            if (!res.containsKey(type)) {
-                res.put(type, new HashSet());
-            }
             ((Set) res.get(type)).add(op);
         }
         
@@ -86,7 +124,7 @@ public class SpaceGroupFinder {
      * Analyzes the point group to determine the crystal system and find an
      * appropriate set of generators and a preliminary basis based on it.
      */
-    void analyzePointGroup3D() {
+    private Object[] analyzePointGroup3D() {
         final Map type2ops = operatorsByType();
         final List generators = new ArrayList();
         Vector x = null, y = null, z = null;
@@ -110,8 +148,10 @@ public class SpaceGroupFinder {
             sixFold.addAll((Set) type2ops.get(new OperatorType(3, false, 6, true)));
         }
         
+        final int crystalSystem;
+        
         if (sixFold.size() > 0) {
-            this.crystalSystem = HEXAGONAL_SYSTEM;
+            crystalSystem = HEXAGONAL_SYSTEM;
             final Operator A = (Operator) sixFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) A.times(A);
@@ -128,7 +168,7 @@ public class SpaceGroupFinder {
                 generators.add(A);
             }
         } else if (fourFold.size() > 1) {
-            this.crystalSystem = CUBIC_SYSTEM;
+            crystalSystem = CUBIC_SYSTEM;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) threeFold.iterator().next();
@@ -137,7 +177,7 @@ public class SpaceGroupFinder {
             generators.add(A);
             generators.add(R);
         } else if (fourFold.size() > 0) {
-            this.crystalSystem = TETRAGONAL_SYSTEM;
+            crystalSystem = TETRAGONAL_SYSTEM;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
             for (final Iterator iter = twoFold.iterator(); iter.hasNext();) {
@@ -154,7 +194,7 @@ public class SpaceGroupFinder {
             }
             R = A;
         } else if (threeFold.size() > 1) {
-            this.crystalSystem = CUBIC_SYSTEM;
+            crystalSystem = CUBIC_SYSTEM;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) threeFold.iterator().next();
@@ -163,7 +203,7 @@ public class SpaceGroupFinder {
             generators.add(A);
             generators.add(R);
         } else if (threeFold.size() > 0) {
-            this.crystalSystem = TRIGONAL_SYSTEM;
+            crystalSystem = TRIGONAL_SYSTEM;
             R = (Operator) threeFold.iterator().next();
             z = R.linearAxis();
             if (twoFold.size() > 0) {
@@ -174,7 +214,7 @@ public class SpaceGroupFinder {
                 generators.add(R);
             }
         } else if (twoFold.size() > 1) {
-            this.crystalSystem = ORTHORHOMBIC_SYSTEM;
+            crystalSystem = ORTHORHOMBIC_SYSTEM;
             final Iterator ops = twoFold.iterator();
             final Operator A = (Operator) ops.next();
             final Operator B = (Operator) ops.next();
@@ -186,12 +226,12 @@ public class SpaceGroupFinder {
             generators.add(B);
             generators.add(C);
         } else if (twoFold.size() > 0) {
-            this.crystalSystem = MONOCLINIC_SYSTEM;
+            crystalSystem = MONOCLINIC_SYSTEM;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
             generators.add(A);
         } else {
-            this.crystalSystem = TRICLINIC_SYSTEM;
+            crystalSystem = TRICLINIC_SYSTEM;
             z = new Vector(new int[] { 1, 0, 0 });
             if (inversions.size() == 0) {
                 generators.add(new Operator("x+1,y,z"));
@@ -248,7 +288,27 @@ public class SpaceGroupFinder {
             generators.add(inversions.iterator().next());
         }
 
-        this.firstBasis = new Vector[] { x, y, z };
-        this.generators = generators;
+        return new Object[] { new Integer(crystalSystem), new Vector[] { x, y, z }, generators };
+    }
+    
+    /**
+     * @return the current value of crystalSystem.
+     */
+    public int getCrystalSystem() {
+        return this.crystalSystem;
+    }
+    
+    /**
+     * @return the current value of firstBasis.
+     */
+    Vector[] getFirstBasis() {
+        return this.firstBasis;
+    }
+    
+    /**
+     * @return the current value of generators.
+     */
+    public List getGenerators() {
+        return this.generators;
     }
 }
