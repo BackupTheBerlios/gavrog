@@ -25,7 +25,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.3 2005/09/21 01:16:38 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.4 2005/09/21 01:37:38 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
@@ -64,5 +64,9 @@ public class TestSpaceGroupFinder extends TestCase {
         assertEquals(3, ops.size());
         ops = (Set) map.get(new OperatorType(3, false, 2, true));
         assertEquals(3, ops.size());
+    }
+    
+    public void testAnalyzePointGroup3D() {
+        //TODO implement testAnalyzePointGroup3D
     }
 }

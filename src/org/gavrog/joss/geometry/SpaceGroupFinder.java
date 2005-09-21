@@ -31,7 +31,7 @@ import java.util.Set;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.4 2005/09/21 01:17:19 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.5 2005/09/21 01:37:38 odf Exp $
  */
 public class SpaceGroupFinder {
     final public int CUBIC_SYSTEM = 432;
@@ -229,7 +229,7 @@ public class SpaceGroupFinder {
             if (R != null) {
                 y = (Vector) x.times(R);
             } else {
-                //TODO y = Vector.crossProduct(z, x);
+                y = Vector.crossProduct3D(z, x);
                 if (mirrors.size() > 0) {
                     final Operator M = (Operator) mirrors.iterator().next();
                     y = (Vector) y.plus(y.times(M));
@@ -240,9 +240,9 @@ public class SpaceGroupFinder {
             }
         }
 
-// TODO if (Vector.determinant(x, y, z).isNegative()) {
-//          z = (Vector) z.negative();
-//      }
+        if (Vector.volume3D(x, y, z).isNegative()) {
+            z = (Vector) z.negative();
+        }
 
         if (inversions.size() > 0) {
             generators.add(inversions.iterator().next());

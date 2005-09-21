@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.7 2005/09/18 02:37:31 odf Exp $
+ * @version $Id: TestVector.java,v 1.8 2005/09/21 01:37:38 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -221,5 +221,13 @@ public class TestVector extends TestCase {
         assertTrue(u.isCollinearTo(v));
         assertFalse(u.isCollinearTo(w));
         assertFalse(v.isCollinearTo(w));
+    }
+    
+    public void testCrossProduct3D() {
+        // TODO implement testCrossProduct3D
+    }
+    
+    public void testVolume3D() {
+        // TODO implement testVolume3D
     }
 }

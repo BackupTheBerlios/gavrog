@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.10 2005/09/20 04:18:58 odf Exp $
+ * @version $Id: Vector.java,v 1.11 2005/09/21 01:37:38 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -177,6 +177,42 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         final Matrix vc = v.getCoordinates();
         final Matrix wc = w.getCoordinates();
         return ((Matrix) vc.times(wc.transposed())).get(0, 0);
+    }
+    
+    /**
+     * Computes the cross product of two 3-dimensional vectors.
+     * 
+     * @param v the first vector.
+     * @param w the second vector.
+     * @return the cross product.
+     */
+    public static Vector crossProduct3D(final Vector v, final Vector w) {
+        if (v.getDimension() != 3 || w.getDimension() != 3) {
+            throw new IllegalArgumentException("both vectors must be 3-dimensional");
+        }
+        final IArithmetic v0 = v.get(0);
+        final IArithmetic v1 = v.get(1);
+        final IArithmetic v2 = v.get(2);
+        final IArithmetic w0 = w.get(0);
+        final IArithmetic w1 = w.get(1);
+        final IArithmetic w2 = w.get(2);
+        final IArithmetic x0 = v1.times(w2).minus(v2.times(w1));
+        final IArithmetic x1 = v2.times(w0).minus(v0.times(w2));
+        final IArithmetic x2 = v0.times(w1).minus(v1.times(w0));
+        return new Vector(new IArithmetic[] { x0, x1, x2 });
+    }
+    
+    /**
+     * Computes the oriented volume of the parallelohedron spanned by three
+     * 3-dimensional vectors with respect to the usual metric.
+     * 
+     * @param u the first vector.
+     * @param v the second vector.
+     * @param w the third vector.
+     * @return the volume.
+     */
+    public static IArithmetic volume3D(final Vector u, final Vector v, final Vector w) {
+        return dot(u, crossProduct3D(v, w));
     }
     
     /**
