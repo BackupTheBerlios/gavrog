@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.3 2005/09/22 21:51:29 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
@@ -91,7 +91,7 @@ public class TileKTransitive extends IteratorAdapter {
                 if (this.verbose) {
                     System.err.println("    " + setAsString(ds));
                 }
-                symbols = new DefineBranching(ds);
+                symbols = defineBranching(ds);
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++count3dSymbols;
@@ -104,6 +104,16 @@ public class TileKTransitive extends IteratorAdapter {
                 return new DSymbol(ds.canonical());
             }
         }
+    }
+    
+    /**
+     * Override this to restrict or change the generation of branching number combination.
+     * 
+     * @param ds a Delaney symbol.
+     * @return an iterator over all admissible extensions of ds with complete branching.
+     */
+    protected Iterator defineBranching(final DelaneySymbol ds) {
+        return new DefineBranching(ds);
     }
     
     public String statistics() {
