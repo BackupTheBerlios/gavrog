@@ -17,7 +17,6 @@ limitations under the License.
 package org.gavrog.joss.geometry;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +30,7 @@ import java.util.Set;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.6 2005/09/21 22:24:56 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.7 2005/09/22 05:34:36 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -47,36 +46,6 @@ public class SpaceGroupFinder {
     final private int crystalSystem;
     final private Vector firstBasis[];
     final private List generators;
-    
-    /**
-     * Realizes a hash map in which the {@link #get(Object)}method installs a default
-     * value whenever it is passed a key with no associated value yet. The default value
-     * is specified by overriding the method {@link #makeDefault()}. This approach is
-     * used rather than copying a fixed object so that for example an empty container can
-     * be used as the default value without the risk of aliasing.
-     */
-    private abstract class HashMapWIthDefault extends HashMap {
-        /**
-         * This method must be overriden to produce a default value.
-         * 
-         * @return the default value.
-         */
-        public abstract Object makeDefault();
-        
-        /* (non-Javadoc)
-         * @see java.util.Map#get(java.lang.Object)
-         */
-        public Object get(final Object key) {
-            if (!containsKey(key)) {
-                try {
-                    put(key, makeDefault());
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            return super.get(key);
-        }
-    }
     
     /**
      * Constructs a new instance.
@@ -100,32 +69,11 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * Returns a map with the occuring operator types as keys and the sets of
-     * all operators of the respective types as values.
-     * 
-     * @return a map assigning operators types to operator sets.
-     */
-    Map operatorsByType() {
-        final Map res = new HashMapWIthDefault() {
-            public Object makeDefault() {
-                return new HashSet();
-            }
-        };
-        for (final Iterator iter = G.primitiveOperators().iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
-            final OperatorType type = new OperatorType(op);
-            ((Set) res.get(type)).add(op);
-        }
-        
-        return res;
-    }
-    
-    /**
      * Analyzes the point group to determine the crystal system and find an
      * appropriate set of generators and a preliminary basis based on it.
      */
     private Object[] analyzePointGroup3D() {
-        final Map type2ops = operatorsByType();
+        final Map type2ops = G.operatorsByType();
         final List generators = new ArrayList();
         Vector x = null, y = null, z = null;
         Operator R = null;
@@ -288,7 +236,8 @@ public class SpaceGroupFinder {
             generators.add(inversions.iterator().next());
         }
 
-        return new Object[] { new Integer(crystalSystem), new Vector[] { x, y, z }, generators };
+        return new Object[] { new Integer(crystalSystem), new Vector[] { x, y, z },
+                generators };
     }
     
     /**

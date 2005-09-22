@@ -19,6 +19,7 @@ package org.gavrog.joss.geometry;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.TestCase;
@@ -30,20 +31,23 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.5 2005/09/15 17:46:33 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.6 2005/09/22 05:34:36 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
+    private SpaceGroup P31;
     private SpaceGroup c2mm;
 
     public void setUp() {
         Fddd = new SpaceGroup(3, "Fddd");
+        P31 = new SpaceGroup(3, "P31");
         c2mm = new SpaceGroup(2, "c2mm");
     }
     
     public void tearDown() {
         Fddd = null;
         c2mm = null;
+        P31 = null;
     }
     
     public void testSpaceGroupByName() {
@@ -146,5 +150,39 @@ public class TestSpaceGroup extends TestCase {
         final Operator T = SpaceGroup.transform(3, "Ia-3d");
         assertNotNull(T);
         assertEquals(Operator.identity(3), T);
+    }
+
+    public void testOperatorsByType() {
+        Map map;
+        Set ops;
+        
+        map = c2mm.operatorsByType();
+        assertEquals(3, map.size());
+        ops = (Set) map.get(new OperatorType(2, true, 1, true));
+        assertEquals(1, ops.size());
+        ops = (Set) map.get(new OperatorType(2, true, 2, true));
+        assertEquals(1, ops.size());
+        ops = (Set) map.get(new OperatorType(2, false, 2, false));
+        assertEquals(2, ops.size());
+        
+        map = Fddd.operatorsByType();
+        assertEquals(4, map.size());
+        ops = (Set) map.get(new OperatorType(3, true, 1, true));
+        assertEquals(1, ops.size());
+        ops = (Set) map.get(new OperatorType(3, false, 1, true));
+        assertEquals(1, ops.size());
+        ops = (Set) map.get(new OperatorType(3, true, 2, true));
+        assertEquals(3, ops.size());
+        ops = (Set) map.get(new OperatorType(3, false, 2, true));
+        assertEquals(3, ops.size());
+        
+        map = P31.operatorsByType();
+        assertEquals(3, map.size());
+        ops = (Set) map.get(new OperatorType(3, true, 1, true));
+        assertEquals(1, ops.size());
+        ops = (Set) map.get(new OperatorType(3, true, 3, true));
+        assertEquals(1, ops.size());
+        ops = (Set) map.get(new OperatorType(3, true, 3, false));
+        assertEquals(1, ops.size());
     }
 }

@@ -17,8 +17,6 @@ limitations under the License.
 package org.gavrog.joss.geometry;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -26,52 +24,31 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.5 2005/09/21 22:25:19 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.6 2005/09/22 05:34:36 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
+    private SpaceGroupFinder P31;
     //private SpaceGroupFinder c2mm;
 
     public void setUp() {
         Fddd = new SpaceGroupFinder(new SpaceGroup(3, "Fddd"));
+        P31 = new SpaceGroupFinder(new SpaceGroup(3, "P31"));
         //c2mm = new SpaceGroupFinder(new SpaceGroup(2, "c2mm"));
     }
     
     public void tearDown() {
         Fddd = null;
+        P31 = null;
         //c2mm = null;
     }
     
-    public void testOperatorsByType() {
-        Map map;
-        Set ops;
-        
-//        map = c2mm.operatorsByType();
-//        assertEquals(3, map.size());
-//        ops = (Set) map.get(new OperatorType(2, true, 1, true));
-//        assertEquals(1, ops.size());
-//        ops = (Set) map.get(new OperatorType(2, true, 2, true));
-//        assertEquals(1, ops.size());
-//        ops = (Set) map.get(new OperatorType(2, false, 2, false));
-//        assertEquals(2, ops.size());
-        
-        map = Fddd.operatorsByType();
-        assertEquals(4, map.size());
-        ops = (Set) map.get(new OperatorType(3, true, 1, true));
-        assertEquals(1, ops.size());
-        ops = (Set) map.get(new OperatorType(3, false, 1, true));
-        assertEquals(1, ops.size());
-        ops = (Set) map.get(new OperatorType(3, true, 2, true));
-        assertEquals(3, ops.size());
-        ops = (Set) map.get(new OperatorType(3, false, 2, true));
-        assertEquals(3, ops.size());
-    }
-
     public void testGetCrystalSystem() {
         assertEquals(SpaceGroupFinder.ORTHORHOMBIC_SYSTEM, Fddd.getCrystalSystem());
+        assertEquals(SpaceGroupFinder.TRIGONAL_SYSTEM, P31.getCrystalSystem());
     }
 
-    public void testGetGeneratorsAndBasis() {
+    public void testGetGeneratorsAndBasis1() {
         final List gens = Fddd.getGenerators();
         assertEquals(4, gens.size());
         final Operator g[] = new Operator[4];
@@ -104,5 +81,18 @@ public class TestSpaceGroupFinder extends TestCase {
             assertEquals(1, countFixed);
             assertEquals(2, countTurned);
         }
+    }
+
+    public void testGetGeneratorsAndBasis2() {
+        final List gens = P31.getGenerators();
+        assertEquals(1, gens.size());
+        final Operator g = (Operator) gens.get(0);
+        assertEquals(new OperatorType(3, true, 3, true), new OperatorType(g));
+        
+        final Vector basis[] = P31.getFirstBasis();
+        assertEquals(3, basis.length);
+        assertTrue(Vector.volume3D(basis[0], basis[1], basis[2]).isPositive());
+        assertEquals(basis[2], basis[2].times(g));
+        assertEquals(basis[1], basis[0].times(g));
     }
 }
