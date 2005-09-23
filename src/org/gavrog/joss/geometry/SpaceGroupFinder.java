@@ -30,7 +30,7 @@ import java.util.Set;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.7 2005/09/22 05:34:36 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.8 2005/09/23 04:27:03 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -73,7 +73,7 @@ public class SpaceGroupFinder {
      * appropriate set of generators and a preliminary basis based on it.
      */
     private Object[] analyzePointGroup3D() {
-        final Map type2ops = G.operatorsByType();
+        final Map type2ops = G.fundamentalOperatorsByType();
         final List generators = new ArrayList();
         Vector x = null, y = null, z = null;
         Operator R = null;

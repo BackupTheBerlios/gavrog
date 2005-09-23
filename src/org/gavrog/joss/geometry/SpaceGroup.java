@@ -72,7 +72,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.13 2005/09/22 05:34:36 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.14 2005/09/23 04:27:03 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -316,6 +316,27 @@ public class SpaceGroup {
         return result;
     }
 
+    /**
+     * Returns a map with the occuring operator types as keys and the sets of
+     * all operators of the respective types as values.
+     * 
+     * @return a map assigning operators types to operator sets.
+     */
+    public Map fundamentalOperatorsByType() {
+        final Map res = new HashMapWithDefault() {
+            public Object makeDefault() {
+                return new HashSet();
+            }
+        };
+        for (final Iterator iter = primitiveOperators().iterator(); iter.hasNext();) {
+            final Operator op = (Operator) iter.next();
+            final OperatorType type = new OperatorType(op);
+            ((Set) res.get(type)).add(op);
+        }
+        
+        return res;
+    }
+    
     // --- IO operations for groups
     
     /**
@@ -503,26 +524,5 @@ public class SpaceGroup {
      */
     public static Operator transform(final int dim, final String name) {
         return (Operator) retrieve(dim, false, name);
-    }
-
-    /**
-     * Returns a map with the occuring operator types as keys and the sets of
-     * all operators of the respective types as values.
-     * 
-     * @return a map assigning operators types to operator sets.
-     */
-    public Map operatorsByType() {
-        final Map res = new HashMapWithDefault() {
-            public Object makeDefault() {
-                return new HashSet();
-            }
-        };
-        for (final Iterator iter = primitiveOperators().iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
-            final OperatorType type = new OperatorType(op);
-            ((Set) res.get(type)).add(op);
-        }
-        
-        return res;
     }
 }

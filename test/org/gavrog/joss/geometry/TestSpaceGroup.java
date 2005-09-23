@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.6 2005/09/22 05:34:36 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.7 2005/09/23 04:27:03 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -156,7 +156,7 @@ public class TestSpaceGroup extends TestCase {
         Map map;
         Set ops;
         
-        map = c2mm.operatorsByType();
+        map = c2mm.fundamentalOperatorsByType();
         assertEquals(3, map.size());
         ops = (Set) map.get(new OperatorType(2, true, 1, true));
         assertEquals(1, ops.size());
@@ -165,7 +165,7 @@ public class TestSpaceGroup extends TestCase {
         ops = (Set) map.get(new OperatorType(2, false, 2, false));
         assertEquals(2, ops.size());
         
-        map = Fddd.operatorsByType();
+        map = Fddd.fundamentalOperatorsByType();
         assertEquals(4, map.size());
         ops = (Set) map.get(new OperatorType(3, true, 1, true));
         assertEquals(1, ops.size());
@@ -176,7 +176,7 @@ public class TestSpaceGroup extends TestCase {
         ops = (Set) map.get(new OperatorType(3, false, 2, true));
         assertEquals(3, ops.size());
         
-        map = P31.operatorsByType();
+        map = P31.fundamentalOperatorsByType();
         assertEquals(3, map.size());
         ops = (Set) map.get(new OperatorType(3, true, 1, true));
         assertEquals(1, ops.size());
