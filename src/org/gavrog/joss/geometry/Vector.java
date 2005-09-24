@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.12 2005/09/21 21:24:49 odf Exp $
+ * @version $Id: Vector.java,v 1.13 2005/09/24 03:32:54 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -546,5 +546,36 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         } else {
             throw new UnsupportedOperationException("only dimensions 2 and 3 work");
         }
+    }
+    
+    /**
+     * Splits a matrix into its row vectors.
+     * 
+     * @param M the input matrix.
+     * @return the array of row vectors from the input matrix.
+     */
+    public static Vector[] fromMatrix(final Matrix M) {
+        final int n = M.numberOfRows();
+        final Vector[] rows = new Vector[n];
+        for (int i = 0; i < n; ++i) {
+            rows[i] = new Vector(M.getRow(i));
+        }
+        return rows;
+    }
+    
+    /**
+     * Makes vectors of common dimension into rows of a matrix.
+     * 
+     * @param rows an array of vectors.
+     * @return the matrix with the given vectors as its rows.
+     */
+    public static Matrix toMatrix(final Vector[] rows) {
+        final int n = rows.length;
+        final int m = rows[0].dimension;
+        final Matrix M = new Matrix(n, m);
+        for (int i = 0; i < n; ++i) {
+            M.setRow(i, rows[i].getCoordinates());
+        }
+        return M;
     }
 }
