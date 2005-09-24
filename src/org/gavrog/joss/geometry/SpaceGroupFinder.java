@@ -30,7 +30,7 @@ import java.util.Set;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.8 2005/09/23 04:27:03 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.9 2005/09/24 03:33:48 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -44,8 +44,11 @@ public class SpaceGroupFinder {
     final private SpaceGroup G;
     
     final private int crystalSystem;
-    final private Vector firstBasis[];
-    final private List generators;
+    final private Vector preliminaryBasis[];
+    private Vector latticeBasis[];
+    final private List generatorsOriginalBasis;
+    private List generatorsPreliminaryBasis;
+    private List generatorsLatticeBasis;
     
     /**
      * Constructs a new instance.
@@ -58,8 +61,10 @@ public class SpaceGroupFinder {
         if (d == 3) {
             final Object res[] = analyzePointGroup3D();
             crystalSystem = ((Integer) res[0]).intValue();
-            firstBasis = (Vector[]) res[1];
-            generators = (List) res[2];
+            preliminaryBasis = (Vector[]) res[1];
+            generatorsOriginalBasis = (List) res[2];
+            
+            
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
@@ -241,23 +246,23 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * @return the current value of crystalSystem.
+     * @return the crystal system for the group.
      */
     public int getCrystalSystem() {
         return this.crystalSystem;
     }
     
     /**
-     * @return the current value of firstBasis.
+     * @return a preliminary basis based on the point group structure.
      */
-    Vector[] getFirstBasis() {
-        return this.firstBasis;
+    Vector[] getPreliminaryBasis() {
+        return this.preliminaryBasis;
     }
     
     /**
-     * @return the current value of generators.
+     * @return a set of group generators.
      */
-    public List getGenerators() {
-        return this.generators;
+    public List getGeneratorsOriginalBasis() {
+        return this.generatorsOriginalBasis;
     }
 }

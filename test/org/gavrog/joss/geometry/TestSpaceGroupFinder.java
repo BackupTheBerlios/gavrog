@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.6 2005/09/22 05:34:36 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.7 2005/09/24 03:33:48 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
@@ -48,8 +48,8 @@ public class TestSpaceGroupFinder extends TestCase {
         assertEquals(SpaceGroupFinder.TRIGONAL_SYSTEM, P31.getCrystalSystem());
     }
 
-    public void testGetGeneratorsAndBasis1() {
-        final List gens = Fddd.getGenerators();
+    public void testGetPreliminaryBasis1() {
+        final List gens = Fddd.getGeneratorsOriginalBasis();
         assertEquals(4, gens.size());
         final Operator g[] = new Operator[4];
         for (int i = 0; i < 4; ++i) {
@@ -62,7 +62,7 @@ public class TestSpaceGroupFinder extends TestCase {
         
         assertEquals(g[2], g[0].times(g[1]));
         
-        final Vector basis[] = Fddd.getFirstBasis();
+        final Vector basis[] = Fddd.getPreliminaryBasis();
         assertEquals(3, basis.length);
         assertTrue(Vector.volume3D(basis[0], basis[1], basis[2]).isPositive());
         for (int i = 0; i < 3; ++i) {
@@ -83,13 +83,13 @@ public class TestSpaceGroupFinder extends TestCase {
         }
     }
 
-    public void testGetGeneratorsAndBasis2() {
-        final List gens = P31.getGenerators();
+    public void testGetPreliminaryBasis2() {
+        final List gens = P31.getGeneratorsOriginalBasis();
         assertEquals(1, gens.size());
         final Operator g = (Operator) gens.get(0);
         assertEquals(new OperatorType(3, true, 3, true), new OperatorType(g));
         
-        final Vector basis[] = P31.getFirstBasis();
+        final Vector basis[] = P31.getPreliminaryBasis();
         assertEquals(3, basis.length);
         assertTrue(Vector.volume3D(basis[0], basis[1], basis[2]).isPositive());
         assertEquals(basis[2], basis[2].times(g));
