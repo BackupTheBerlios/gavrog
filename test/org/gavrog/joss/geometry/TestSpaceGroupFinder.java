@@ -20,11 +20,13 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.gavrog.jane.compounds.Matrix;
+
 /**
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.7 2005/09/24 03:33:48 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.8 2005/09/24 03:45:21 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
@@ -62,15 +64,16 @@ public class TestSpaceGroupFinder extends TestCase {
         
         assertEquals(g[2], g[0].times(g[1]));
         
-        final Vector basis[] = Fddd.getPreliminaryBasis();
-        assertEquals(3, basis.length);
-        assertTrue(Vector.volume3D(basis[0], basis[1], basis[2]).isPositive());
+        final Matrix basis = Fddd.getPreliminaryBasis();
+        assertEquals(3, basis.numberOfRows());
+        assertEquals(3, basis.numberOfColumns());
+        assertTrue(basis.determinant().isPositive());
         for (int i = 0; i < 3; ++i) {
             final Operator op = g[i];
             int countFixed = 0;
             int countTurned = 0;
             for (int j = 0; j < 3; ++j) {
-                final Vector v = basis[j];
+                final Vector v = new Vector(basis.getRow(j));
                 final Vector w = (Vector) v.times(op);
                 if (v.equals(w)) {
                     ++countFixed;
@@ -89,10 +92,12 @@ public class TestSpaceGroupFinder extends TestCase {
         final Operator g = (Operator) gens.get(0);
         assertEquals(new OperatorType(3, true, 3, true), new OperatorType(g));
         
-        final Vector basis[] = P31.getPreliminaryBasis();
-        assertEquals(3, basis.length);
-        assertTrue(Vector.volume3D(basis[0], basis[1], basis[2]).isPositive());
-        assertEquals(basis[2], basis[2].times(g));
-        assertEquals(basis[1], basis[0].times(g));
+        final Matrix basis = P31.getPreliminaryBasis();
+        assertEquals(3, basis.numberOfRows());
+        assertEquals(3, basis.numberOfColumns());
+        assertTrue(basis.determinant().isPositive());
+        final Vector v[] = Vector.fromMatrix(basis);
+        assertEquals(v[2], v[2].times(g));
+        assertEquals(v[1], v[0].times(g));
     }
 }

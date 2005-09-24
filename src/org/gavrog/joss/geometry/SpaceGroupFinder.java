@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.jane.compounds.Matrix;
+
 
 /**
  * Takes a two- or three-dimensional crystallographic group and identifies it,
@@ -30,7 +32,7 @@ import java.util.Set;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.9 2005/09/24 03:33:48 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.10 2005/09/24 03:45:21 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -44,8 +46,8 @@ public class SpaceGroupFinder {
     final private SpaceGroup G;
     
     final private int crystalSystem;
-    final private Vector preliminaryBasis[];
-    private Vector latticeBasis[];
+    final private Matrix preliminaryBasis;
+    private Matrix latticeBasis;
     final private List generatorsOriginalBasis;
     private List generatorsPreliminaryBasis;
     private List generatorsLatticeBasis;
@@ -61,10 +63,11 @@ public class SpaceGroupFinder {
         if (d == 3) {
             final Object res[] = analyzePointGroup3D();
             crystalSystem = ((Integer) res[0]).intValue();
-            preliminaryBasis = (Vector[]) res[1];
+            preliminaryBasis = (Matrix) res[1];
             generatorsOriginalBasis = (List) res[2];
             
-            
+            final Matrix B = preliminaryBasis;
+            final Matrix B_1 = (Matrix) preliminaryBasis.inverse();
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
@@ -241,8 +244,8 @@ public class SpaceGroupFinder {
             generators.add(inversions.iterator().next());
         }
 
-        return new Object[] { new Integer(crystalSystem), new Vector[] { x, y, z },
-                generators };
+        return new Object[] { new Integer(crystalSystem),
+                Vector.toMatrix(new Vector[] { x, y, z }), generators };
     }
     
     /**
@@ -255,7 +258,7 @@ public class SpaceGroupFinder {
     /**
      * @return a preliminary basis based on the point group structure.
      */
-    Vector[] getPreliminaryBasis() {
+    Matrix getPreliminaryBasis() {
         return this.preliminaryBasis;
     }
     
