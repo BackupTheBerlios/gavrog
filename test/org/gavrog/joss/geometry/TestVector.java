@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.8 2005/09/21 01:37:38 odf Exp $
+ * @version $Id: TestVector.java,v 1.9 2005/09/24 03:33:12 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -224,10 +224,30 @@ public class TestVector extends TestCase {
     }
     
     public void testCrossProduct3D() {
-        // TODO implement testCrossProduct3D
+        assertEquals(new Vector(new int[] { 2, -1, 0 }), Vector.crossProduct3D(v, w));
+        assertEquals(new Vector(new int[] { -2, 1, 0 }), Vector.crossProduct3D(w, v));
     }
     
     public void testVolume3D() {
-        // TODO implement testVolume3D
+        final Vector u = new Vector(new int[] { 1, 1, 1 });
+        assertEquals(new Whole(1), Vector.volume3D(u, v, w));
+    }
+    
+    public void testFromMatrix() {
+        final Matrix A = new Matrix(new int[][] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
+        final Vector rows[] = Vector.fromMatrix(A);
+        assertEquals(new Vector(new int[] { 1, 2, 3 }), rows[0]);
+        assertEquals(new Vector(new int[] { 4, 5, 6 }), rows[1]);
+        assertEquals(new Vector(new int[] { 7, 8, 9 }), rows[2]);
+    }
+    
+    public void testToMatrix() {
+        final Matrix A = new Matrix(new int[][] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
+        final Vector rows[] = new Vector[] {
+                new Vector(new int[] { 1, 2, 3 }),
+                new Vector(new int[] { 4, 5, 6 }),
+                new Vector(new int[] { 7, 8, 9 }),
+        };
+        assertEquals(A, Vector.toMatrix(rows));
     }
 }
