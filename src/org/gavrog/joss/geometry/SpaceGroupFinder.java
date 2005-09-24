@@ -32,7 +32,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.10 2005/09/24 03:45:21 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.11 2005/09/24 03:50:23 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -65,9 +65,6 @@ public class SpaceGroupFinder {
             crystalSystem = ((Integer) res[0]).intValue();
             preliminaryBasis = (Matrix) res[1];
             generatorsOriginalBasis = (List) res[2];
-            
-            final Matrix B = preliminaryBasis;
-            final Matrix B_1 = (Matrix) preliminaryBasis.inverse();
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
