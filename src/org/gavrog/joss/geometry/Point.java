@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.7 2005/08/23 05:04:04 odf Exp $
+ * @version $Id: Point.java,v 1.8 2005/09/25 01:37:28 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -266,6 +266,8 @@ public class Point extends ArithmeticBase implements IArithmetic {
     public IArithmetic times(final Object other) {
         if (other instanceof Operator) {
             return new Point(this, ((Operator) other).getCoordinates());
+        } else if (other instanceof IArithmetic) {
+            return ((IArithmetic) other).rtimes(this);
         } else {
             throw new UnsupportedOperationException("operation not defined");
         }

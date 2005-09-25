@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.12 2005/09/20 05:12:54 odf Exp $
+ * @version $Id: Operator.java,v 1.13 2005/09/25 01:37:26 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -302,6 +302,8 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         if (other instanceof Operator) {
             final Matrix M = ((Operator) other).coords;
             return new Operator((Matrix) this.coords.times(M));
+        } else if (other instanceof IArithmetic) {
+            return ((IArithmetic) other).rtimes(this);
         } else {
             throw new UnsupportedOperationException("operation not defined");
         }
