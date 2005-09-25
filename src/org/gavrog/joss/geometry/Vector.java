@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.14 2005/09/25 01:37:28 odf Exp $
+ * @version $Id: Vector.java,v 1.15 2005/09/25 21:59:13 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -100,14 +100,13 @@ public class Vector extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * This constructor applies a matrix to a vector. It is used by the
-     * {@link #times(Object)} method to apply a general projective operator to
-     * a vector.
+     * This constructor applies a matrix to a vector. It is used to apply a
+     * general projective operator to a vector.
      * 
      * @param v the original vector.
      * @param M the operator to apply as a (d+1)x(d+1) matrix.
      */
-    private Vector(final Vector v, final Matrix M) {
+    Vector(final Vector v, final Matrix M) {
         this(image(v, M));
     }
 

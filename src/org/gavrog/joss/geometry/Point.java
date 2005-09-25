@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.8 2005/09/25 01:37:28 odf Exp $
+ * @version $Id: Point.java,v 1.9 2005/09/25 21:59:13 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -97,14 +97,13 @@ public class Point extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * This constructor applies a matrix to a point. It is used by the
-     * {@link #times(Object)}method to apply a general projective operator to a
-     * point.
+     * This constructor applies a matrix to a point. It is used to apply a
+     * general projective operator to a point.
      * 
      * @param p the original point.
      * @param M the operator to apply as a (d+1)x(d+1) matrix.
      */
-    private Point(final Point p, final Matrix M) {
+    Point(final Point p, final Matrix M) {
         this(image(p, M));
     }
 

@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * choice of basis and or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: BasisTransform.java,v 1.1 2005/09/25 01:39:46 odf Exp $
+ * @version $Id: BasisTransform.java,v 1.2 2005/09/25 21:59:13 odf Exp $
  */
 public class BasisTransform extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -115,7 +115,7 @@ public class BasisTransform extends ArithmeticBase implements IArithmetic {
     /* (non-Javadoc)
      * @see org.gavrog.jane.numbers.ArithmeticBase#times(java.lang.Object)
      */
-    public IArithmetic times(Object other) {
+    public IArithmetic times(final Object other) {
         if (other instanceof BasisTransform) {
             final BasisTransform bt = (BasisTransform) other;
             return new BasisTransform((Matrix) bt.coords.times(this.coords),
@@ -130,15 +130,23 @@ public class BasisTransform extends ArithmeticBase implements IArithmetic {
     /* (non-Javadoc)
      * @see org.gavrog.jane.numbers.IArithmetic#rtimes(org.gavrog.jane.numbers.IArithmetic)
      */
-    public IArithmetic rtimes(IArithmetic other) {
-        //TODO implement rtimes()
-        return null;
+    public IArithmetic rtimes(final IArithmetic other) {
+        if (other instanceof Point) {
+            return new Point((Point) other, this.inverse);
+        } else if (other instanceof Vector) {
+            return new Vector((Vector) other, this.inverse);
+        } else if (other instanceof Operator) {
+            final Operator op = (Operator) other;
+            return new Operator((Matrix) this.coords.times(op).times(this.inverse));
+        } else {
+            throw new UnsupportedOperationException("operation not defined");
+        }
     }
     
     /* (non-Javadoc)
      * @see org.gavrog.jane.numbers.ArithmeticBase#compareTo(java.lang.Object)
      */
-    public int compareTo(Object other) {
+    public int compareTo(final Object other) {
         if (other instanceof BasisTransform) {
             final BasisTransform ob = (BasisTransform) other;
             final int dim = getDimension();
