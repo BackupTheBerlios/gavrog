@@ -17,6 +17,7 @@
 package org.gavrog.jane.compounds;
 
 import org.gavrog.jane.numbers.ArithmeticBase;
+import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
@@ -765,8 +766,10 @@ public class Matrix extends ArithmeticBase {
     public IArithmetic rtimes(IArithmetic other) {
         if (other instanceof Matrix) {
             return ((Matrix) other).times(this);
-        } else {
+        } else if (other instanceof Complex) {
             return this.rscaled(other);
+        } else {
+            throw new UnsupportedOperationException("operation not supported");
         }
     }
 
