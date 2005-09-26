@@ -33,7 +33,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.12 2005/09/26 05:06:25 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.13 2005/09/26 21:35:20 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -48,10 +48,7 @@ public class SpaceGroupFinder {
     
     final private int crystalSystem;
     final private Matrix intermediateBasis;
-    private Matrix latticeBasis;
     final private List gensOriginalBasis;
-    final private List gensIntermediateBasis;
-    private List gensLatticeBasis;
     
     /**
      * Constructs a new instance.
@@ -75,7 +72,7 @@ public class SpaceGroupFinder {
             for (final Iterator iter = gensOriginalBasis.iterator(); iter.hasNext();) {
                 tmp.add(((Operator) iter.next()).times(T));
             }
-            gensIntermediateBasis = Collections.unmodifiableList(tmp);
+            final List gensIntermediateBasis = Collections.unmodifiableList(tmp);
             
             // --- get primitive cell vectors and convert to intermediate basis
             final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());

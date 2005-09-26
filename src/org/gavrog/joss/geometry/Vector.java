@@ -16,6 +16,9 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
@@ -29,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.16 2005/09/26 04:52:53 odf Exp $
+ * @version $Id: Vector.java,v 1.17 2005/09/26 21:35:20 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -515,6 +518,50 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         }
         
         return new Vector[] { w[0], w[1], w[2] };
+    }
+    
+    /**
+     * Returns a basis of shortest Dirichlet vectors.
+     * 
+     * @param v original basis.
+     * @param M the quadratic form determining the metric.
+     * @return the reduced basis.
+     */
+    public static Vector[] reducedBasis(final Vector[] v, final Matrix M) {
+        final Vector tmp[] = dirichletVectors(v, M);
+        Arrays.sort(tmp, new Comparator() {
+            public int compare(final Object o1, final Object o2) {
+                final Vector v1 = (Vector) o1;
+                final Vector v2 = (Vector) o2;
+                return dot(v1, v1, M).compareTo(dot(v2, v2, M));
+            }
+        });
+        
+        final int d = v[0].getDimension();
+        final Vector w[] = new Vector[d];
+        final Matrix A = Matrix.zero(d, d).mutableClone();
+        int k = 0;
+        for (int i = 0; i < d; ++i) {
+            while (k < tmp.length) {
+                w[i] = tmp[k];
+                if (dot(w[0], w[i], M).isPositive()) {
+                    w[i] = (Vector) w[i].negative();
+                }
+                A.setRow(i, w[i].getCoordinates());
+                if (A.rank() > i) {
+                    break;
+                }
+                ++k;
+            }
+        }
+        
+        if (!isBasis(v)) {
+            throw new RuntimeException("serious problem: could not find a basis");
+        }
+        if (A.determinant().sign() != toMatrix(v).determinant().sign()) {
+            w[d-1] = (Vector) w[d-1].negative(); 
+        }
+        return w;
     }
     
     /**
