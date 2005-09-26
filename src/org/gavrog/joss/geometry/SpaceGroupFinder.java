@@ -17,6 +17,7 @@ limitations under the License.
 package org.gavrog.joss.geometry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +33,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.11 2005/09/24 03:50:23 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.12 2005/09/26 05:06:25 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -46,11 +47,11 @@ public class SpaceGroupFinder {
     final private SpaceGroup G;
     
     final private int crystalSystem;
-    final private Matrix preliminaryBasis;
+    final private Matrix intermediateBasis;
     private Matrix latticeBasis;
-    final private List generatorsOriginalBasis;
-    private List generatorsPreliminaryBasis;
-    private List generatorsLatticeBasis;
+    final private List gensOriginalBasis;
+    final private List gensIntermediateBasis;
+    private List gensLatticeBasis;
     
     /**
      * Constructs a new instance.
@@ -60,11 +61,31 @@ public class SpaceGroupFinder {
     public SpaceGroupFinder(final SpaceGroup G) {
         final int d = G.getDimension();
         this.G = G;
+        
         if (d == 3) {
+            // --- first step of analysis
             final Object res[] = analyzePointGroup3D();
             crystalSystem = ((Integer) res[0]).intValue();
-            preliminaryBasis = (Matrix) res[1];
-            generatorsOriginalBasis = (List) res[2];
+            intermediateBasis = (Matrix) res[1];
+            gensOriginalBasis = (List) res[2];
+            
+            // --- convert generators to intermediate basis
+            final BasisChange T = new BasisChange(intermediateBasis, Point.origin(3));
+            final List tmp = new ArrayList();
+            for (final Iterator iter = gensOriginalBasis.iterator(); iter.hasNext();) {
+                tmp.add(((Operator) iter.next()).times(T));
+            }
+            gensIntermediateBasis = Collections.unmodifiableList(tmp);
+            
+            // --- get primitive cell vectors and convert to intermediate basis
+            final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
+            for (int i = 0; i < primitiveCell.length; ++i) {
+                primitiveCell[i] = (Vector) primitiveCell[i].times(T);
+            }
+            
+            // --- perform a selling reduction on the cell vectors
+            final Vector reduced[] = Vector.sellingReduced(primitiveCell, Matrix.one(3));
+            
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
@@ -242,7 +263,8 @@ public class SpaceGroupFinder {
         }
 
         return new Object[] { new Integer(crystalSystem),
-                Vector.toMatrix(new Vector[] { x, y, z }), generators };
+                Vector.toMatrix(new Vector[] { x, y, z }),
+                Collections.unmodifiableList(generators) };
     }
     
     /**
@@ -256,13 +278,13 @@ public class SpaceGroupFinder {
      * @return a preliminary basis based on the point group structure.
      */
     Matrix getPreliminaryBasis() {
-        return this.preliminaryBasis;
+        return this.intermediateBasis;
     }
     
     /**
      * @return a set of group generators.
      */
     public List getGeneratorsOriginalBasis() {
-        return this.generatorsOriginalBasis;
+        return this.gensOriginalBasis;
     }
 }
