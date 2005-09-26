@@ -33,7 +33,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.14 2005/09/26 21:48:49 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.15 2005/09/26 23:47:54 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -79,7 +79,10 @@ public class SpaceGroupFinder {
             
             // --- compute a lattice basis of smallest Dirichlet vectors
             final Vector reduced[] = Vector.reducedBasis(primitiveCell, Matrix.one(3));
-            final Matrix latticeBasis = Vector.toMatrix(reduced);
+            final Matrix reducedBasis = Vector.toMatrix(reduced);
+            
+            // --- compute a canonical basis based on the group's crystal system
+            final Matrix latticeBasis = canonicalBasis(reducedBasis);
             
             // --- convert generators to lattice basis
             final BasisChange T2 = new BasisChange(latticeBasis, o);
@@ -111,13 +114,12 @@ public class SpaceGroupFinder {
     /**
      * Analyzes the point group to determine the crystal system and find an
      * appropriate set of generators and a preliminary basis based on it.
+     * 
+     * @return an array containing the crystal system, basis and set of generators.
      */
     private Object[] analyzePointGroup3D() {
+        // --- categorize the group operators by their point actions
         final Map type2ops = G.fundamentalOperatorsByType();
-        final List generators = new ArrayList();
-        Vector x = null, y = null, z = null;
-        Operator R = null;
-        
         final Set twoFold = (Set) type2ops.get(new OperatorType(3, true, 2, true));
         final Set threeFold = (Set) type2ops.get(new OperatorType(3, true, 3, true));
         final Set fourFold = (Set) type2ops.get(new OperatorType(3, true, 4, true));
@@ -136,9 +138,18 @@ public class SpaceGroupFinder {
             sixFold.addAll((Set) type2ops.get(new OperatorType(3, false, 6, true)));
         }
         
+        // --- initialize some variables
         final int crystalSystem;
+        final List generators = new ArrayList();
+        Vector x = null, y = null, z = null;
+        Operator R = null;
+        
+        /* --- find some generators and basis vectors based on rotational and
+         *     roto-inversive axes
+         */
         
         if (sixFold.size() > 0) {
+            // --- there is a six-fold axis
             crystalSystem = HEXAGONAL_SYSTEM;
             final Operator A = (Operator) sixFold.iterator().next();
             z = A.linearAxis();
@@ -156,6 +167,7 @@ public class SpaceGroupFinder {
                 generators.add(A);
             }
         } else if (fourFold.size() > 1) {
+            // --- there is more than one four-fold, but no six-fold, axis
             crystalSystem = CUBIC_SYSTEM;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
@@ -165,6 +177,7 @@ public class SpaceGroupFinder {
             generators.add(A);
             generators.add(R);
         } else if (fourFold.size() > 0) {
+            // --- there is exactly one four-fold, but no six-fold, axis
             crystalSystem = TETRAGONAL_SYSTEM;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
@@ -182,6 +195,7 @@ public class SpaceGroupFinder {
             }
             R = A;
         } else if (threeFold.size() > 1) {
+            // --- multiple three-fold, but no four- or six-fold, axes
             crystalSystem = CUBIC_SYSTEM;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
@@ -191,6 +205,7 @@ public class SpaceGroupFinder {
             generators.add(A);
             generators.add(R);
         } else if (threeFold.size() > 0) {
+            // --- exactly one three-fold axis, but no four- or six-fold axes
             crystalSystem = TRIGONAL_SYSTEM;
             R = (Operator) threeFold.iterator().next();
             z = R.linearAxis();
@@ -202,6 +217,7 @@ public class SpaceGroupFinder {
                 generators.add(R);
             }
         } else if (twoFold.size() > 1) {
+            // --- mutliply two-fold, no three-, four- or six-fold, axes
             crystalSystem = ORTHORHOMBIC_SYSTEM;
             final Iterator ops = twoFold.iterator();
             final Operator A = (Operator) ops.next();
@@ -214,11 +230,13 @@ public class SpaceGroupFinder {
             generators.add(B);
             generators.add(C);
         } else if (twoFold.size() > 0) {
+            // --- exactly one two-fold, but no three-, four- or six-fold
             crystalSystem = MONOCLINIC_SYSTEM;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
             generators.add(A);
         } else {
+            // --- no two-, three-, four- or six-fold axes
             crystalSystem = TRICLINIC_SYSTEM;
             z = new Vector(new int[] { 1, 0, 0 });
             if (inversions.size() == 0) {
@@ -226,6 +244,7 @@ public class SpaceGroupFinder {
             }
         }
         
+        // --- add a first basis vector, if missing
         if (x == null) {
             for (final Iterator iter = twoFold.iterator(); iter.hasNext();) {
                 final Operator B = (Operator) iter.next();
@@ -253,6 +272,7 @@ public class SpaceGroupFinder {
             }
         }
         
+        // --- add a second basis vector, if missing
         if (y == null) {
             if (R != null) {
                 y = (Vector) x.times(R);
@@ -268,19 +288,134 @@ public class SpaceGroupFinder {
             }
         }
 
+        // --- make sure the new basis is oriented like the old one
         if (Vector.volume3D(x, y, z).isNegative()) {
             z = (Vector) z.negative();
         }
 
+        // --- if there's an inversion, we always need it among the generators
         if (inversions.size() > 0) {
             generators.add(inversions.iterator().next());
         }
 
+        // --- return the results
         return new Object[] { new Integer(crystalSystem),
                 Vector.toMatrix(new Vector[] { x, y, z }),
                 Collections.unmodifiableList(generators) };
     }
     
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the group's crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasis(final Matrix B) {
+        switch (this.crystalSystem) {
+        case CUBIC_SYSTEM:
+            return canonicalBasisCubic(B);
+        case HEXAGONAL_SYSTEM:
+            return canonicalBasisHexagonal(B);
+        case TRIGONAL_SYSTEM:
+            return canonicalBasisTrigonal(B);
+        case TETRAGONAL_SYSTEM:
+            return canonicalBasisTetragonal(B);
+        case ORTHORHOMBIC_SYSTEM:
+            return canonicalBasisOrthorhombic(B);
+        case MONOCLINIC_SYSTEM:
+            return canonicalBasisMonoclinic(B);
+        case TRICLINIC_SYSTEM:
+            return canonicalBasisTriclinic(B);
+        default:
+            throw new RuntimeException("unknown crystal system");
+        }
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the cubic crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisCubic(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the hexagonal crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisHexagonal(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the trigonal crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisTrigonal(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the tetragonal crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisTetragonal(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the orthorhombic crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisOrthorhombic(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the monoclinic crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisMonoclinic(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * respect to the triclinic crystal system.
+     * 
+     * @param B the reduced lattice basis.
+     * @return the canonical lattice basis.
+     */
+    private Matrix canonicalBasisTriclinic(Matrix b) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     /**
      * @return the crystal system for the group.
      */
