@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.15 2005/09/25 21:59:13 odf Exp $
+ * @version $Id: Vector.java,v 1.16 2005/09/26 04:52:53 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -577,6 +577,7 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         for (int i = 0; i < n; ++i) {
             M.setRow(i, rows[i].getCoordinates());
         }
+        M.makeImmutable();
         return M;
     }
 }
