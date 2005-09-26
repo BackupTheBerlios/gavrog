@@ -33,7 +33,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.13 2005/09/26 21:35:20 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.14 2005/09/26 21:48:49 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -58,6 +58,7 @@ public class SpaceGroupFinder {
     public SpaceGroupFinder(final SpaceGroup G) {
         final int d = G.getDimension();
         this.G = G;
+        final Point o = Point.origin(d);
         
         if (d == 3) {
             // --- first step of analysis
@@ -67,21 +68,22 @@ public class SpaceGroupFinder {
             gensOriginalBasis = (List) res[2];
             
             // --- convert generators to intermediate basis
-            final BasisChange T = new BasisChange(intermediateBasis, Point.origin(3));
-            final List tmp = new ArrayList();
-            for (final Iterator iter = gensOriginalBasis.iterator(); iter.hasNext();) {
-                tmp.add(((Operator) iter.next()).times(T));
-            }
-            final List gensIntermediateBasis = Collections.unmodifiableList(tmp);
+            final BasisChange T1 = new BasisChange(intermediateBasis, o);
+            final List gensIntermediateBasis = convert(gensOriginalBasis, T1);
             
             // --- get primitive cell vectors and convert to intermediate basis
             final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
             for (int i = 0; i < primitiveCell.length; ++i) {
-                primitiveCell[i] = (Vector) primitiveCell[i].times(T);
+                primitiveCell[i] = (Vector) primitiveCell[i].times(T1);
             }
             
-            // --- perform a selling reduction on the cell vectors
-            final Vector reduced[] = Vector.sellingReduced(primitiveCell, Matrix.one(3));
+            // --- compute a lattice basis of smallest Dirichlet vectors
+            final Vector reduced[] = Vector.reducedBasis(primitiveCell, Matrix.one(3));
+            final Matrix latticeBasis = Vector.toMatrix(reduced);
+            
+            // --- convert generators to lattice basis
+            final BasisChange T2 = new BasisChange(latticeBasis, o);
+            final List gensLatticeBasis = convert(gensIntermediateBasis, T2);
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
@@ -89,6 +91,21 @@ public class SpaceGroupFinder {
             final String msg = "group dimension is " + d + ", must be 2 or 3";
             throw new UnsupportedOperationException(msg);
         }
+    }
+    
+    /**
+     * Performs a basis change on a list of geometric objects.
+     * 
+     * @param gens the objects to conver to the new basis.
+     * @param T the basis change transformation.
+     * @return the list of converted objects.
+     */
+    private List convert(final List gens, final BasisChange T) {
+        final List tmp = new ArrayList();
+        for (final Iterator iter = gensOriginalBasis.iterator(); iter.hasNext();) {
+            tmp.add(((Operator) iter.next()).times(T));
+        }
+        return Collections.unmodifiableList(tmp);
     }
     
     /**
