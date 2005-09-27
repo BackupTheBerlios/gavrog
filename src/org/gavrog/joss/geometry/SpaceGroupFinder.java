@@ -33,7 +33,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.15 2005/09/26 23:47:54 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.16 2005/09/27 00:08:39 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -47,8 +47,11 @@ public class SpaceGroupFinder {
     final private SpaceGroup G;
     
     final private int crystalSystem;
-    final private Matrix intermediateBasis;
+    final private String centering;
+    final private Matrix preliminaryBasis;
+    final private Matrix latticeBasis;
     final private List gensOriginalBasis;
+    final private List gensLatticeBasis;
     
     /**
      * Constructs a new instance.
@@ -62,16 +65,16 @@ public class SpaceGroupFinder {
         
         if (d == 3) {
             // --- first step of analysis
-            final Object res[] = analyzePointGroup3D();
+            Object res[] = analyzePointGroup3D();
             crystalSystem = ((Integer) res[0]).intValue();
-            intermediateBasis = (Matrix) res[1];
+            preliminaryBasis = (Matrix) res[1];
             gensOriginalBasis = (List) res[2];
             
-            // --- convert generators to intermediate basis
-            final BasisChange T1 = new BasisChange(intermediateBasis, o);
-            final List gensIntermediateBasis = convert(gensOriginalBasis, T1);
+            // --- convert generators to preliminary basis
+            final BasisChange T1 = new BasisChange(preliminaryBasis, o);
+            final List gensPreliminaryBasis = convert(gensOriginalBasis, T1);
             
-            // --- get primitive cell vectors and convert to intermediate basis
+            // --- get primitive cell vectors and convert to preliminary basis
             final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
             for (int i = 0; i < primitiveCell.length; ++i) {
                 primitiveCell[i] = (Vector) primitiveCell[i].times(T1);
@@ -82,11 +85,13 @@ public class SpaceGroupFinder {
             final Matrix reducedBasis = Vector.toMatrix(reduced);
             
             // --- compute a canonical basis based on the group's crystal system
-            final Matrix latticeBasis = canonicalBasis(reducedBasis);
+            res = canonicalBasis(reducedBasis);
+            this.latticeBasis = (Matrix) res[0];
+            this.centering = (String) res[1];
             
             // --- convert generators to lattice basis
-            final BasisChange T2 = new BasisChange(latticeBasis, o);
-            final List gensLatticeBasis = convert(gensIntermediateBasis, T2);
+            final BasisChange T2 = new BasisChange(this.latticeBasis, o);
+            this.gensLatticeBasis = convert(gensPreliminaryBasis, T2);
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
@@ -305,13 +310,13 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the group's crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasis(final Matrix B) {
+    private Object[] canonicalBasis(final Matrix B) {
         switch (this.crystalSystem) {
         case CUBIC_SYSTEM:
             return canonicalBasisCubic(B);
@@ -333,85 +338,85 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the cubic crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisCubic(Matrix b) {
+    private Object[] canonicalBasisCubic(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the hexagonal crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisHexagonal(Matrix b) {
+    private Object[] canonicalBasisHexagonal(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the trigonal crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisTrigonal(Matrix b) {
+    private Object[] canonicalBasisTrigonal(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the tetragonal crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisTetragonal(Matrix b) {
+    private Object[] canonicalBasisTetragonal(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the orthorhombic crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisOrthorhombic(Matrix b) {
+    private Object[] canonicalBasisOrthorhombic(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the monoclinic crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisMonoclinic(Matrix b) {
+    private Object[] canonicalBasisMonoclinic(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis with
+     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the triclinic crystal system.
      * 
      * @param B the reduced lattice basis.
-     * @return the canonical lattice basis.
+     * @return the canonical lattice basis and centering.
      */
-    private Matrix canonicalBasisTriclinic(Matrix b) {
+    private Object[] canonicalBasisTriclinic(Matrix b) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -427,7 +432,14 @@ public class SpaceGroupFinder {
      * @return a preliminary basis based on the point group structure.
      */
     Matrix getPreliminaryBasis() {
-        return this.intermediateBasis;
+        return this.preliminaryBasis;
+    }
+    
+    /**
+     * @return the uncorrected lattice basis.
+     */
+    Matrix getLatticeBasis() {
+        return this.latticeBasis;
     }
     
     /**
@@ -435,5 +447,19 @@ public class SpaceGroupFinder {
      */
     public List getGeneratorsOriginalBasis() {
         return this.gensOriginalBasis;
+    }
+    
+    /**
+     * @return group generators converted to the uncorrected lattice basis.
+     */
+    public List getGeneratorsLatticeBasis() {
+        return this.gensLatticeBasis;
+    }
+    
+   /**
+     * @return the centering code.
+     */
+    public String getCentering() {
+        return this.centering;
     }
 }
