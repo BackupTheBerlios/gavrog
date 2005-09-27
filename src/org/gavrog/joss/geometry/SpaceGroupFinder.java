@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.18 2005/09/27 02:43:43 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.19 2005/09/27 05:06:52 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -487,80 +487,145 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the orthorhombic crystal system.
      * 
-     * @param b the reduced lattice basis.
+     * @param basis the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisOrthorhombic(final Matrix b) {
-        //TODO implement this
-//        x, y, z = L
-//        d = [ len([ r for r in v if r != 0 ]) for v in L ]
-//
-//        if d[1] == 3:
-//            x, y, z = y, z, x
-//        elif d[2] == 3:
-//            x, y, z = z, x, y
-//        elif d[1] == 2 and orthogonal(y, [0,0,1]):
-//            x, y, z = y, z, x
-//        elif d[2] == 2 and orthogonal(z, [0,0,1]):
-//            x, y, z = z, x, y
-//        elif d[1] == 2 and orthogonal(y, [0,1,0]):
-//            x, y, z = y, z, x
-//        elif d[2] == 2 and orthogonal(z, [0,1,0]):
-//            x, y, z = z, x, y
-//        elif collinear(y, [1,0,0]):
-//            x, y, z = y, z, x
-//        elif collinear(z, [1,0,0]):
-//            x, y, z = z, x, y
-//
-//        n = len([ r for r in x if r != 0 ])
-//        if n == 3:
-//            a = 2 * abs(x[0])
-//            b = 2 * abs(x[1])
-//            c = 2 * abs(x[2])
-//            centering = "I"
-//        elif n == 2:
-//            p = [i for i in range(3) if x[i] == 0][0]
-//            if z[p] == 0 or abs(z[p]) > abs(y[p]) != 0:
-//                y, z = z, y
-//            m = len([r for r in z if r != 0])
-//            if p == 0:
-//                raise RuntimeException("this should not happen")
-//            elif p == 1:
-//                a = 2 * abs(x[0])
-//                b = m * abs(z[1])
-//                c = 2 * abs(x[2])
-//                centering = "B"
-//            elif p == 2:
-//                a = 2 * abs(x[0])
-//                b = 2 * abs(x[1])
-//                c = m * abs(z[2])
-//                centering = "C"
-//            if m == 2:
-//                centering = "F"
-//        elif n == 1:
-//            if not collinear(x, [1,0,0]):
-//                raise RuntimeException("this should not happen")
-//            if y[1] == 0 or abs(y[1]) > abs(z[1]) != 0:
-//                y, z = z, y
-//            m = len([r for r in y if r != 0])
-//            a = abs(x[0])
-//            if m == 2:
-//                b = 2 * abs(y[1])
-//                c = 2 * abs(y[2])
-//                centering = "A"
-//            else:
-//                if y[1] != 0:
-//                    b = abs(y[1])
-//                    c = abs(z[2])
-//                else:
-//                    b = abs(z[1])
-//                    c = abs(y[2])
-//                centering = "P"
-//
-//        x = [a, 0, 0]
-//        y = [0, b, 0]
-//        z = [0, 0, c]
-        return null;
+    private Object[] canonicalBasisOrthorhombic(final Matrix basis) {
+        Vector v[] = Vector.rowVectors(basis);
+        final int d[] = new int[3];
+        for (int i = 0; i < 3; ++i) {
+            d[i] = 0;
+            for (int j = 0; j < 3; ++j) {
+                if (!v[i].get(j).isZero()) {
+                    ++d[i];
+                }
+            }
+        }
+        
+        final Vector x = new Vector(1, 0, 0);
+        final Vector y = new Vector(1, 0, 0);
+        final Vector z = new Vector(1, 0, 0);
+        
+        final int n;
+        if (d[1] == 3) {
+            v = new Vector[] { v[1], v[2], v[0] };
+            n = d[1];
+        } else if (d[2] == 3) {
+            v = new Vector[] { v[2], v[0], v[1] };
+            n = d[2];
+        } else if (d[1] == 2 && v[1].isOrthogonalTo(z)) {
+            v = new Vector[] { v[1], v[2], v[0] };
+            n = d[1];
+        } else if (d[2] == 2 && v[2].isOrthogonalTo(z)) {
+            v = new Vector[] { v[2], v[0], v[1] };
+            n = d[2];
+        } else if (d[1] == 2 && v[1].isOrthogonalTo(y)) {
+            v = new Vector[] { v[1], v[2], v[0] };
+            n = d[1];
+        } else if (d[2] == 2 && v[2].isOrthogonalTo(y)) {
+            v = new Vector[] { v[2], v[0], v[1] };
+            n = d[2];
+        } else if (v[1].isCollinearTo(x)) {
+            v = new Vector[] { v[1], v[2], v[0] };
+            n = d[1];
+        } else if (v[2].isCollinearTo(x)) {
+            v = new Vector[] { v[2], v[0], v[1] };
+            n = d[2];
+        } else {
+            n = d[0];
+        }
+        
+        final IArithmetic a;
+        final IArithmetic b;
+        final IArithmetic c;
+        final String centering;
+        
+        switch (n) {
+        case 3:
+            final Vector u = (Vector) v[0].times(2);
+            a = u.get(0);
+            b = u.get(1);
+            c = u.get(2);
+            centering = "I";
+            break;
+        case 2:
+            int p;
+            for (p = 0; p < 3; ++p) {
+                if (v[0].get(p).isZero()) {
+                    break;
+                }
+            }
+            final IArithmetic v1p = v[1].get(p);
+            final IArithmetic v2p = v[2].get(p);
+            final int m;
+            if (v2p.isZero() || (!v1p.isZero() && v2p.abs().isGreaterThan(v1p.abs()))) {
+                final Vector t = v[1];
+                v[1] = v[2];
+                v[2] = t;
+                m = d[1];
+            } else {
+                m = d[2];
+            }
+            
+            switch (p) {
+            case 1:
+                a = v[0].get(0).times(new Whole(2));
+                b = v[2].get(1).times(new Whole(m));
+                c = v[0].get(2).times(new Whole(2));
+                centering = m == 2 ? "F" : "B";
+                break;
+            case 2:
+                a = v[0].get(0).times(new Whole(2));
+                b = v[0].get(1).times(new Whole(2));
+                c = v[2].get(2).times(new Whole(m));
+                centering = m == 2 ? "F" : "C";
+                break;
+            default:
+                throw new RuntimeException("this should not happen");
+            }
+            break;
+        case 1:
+            if (!v[0].isCollinearTo(x)) {
+                throw new RuntimeException("this should not happen");
+            }
+            final IArithmetic v11 = v[1].get(1);
+            final IArithmetic v21 = v[2].get(1);
+            if (v11.isZero() || (!v21.isZero() && v11.abs().isGreaterThan(v21.abs()))) {
+                final Vector t = v[2];
+                v[2] = v[1];
+                v[1] = t;
+                m = d[2];
+            } else {
+                m = d[1];
+            }
+            a = v[0].get(0);
+            if (m == 2) {
+                final Vector s = (Vector) v[1].times(2);
+                b = s.get(1);
+                c = s.get(2);
+                centering = "A";
+            } else {
+                if (!v[1].get(1).isZero()) {
+                    b = v[1].get(1);
+                    c = v[2].get(2);
+                } else {
+                    b = v[2].get(1);
+                    c = v[1].get(2);
+                }
+                centering = "P";
+            }
+            break;
+        default:
+            throw new RuntimeException("this should not happen");
+        }
+
+        final Rational o = Whole.ZERO;
+        final Matrix A = new Matrix(new IArithmetic [][] {
+                { a.abs(), o, o },
+                { o, b.abs(), o },
+                { o, o, c.abs() },
+        });
+        return new Object[] { A, centering };
     }
 
     /**
