@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Whole;
 
 
 /**
@@ -33,7 +36,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.17 2005/09/27 01:02:48 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.18 2005/09/27 02:43:43 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -243,12 +246,12 @@ public class SpaceGroupFinder {
         } else {
             // --- no two-, three-, four- or six-fold axes
             crystalSystem = TRICLINIC_SYSTEM;
-            z = new Vector(new int[] { 1, 0, 0 });
+            z = new Vector(1, 0, 0);
             if (inversions.size() == 0) {
                 generators.add(new Operator("x+1,y,z"));
             }
         }
-        
+
         // --- add a first basis vector, if missing
         if (x == null) {
             for (final Iterator iter = twoFold.iterator(); iter.hasNext();) {
@@ -260,9 +263,9 @@ public class SpaceGroupFinder {
                 }
             }
             if (x == null) {
-                x = new Vector(new int[] { 0, 0, 1 });
+                x = new Vector(0, 0, 1);
                 if (x.isCollinearTo(z)) {
-                    x = new Vector(new int[] { 1, 0, 0 });
+                    x = new Vector(1, 0, 0);
                 }
                 if (mirrors.size() > 0) {
                     final Operator M = (Operator) mirrors.iterator().next();
@@ -344,26 +347,38 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisCubic(Matrix b) {
-        //TODO implement this
-//              x = L[0]
-//              t = [r for r in x if r != 0]
-//              n = len(t)
-//              r = abs(t[0])
-//              if n == 1:
-//                  a = r
-//                  centering = "P"
-//              elif n == 2:
-//                  a = 2 * r
-//                  centering = "F"
-//              elif n == 3:
-//                  a = 2 * r
-//                  centering = "I"
-//
-//              x = [a, 0, 0]
-//              y = [0, a, 0]
-//              z = [0, 0, a]
-        return null;
+    private Object[] canonicalBasisCubic(final Matrix b) {
+        final Vector v = new Vector(b.getRow(0));
+        int n = 0;
+        int k = 3;
+        for (int i = 2; i >= 0; --i) {
+            if (!v.get(i).isZero()) {
+                ++n;
+                k = i;
+            }
+        }
+        final Rational r = (Rational) v.get(k).abs();
+        final String centering;
+        final Rational a;
+        if (n == 1) {
+            a = r;
+            centering = "P";
+        } else if (n == 2) {
+            a = (Rational) r.times(2);
+            centering = "F";
+        } else if (n == 3) {
+            a = (Rational) r.times(2);
+            centering = "I";
+        } else {
+            throw new RuntimeException("this should not happen");
+        }
+        final Rational o = Whole.ZERO;
+        final Matrix A = new Matrix(new IArithmetic [][] {
+                { a, o, o },
+                { o, a, o },
+                { o, o, a },
+        });
+        return new Object[] { A, centering };
     }
 
     /**
@@ -373,16 +388,21 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisHexagonal(Matrix b) {
-        //TODO implement this
-//        x, y, z = L
-//        if collinear(x, [0,0,1]):
-//            x, z = z, x
-//        elif collinear(y, [0,0,1]):
-//            y, z = z, y
-//
-//        y = linear.mul_vM(x, [[0,1,0],[-1,-1,0],[0,0,1]])
-        return null;
+    private Object[] canonicalBasisHexagonal(final Matrix b) {
+        final Vector v[] = Vector.rowVectors(b);
+        final Vector z = new Vector(0, 0, 1);
+        if (z.isCollinearTo(v[0])) {
+            final Vector t = v[0];
+            v[0] = v[2];
+            v[2] = t;
+        } else if (z.isCollinearTo(v[1])) {
+            final Vector t = v[1];
+            v[1] = v[2];
+            v[2] = t;
+        }
+        v[1] = (Vector) v[1].times(new Operator("-y, x-y, z"));
+
+        return new Object[] { Vector.toMatrix(v), "P" };
     }
 
     /**
@@ -392,24 +412,35 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisTrigonal(Matrix b) {
-        //TODO implement this
-//        x, y, z = L
-//        if collinear(x, [0,0,1]):
-//            z, x, y = x, y, z
-//        elif collinear(y, [0,0,1]):
-//            x, z, y = x, y, z
-//
-//        r = [ v for v in (x, y, z) if v[2] != 0 ][0]
-//        if not collinear(r, [0,0,1]):
-//            z = [0,0,3*r[2]]
-//            x = linear.mul_vM(r, [[2,1,0], [-1,1,0], [0,0,0]])
-//            centering = "R"
-//        else:
-//            centering = "P"
-//
-//        y = linear.mul_vM(x, [[0,1,0],[-1,-1,0],[0,0,1]])
-        return null;
+    private Object[] canonicalBasisTrigonal(final Matrix b) {
+        final Vector v[] = Vector.rowVectors(b);
+        final Vector z = new Vector(0, 0, 1);
+        if (z.isCollinearTo(v[0])) {
+            final Vector t = v[0];
+            v[0] = v[1];
+            v[1] = v[2];
+            v[2] = t;
+        } else if (z.isCollinearTo(v[1])) {
+            final Vector t = v[1];
+            v[1] = v[2];
+            v[2] = t;
+        }
+        
+        String centering = "P";
+        for (int i = 0; i < 3; ++i) {
+            if (!v[i].get(2).isZero()) {
+                final Vector r = v[i];
+                if (!z.isCollinearTo(r)) {
+                    v[2] = (Vector) r.times(new Operator("0, 0, 3z"));
+                    centering = "R";
+                    v[0] = (Vector) r.times(new Operator("2x-y, x+y, 0"));
+                }
+                break;
+            }
+        }
+        v[1] = (Vector) v[0].times(new Operator("-y, x-y, z"));
+        
+        return new Object[] { Vector.toMatrix(v), centering };
     }
 
     /**
@@ -419,31 +450,37 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisTetragonal(Matrix b) {
-        //TODO implement this
-//            centering = "P"
-//            x = L[0]
-//            if collinear(x, [0,0,1]):
-//                z = x
-//                x = L[1]
-//                if not orthogonal(x, [0,0,1]):
-//                    centering = "I"
-//                    x = linear.mul_vM(x, [[1,1,0], [-1,1,0], [0,0,0]])
-//            elif orthogonal(x, [0,0,1]):
-//                z = L[1]
-//                if orthogonal(z, [0,0,1]):
-//                    z = L[2]
-//                if not collinear(z, [0,0,1]):
-//                    z = [0,0, 2*z[2]]
-//                    centering = "I"
-//            else:
-//                centering = "I"
-//                z = [0,0, 2*x[2]]
-//                x = linear.mul_vM(x, [[1,1,0], [-1,1,0], [0,0,0]])
-//
-//            z = [0, 0, abs(z[2])]
-//            y = linear.mul_vM(x, [[0,1,0], [-1,0,0], [0,0,1]])
-        return null;
+    private Object[] canonicalBasisTetragonal(final Matrix b) {
+        String centering = "P";
+        final Vector v[] = Vector.rowVectors(b);
+        final Vector z = new Vector(0, 0, 1);
+        if (z.isCollinearTo(v[0])) {
+            v[2] = v[0];
+            v[0] = v[1];
+            if (!z.isOrthogonalTo(v[0])) {
+                centering = "I";
+                v[0] = (Vector) v[0].times(new Operator("x-y, x+y, 0"));
+            }
+        } else if (z.isOrthogonalTo(v[0])) {
+            if (!z.isOrthogonalTo(v[1])) {
+                v[2] = v[1];
+            }
+            if (!z.isCollinearTo(v[2])) {
+                v[2] = (Vector) v[2].times(new Operator("0, 0, 2z"));
+                centering = "I";
+            }
+        } else {
+            centering = "I";
+            v[2] = (Vector) v[0].times(new Operator("0, 0, 2z"));
+            v[0] = (Vector) v[0].times(new Operator("x-y, x+y, 0"));
+        }
+        
+        if (v[2].get(2).isNegative()) {
+            v[2] = (Vector) v[2].negative();
+        }
+        v[1] = (Vector) v[0].times(new Operator("-y, x, z"));
+        
+        return new Object[] { Vector.toMatrix(v), centering };
     }
 
     /**
@@ -453,7 +490,7 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisOrthorhombic(Matrix b) {
+    private Object[] canonicalBasisOrthorhombic(final Matrix b) {
         //TODO implement this
 //        x, y, z = L
 //        d = [ len([ r for r in v if r != 0 ]) for v in L ]
@@ -533,7 +570,7 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisMonoclinic(Matrix b) {
+    private Object[] canonicalBasisMonoclinic(final Matrix b) {
         //TODO implement this
 //            centering = "P"
 //            x, y, z = L
@@ -587,10 +624,8 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisTriclinic(Matrix b) {
-        //TODO implement this
-//        x, y, z = L
-        return null;
+    private Object[] canonicalBasisTriclinic(final Matrix b) {
+        return new Object[] { b, "P" };
     }
 
     /**
