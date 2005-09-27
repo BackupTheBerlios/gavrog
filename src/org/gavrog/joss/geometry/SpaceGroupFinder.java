@@ -33,7 +33,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.16 2005/09/27 00:08:39 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.17 2005/09/27 01:02:48 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -341,11 +341,28 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the cubic crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisCubic(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//              x = L[0]
+//              t = [r for r in x if r != 0]
+//              n = len(t)
+//              r = abs(t[0])
+//              if n == 1:
+//                  a = r
+//                  centering = "P"
+//              elif n == 2:
+//                  a = 2 * r
+//                  centering = "F"
+//              elif n == 3:
+//                  a = 2 * r
+//                  centering = "I"
+//
+//              x = [a, 0, 0]
+//              y = [0, a, 0]
+//              z = [0, 0, a]
         return null;
     }
 
@@ -353,11 +370,18 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the hexagonal crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisHexagonal(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//        x, y, z = L
+//        if collinear(x, [0,0,1]):
+//            x, z = z, x
+//        elif collinear(y, [0,0,1]):
+//            y, z = z, y
+//
+//        y = linear.mul_vM(x, [[0,1,0],[-1,-1,0],[0,0,1]])
         return null;
     }
 
@@ -365,11 +389,26 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the trigonal crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisTrigonal(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//        x, y, z = L
+//        if collinear(x, [0,0,1]):
+//            z, x, y = x, y, z
+//        elif collinear(y, [0,0,1]):
+//            x, z, y = x, y, z
+//
+//        r = [ v for v in (x, y, z) if v[2] != 0 ][0]
+//        if not collinear(r, [0,0,1]):
+//            z = [0,0,3*r[2]]
+//            x = linear.mul_vM(r, [[2,1,0], [-1,1,0], [0,0,0]])
+//            centering = "R"
+//        else:
+//            centering = "P"
+//
+//        y = linear.mul_vM(x, [[0,1,0],[-1,-1,0],[0,0,1]])
         return null;
     }
 
@@ -377,11 +416,33 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the tetragonal crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisTetragonal(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//            centering = "P"
+//            x = L[0]
+//            if collinear(x, [0,0,1]):
+//                z = x
+//                x = L[1]
+//                if not orthogonal(x, [0,0,1]):
+//                    centering = "I"
+//                    x = linear.mul_vM(x, [[1,1,0], [-1,1,0], [0,0,0]])
+//            elif orthogonal(x, [0,0,1]):
+//                z = L[1]
+//                if orthogonal(z, [0,0,1]):
+//                    z = L[2]
+//                if not collinear(z, [0,0,1]):
+//                    z = [0,0, 2*z[2]]
+//                    centering = "I"
+//            else:
+//                centering = "I"
+//                z = [0,0, 2*x[2]]
+//                x = linear.mul_vM(x, [[1,1,0], [-1,1,0], [0,0,0]])
+//
+//            z = [0, 0, abs(z[2])]
+//            y = linear.mul_vM(x, [[0,1,0], [-1,0,0], [0,0,1]])
         return null;
     }
 
@@ -389,11 +450,79 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the orthorhombic crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisOrthorhombic(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//        x, y, z = L
+//        d = [ len([ r for r in v if r != 0 ]) for v in L ]
+//
+//        if d[1] == 3:
+//            x, y, z = y, z, x
+//        elif d[2] == 3:
+//            x, y, z = z, x, y
+//        elif d[1] == 2 and orthogonal(y, [0,0,1]):
+//            x, y, z = y, z, x
+//        elif d[2] == 2 and orthogonal(z, [0,0,1]):
+//            x, y, z = z, x, y
+//        elif d[1] == 2 and orthogonal(y, [0,1,0]):
+//            x, y, z = y, z, x
+//        elif d[2] == 2 and orthogonal(z, [0,1,0]):
+//            x, y, z = z, x, y
+//        elif collinear(y, [1,0,0]):
+//            x, y, z = y, z, x
+//        elif collinear(z, [1,0,0]):
+//            x, y, z = z, x, y
+//
+//        n = len([ r for r in x if r != 0 ])
+//        if n == 3:
+//            a = 2 * abs(x[0])
+//            b = 2 * abs(x[1])
+//            c = 2 * abs(x[2])
+//            centering = "I"
+//        elif n == 2:
+//            p = [i for i in range(3) if x[i] == 0][0]
+//            if z[p] == 0 or abs(z[p]) > abs(y[p]) != 0:
+//                y, z = z, y
+//            m = len([r for r in z if r != 0])
+//            if p == 0:
+//                raise RuntimeException("this should not happen")
+//            elif p == 1:
+//                a = 2 * abs(x[0])
+//                b = m * abs(z[1])
+//                c = 2 * abs(x[2])
+//                centering = "B"
+//            elif p == 2:
+//                a = 2 * abs(x[0])
+//                b = 2 * abs(x[1])
+//                c = m * abs(z[2])
+//                centering = "C"
+//            if m == 2:
+//                centering = "F"
+//        elif n == 1:
+//            if not collinear(x, [1,0,0]):
+//                raise RuntimeException("this should not happen")
+//            if y[1] == 0 or abs(y[1]) > abs(z[1]) != 0:
+//                y, z = z, y
+//            m = len([r for r in y if r != 0])
+//            a = abs(x[0])
+//            if m == 2:
+//                b = 2 * abs(y[1])
+//                c = 2 * abs(y[2])
+//                centering = "A"
+//            else:
+//                if y[1] != 0:
+//                    b = abs(y[1])
+//                    c = abs(z[2])
+//                else:
+//                    b = abs(z[1])
+//                    c = abs(y[2])
+//                centering = "P"
+//
+//        x = [a, 0, 0]
+//        y = [0, b, 0]
+//        z = [0, 0, c]
         return null;
     }
 
@@ -401,11 +530,53 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the monoclinic crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisMonoclinic(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//            centering = "P"
+//            x, y, z = L
+//            if collinear(x, [0,0,1]):
+//                z, x, y = x, y, z
+//            elif collinear(y, [0,0,1]):
+//                x, z, y = x, y, z
+//
+//            h = None
+//            if not orthogonal(x, [0,0,1]):
+//                h = 2 * x[2]
+//                if not orthogonal(y, [0,0,1]):
+//                    t = x[:]
+//                    x = [t[0] + y[0], t[1] + y[1], 0]
+//                    y = [t[0] - y[0], t[1] - y[1], 0]
+//                    centering = "I" # was "C", but "I" seems to be correct
+//                else:
+//                    x = [2*x[0], 2*x[1], 0]
+//                    centering = "B"
+//            elif not orthogonal(y, [0,0,1]):
+//                h = 2 * y[2]
+//                y = [2*y[0], 2*y[1], 0]
+//                centering = "A"
+//
+//            if not collinear(z, [0,0,1]):
+//                if h is None:
+//                    h = 2*z[2]
+//                    if linear.dot(x, z) != 0:
+//                        if linear.dot(y, z) != 0:
+//                            centering = "I"
+//                        else:
+//                            centering = "B"
+//                    else:
+//                        centering = "A"
+//                z = [0,0,h]
+//
+//            if det3([x, y, z]) < 0:
+//                z = linear.neg_v(z)
+//
+//            if centering == "B":
+//                return y, linear.neg_v(x), z, "A"
+//            elif centering == "I":
+//                return y, linear.neg_v(linear.add_v(x, y)), z, "A"
         return null;
     }
 
@@ -413,11 +584,12 @@ public class SpaceGroupFinder {
      * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
      * respect to the triclinic crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalBasisTriclinic(Matrix b) {
-        // TODO Auto-generated method stub
+        //TODO implement this
+//        x, y, z = L
         return null;
     }
 
