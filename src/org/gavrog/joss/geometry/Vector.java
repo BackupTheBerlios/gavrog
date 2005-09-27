@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.17 2005/09/26 21:35:20 odf Exp $
+ * @version $Id: Vector.java,v 1.18 2005/09/27 02:43:24 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -91,6 +91,27 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public Vector(final double[] coordinates) {
         this(new Matrix(new double[][] {coordinates}));
+    }
+    
+    /**
+     * Creates a new 2-dimensional vector.
+     * 
+     * @param a the first coordinate.
+     * @param b the second coordinate.
+     */
+    public Vector(final int a, final int b) {
+        this(new int[] { a, b });
+    }
+    
+    /**
+     * Creates a new 3-dimensional vector.
+     * 
+     * @param a the first coordinate.
+     * @param b the second coordinate.
+     * @param c the third coordinate.
+     */
+    public Vector(final int a, final int b, final int c) {
+        this(new int[] { a, b, c });
     }
     
     /**
@@ -237,6 +258,18 @@ public class Vector extends ArithmeticBase implements IArithmetic {
             }
         }
         return false;
+    }
+    
+    /**
+     * Tests if this vector is orthogonal to another. Both vectors must have the
+     * same dimension. The zero vector is considered orthogonal to any other
+     * vector.
+     * 
+     * @param v the other vector.
+     * @return true if the two vectors are orthogonal.
+     */
+    public boolean isOrthogonalTo(final Vector v) {
+        return dot(this, v).isZero();
     }
     
     /*
