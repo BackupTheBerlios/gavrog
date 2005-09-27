@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.19 2005/09/27 05:06:52 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.20 2005/09/27 20:20:09 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -83,12 +83,8 @@ public class SpaceGroupFinder {
                 primitiveCell[i] = (Vector) primitiveCell[i].times(T1);
             }
             
-            // --- compute a lattice basis of smallest Dirichlet vectors
-            final Vector reduced[] = Vector.reducedBasis(primitiveCell, Matrix.one(3));
-            final Matrix reducedBasis = Vector.toMatrix(reduced);
-            
             // --- compute a canonical basis based on the group's crystal system
-            res = canonicalBasis(reducedBasis);
+            res = canonicalLatticeBasis(primitiveCell);
             this.latticeBasis = (Matrix) res[0];
             this.centering = (String) res[1];
             
@@ -313,41 +309,46 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the group's crystal system.
+     * Takes a lattice basis and produces a canonical lattice basis and
+     * centering with respect to the group's crystal system.
      * 
-     * @param B the reduced lattice basis.
+     * @param lattice the lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasis(final Matrix B) {
+    private Object[] canonicalLatticeBasis(final Vector lattice[]) {
+        // --- compute a lattice basis of smallest Dirichlet vectors
+        final Vector reduced[] = Vector.reducedLatticeBasis(lattice, Matrix.one(3));
+        final Matrix B = Vector.toMatrix(reduced);
+        
+        // --- call the appropriate method for the group's crystal system
         switch (this.crystalSystem) {
         case CUBIC_SYSTEM:
-            return canonicalBasisCubic(B);
+            return canonicalLatticeBasisCubic(B);
         case HEXAGONAL_SYSTEM:
-            return canonicalBasisHexagonal(B);
+            return canonicalLatticeBasisHexagonal(B);
         case TRIGONAL_SYSTEM:
-            return canonicalBasisTrigonal(B);
+            return canonicalLatticeBasisTrigonal(B);
         case TETRAGONAL_SYSTEM:
-            return canonicalBasisTetragonal(B);
+            return canonicalLatticeBasisTetragonal(B);
         case ORTHORHOMBIC_SYSTEM:
-            return canonicalBasisOrthorhombic(B);
+            return canonicalLatticeBasisOrthorhombic(B);
         case MONOCLINIC_SYSTEM:
-            return canonicalBasisMonoclinic(B);
+            return canonicalLatticeBasisMonoclinic(B);
         case TRICLINIC_SYSTEM:
-            return canonicalBasisTriclinic(B);
+            return canonicalLatticeBasisTriclinic(B);
         default:
             throw new RuntimeException("unknown crystal system");
         }
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the cubic crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the cubic crystal system.
      * 
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisCubic(final Matrix b) {
+    private Object[] canonicalLatticeBasisCubic(final Matrix b) {
         final Vector v = new Vector(b.getRow(0));
         int n = 0;
         int k = 3;
@@ -373,22 +374,19 @@ public class SpaceGroupFinder {
             throw new RuntimeException("this should not happen");
         }
         final Rational o = Whole.ZERO;
-        final Matrix A = new Matrix(new IArithmetic [][] {
-                { a, o, o },
-                { o, a, o },
-                { o, o, a },
-        });
+        final Matrix A = new Matrix(new IArithmetic[][] { { a, o, o }, { o, a, o },
+                { o, o, a }, });
         return new Object[] { A, centering };
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the hexagonal crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the hexagonal crystal system.
      * 
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisHexagonal(final Matrix b) {
+    private Object[] canonicalLatticeBasisHexagonal(final Matrix b) {
         final Vector v[] = Vector.rowVectors(b);
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(v[0])) {
@@ -406,13 +404,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the trigonal crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the trigonal crystal system.
      * 
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisTrigonal(final Matrix b) {
+    private Object[] canonicalLatticeBasisTrigonal(final Matrix b) {
         final Vector v[] = Vector.rowVectors(b);
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(v[0])) {
@@ -425,7 +423,7 @@ public class SpaceGroupFinder {
             v[1] = v[2];
             v[2] = t;
         }
-        
+
         String centering = "P";
         for (int i = 0; i < 3; ++i) {
             if (!v[i].get(2).isZero()) {
@@ -439,18 +437,18 @@ public class SpaceGroupFinder {
             }
         }
         v[1] = (Vector) v[0].times(new Operator("-y, x-y, z"));
-        
+
         return new Object[] { Vector.toMatrix(v), centering };
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the tetragonal crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the tetragonal crystal system.
      * 
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisTetragonal(final Matrix b) {
+    private Object[] canonicalLatticeBasisTetragonal(final Matrix b) {
         String centering = "P";
         final Vector v[] = Vector.rowVectors(b);
         final Vector z = new Vector(0, 0, 1);
@@ -474,23 +472,23 @@ public class SpaceGroupFinder {
             v[2] = (Vector) v[0].times(new Operator("0, 0, 2z"));
             v[0] = (Vector) v[0].times(new Operator("x-y, x+y, 0"));
         }
-        
+
         if (v[2].get(2).isNegative()) {
             v[2] = (Vector) v[2].negative();
         }
         v[1] = (Vector) v[0].times(new Operator("-y, x, z"));
-        
+
         return new Object[] { Vector.toMatrix(v), centering };
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the orthorhombic crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the orthorhombic crystal system.
      * 
      * @param basis the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisOrthorhombic(final Matrix basis) {
+    private Object[] canonicalLatticeBasisOrthorhombic(final Matrix basis) {
         Vector v[] = Vector.rowVectors(basis);
         final int d[] = new int[3];
         for (int i = 0; i < 3; ++i) {
@@ -501,11 +499,11 @@ public class SpaceGroupFinder {
                 }
             }
         }
-        
+
         final Vector x = new Vector(1, 0, 0);
         final Vector y = new Vector(1, 0, 0);
         final Vector z = new Vector(1, 0, 0);
-        
+
         final int n;
         if (d[1] == 3) {
             v = new Vector[] { v[1], v[2], v[0] };
@@ -534,12 +532,12 @@ public class SpaceGroupFinder {
         } else {
             n = d[0];
         }
-        
+
         final IArithmetic a;
         final IArithmetic b;
         final IArithmetic c;
         final String centering;
-        
+
         switch (n) {
         case 3:
             final Vector u = (Vector) v[0].times(2);
@@ -566,7 +564,7 @@ public class SpaceGroupFinder {
             } else {
                 m = d[2];
             }
-            
+
             switch (p) {
             case 1:
                 a = v[0].get(0).times(new Whole(2));
@@ -620,76 +618,94 @@ public class SpaceGroupFinder {
         }
 
         final Rational o = Whole.ZERO;
-        final Matrix A = new Matrix(new IArithmetic [][] {
-                { a.abs(), o, o },
-                { o, b.abs(), o },
-                { o, o, c.abs() },
-        });
+        final Matrix A = new Matrix(new IArithmetic[][] { { a.abs(), o, o },
+                { o, b.abs(), o }, { o, o, c.abs() }, });
         return new Object[] { A, centering };
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the monoclinic crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the monoclinic crystal system.
      * 
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisMonoclinic(final Matrix b) {
-        //TODO implement this
-//            centering = "P"
-//            x, y, z = L
-//            if collinear(x, [0,0,1]):
-//                z, x, y = x, y, z
-//            elif collinear(y, [0,0,1]):
-//                x, z, y = x, y, z
-//
-//            h = None
-//            if not orthogonal(x, [0,0,1]):
-//                h = 2 * x[2]
-//                if not orthogonal(y, [0,0,1]):
-//                    t = x[:]
-//                    x = [t[0] + y[0], t[1] + y[1], 0]
-//                    y = [t[0] - y[0], t[1] - y[1], 0]
-//                    centering = "I" # was "C", but "I" seems to be correct
-//                else:
-//                    x = [2*x[0], 2*x[1], 0]
-//                    centering = "B"
-//            elif not orthogonal(y, [0,0,1]):
-//                h = 2 * y[2]
-//                y = [2*y[0], 2*y[1], 0]
-//                centering = "A"
-//
-//            if not collinear(z, [0,0,1]):
-//                if h is None:
-//                    h = 2*z[2]
-//                    if linear.dot(x, z) != 0:
-//                        if linear.dot(y, z) != 0:
-//                            centering = "I"
-//                        else:
-//                            centering = "B"
-//                    else:
-//                        centering = "A"
-//                z = [0,0,h]
-//
-//            if det3([x, y, z]) < 0:
-//                z = linear.neg_v(z)
-//
-//            if centering == "B":
-//                return y, linear.neg_v(x), z, "A"
-//            elif centering == "I":
-//                return y, linear.neg_v(linear.add_v(x, y)), z, "A"
-        return null;
+    private Object[] canonicalLatticeBasisMonoclinic(final Matrix b) {
+        String centering = "P";
+        final Vector v[] = Vector.rowVectors(b);
+        final Vector z = new Vector(0, 0, 1);
+
+        if (v[0].isCollinearTo(z)) {
+            final Vector t = v[0];
+            v[0] = v[1];
+            v[1] = v[2];
+            v[2] = t;
+        } else if (v[1].isCollinearTo(z)) {
+            final Vector t = v[1];
+            v[1] = v[2];
+            v[2] = t;
+        }
+
+        final IArithmetic two = new Whole(2);
+        IArithmetic h = null;
+
+        if (!v[0].isOrthogonalTo(z)) {
+            h = v[0].get(2).times(two);
+            if (!v[1].isOrthogonalTo(z)) {
+                final Vector t = new Vector(v[0]);
+                v[0] = (Vector) t.plus(v[1]).times(new Operator("x, y, 0"));
+                v[1] = (Vector) t.minus(v[1]).times(new Operator("x, y, 0"));
+                centering = "I";
+            } else {
+                v[0] = (Vector) v[0].times(new Operator("2x, 2y, 0"));
+                centering = "B";
+            }
+        } else if (!v[1].isOrthogonalTo(z)) {
+            h = v[1].get(2).times(two);
+            v[1] = (Vector) v[1].times(new Operator("2x, 2y, 0"));
+            centering = "A";
+        }
+
+        if (!v[2].isCollinearTo(z)) {
+            if (h == null) {
+                h = v[2].get(2).times(two);
+                if (!v[0].isOrthogonalTo(v[2])) {
+                    if (!v[1].isOrthogonalTo(v[2])) {
+                        centering = "I";
+                    } else {
+                        centering = "B";
+                    }
+                } else {
+                    centering = "A";
+                }
+            }
+            final IArithmetic o = Whole.ZERO;
+            v[2] = new Vector(new IArithmetic[] { o, o, h });
+        }
+
+        if (centering == "B") {
+            centering = "A";
+            final Vector t = v[0];
+            v[0] = v[1];
+            v[1] = (Vector) t.negative();
+        } else if (centering == "I") {
+            centering = "A";
+            final Vector t = v[0];
+            v[0] = v[1];
+            v[1] = (Vector) t.plus(v[1]).negative();
+        }
+
+        return new Object[] { Vector.toMatrix(v), centering };
     }
 
     /**
-     * Takes a reduced lattice basis and produces a canonical lattice basis and centering with
-     * respect to the triclinic crystal system.
+     * Takes a reduced lattice basis and produces a canonical lattice basis and
+     * centering with respect to the triclinic crystal system.
      * 
      * @param b the reduced lattice basis.
      * @return the canonical lattice basis and centering.
      */
-    private Object[] canonicalBasisTriclinic(final Matrix b) {
+    private Object[] canonicalLatticeBasisTriclinic(final Matrix b) {
         return new Object[] { b, "P" };
     }
 
@@ -699,36 +715,36 @@ public class SpaceGroupFinder {
     public int getCrystalSystem() {
         return this.crystalSystem;
     }
-    
+
     /**
      * @return a preliminary basis based on the point group structure.
      */
     Matrix getPreliminaryBasis() {
         return this.preliminaryBasis;
     }
-    
+
     /**
      * @return the uncorrected lattice basis.
      */
     Matrix getLatticeBasis() {
         return this.latticeBasis;
     }
-    
+
     /**
      * @return a set of group generators.
      */
     public List getGeneratorsOriginalBasis() {
         return this.gensOriginalBasis;
     }
-    
+
     /**
      * @return group generators converted to the uncorrected lattice basis.
      */
     public List getGeneratorsLatticeBasis() {
         return this.gensLatticeBasis;
     }
-    
-   /**
+
+    /**
      * @return the centering code.
      */
     public String getCentering() {

@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.18 2005/09/27 02:43:24 odf Exp $
+ * @version $Id: Vector.java,v 1.19 2005/09/27 20:20:09 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -554,13 +554,13 @@ public class Vector extends ArithmeticBase implements IArithmetic {
     }
     
     /**
-     * Returns a basis of shortest Dirichlet vectors.
+     * Returns a lattice basis of shortest Dirichlet vectors.
      * 
      * @param v original basis.
      * @param M the quadratic form determining the metric.
      * @return the reduced basis.
      */
-    public static Vector[] reducedBasis(final Vector[] v, final Matrix M) {
+    public static Vector[] reducedLatticeBasis(final Vector[] v, final Matrix M) {
         final Vector tmp[] = dirichletVectors(v, M);
         Arrays.sort(tmp, new Comparator() {
             public int compare(final Object o1, final Object o2) {

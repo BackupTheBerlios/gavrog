@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.10 2005/09/26 21:35:20 odf Exp $
+ * @version $Id: TestVector.java,v 1.11 2005/09/27 20:20:09 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -234,7 +234,7 @@ public class TestVector extends TestCase {
         final Matrix G = new Matrix(new int[][] { { 4, 1, 3 }, { 1, 5, 2 }, { 3, 2, 6 } });
         final Vector b[] = { new Vector(new int[] { 1, 2, 3 }),
                 new Vector(new int[] { 4, 5, 6 }), new Vector(new int[] { 7, 8, 8 }) };
-        final Vector v[] = Vector.reducedBasis(b, G);
+        final Vector v[] = Vector.reducedLatticeBasis(b, G);
         assertTrue(Vector.isBasis(v));
         final Matrix A = (Matrix) Vector.toMatrix(v).dividedBy(Vector.toMatrix(b));
         assertTrue(A.determinant().isOne());
