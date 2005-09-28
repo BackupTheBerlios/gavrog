@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.21 2005/09/28 00:58:59 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.22 2005/09/28 22:17:57 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -508,36 +508,43 @@ public class SpaceGroupFinder {
         final Vector x = new Vector(1, 0, 0);
         final Vector y = new Vector(0, 1, 0);
         final Vector z = new Vector(0, 0, 1);
+        final Vector copy[] = new Vector[] { basis[0], basis[1], basis[2] };
+        final Vector left[] = new Vector[] { basis[1], basis[2], basis[0] };
+        final Vector right[] = new Vector[] { basis[2], basis[0], basis[1] };
         final Vector v[];
 
-        final int n;
-        if (d[1] == 3) {
-            v = new Vector[] { basis[1], basis[2], basis[0] };
-            n = d[1];
+        if (d[0] == 3) {
+            v = copy;
+        } else if (d[1] == 3) {
+            v = left;
         } else if (d[2] == 3) {
-            v = new Vector[] { basis[2], basis[0], basis[1] };
-            n = d[2];
+            v = right;
+        } else if (d[0] == 2 && basis[0].isOrthogonalTo(z)) {
+            v = copy;
         } else if (d[1] == 2 && basis[1].isOrthogonalTo(z)) {
-            v = new Vector[] { basis[1], basis[2], basis[0] };
-            n = d[1];
+            v = left;
         } else if (d[2] == 2 && basis[2].isOrthogonalTo(z)) {
-            v = new Vector[] { basis[2], basis[0], basis[1] };
-            n = d[2];
+            v = right;
+        } else if (d[0] == 2 && basis[0].isOrthogonalTo(y)) {
+            v = copy;
         } else if (d[1] == 2 && basis[1].isOrthogonalTo(y)) {
-            v = new Vector[] { basis[1], basis[2], basis[0] };
-            n = d[1];
+            v = left;
         } else if (d[2] == 2 && basis[2].isOrthogonalTo(y)) {
-            v = new Vector[] { basis[2], basis[0], basis[1] };
-            n = d[2];
+            v = right;
+        } else if (basis[0].isCollinearTo(x)) {
+            v = copy;
         } else if (basis[1].isCollinearTo(x)) {
-            v = new Vector[] { basis[1], basis[2], basis[0] };
-            n = d[1];
+            v = left;
         } else if (basis[2].isCollinearTo(x)) {
-            v = new Vector[] { basis[2], basis[0], basis[1] };
-            n = d[2];
+            v = right;
         } else {
-            v = new Vector[] { basis[0], basis[1], basis[2] };
-            n = d[0];
+            v = copy;
+        }
+        int n = 0;
+        for (int j = 0; j < 3; ++j) {
+            if (!v[0].get(j).isZero()) {
+                ++n;
+            }
         }
 
         final IArithmetic a;
