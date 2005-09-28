@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.22 2005/09/28 22:17:57 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.23 2005/09/28 23:51:00 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -410,7 +410,7 @@ public class SpaceGroupFinder {
         } else {
             v = new Vector[] { b[0], b[1], b[2] };
         }
-        v[1] = (Vector) v[1].times(new Operator("-y, x-y, z"));
+        v[1] = (Vector) v[0].times(new Operator("-y, x-y, z"));
 
         return new Object[] { v, "P" };
     }
