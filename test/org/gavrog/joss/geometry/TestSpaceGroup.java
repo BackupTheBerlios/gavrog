@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.8 2005/09/29 21:34:06 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.9 2005/09/29 22:10:34 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -140,6 +140,27 @@ public class TestSpaceGroup extends TestCase {
         }
     }
 
+    private Operator diagonal(final int a, final int b, final int c) {
+        return new Operator(new int[][] {
+                { a, 0, 0, 0 },
+                { 0, b, 0, 0 },
+                { 0, 0, c, 0 },
+                { 0, 0, 0, 1 } });
+    }
+    
+    public void testPrimitiveOperatorsSorted() {
+        final List ops = Fddd.primitiveOperatorsSorted();
+        assertEquals(8, ops.size());
+        assertEquals(diagonal(-1, -1, -1), ((Operator) ops.get(0)).linearPart());
+        assertEquals(diagonal(-1, -1,  1), ((Operator) ops.get(1)).linearPart());
+        assertEquals(diagonal(-1,  1, -1), ((Operator) ops.get(2)).linearPart());
+        assertEquals(diagonal(-1,  1,  1), ((Operator) ops.get(3)).linearPart());
+        assertEquals(diagonal( 1, -1, -1), ((Operator) ops.get(4)).linearPart());
+        assertEquals(diagonal( 1, -1,  1), ((Operator) ops.get(5)).linearPart());
+        assertEquals(diagonal( 1,  1, -1), ((Operator) ops.get(6)).linearPart());
+        assertEquals(diagonal( 1,  1,  1), ((Operator) ops.get(7)).linearPart());
+    }
+    
     public void testOperators() {
         final List ops = SpaceGroup.operators(3, "Ia-3d");
         assertNotNull(ops);

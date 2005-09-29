@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -72,7 +73,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.15 2005/09/29 21:34:06 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.16 2005/09/29 22:10:34 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -316,6 +317,28 @@ public class SpaceGroup {
         return result;
     }
 
+    /**
+     * Constructs a sorted list of operators which is full with respect to a primitive
+     * cell for the group, but still expressed in the coordinate system defined by the
+     * original cell. The operators are sorted lexicographically by their linear parts.
+     * 
+     * @return the sorted list of operators for a primitive setting.
+     */
+    public List primitiveOperatorsSorted() {
+        final List res = new ArrayList();
+        res.addAll(primitiveOperators());
+        
+        Collections.sort(res, new Comparator() {
+            public int compare(final Object o1, final Object o2) {
+                final Operator op1 = ((Operator) o1).linearPart();
+                final Operator op2 = ((Operator) o2).linearPart();
+                return op1.compareTo(op2);
+            }
+        });
+        
+        return res;
+    }
+    
     /**
      * Returns a map with the occuring operator types as keys and the sets of
      * all operators of the respective types as values.
