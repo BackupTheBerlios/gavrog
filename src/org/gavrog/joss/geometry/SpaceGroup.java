@@ -73,7 +73,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.16 2005/09/29 22:10:34 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.17 2005/09/29 22:56:47 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -226,6 +226,31 @@ public class SpaceGroup {
      */
     public SpaceGroup(final int dimension, final Collection generators) {
         this(dimension, generators, true, false);
+    }
+    
+    /**
+     * Constructs a new space group instance by changing the basis for a given group.
+     * 
+     * @param G the old space group.
+     * @param T the basis change operator.
+     */
+    public SpaceGroup(final SpaceGroup G, final BasisChange T) {
+        this(G.getDimension(), transformed(G.getOperators(), T));
+    }
+    
+    /**
+     * Performs a basis change on a list of geometric objects.
+     * 
+     * @param src the objects to convert to the new basis.
+     * @param T the basis change transformation.
+     * @return the list of converted objects.
+     */
+    private static List transformed(final Collection src, final BasisChange T) {
+        final List res = new ArrayList();
+        for (final Iterator iter = src.iterator(); iter.hasNext();) {
+            res.add(((Operator) iter.next()).times(T));
+        }
+        return res;
     }
     
     /**

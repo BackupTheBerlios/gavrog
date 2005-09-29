@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.9 2005/09/29 22:10:34 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.10 2005/09/29 22:56:48 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -112,6 +112,17 @@ public class TestSpaceGroup extends TestCase {
         assertEquals(8, G.getOperators().size());
     }
 
+    public void testTransformedSpaceGroup() {
+        final Matrix M = new Matrix(new int[][] {{1,0,0}, {0,-1,0}, {0,0,-1}});
+        final BasisChange T = new BasisChange(M, Point.origin(3));
+        final SpaceGroup G = new SpaceGroup(P31, T);
+        final List ops = G.primitiveOperatorsSorted();
+        assertEquals(3, ops.size());
+        assertEquals(new Operator("-x-y,x,z"), ((Operator) ops.get(0)).linearPart());
+        assertEquals(new Operator("y,-x-y,z"), ((Operator) ops.get(1)).linearPart());
+        assertEquals(new Operator("x,y,z"), ((Operator) ops.get(2)).linearPart());
+    }
+    
     public void testGetDimension() {
         final List L = new LinkedList();
         L.add(Operator.identity(2));
@@ -149,16 +160,22 @@ public class TestSpaceGroup extends TestCase {
     }
     
     public void testPrimitiveOperatorsSorted() {
-        final List ops = Fddd.primitiveOperatorsSorted();
-        assertEquals(8, ops.size());
-        assertEquals(diagonal(-1, -1, -1), ((Operator) ops.get(0)).linearPart());
-        assertEquals(diagonal(-1, -1,  1), ((Operator) ops.get(1)).linearPart());
-        assertEquals(diagonal(-1,  1, -1), ((Operator) ops.get(2)).linearPart());
-        assertEquals(diagonal(-1,  1,  1), ((Operator) ops.get(3)).linearPart());
-        assertEquals(diagonal( 1, -1, -1), ((Operator) ops.get(4)).linearPart());
-        assertEquals(diagonal( 1, -1,  1), ((Operator) ops.get(5)).linearPart());
-        assertEquals(diagonal( 1,  1, -1), ((Operator) ops.get(6)).linearPart());
-        assertEquals(diagonal( 1,  1,  1), ((Operator) ops.get(7)).linearPart());
+        final List opsFddd = Fddd.primitiveOperatorsSorted();
+        assertEquals(8, opsFddd.size());
+        assertEquals(diagonal(-1, -1, -1), ((Operator) opsFddd.get(0)).linearPart());
+        assertEquals(diagonal(-1, -1,  1), ((Operator) opsFddd.get(1)).linearPart());
+        assertEquals(diagonal(-1,  1, -1), ((Operator) opsFddd.get(2)).linearPart());
+        assertEquals(diagonal(-1,  1,  1), ((Operator) opsFddd.get(3)).linearPart());
+        assertEquals(diagonal( 1, -1, -1), ((Operator) opsFddd.get(4)).linearPart());
+        assertEquals(diagonal( 1, -1,  1), ((Operator) opsFddd.get(5)).linearPart());
+        assertEquals(diagonal( 1,  1, -1), ((Operator) opsFddd.get(6)).linearPart());
+        assertEquals(diagonal( 1,  1,  1), ((Operator) opsFddd.get(7)).linearPart());
+        
+        final List opsP31 = P31.primitiveOperatorsSorted();
+        assertEquals(3, opsP31.size());
+        assertEquals(new Operator("y-x,-x,z"), ((Operator) opsP31.get(0)).linearPart());
+        assertEquals(new Operator("-y,x-y,z"), ((Operator) opsP31.get(1)).linearPart());
+        assertEquals(new Operator("x,y,z"), ((Operator) opsP31.get(2)).linearPart());
     }
     
     public void testOperators() {
