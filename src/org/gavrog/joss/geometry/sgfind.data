@@ -1,0 +1,815 @@
+#
+#   Copyright 2005 Olaf Delgado-Friedrichs
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+# The table of 3-dimensional crystallographic space groups.
+# Groups are given in a special setting suitable for use within the
+# SpaceGroupFinder class.
+
+P-43n cubic P x-1/4,y+1/4,z-1/4
+    y,-x+1/2,-z
+    z,x+1/2,y+1/2
+P42cm tetragonal P x,y,z
+    -x,y,z+1/2
+    y,x,z
+I41cd tetragonal I x,y,z
+    -x,y,z+1/2
+    y,x+1/2,z+3/4
+P4/mcc tetragonal P x,y,z-1/4
+    x,-y,-z
+    -y,-x,-z
+    -x,-y,-z+1/2
+P64 hexagonal P x,y,z
+    x-y,x,z+2/3
+C12/c1 monoclinic A -z+1/4,x,-y
+    -x,-y,z
+    -x+1/2,-y,-z
+P-31c trigonal P x-y,x,z-1/4
+    x,x-y,-z
+    -y,-x,-z
+    -x,-y,-z+1/2
+I41/amd:2 tetragonal I x-1/4,y,z
+    x,-y,-z
+    -y,-x,-z+3/4
+    -x+1/2,-y,-z
+P4bm tetragonal P x-1/4,y+1/4,z
+    -x,y+1/2,z
+    y,x,z
+P3212 trigonal P x-y,x,z-1/6
+    x,x-y,-z
+    -y,-x,-z+1/3
+P42/ncm:2 tetragonal P y,-x,z-1/4
+    -x,y+1/2,-z
+    y,x,-z+1/2
+    -x,-y,-z+1/2
+R-3m:H trigonal R -y,x-y,z
+    x-y,-y,-z
+    -x,-x+y,-z
+    -x,-y,-z
+Pn-3m:2 cubic P x+1/4,y-1/4,z+1/4
+    -y,x,z+1/2
+    z,x+1/2,y+1/2
+    -x+1/2,-y+1/2,-z+1/2
+Immm orthorhombic I x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z
+P121 monoclinic P x,z,-y
+    -x,-y,z
+Pmmm orthorhombic P x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z
+I-43m cubic I x,y,z
+    y,-x,-z
+    z,x,y
+P3c1 trigonal P -y,x-y,z
+    -x+y,y,z+1/2
+    x,x-y,z+1/2
+P1211 monoclinic P x,z,-y
+    -x,-y,z+1/2
+Pn-3n:2 cubic P x-1/4,y-1/4,z-1/4
+    -y,x,z
+    z,x,y
+    -x+1/2,-y+1/2,-z+1/2
+I-4c2 tetragonal I y,x,-z+1/4
+    y,x,-z
+    x,-y,z+1/2
+P42/mcm tetragonal P x,y,z-1/4
+    x,-y,-z
+    -y,-x,-z+1/2
+    -x,-y,-z+1/2
+R3c:H trigonal R -y,x-y,z
+    -x+y,y,z+1/2
+    x,x-y,z+1/2
+P121/c1 monoclinic P x,z-1/4,-y
+    -x,-y,z+1/2
+    -x,-y+1/2,-z
+P-6 hexagonal P x,y,z
+    -x+y,-x,-z
+P4/mbm tetragonal P x-1/4,y-1/4,z
+    x+1/2,-y,-z
+    -y,-x,-z
+    -x+1/2,-y+1/2,-z
+P42bc tetragonal P x-1/4,y+1/4,z
+    -x,y+1/2,z
+    y,x,z+1/2
+Aba2 orthorhombic C y,z,x
+    -x,y,-z
+    x+1/2,y,-z+1/2
+    -x+1/2,y,z+1/2
+P12/c1 monoclinic P x,z-1/4,-y
+    -x,-y,z
+    -x,-y+1/2,-z
+P4/mnc tetragonal P x-1/4,y-1/4,z-1/4
+    x+1/2,-y,-z
+    -y,-x,-z
+    -x+1/2,-y+1/2,-z+1/2
+P6422 hexagonal P x-y,x,z-1/6
+    x,x-y,-z
+    x-y,-y,-z+1/3
+P6 hexagonal P x,y,z
+    x-y,x,z
+C1m1 monoclinic A z,x,y
+    x,y,-z
+P-4m2 tetragonal P y,x,-z
+    y,x,-z
+    x,-y,z
+P3112 trigonal P x-y,x,z-1/3
+    x,x-y,-z
+    -y,-x,-z+2/3
+Ibca orthorhombic I x,y-1/4,z-1/4
+    -x,-y,z
+    x,-y+1/2,-z
+    -x,y+1/2,-z
+    -x,-y+1/2,-z+1/2
+P63/mcm hexagonal P x-y,x,z
+    x,x-y,-z
+    x-y,-y,-z+1/2
+    -x,-y,-z
+Fm-3 cubic F x,y,z
+    -x,-y,z
+    z,x,y
+    -x,-y,-z
+Pma2 orthorhombic P x,y,z
+    -x,-y,z
+    -x+1/2,y,z
+    x+1/2,-y,z
+R32:H trigonal R -y,x-y,z
+    x-y,-y,-z
+    -x,-x+y,-z
+Pmna orthorhombic P x-1/4,y,z
+    -x,-y,z+1/2
+    x,-y,-z
+    -x,y,-z+1/2
+    -x+1/2,-y,-z
+F-43m cubic F x,y,z
+    y,-x,-z
+    z,x,y
+P4/ncc:2 tetragonal P y,-x,z-1/4
+    -x,y+1/2,-z
+    y,x,-z
+    -x,-y,-z+1/2
+P-4b2 tetragonal P y-3/4,x-1/4,-z
+    y,x,-z
+    x+1/2,-y,z
+P42/m tetragonal P x,y,z
+    -y,x,z+1/2
+    -x,-y,-z
+Pmm2 orthorhombic P x,y,z
+    -x,-y,z
+    -x,y,z
+    x,-y,z
+Pca21 orthorhombic P x,y,z
+    -x,-y,z+1/2
+    -x+1/2,y,z+1/2
+    x+1/2,-y,z
+Imm2 orthorhombic I x,y,z
+    -x,-y,z
+    -x,y,z
+    x,-y,z
+I41/acd:2 tetragonal I -x+1/4,-y,z-1/4
+    x,-y,-z
+    -y,-x,-z+3/4
+    -x+1/2,-y,-z+1/2
+P4mm tetragonal P x,y,z
+    -x,y,z
+    y,x,z
+P6/m hexagonal P x,y,z
+    x-y,x,z
+    -x,-y,-z
+P42/nbc:2 tetragonal P x-1/4,y-1/4,z
+    x,-y,-z
+    -y,-x,-z+1/2
+    -x+1/2,-y+1/2,-z
+P-43m cubic P x,y,z
+    y,-x,-z
+    z,x,y
+P42212 tetragonal P x-3/4,y-1/4,z-1/4
+    x+1/2,-y,-z
+    -y,-x,-z+1/2
+Iba2 orthorhombic I x,y,z
+    -x,-y,z
+    -x,y,z+1/2
+    x,-y,z+1/2
+I422 tetragonal I y,-x,z
+    -x,y,-z
+    y,x,-z
+P222 orthorhombic P x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+P6522 hexagonal P x-y,x,z-1/12
+    x,x-y,-z
+    x-y,-y,-z+1/6
+I213 cubic I x,y,z
+    -x,-y+1/2,z
+    z,x,y
+P4222 tetragonal P x,y,z
+    x,-y,-z
+    -y,-x,-z+1/2
+I4122 tetragonal I x+1/4,y-1/4,z-1/8
+    x,-y,-z
+    -y,-x,-z+3/4
+P4122 tetragonal P x,y,z-1/4
+    x,-y,-z
+    -y,-x,-z+3/4
+Cmma orthorhombic C x-1/4,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x+1/2,-y,-z
+F432 cubic F x,y,z
+    -y,x,z
+    z,x,y
+P23 cubic P x,y,z
+    -x,-y,z
+    z,x,y
+Pnna orthorhombic P x-1/4,y,z-1/4
+    -x,-y,z
+    x,-y+1/2,-z
+    -x,y+1/2,-z
+    -x+1/2,-y,-z+1/2
+P3121 trigonal P -y,x-y,z
+    x-y,-y,-z
+    -x,-x+y,-z+2/3
+Pm-3n cubic P x,y-1/2,z
+    -y,x,z+1/2
+    z,x+1/2,y+1/2
+    -x,-y,-z
+Pm-3m cubic P x,y,z
+    -y,x,z
+    z,x,y
+    -x,-y,-z
+F222 orthorhombic F x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+P6222 hexagonal P x-y,x,z-1/3
+    x,x-y,-z
+    x-y,-y,-z+2/3
+Amm2 orthorhombic C y,z,x
+    -x,y,-z
+    x,y,-z
+    -x,y,z
+Pban:2 orthorhombic P x-1/4,y-1/4,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x+1/2,-y+1/2,-z
+P4/mmm tetragonal P x,y,z
+    x,-y,-z
+    -y,-x,-z
+    -x,-y,-z
+P43 tetragonal P x,y,z
+    -y,x,z+3/4
+F23 cubic F x,y,z
+    -x,-y,z
+    z,x,y
+Pmc21 orthorhombic P x,y,z
+    -x,-y,z+1/2
+    -x,y,z
+    x,-y,z+1/2
+P622 hexagonal P x-y,x,z
+    x,x-y,-z
+    x-y,-y,-z
+P42nm tetragonal P x-1/4,y-1/4,z
+    -x,y+1/2,z+1/2
+    y,x,z
+P-31m trigonal P x-y,x,z
+    x,x-y,-z
+    -y,-x,-z
+    -x,-y,-z
+P312 trigonal P x-y,x,z
+    x,x-y,-z
+    -y,-x,-z
+I41 tetragonal I x+1/4,y-1/4,z
+    -y,x,z+1/4
+I4132 cubic I x+1/4,y-1/2,z+1/4
+    -y,x,z+1/4
+    z,x+1/4,y+3/4
+C12/m1 monoclinic A z,x,y
+    -x,-y,z
+    -x,-y,-z
+P4nc tetragonal P x-1/4,y+1/4,z
+    -x,y+1/2,z+1/2
+    y,x,z+1/2
+Pnn2 orthorhombic P x,y,z
+    -x,-y,z
+    -x+1/2,y+1/2,z+1/2
+    x+1/2,-y+1/2,z+1/2
+P4232 cubic P x,y-1/2,z
+    -y,x,z+1/2
+    z,x+1/2,y+1/2
+P42/mbc tetragonal P x-1/4,y-1/4,z
+    x+1/2,-y,-z
+    -y,-x,-z+1/2
+    -x+1/2,-y+1/2,-z
+P-4 tetragonal P x,-y,-z
+    y,-x,-z
+R3:H trigonal R x,y,z
+    -y,x-y,z
+Ibam orthorhombic I x,y,z-1/4
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z+1/2
+P32 trigonal P x-y,x,z
+    -y,x-y,z+2/3
+R3m:H trigonal R -y,x-y,z
+    -x+y,y,z
+    x,x-y,z
+P31 trigonal P x-y,x,z
+    -y,x-y,z+1/3
+P12/m1 monoclinic P x,z,-y
+    -x,-y,z
+    -x,-y,-z
+P3221 trigonal P -y,x-y,z
+    x-y,-y,-z
+    -x,-x+y,-z+1/3
+Ia-3 cubic I x,y,z
+    -x,-y+1/2,z
+    z,x,y
+    -x,-y,-z
+Pmn21 orthorhombic P x-1/4,y,z
+    -x,-y,z+1/2
+    -x+1/2,y,z
+    x+1/2,-y,z+1/2
+P31m trigonal P x-y,x,z
+    -x,-x+y,z
+    y,x,z
+C2221 orthorhombic C x,y,z
+    -x,-y,z+1/2
+    x,-y,-z
+    -x,y,-z+1/2
+Pn-3:2 cubic P x-1/4,y-1/4,z-1/4
+    -x,-y,z
+    z,x,y
+    -x+1/2,-y+1/2,-z+1/2
+I41/a:2 tetragonal I y-1/2,-x+1/4,z
+    -y,x,z+1/4
+    -x,-y+1/2,-z
+I432 cubic I x,y,z
+    -y,x,z
+    z,x,y
+P-42m tetragonal P x,-y,-z
+    x,-y,-z
+    -y,-x,z
+Pnc2 orthorhombic P x,y,z
+    -x,-y,z
+    -x,y+1/2,z+1/2
+    x,-y+1/2,z+1/2
+Imma orthorhombic I x,y-1/4,z
+    -x,-y,z
+    x,-y+1/2,-z
+    -x,y+1/2,-z
+    -x,-y+1/2,-z
+F-43c cubic F x,y+1/2,z
+    y,-x+1/2,-z
+    z,x+1/2,y+1/2
+Pbcm orthorhombic P x,y,z
+    -x,-y,z+1/2
+    x,-y+1/2,-z
+    -x,y+1/2,-z+1/2
+    -x,-y,-z
+P63/mmc hexagonal P x-y,x,z-1/4
+    x,x-y,-z
+    x-y,-y,-z+1/2
+    -x,-y,-z+1/2
+Pbca orthorhombic P x-1/4,y,z
+    -x,-y,z+1/2
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z+1/2
+    -x+1/2,-y,-z
+Ccc2 orthorhombic C x,y,z
+    -x,-y,z
+    -x,y,z+1/2
+    x,-y,z+1/2
+P-4n2 tetragonal P y-3/4,x-1/4,-z+1/4
+    y,x,-z
+    x+1/2,-y,z+1/2
+I4cm tetragonal I y,-x,z
+    x,-y,z+1/2
+    -y,-x,z+1/2
+P6122 hexagonal P x-y,x,z-5/12
+    x,x-y,-z
+    x-y,-y,-z+5/6
+Cmmm orthorhombic C x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z
+P-6c2 hexagonal P x-y,x,z
+    x,x-y,-z
+    -x+y,y,z+1/2
+I222 orthorhombic I x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+P42/n:2 tetragonal P y-1/4,-x-1/4,z
+    -y,x,z+1/2
+    -x+1/2,-y+1/2,-z
+Pnnn:2 orthorhombic P x-1/4,y-1/4,z-1/4
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x+1/2,-y+1/2,-z+1/2
+Cmca orthorhombic C x-1/4,y,z
+    -x,-y,z+1/2
+    x,-y,-z
+    -x,y,-z+1/2
+    -x+1/2,-y,-z
+I-43d cubic I x-1/8,y+1/8,z-1/8
+    y,-x+3/4,-z
+    z,x+1/4,y+3/4
+Pba2 orthorhombic P x,y,z
+    -x,-y,z
+    -x+1/2,y+1/2,z
+    x+1/2,-y+1/2,z
+P-3m1 trigonal P -y,x-y,z
+    x-y,-y,-z
+    -x,-x+y,-z
+    -x,-y,-z
+R-3:H trigonal R x,y,z
+    -y,x-y,z
+    -x,-y,-z
+Pcc2 orthorhombic P x,y,z
+    -x,-y,z
+    -x,y,z+1/2
+    x,-y,z+1/2
+Cmcm orthorhombic C x,y,z
+    -x,-y,z+1/2
+    x,-y,-z
+    -x,y,-z+1/2
+    -x,-y,-z
+C121 monoclinic A z,x,y
+    -x,-y,z
+Ccca:2 orthorhombic C x-1/4,y,z-1/4
+    -x,-y,z
+    x+1/2,-y,-z
+    -x+1/2,y,-z
+    -x+1/2,-y,-z+1/2
+P42 tetragonal P x,y,z
+    -y,x,z+1/2
+P41 tetragonal P x,y,z
+    -y,x,z+1/4
+Ima2 orthorhombic I x,y,z
+    -x,-y,z
+    -x+1/2,y,z
+    x+1/2,-y,z
+P6/mmm hexagonal P x-y,x,z
+    x,x-y,-z
+    x-y,-y,-z
+    -x,-y,-z
+P4132 cubic P x+1/4,y-1/2,z+1/4
+    -y,x,z+1/4
+    z,x+1/4,y+3/4
+P6322 hexagonal P x-y,x,z-1/4
+    x,x-y,-z
+    x-y,-y,-z+1/2
+P42/nnm:2 tetragonal P x-1/4,y-1/4,z-1/4
+    x,-y,-z
+    -y,-x,-z+1/2
+    -x+1/2,-y+1/2,-z+1/2
+P432 cubic P x,y,z
+    -y,x,z
+    z,x,y
+P6mm hexagonal P x-y,x,z
+    -x,-x+y,z
+    -x+y,y,z
+I-4 tetragonal I -y,-x,-z
+    y,-x,-z
+C1c1 monoclinic A z,x,y
+    x+1/2,y,-z
+Im-3 cubic I x,y,z
+    -x,-y,z
+    z,x,y
+    -x,-y,-z
+I41md tetragonal I x,y,z
+    -x,y,z
+    y,x+1/2,z+1/4
+P4/nmm:2 tetragonal P y,-x,z
+    -x,y+1/2,-z
+    y,x,-z
+    -x,-y,-z
+P1c1 monoclinic P x,z,-y
+    x,y+1/2,-z
+P43212 tetragonal P y-1/4,-x-1/4,z-1/8
+    -x,y+1/2,-z
+    y,x,-z+1/4
+P42/mnm tetragonal P x-3/4,y-1/4,z-1/4
+    x+1/2,-y,-z
+    -y,-x,-z+1/2
+    -x+1/2,-y+1/2,-z+1/2
+Pccn orthorhombic P x-1/4,y-1/4,z-1/4
+    -x,-y,z
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z
+    -x+1/2,-y+1/2,-z+1/2
+P4332 cubic P x-1/4,y-1/2,z-1/4
+    -y,x,z+3/4
+    z,x+3/4,y+1/4
+Pccm orthorhombic P x,y,z-1/4
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z+1/2
+P21212 orthorhombic P x,y,z
+    -x,-y,z
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z
+Cmc21 orthorhombic C x,y,z
+    -x,-y,z+1/2
+    -x,y,z
+    x,-y,z+1/2
+Pcca orthorhombic P x-1/4,y,z-1/4
+    -x,-y,z
+    x+1/2,-y,-z
+    -x+1/2,y,-z
+    -x+1/2,-y,-z+1/2
+Pbam orthorhombic P x,y,z
+    -x,-y,z
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z
+    -x,-y,-z
+I4/mcm tetragonal I x,y,z-1/4
+    x,-y,-z
+    -y,-x,-z
+    -x,-y,-z+1/2
+I-42d tetragonal I x-1/4,-y+1/4,-z+1/8
+    x,-y,-z
+    -y,-x+1/2,z+3/4
+Im-3m cubic I x,y,z
+    -y,x,z
+    z,x,y
+    -x,-y,-z
+Cmm2 orthorhombic C x,y,z
+    -x,-y,z
+    -x,y,z
+    x,-y,z
+P-42c tetragonal P x,-y,-z+1/4
+    x,-y,-z
+    -y,-x,z+1/2
+I-42m tetragonal I -x,y,-z
+    x,-y,-z
+    -y,-x,z
+P4/n:2 tetragonal P x-1/4,y-1/4,z
+    -y,x,z
+    -x+1/2,-y+1/2,-z
+P212121 orthorhombic P x-1/4,y,z
+    -x,-y,z+1/2
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z+1/2
+Pna21 orthorhombic P x,y,z
+    -x,-y,z+1/2
+    -x+1/2,y+1/2,z+1/2
+    x+1/2,-y+1/2,z
+Cccm orthorhombic C x,y,z-1/4
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z+1/2
+C222 orthorhombic C x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+P3 trigonal P x-y,x,z
+    -y,x-y,z
+P1 triclinic P z,-y,x
+P321 trigonal P -y,x-y,z
+    x-y,-y,-z
+    -x,-x+y,-z
+P-421c tetragonal P -y+1/4,-x-1/4,-z+1/4
+    -x,y+1/2,-z
+    y,x,z+1/2
+P4 tetragonal P x,y,z
+    -y,x,z
+P42/nmc:2 tetragonal P y,-x,z
+    -x,y+1/2,-z
+    y,x,-z+1/2
+    -x,-y,-z
+P-421m tetragonal P -y+1/4,-x-1/4,-z
+    -x,y+1/2,-z
+    y,x,z
+P63 hexagonal P x,y,z
+    x-y,x,z+1/2
+Ia-3d cubic I x+1/4,y-1/2,z+1/4
+    -y,x,z+1/4
+    z,x+1/4,y+3/4
+    -x+1/2,-y,-z+1/2
+Fd-3:2 cubic F x-1/8,y-1/8,z-1/8
+    -x,-y,z
+    z,x,y
+    -x+3/4,-y+3/4,-z+3/4
+P-62c hexagonal P x,y,z
+    x-y,-y,-z
+    y,x,z+1/2
+P4322 tetragonal P x,y,z-1/4
+    x,-y,-z
+    -y,-x,-z+1/4
+P-62m hexagonal P x,y,z
+    x-y,-y,-z
+    y,x,z
+P4/nbm:2 tetragonal P x-1/4,y-1/4,z
+    x,-y,-z
+    -y,-x,-z
+    -x+1/2,-y+1/2,-z
+Pnnm orthorhombic P x,y,z-1/4
+    -x,-y,z
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z
+    -x,-y,-z+1/2
+P61 hexagonal P x,y,z
+    x-y,x,z+1/6
+Fm-3m cubic F x,y,z
+    -y,x,z
+    z,x,y
+    -x,-y,-z
+P6/mcc hexagonal P x-y,x,z-1/4
+    x,x-y,-z
+    x-y,-y,-z
+    -x,-y,-z+1/2
+P42mc tetragonal P x,y,z
+    -x,y,z
+    y,x,z+1/2
+P65 hexagonal P x,y,z
+    x-y,x,z+5/6
+P-1 triclinic P z,-y,x
+    -x,-y,-z
+P-3 trigonal P x-y,x,z
+    -y,x-y,z
+    -x,-y,-z
+P63cm hexagonal P x-y,x,z
+    -x,-x+y,z
+    -x+y,y,z+1/2
+P422 tetragonal P x,y,z
+    x,-y,-z
+    -y,-x,-z
+P62 hexagonal P x,y,z
+    x-y,x,z+1/3
+Fm-3c cubic F x-1/4,y-1/4,z-1/4
+    -y,x,z
+    z,x,y
+    -x+1/2,-y+1/2,-z+1/2
+P41212 tetragonal P x-3/4,y-1/4,z-3/8
+    x+1/2,-y,-z
+    -y,-x,-z+3/4
+Ama2 orthorhombic C y,z,x
+    -x,y,-z
+    x,y,-z+1/2
+    -x,y,z+1/2
+I-4m2 tetragonal I x,-y,-z
+    -y,-x,-z
+    -x,y,z
+P31c trigonal P x-y,x,z
+    -x,-x+y,z+1/2
+    y,x,z+1/2
+Fddd:2 orthorhombic F x-1/8,y-1/8,z-1/8
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x+3/4,-y+3/4,-z+3/4
+P1m1 monoclinic P x,z,-y
+    x,y,-z
+Pnma orthorhombic P x-1/4,y,z-1/4
+    -x,-y,z+1/2
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z+1/2
+    -x+1/2,-y,-z+1/2
+Fmm2 orthorhombic F x,y,z
+    -x,-y,z
+    -x,y,z
+    x,-y,z
+P42/mmc tetragonal P x,y,z
+    x,-y,-z
+    -y,-x,-z+1/2
+    -x,-y,-z
+I4mm tetragonal I y,-x,z
+    x,-y,z
+    -y,-x,z
+I23 cubic I x,y,z
+    -x,-y,z
+    z,x,y
+P63/m hexagonal P x,y,z
+    x-y,x,z+1/2
+    -x,-y,-z
+I4/mmm tetragonal I y,-x,z
+    -x,y,-z
+    y,x,-z
+    -x,-y,-z
+Pmma orthorhombic P x-1/4,y,z
+    -x,-y,z
+    x+1/2,-y,-z
+    -x+1/2,y,-z
+    -x+1/2,-y,-z
+P213 cubic P x-1/4,y-1/4,z-1/4
+    -x,-y+1/2,z+1/2
+    z,x,y
+P121/m1 monoclinic P x,z,-y
+    -x,-y,z+1/2
+    -x,-y,-z
+P4212 tetragonal P x-3/4,y-1/4,z
+    x+1/2,-y,-z
+    -y,-x,-z
+P3m1 trigonal P -y,x-y,z
+    -x+y,y,z
+    x,x-y,z
+P-3c1 trigonal P -y,x-y,z-1/4
+    x-y,-y,-z
+    -x,-x+y,-z
+    -x,-y,-z+1/2
+Pmmn:2 orthorhombic P x-1/4,y-1/4,z
+    -x,-y,z
+    x+1/2,-y+1/2,-z
+    -x+1/2,y+1/2,-z
+    -x+1/2,-y+1/2,-z
+Abm2 orthorhombic C y,z,x
+    -x,y,-z
+    x+1/2,y,-z
+    -x+1/2,y,z
+P-6m2 hexagonal P x-y,x,z
+    x,x-y,-z
+    -x+y,y,z
+P4/nnc:2 tetragonal P x-1/4,y-1/4,z-1/4
+    x,-y,-z
+    -y,-x,-z
+    -x+1/2,-y+1/2,-z+1/2
+Pbcn orthorhombic P x-1/4,y-1/4,z
+    -x,-y,z+1/2
+    x+1/2,-y,-z
+    -x+1/2,y,-z+1/2
+    -x+1/2,-y+1/2,-z
+P4/m tetragonal P x,y,z
+    -y,x,z
+    -x,-y,-z
+P2221 orthorhombic P x,y,z
+    -x,-y,z+1/2
+    x,-y,-z
+    -x,y,-z+1/2
+Fd-3m:2 cubic F x+1/8,y-1/8,z+1/8
+    -y,x,z+1/4
+    z,x+3/4,y+1/4
+    -x+1/4,-y+3/4,-z+1/4
+P-4c2 tetragonal P y,x,-z+1/4
+    y,x,-z
+    x,-y,z+1/2
+P4cc tetragonal P x,y,z
+    -x,y,z+1/2
+    y,x,z+1/2
+I4 tetragonal I y,-x,z
+    -y,x,z
+Pa-3 cubic P x-1/4,y-1/4,z-1/4
+    -x,-y+1/2,z+1/2
+    z,x,y
+    -x+1/2,-y+1/2,-z+1/2
+I212121 orthorhombic I x,y-1/4,z-1/4
+    -x,-y,z
+    x,-y+1/2,-z
+    -x,y+1/2,-z
+P6cc hexagonal P x-y,x,z
+    -x,-x+y,z+1/2
+    -x+y,y,z+1/2
+F4132 cubic F x,y-1/4,z
+    -y,x,z+1/4
+    z,x+3/4,y+1/4
+Fdd2 orthorhombic F x,y,z
+    -x,-y,z
+    -x+1/4,y+1/4,z+1/4
+    x+3/4,-y+3/4,z+1/4
+Pm-3 cubic P x,y,z
+    -x,-y,z
+    z,x,y
+    -x,-y,-z
+Fd-3c:2 cubic F x-1/8,y-3/8,z-1/8
+    -y,x,z+1/4
+    z,x+3/4,y+1/4
+    -x+3/4,-y+1/4,-z+3/4
+R-3c:H trigonal R y,-x+y,z-1/4
+    x-y,-y,-z
+    -x,-x+y,-z
+    -x,-y,-z+1/2
+P63mc hexagonal P x-y,x,z
+    -x,-x+y,z+1/2
+    -x+y,y,z
+I4/m tetragonal I y,-x,z
+    -y,x,z
+    -x,-y,-z
+Fmmm orthorhombic F x,y,z
+    -x,-y,z
+    x,-y,-z
+    -x,y,-z
+    -x,-y,-z
