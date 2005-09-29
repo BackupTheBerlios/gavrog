@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.23 2005/09/28 23:51:00 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.24 2005/09/29 21:34:31 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -123,7 +123,7 @@ public class SpaceGroupFinder {
      */
     private Object[] analyzePointGroup3D() {
         // --- categorize the group operators by their point actions
-        final Map type2ops = G.fundamentalOperatorsByType();
+        final Map type2ops = G.primitiveOperatorsByType();
         final Set twoFold = (Set) type2ops.get(new OperatorType(3, true, 2, true));
         final Set threeFold = (Set) type2ops.get(new OperatorType(3, true, 3, true));
         final Set fourFold = (Set) type2ops.get(new OperatorType(3, true, 4, true));
