@@ -73,7 +73,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.17 2005/09/29 22:56:47 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.18 2005/09/29 23:07:38 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -235,6 +235,7 @@ public class SpaceGroup {
      * @param T the basis change operator.
      */
     public SpaceGroup(final SpaceGroup G, final BasisChange T) {
+        //TODO make this work correctly if the centering changes
         this(G.getDimension(), transformed(G.getOperators(), T));
     }
     
