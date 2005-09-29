@@ -72,7 +72,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.14 2005/09/23 04:27:03 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.15 2005/09/29 21:34:06 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -322,7 +322,7 @@ public class SpaceGroup {
      * 
      * @return a map assigning operators types to operator sets.
      */
-    public Map fundamentalOperatorsByType() {
+    public Map primitiveOperatorsByType() {
         final Map res = new HashMapWithDefault() {
             public Object makeDefault() {
                 return new HashSet();
