@@ -17,7 +17,9 @@ limitations under the License.
 package org.gavrog.joss.geometry;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -36,7 +38,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.24 2005/09/29 21:34:31 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.25 2005/09/30 00:32:58 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -52,9 +54,7 @@ public class SpaceGroupFinder {
     final private int crystalSystem;
     final private String centering;
     final private Matrix preliminaryBasis;
-    final private Matrix latticeBasis;
     final private List gensOriginalBasis;
-    final private List gensLatticeBasis;
     
     /**
      * Constructs a new instance.
@@ -73,24 +73,27 @@ public class SpaceGroupFinder {
             preliminaryBasis = (Matrix) res[1];
             gensOriginalBasis = (List) res[2];
             
-            // --- convert generators to preliminary basis
-            final BasisChange T1 = new BasisChange(preliminaryBasis, o);
-            final List gensPreliminaryBasis = convert(gensOriginalBasis, T1);
+            // --- compute the basis change to the preliminary basis
+            final BasisChange toPreliminary = new BasisChange(preliminaryBasis, o);
             
             // --- get primitive cell vectors and convert to preliminary basis
             final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
             for (int i = 0; i < primitiveCell.length; ++i) {
-                primitiveCell[i] = (Vector) primitiveCell[i].times(T1);
+                primitiveCell[i] = (Vector) primitiveCell[i].times(toPreliminary);
             }
             
-            // --- compute a canonical basis based on the group's crystal system
+            // --- compute the centering and a canonical lattice basis
             res = canonicalLatticeBasis(primitiveCell);
-            this.latticeBasis = (Matrix) res[0];
+            final Matrix canonicalBasis = (Matrix) res[0];
             this.centering = (String) res[1];
             
-            // --- convert generators to lattice basis
-            final BasisChange T2 = new BasisChange(this.latticeBasis, o);
-            this.gensLatticeBasis = convert(gensPreliminaryBasis, T2);
+            // --- compute basis change to canonical basis
+            final BasisChange pre2Canon = new BasisChange(canonicalBasis, o);
+            final BasisChange toCanonical = (BasisChange) toPreliminary.times(pre2Canon);
+            
+            // --- convert primitive set of group operators to canonical basis and sort
+            final List ops = convert(G.primitiveOperators(), toCanonical);
+            sortOps(ops);
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
@@ -101,18 +104,33 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * Performs a basis change on a list of geometric objects.
+     * Performs a basis change on a Collection of geometric objects.
      * 
-     * @param gens the objects to conver to the new basis.
+     * @param gens the objects to convert to the new basis.
      * @param T the basis change transformation.
      * @return the list of converted objects.
      */
-    private List convert(final List gens, final BasisChange T) {
+    private List convert(final Collection gens, final BasisChange T) {
         final List tmp = new ArrayList();
         for (final Iterator iter = gensOriginalBasis.iterator(); iter.hasNext();) {
             tmp.add(((Operator) iter.next()).times(T));
         }
         return Collections.unmodifiableList(tmp);
+    }
+    
+    /**
+     * Sorts a list of operators lexicographically by their linear components.
+     * 
+     * @param ops the list to sort.
+     */
+    private void sortOps(final List ops) {
+        Collections.sort(ops, new Comparator() {
+            public int compare(final Object o1, final Object o2) {
+                final Operator op1 = ((Operator) o1).linearPart();
+                final Operator op2 = ((Operator) o2).linearPart();
+                return op1.compareTo(op2);
+            }
+        });
     }
     
     /**
@@ -738,24 +756,10 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * @return the uncorrected lattice basis.
-     */
-    Matrix getLatticeBasis() {
-        return this.latticeBasis;
-    }
-
-    /**
      * @return a set of group generators.
      */
     public List getGeneratorsOriginalBasis() {
         return this.gensOriginalBasis;
-    }
-
-    /**
-     * @return group generators converted to the uncorrected lattice basis.
-     */
-    public List getGeneratorsLatticeBasis() {
-        return this.gensLatticeBasis;
     }
 
     /**
