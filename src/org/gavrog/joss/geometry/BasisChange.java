@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * choice of basis and or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: BasisChange.java,v 1.2 2005/09/30 00:45:27 odf Exp $
+ * @version $Id: BasisChange.java,v 1.3 2005/09/30 00:46:17 odf Exp $
  */
 public class BasisChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
@@ -35,9 +35,8 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
     final int dimension;
     
     /**
-     * Creates a new basis transform. The input consists a matrix, the rows of
-     * which represent the new basis vectors and a point specifying the new
-     * origin.
+     * Creates a new basis transform. The input consists of a matrix, the rows of which
+     * represent the new basis vectors, and a point specifying the new origin.
      * 
      * @param basis the d x d matrix representing the new basis.
      * @param origin the new origin.
