@@ -27,11 +27,11 @@ import org.gavrog.jane.numbers.Whole;
  * choice of basis and or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: BasisChange.java,v 1.1 2005/09/26 04:42:22 odf Exp $
+ * @version $Id: BasisChange.java,v 1.2 2005/09/30 00:45:27 odf Exp $
  */
 public class BasisChange extends ArithmeticBase implements IArithmetic {
-    final Matrix coords;
-    final Matrix inverse;
+    final Matrix left;
+    final Matrix right;
     final int dimension;
     
     /**
@@ -47,25 +47,25 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
         if (basis.numberOfColumns() != d) {
             throw new IllegalArgumentException("bad shape");
         }
-        this.coords = new Matrix(d+1, d+1);
-        this.coords.setSubMatrix(0, 0, basis);
-        this.coords.setSubMatrix(d, 0, origin.getCoordinates());
-        this.coords.setSubMatrix(0, d, Matrix.zero(d, 1));
-        this.coords.set(d, d, Whole.ONE);
-        this.inverse = (Matrix) this.coords.inverse();
+        this.left = new Matrix(d+1, d+1);
+        this.left.setSubMatrix(0, 0, basis);
+        this.left.setSubMatrix(d, 0, origin.getCoordinates());
+        this.left.setSubMatrix(0, d, Matrix.zero(d, 1));
+        this.left.set(d, d, Whole.ONE);
+        this.right = (Matrix) this.left.inverse();
         this.dimension = d;
     }
 
     /**
      * Quick and dirty constructor for internal use.
      * 
-     * @param coords the coordination matrix for the new instance.
-     * @param inverse the inverse of the coordination matrix.
+     * @param left the coordination matrix for the new instance.
+     * @param right the inverse of the coordination matrix.
      */
-    private BasisChange(final Matrix coords, final Matrix inverse) {
-        final int d = coords.numberOfRows() - 1;
-        this.coords = coords;
-        this.inverse = inverse;
+    private BasisChange(final Matrix left, final Matrix right) {
+        final int d = left.numberOfRows() - 1;
+        this.left = left;
+        this.right = right;
         this.dimension = d;
     }
     
@@ -73,7 +73,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.ArithmeticBase#isExact()
      */
     public boolean isExact() {
-        return this.coords.isExact();
+        return this.left.isExact();
     }
     
     /* (non-Javadoc)
@@ -102,7 +102,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.ArithmeticBase#inverse()
      */
     public IArithmetic inverse() {
-        return new BasisChange(this.inverse, this.coords);
+        return new BasisChange(this.right, this.left);
     }
     
     /* (non-Javadoc)
@@ -118,8 +118,8 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
     public IArithmetic times(final Object other) {
         if (other instanceof BasisChange) {
             final BasisChange bt = (BasisChange) other;
-            return new BasisChange((Matrix) bt.coords.times(this.coords),
-                    (Matrix) this.inverse.times(bt.inverse));
+            return new BasisChange((Matrix) bt.left.times(this.left),
+                    (Matrix) this.right.times(bt.right));
         } else if (other instanceof IArithmetic) {
             return ((IArithmetic) other).rtimes(this);
         } else {
@@ -132,13 +132,13 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      */
     public IArithmetic rtimes(final IArithmetic other) {
         if (other instanceof Point) {
-            return new Point((Point) other, this.inverse);
+            return new Point((Point) other, this.right);
         } else if (other instanceof Vector) {
-            return new Vector((Vector) other, this.inverse);
+            return new Vector((Vector) other, this.right);
         } else if (other instanceof Operator) {
             final Operator op = (Operator) other;
-            return new Operator((Matrix) this.coords.times(op.getCoordinates()).times(
-                    this.inverse));
+            return new Operator((Matrix) this.left.times(op.getCoordinates()).times(
+                    this.right));
         } else {
             throw new UnsupportedOperationException("operation not defined");
         }
@@ -154,8 +154,8 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
             if (dim != ob.getDimension()) {
                 throw new IllegalArgumentException("dimensions must be equal");
             }
-            final Matrix A = this.coords;
-            final Matrix B = ob.coords;
+            final Matrix A = this.left;
+            final Matrix B = ob.left;
             for (int i = 0; i < dim+1; ++i) {
                 for (int j = 0; j < dim+1; ++j) {
                     final int d = A.get(i, j).compareTo(B.get(i, j));
@@ -194,7 +194,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.ArithmeticBase#hashCode()
      */
     public int hashCode() {
-        return coords.hashCode();
+        return left.hashCode();
     }
     
     /**
@@ -213,7 +213,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      */
     public Matrix getBasis() {
         final int d = getDimension();
-        return this.coords.getSubMatrix(0, 0, d, d);
+        return this.left.getSubMatrix(0, 0, d, d);
     }
     
     /**
@@ -223,6 +223,6 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      */
     public Point getOrigin() {
         final int d = getDimension();
-        return new Point(this.coords.getSubMatrix(d, 0, 1, d));
+        return new Point(this.left.getSubMatrix(d, 0, 1, d));
     }
 }
