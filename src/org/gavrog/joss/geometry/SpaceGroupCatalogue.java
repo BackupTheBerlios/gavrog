@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.2 2005/10/01 04:12:51 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.3 2005/10/01 04:25:20 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -104,6 +104,8 @@ public class SpaceGroupCatalogue {
                 final String fields[] = line.trim().split("\\s+");
                 if (fields[0].equalsIgnoreCase("alias")) {
                     aliases.put(fields[1], fields[2]);
+                } else if (fields[0].equalsIgnoreCase("lookup")) {
+                    // TODO fill in later
                 } else {
                     currentName = fields[0];
                     final Operator T = new Operator(line.substring(i + 1));

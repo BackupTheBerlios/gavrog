@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-# the table of 2-dimensional space groups, aka plane groups, aka wallpaper groups
+# The table of 2-dimensional space groups, aka plane groups, aka wallpaper groups.
 
 p1 x,y
     x,y
@@ -119,7 +119,7 @@ p6mm x,y
     -x,-x+y
 
 
-# the table of conventional 3-dimensional space group settings
+# The table of conventional 3-dimensional space group settings.
 
 P1 x,y,z
     x,y,z
@@ -8040,7 +8040,9 @@ Ia-3d x,y,z
     -z-1/4,y-1/4,-x+1/4
     z-1/4,-y+1/4,-x-1/4
 
-# short names for some of the settings
+
+# Short names for some of the settings.
+
 alias P2 P121
 alias P21 P1211
 alias C2 C121
@@ -8054,3 +8056,237 @@ alias C2/m C12/m1
 alias P2/c P12/c1
 alias P21/c P121/c1
 alias C2/c C12/c1
+
+
+# Lookup settings for use by the SpaceGroupFinder class.
+
+lookup P-43n cubic P x-1/4,y+1/4,z-1/4
+lookup P42cm tetragonal P x,y,z
+lookup I41cd tetragonal I x,y,z
+lookup P4/mcc tetragonal P x,y,z-1/4
+lookup P64 hexagonal P x,y,z
+lookup C12/c1 monoclinic A -z+1/4,x,-y
+lookup P-31c trigonal P x-y,x,z-1/4
+lookup I41/amd:2 tetragonal I x-1/4,y,z
+lookup P4bm tetragonal P x-1/4,y+1/4,z
+lookup P3212 trigonal P x-y,x,z-1/6
+lookup P42/ncm:2 tetragonal P y,-x,z-1/4
+lookup R-3m:H trigonal R -y,x-y,z
+lookup Pn-3m:2 cubic P x+1/4,y-1/4,z+1/4
+lookup Immm orthorhombic I x,y,z
+lookup P121 monoclinic P x,z,-y
+lookup Pmmm orthorhombic P x,y,z
+lookup I-43m cubic I x,y,z
+lookup P3c1 trigonal P -y,x-y,z
+lookup P1211 monoclinic P x,z,-y
+lookup Pn-3n:2 cubic P x-1/4,y-1/4,z-1/4
+lookup I-4c2 tetragonal I y,x,-z+1/4
+lookup P42/mcm tetragonal P x,y,z-1/4
+lookup R3c:H trigonal R -y,x-y,z
+lookup P121/c1 monoclinic P x,z-1/4,-y
+lookup P-6 hexagonal P x,y,z
+lookup P4/mbm tetragonal P x-1/4,y-1/4,z
+lookup P42bc tetragonal P x-1/4,y+1/4,z
+lookup Aba2 orthorhombic C y,z,x
+lookup P12/c1 monoclinic P x,z-1/4,-y
+lookup P4/mnc tetragonal P x-1/4,y-1/4,z-1/4
+lookup P6422 hexagonal P x-y,x,z-1/6
+lookup P6 hexagonal P x,y,z
+lookup C1m1 monoclinic A z,x,y
+lookup P-4m2 tetragonal P y,x,-z
+lookup P3112 trigonal P x-y,x,z-1/3
+lookup Ibca orthorhombic I x,y-1/4,z-1/4
+lookup P63/mcm hexagonal P x-y,x,z
+lookup Fm-3 cubic F x,y,z
+lookup Pma2 orthorhombic P x,y,z
+lookup R32:H trigonal R -y,x-y,z
+lookup Pmna orthorhombic P x-1/4,y,z
+lookup F-43m cubic F x,y,z
+lookup P4/ncc:2 tetragonal P y,-x,z-1/4
+lookup P-4b2 tetragonal P y-3/4,x-1/4,-z
+lookup P42/m tetragonal P x,y,z
+lookup Pmm2 orthorhombic P x,y,z
+lookup Pca21 orthorhombic P x,y,z
+lookup Imm2 orthorhombic I x,y,z
+lookup I41/acd:2 tetragonal I -x+1/4,-y,z-1/4
+lookup P4mm tetragonal P x,y,z
+lookup P6/m hexagonal P x,y,z
+lookup P42/nbc:2 tetragonal P x-1/4,y-1/4,z
+lookup P-43m cubic P x,y,z
+lookup P42212 tetragonal P x-3/4,y-1/4,z-1/4
+lookup Iba2 orthorhombic I x,y,z
+lookup I422 tetragonal I y,-x,z
+lookup P222 orthorhombic P x,y,z
+lookup P6522 hexagonal P x-y,x,z-1/12
+lookup I213 cubic I x,y,z
+lookup P4222 tetragonal P x,y,z
+lookup I4122 tetragonal I x+1/4,y-1/4,z-1/8
+lookup P4122 tetragonal P x,y,z-1/4
+lookup Cmma orthorhombic C x-1/4,y,z
+lookup F432 cubic F x,y,z
+lookup P23 cubic P x,y,z
+lookup Pnna orthorhombic P x-1/4,y,z-1/4
+lookup P3121 trigonal P -y,x-y,z
+lookup Pm-3n cubic P x,y-1/2,z
+lookup Pm-3m cubic P x,y,z
+lookup F222 orthorhombic F x,y,z
+lookup P6222 hexagonal P x-y,x,z-1/3
+lookup Amm2 orthorhombic C y,z,x
+lookup Pban:2 orthorhombic P x-1/4,y-1/4,z
+lookup P4/mmm tetragonal P x,y,z
+lookup P43 tetragonal P x,y,z
+lookup F23 cubic F x,y,z
+lookup Pmc21 orthorhombic P x,y,z
+lookup P622 hexagonal P x-y,x,z
+lookup P42nm tetragonal P x-1/4,y-1/4,z
+lookup P-31m trigonal P x-y,x,z
+lookup P312 trigonal P x-y,x,z
+lookup I41 tetragonal I x+1/4,y-1/4,z
+lookup I4132 cubic I x+1/4,y-1/2,z+1/4
+lookup C12/m1 monoclinic A z,x,y
+lookup P4nc tetragonal P x-1/4,y+1/4,z
+lookup Pnn2 orthorhombic P x,y,z
+lookup P4232 cubic P x,y-1/2,z
+lookup P42/mbc tetragonal P x-1/4,y-1/4,z
+lookup P-4 tetragonal P x,-y,-z
+lookup R3:H trigonal R x,y,z
+lookup Ibam orthorhombic I x,y,z-1/4
+lookup P32 trigonal P x-y,x,z
+lookup R3m:H trigonal R -y,x-y,z
+lookup P31 trigonal P x-y,x,z
+lookup P12/m1 monoclinic P x,z,-y
+lookup P3221 trigonal P -y,x-y,z
+lookup Ia-3 cubic I x,y,z
+lookup Pmn21 orthorhombic P x-1/4,y,z
+lookup P31m trigonal P x-y,x,z
+lookup C2221 orthorhombic C x,y,z
+lookup Pn-3:2 cubic P x-1/4,y-1/4,z-1/4
+lookup I41/a:2 tetragonal I y-1/2,-x+1/4,z
+lookup I432 cubic I x,y,z
+lookup P-42m tetragonal P x,-y,-z
+lookup Pnc2 orthorhombic P x,y,z
+lookup Imma orthorhombic I x,y-1/4,z
+lookup F-43c cubic F x,y+1/2,z
+lookup Pbcm orthorhombic P x,y,z
+lookup P63/mmc hexagonal P x-y,x,z-1/4
+lookup Pbca orthorhombic P x-1/4,y,z
+lookup Ccc2 orthorhombic C x,y,z
+lookup P-4n2 tetragonal P y-3/4,x-1/4,-z+1/4
+lookup I4cm tetragonal I y,-x,z
+lookup P6122 hexagonal P x-y,x,z-5/12
+lookup Cmmm orthorhombic C x,y,z
+lookup P-6c2 hexagonal P x-y,x,z
+lookup I222 orthorhombic I x,y,z
+lookup P42/n:2 tetragonal P y-1/4,-x-1/4,z
+lookup Pnnn:2 orthorhombic P x-1/4,y-1/4,z-1/4
+lookup Cmca orthorhombic C x-1/4,y,z
+lookup I-43d cubic I x-1/8,y+1/8,z-1/8
+lookup Pba2 orthorhombic P x,y,z
+lookup P-3m1 trigonal P -y,x-y,z
+lookup R-3:H trigonal R x,y,z
+lookup Pcc2 orthorhombic P x,y,z
+lookup Cmcm orthorhombic C x,y,z
+lookup C121 monoclinic A z,x,y
+lookup Ccca:2 orthorhombic C x-1/4,y,z-1/4
+lookup P42 tetragonal P x,y,z
+lookup P41 tetragonal P x,y,z
+lookup Ima2 orthorhombic I x,y,z
+lookup P6/mmm hexagonal P x-y,x,z
+lookup P4132 cubic P x+1/4,y-1/2,z+1/4
+lookup P6322 hexagonal P x-y,x,z-1/4
+lookup P42/nnm:2 tetragonal P x-1/4,y-1/4,z-1/4
+lookup P432 cubic P x,y,z
+lookup P6mm hexagonal P x-y,x,z
+lookup I-4 tetragonal I -y,-x,-z
+lookup C1c1 monoclinic A z,x,y
+lookup Im-3 cubic I x,y,z
+lookup I41md tetragonal I x,y,z
+lookup P4/nmm:2 tetragonal P y,-x,z
+lookup P1c1 monoclinic P x,z,-y
+lookup P43212 tetragonal P y-1/4,-x-1/4,z-1/8
+lookup P42/mnm tetragonal P x-3/4,y-1/4,z-1/4
+lookup Pccn orthorhombic P x-1/4,y-1/4,z-1/4
+lookup P4332 cubic P x-1/4,y-1/2,z-1/4
+lookup Pccm orthorhombic P x,y,z-1/4
+lookup P21212 orthorhombic P x,y,z
+lookup Cmc21 orthorhombic C x,y,z
+lookup Pcca orthorhombic P x-1/4,y,z-1/4
+lookup Pbam orthorhombic P x,y,z
+lookup I4/mcm tetragonal I x,y,z-1/4
+lookup I-42d tetragonal I x-1/4,-y+1/4,-z+1/8
+lookup Im-3m cubic I x,y,z
+lookup Cmm2 orthorhombic C x,y,z
+lookup P-42c tetragonal P x,-y,-z+1/4
+lookup I-42m tetragonal I -x,y,-z
+lookup P4/n:2 tetragonal P x-1/4,y-1/4,z
+lookup P212121 orthorhombic P x-1/4,y,z
+lookup Pna21 orthorhombic P x,y,z
+lookup Cccm orthorhombic C x,y,z-1/4
+lookup C222 orthorhombic C x,y,z
+lookup P3 trigonal P x-y,x,z
+lookup P1 triclinic P z,-y,x
+lookup P321 trigonal P -y,x-y,z
+lookup P-421c tetragonal P -y+1/4,-x-1/4,-z+1/4
+lookup P4 tetragonal P x,y,z
+lookup P42/nmc:2 tetragonal P y,-x,z
+lookup P-421m tetragonal P -y+1/4,-x-1/4,-z
+lookup P63 hexagonal P x,y,z
+lookup Ia-3d cubic I x+1/4,y-1/2,z+1/4
+lookup Fd-3:2 cubic F x-1/8,y-1/8,z-1/8
+lookup P-62c hexagonal P x,y,z
+lookup P4322 tetragonal P x,y,z-1/4
+lookup P-62m hexagonal P x,y,z
+lookup P4/nbm:2 tetragonal P x-1/4,y-1/4,z
+lookup Pnnm orthorhombic P x,y,z-1/4
+lookup P61 hexagonal P x,y,z
+lookup Fm-3m cubic F x,y,z
+lookup P6/mcc hexagonal P x-y,x,z-1/4
+lookup P42mc tetragonal P x,y,z
+lookup P65 hexagonal P x,y,z
+lookup P-1 triclinic P z,-y,x
+lookup P-3 trigonal P x-y,x,z
+lookup P63cm hexagonal P x-y,x,z
+lookup P422 tetragonal P x,y,z
+lookup P62 hexagonal P x,y,z
+lookup Fm-3c cubic F x-1/4,y-1/4,z-1/4
+lookup P41212 tetragonal P x-3/4,y-1/4,z-3/8
+lookup Ama2 orthorhombic C y,z,x
+lookup I-4m2 tetragonal I x,-y,-z
+lookup P31c trigonal P x-y,x,z
+lookup Fddd:2 orthorhombic F x-1/8,y-1/8,z-1/8
+lookup P1m1 monoclinic P x,z,-y
+lookup Pnma orthorhombic P x-1/4,y,z-1/4
+lookup Fmm2 orthorhombic F x,y,z
+lookup P42/mmc tetragonal P x,y,z
+lookup I4mm tetragonal I y,-x,z
+lookup I23 cubic I x,y,z
+lookup P63/m hexagonal P x,y,z
+lookup I4/mmm tetragonal I y,-x,z
+lookup Pmma orthorhombic P x-1/4,y,z
+lookup P213 cubic P x-1/4,y-1/4,z-1/4
+lookup P121/m1 monoclinic P x,z,-y
+lookup P4212 tetragonal P x-3/4,y-1/4,z
+lookup P3m1 trigonal P -y,x-y,z
+lookup P-3c1 trigonal P -y,x-y,z-1/4
+lookup Pmmn:2 orthorhombic P x-1/4,y-1/4,z
+lookup Abm2 orthorhombic C y,z,x
+lookup P-6m2 hexagonal P x-y,x,z
+lookup P4/nnc:2 tetragonal P x-1/4,y-1/4,z-1/4
+lookup Pbcn orthorhombic P x-1/4,y-1/4,z
+lookup P4/m tetragonal P x,y,z
+lookup P2221 orthorhombic P x,y,z
+lookup Fd-3m:2 cubic F x+1/8,y-1/8,z+1/8
+lookup P-4c2 tetragonal P y,x,-z+1/4
+lookup P4cc tetragonal P x,y,z
+lookup I4 tetragonal I y,-x,z
+lookup Pa-3 cubic P x-1/4,y-1/4,z-1/4
+lookup I212121 orthorhombic I x,y-1/4,z-1/4
+lookup P6cc hexagonal P x-y,x,z
+lookup F4132 cubic F x,y-1/4,z
+lookup Fdd2 orthorhombic F x,y,z
+lookup Pm-3 cubic P x,y,z
+lookup Fd-3c:2 cubic F x-1/8,y-3/8,z-1/8
+lookup R-3c:H trigonal R y,-x+y,z-1/4
+lookup P63mc hexagonal P x-y,x,z
+lookup I4/m tetragonal I y,-x,z
+lookup Fmmm orthorhombic F x,y,z
