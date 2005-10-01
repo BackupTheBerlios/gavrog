@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.1 2005/10/01 00:40:12 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.2 2005/10/01 04:12:51 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -51,15 +51,14 @@ public class SpaceGroupCatalogue {
         final public int dimension;
         final public Map nameToOps = new HashMap();
         final public Map nameToTransform = new HashMap();
-        final public Map translationTable;
         
-        public Table(final int dimension, final Map translationTable) {
+        public Table(final int dimension) {
             this.dimension = dimension;
-            this.translationTable = translationTable;
         }
     }
     
     static private Table groupTables[] = new Table[5];
+    static private Map aliases = new HashMap();
     
     /**
      * Parses space group settings from a file and stores them statically. Each setting is
@@ -101,15 +100,21 @@ public class SpaceGroupCatalogue {
                     final String key = currentName;
                     map.put(key, Collections.unmodifiableList((List) map.get(key)));
                 }
-                currentName = line.substring(0, i);
-                final Operator T = new Operator(line.substring(i + 1));
-                final int d = T.getDimension();
-                if (groupTables[d] == null) {
-                    groupTables[d] = new Table(d, makeTranslationTable(d));
+
+                final String fields[] = line.trim().split("\\s+");
+                if (fields[0].equalsIgnoreCase("alias")) {
+                    aliases.put(fields[1], fields[2]);
+                } else {
+                    currentName = fields[0];
+                    final Operator T = new Operator(line.substring(i + 1));
+                    final int d = T.getDimension();
+                    if (groupTables[d] == null) {
+                        groupTables[d] = new Table(d);
+                    }
+                    table = groupTables[d];
+                    table.nameToOps.put(currentName, new LinkedList());
+                    table.nameToTransform.put(currentName, T);
                 }
-                table = groupTables[d];
-                table.nameToOps.put(currentName, new LinkedList());
-                table.nameToTransform.put(currentName, T);
             } else if (currentName != null) {
                 final Operator op = new Operator(line).modZ();
                 ((List) table.nameToOps.get(currentName)).add(op);
@@ -144,35 +149,6 @@ public class SpaceGroupCatalogue {
     }
 
     /**
-     * As some space group settings have more than one commonly used name, this method
-     * produces a map assigning "non-standard" to "standard" names.
-     * 
-     * TODO this should be part of the settings file.
-     * 
-     * @param dimension the common dimension of the space groups.
-     * @return the translation map.
-     */
-    private static Map makeTranslationTable(final int dimension) {
-        final Map translationTable = new HashMap();
-        if (dimension == 3) {
-            translationTable.put("P2", "P121");
-            translationTable.put("P21", "P1211");
-            translationTable.put("C2", "C121");
-            translationTable.put("Pm", "P1m1");
-            translationTable.put("Pc", "P1c1");
-            translationTable.put("Cm", "C1m1");
-            translationTable.put("Cc", "C1c1");
-            translationTable.put("P2/m", "P12/m1");
-            translationTable.put("P21/m", "P121/m1");
-            translationTable.put("C2/m", "C12/m1");
-            translationTable.put("P2/c", "P12/c1");
-            translationTable.put("P21/c", "P121/c1");
-            translationTable.put("C2/c", "C12/c1");
-        }
-        return translationTable;
-    }
-    
-    /**
      * Retrieves information about a given space group setting. The setting is identified
      * by its name. Depending on the value of the <code>getOps</code> parameter, either
      * the operator list for that setting or the transformation used to obtain it from the
@@ -192,8 +168,8 @@ public class SpaceGroupCatalogue {
         final String parts[] = name.split(":");
         //String base = capitalized(parts[0]);
         String base = parts[0];
-        if (table.translationTable.containsKey(base)) {
-            base = (String) table.translationTable.get(base);
+        if (aliases.containsKey(base)) {
+            base = (String) aliases.get(base);
         }
         final String ext = parts.length > 1 ? Strings.capitalized(parts[1]) : "";
         

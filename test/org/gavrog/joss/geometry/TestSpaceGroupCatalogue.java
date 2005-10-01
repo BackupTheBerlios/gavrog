@@ -24,13 +24,15 @@ import junit.framework.TestCase;
  * Unit tests for class {@link org.gavrog.joss.geometry.SpaceGroupCatalogue}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupCatalogue.java,v 1.1 2005/10/01 00:40:12 odf Exp $
+ * @version $Id: TestSpaceGroupCatalogue.java,v 1.2 2005/10/01 04:12:52 odf Exp $
  */
 public class TestSpaceGroupCatalogue extends TestCase {
     public void testOperators() {
-        final List ops = SpaceGroupCatalogue.operators(3, "Ia-3d");
-        assertNotNull(ops);
-        assertEquals(96, ops.size());
+        final List opsIa_3d = SpaceGroupCatalogue.operators(3, "Ia-3d");
+        assertNotNull(opsIa_3d);
+        assertEquals(96, opsIa_3d.size());
+        final List opsP2 = SpaceGroupCatalogue.operators(3, "P2");
+        assertEquals(2, opsP2.size());
     }
     
     public void testTransform() {
