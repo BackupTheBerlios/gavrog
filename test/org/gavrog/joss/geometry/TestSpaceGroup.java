@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.11 2005/09/30 00:32:58 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.12 2005/10/01 00:40:12 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -52,19 +52,19 @@ public class TestSpaceGroup extends TestCase {
     
     public void testSpaceGroupByName() {
         // --- read all IT settings without structural tests
-        for (final Iterator iter = SpaceGroup.groupNames(3); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroupCatalogue.groupNames(3); iter.hasNext();) {
             new SpaceGroup(3, (String) iter.next());
         }
-        for (final Iterator iter = SpaceGroup.groupNames(2); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroupCatalogue.groupNames(2); iter.hasNext();) {
             new SpaceGroup(2, (String) iter.next());
         }
     }
     
     public void testSpaceGroupByFullOpsList() {
         // --- do the full testing for one group
-        new SpaceGroup(3, SpaceGroup.operators(3, "Ia-3d"), false, true);
+        new SpaceGroup(3, SpaceGroupCatalogue.operators(3, "Ia-3d"), false, true);
         // --- also for a 2-dimensional one
-        new SpaceGroup(2, SpaceGroup.operators(2, "p4mg"), false, true);
+        new SpaceGroup(2, SpaceGroupCatalogue.operators(2, "p4mg"), false, true);
         
         // --- try some illegal inputs
         final List L = new LinkedList();
@@ -167,18 +167,6 @@ public class TestSpaceGroup extends TestCase {
         assertEquals(new Operator("x,y,z"), ((Operator) opsP31.get(2)).linearPart());
     }
     
-    public void testOperators() {
-        final List ops = SpaceGroup.operators(3, "Ia-3d");
-        assertNotNull(ops);
-        assertEquals(96, ops.size());
-    }
-    
-    public void testTransform() {
-        final Operator T = SpaceGroup.transform(3, "Ia-3d");
-        assertNotNull(T);
-        assertEquals(Operator.identity(3), T);
-    }
-
     public void testOperatorsByType() {
         Map map;
         Set ops;
