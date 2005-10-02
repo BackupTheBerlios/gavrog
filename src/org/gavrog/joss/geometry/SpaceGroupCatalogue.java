@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.3 2005/10/01 04:25:20 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.4 2005/10/02 23:26:46 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -45,7 +45,8 @@ public class SpaceGroupCatalogue {
     }
     
     /**
-     * This class is used to represent a table of space group settings of a given dimension.
+     * This class is used to represent a table of space group settings of a
+     * given dimension.
      */
     private static class Table {
         final public int dimension;
@@ -59,6 +60,26 @@ public class SpaceGroupCatalogue {
     
     static private Table groupTables[] = new Table[5];
     static private Map aliases = new HashMap();
+    
+    /**
+     * Represents lookup information for groups, as used by {@link SpaceGroupFinder}.
+     */
+    static class Lookup {
+        final public String name;
+        final public int system;
+        final public String centering;
+        final public BasisChange fromStd;
+        
+        public Lookup(final String name, final int system, final String centering,
+                final BasisChange fromStd) {
+            this.name = name;
+            this.system = system;
+            this.centering = centering;
+            this.fromStd = fromStd;
+        }
+    }
+    
+    static private Map lookup = new HashMap();
     
     /**
      * Parses space group settings from a file and stores them statically. Each setting is
@@ -105,7 +126,28 @@ public class SpaceGroupCatalogue {
                 if (fields[0].equalsIgnoreCase("alias")) {
                     aliases.put(fields[1], fields[2]);
                 } else if (fields[0].equalsIgnoreCase("lookup")) {
-                    // TODO fill in later
+                    final String name = fields[1];
+                    final int system;
+                    if (fields[2].equals("monoclinic")) {
+                        system = SpaceGroupFinder.MONOCLINIC_SYSTEM;
+                    } else if (fields[2].equals("triclinic")) {
+                        system = SpaceGroupFinder.TRICLINIC_SYSTEM;
+                    } else if (fields[2].equals("orthorhombic")) {
+                        system = SpaceGroupFinder.ORTHORHOMBIC_SYSTEM;
+                    } else if (fields[2].equals("trigonal")) {
+                        system = SpaceGroupFinder.TRIGONAL_SYSTEM;
+                    } else if (fields[2].equals("tetragonal")) {
+                        system = SpaceGroupFinder.TETRAGONAL_SYSTEM;
+                    } else if (fields[2].equals("hexagonal")) {
+                        system = SpaceGroupFinder.HEXAGONAL_SYSTEM;
+                    } else if (fields[2].equals("cubic")) {
+                        system = SpaceGroupFinder.CUBIC_SYSTEM;
+                    } else {
+                        throw new RuntimeException(fields[2] + " system unknown");
+                    }
+                    final String centering = fields[3];
+                    final BasisChange fromStd = new BasisChange(new Operator(fields[4]));
+                    lookup.put(name, new Lookup(name, system, centering, fromStd));
                 } else {
                     currentName = fields[0];
                     final Operator T = new Operator(line.substring(i + 1));
@@ -142,7 +184,7 @@ public class SpaceGroupCatalogue {
      * @param dimension the common dimension of the space groups.
      * @return an iterator over the names of space group settings.
      */
-    public static Iterator groupNames(final int dimension) {
+    public static Iterator settingNames(final int dimension) {
         if (groupTables[dimension] == null) {
             parseGroups(tablePath);
         }
@@ -225,5 +267,15 @@ public class SpaceGroupCatalogue {
      */
     public static Operator transform(final int dim, final String name) {
         return (Operator) retrieve(dim, false, name);
+    }
+
+    /**
+     * Retrieves the lookup information stored for a group.
+     * 
+     * @param name the name associated with the group's standard setting.
+     * @return the lookup info for the named group.
+     */
+    static Lookup getLookup(final String name) {
+        return (Lookup) lookup.get(name);
     }
 }
