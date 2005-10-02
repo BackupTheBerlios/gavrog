@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.5 2005/10/02 23:29:52 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.6 2005/10/02 23:32:53 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -58,8 +58,8 @@ public class SpaceGroupCatalogue {
         }
     }
     
-    static private Table groupTables[] = new Table[5];
-    static private Map aliases = new HashMap();
+    private static Table groupTables[] = new Table[5];
+    private static Map aliases = new HashMap();
     
     /**
      * Represents lookup information for groups, as used by {@link SpaceGroupFinder}.
@@ -79,7 +79,7 @@ public class SpaceGroupCatalogue {
         }
     }
     
-    static private Map lookup = new HashMap();
+    private static Map lookup = new HashMap();
     
     /**
      * Parses space group settings from a file and stores them statically. Each setting is
@@ -193,15 +193,6 @@ public class SpaceGroupCatalogue {
     }
 
     /**
-     * Retrieves the list of all names of groups in the lookup table.
-     *
-     * @return an iterator over the names of space groups.
-     */
-    static Iterator groupsInLookup() {
-        return lookup.keySet().iterator();
-    }
-
-    /**
      * Retrieves information about a given space group setting. The setting is identified
      * by its name. Depending on the value of the <code>getOps</code> parameter, either
      * the operator list for that setting or the transformation used to obtain it from the
@@ -279,12 +270,11 @@ public class SpaceGroupCatalogue {
     }
 
     /**
-     * Retrieves the lookup information stored for a group.
+     * Retrieves the lookup information stored.
      * 
-     * @param name the name associated with the group's standard setting.
-     * @return the lookup info for the named group.
+     * @return an iterator over the values in the lookup table.
      */
-    static Lookup getLookup(final String name) {
-        return (Lookup) lookup.get(name);
+    static Iterator lookupInfo() {
+        return lookup.values().iterator();
     }
 }
