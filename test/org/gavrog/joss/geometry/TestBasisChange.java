@@ -24,7 +24,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Unit tests for {@link org.gavrog.joss.geometry.BasisChange}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestBasisChange.java,v 1.1 2005/09/26 04:42:37 odf Exp $
+ * @version $Id: TestBasisChange.java,v 1.2 2005/10/02 23:14:45 odf Exp $
  */
 public class TestBasisChange extends TestCase {
     final Matrix M = new Matrix(new int[][] { { 0, 2, 0 }, { 0, 0, 1 }, { 1, 0, 0 } });
@@ -138,5 +138,10 @@ public class TestBasisChange extends TestCase {
     public void testGetOrigin() {
         final Point p = new Point(new int[] { -1, 1, 1 });
         assertEquals(p, T.getOrigin());
+    }
+    
+    public void testConstructorFromOperator() {
+        final BasisChange S = new BasisChange(new Operator("z-1,2x+1,y+1"));
+        assertEquals(T.inverse(), S);
     }
 }

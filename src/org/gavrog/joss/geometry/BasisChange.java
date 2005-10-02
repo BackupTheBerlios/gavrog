@@ -27,7 +27,7 @@ import org.gavrog.jane.numbers.Whole;
  * choice of basis and or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: BasisChange.java,v 1.3 2005/09/30 00:46:17 odf Exp $
+ * @version $Id: BasisChange.java,v 1.4 2005/10/02 23:14:44 odf Exp $
  */
 public class BasisChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
@@ -55,6 +55,18 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
         this.dimension = d;
     }
 
+    /**
+     * Creates an instance from an explicit coordinate transformation.
+     * 
+     * @param transform maps points and vectors to new basis.
+     */
+    public BasisChange(final Operator transform) {
+        //TODO check the argument
+        this.right = transform.getCoordinates();
+        this.left = (Matrix) this.right.inverse();
+        this.dimension = transform.getDimension();
+    }
+    
     /**
      * Quick and dirty constructor for internal use.
      * 
