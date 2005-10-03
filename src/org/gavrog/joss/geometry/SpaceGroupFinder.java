@@ -20,16 +20,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.collections.HashMapWithDefault;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
 
 
 /**
@@ -38,21 +41,23 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.26 2005/10/01 00:40:12 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.27 2005/10/03 22:12:45 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
     final public static int ORTHORHOMBIC_SYSTEM = 222;
-    final public static int HEXAGONAL_SYSTEM = 6;
-    final public static int TETRAGONAL_SYSTEM = 4;
-    final public static int TRIGONAL_SYSTEM = 3;
+    final public static int HEXAGONAL_SYSTEM = 622;
+    final public static int TETRAGONAL_SYSTEM = 422;
+    final public static int TRIGONAL_SYSTEM = 32;
     final public static int MONOCLINIC_SYSTEM = 2;
     final public static int TRICLINIC_SYSTEM = 1;
+    
+    private static Map _lookupMap = null;
     
     final private SpaceGroup G;
     
     final private int crystalSystem;
-    final private String centering;
+    final private char centering;
     final private Matrix preliminaryBasis;
     final private List gensOriginalBasis;
     
@@ -85,15 +90,19 @@ public class SpaceGroupFinder {
             // --- compute the centering and a canonical lattice basis
             res = canonicalLatticeBasis(primitiveCell);
             final Matrix canonicalBasis = (Matrix) res[0];
-            this.centering = (String) res[1];
+            this.centering = ((Character) res[1]).charValue();
             
             // --- compute basis change to canonical basis
             final BasisChange pre2Canon = new BasisChange(canonicalBasis, o);
             final BasisChange toCanonical = (BasisChange) toPreliminary.times(pre2Canon);
             
-            // --- convert primitive set of group operators to canonical basis and sort
-            final List ops = convert(G.primitiveOperators(), toCanonical);
+            // --- convert full set of group operators to canonical basis and sort
+            final List ops = convert(G.getOperators(), toCanonical);
             sortOps(ops);
+            
+            // --- get the lookup list for the combined crystal system and centering
+            final String key = combinedKey(this.crystalSystem, this.centering);
+            final List lookup = (List) lookupMap().get(key);
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
@@ -110,9 +119,9 @@ public class SpaceGroupFinder {
      * @param T the basis change transformation.
      * @return the list of converted objects.
      */
-    private List convert(final Collection gens, final BasisChange T) {
+    private static List convert(final Collection gens, final BasisChange T) {
         final List tmp = new ArrayList();
-        for (final Iterator iter = gensOriginalBasis.iterator(); iter.hasNext();) {
+        for (final Iterator iter = gens.iterator(); iter.hasNext();) {
             tmp.add(((Operator) iter.next()).times(T));
         }
         return tmp;
@@ -123,7 +132,7 @@ public class SpaceGroupFinder {
      * 
      * @param ops the list to sort.
      */
-    private void sortOps(final List ops) {
+    private static void sortOps(final List ops) {
         Collections.sort(ops, new Comparator() {
             public int compare(final Object o1, final Object o2) {
                 final Operator op1 = ((Operator) o1).linearPart();
@@ -131,6 +140,59 @@ public class SpaceGroupFinder {
                 return op1.compareTo(op2);
             }
         });
+    }
+    
+    /**
+     * Constructs a key for the combined crystal system and centering of a group.
+     * 
+     * @param crystalSystem the crystal system, encoded as an int.
+     * @param centering the centering, encoded as a one-letter string.
+     * @return the combined key.
+     */
+    private static String combinedKey(final int crystalSystem, final char centering) {
+        return String.valueOf(centering) + crystalSystem;
+    }
+    
+    /**
+     * Returns a map containing lists of space groups organized by their combined crystal
+     * systems and centerings. Each group is represented by a full list of operators,
+     * sorted lexicographically by their linear components.
+     * 
+     * The map returned is static and only constructed once.
+     * 
+     * @return the lookup map.
+     */
+    private static Map lookupMap() {
+        if (_lookupMap == null) {
+            // --- creating a map with default value simplifies the subsequent code
+            final Map map = new HashMapWithDefault() {
+                public Object makeDefault() {
+                    return new HashMap();
+                }
+            };
+            
+            // --- fill the map
+            for (final Iterator iter = SpaceGroupCatalogue.lookupInfo(); iter.hasNext();) {
+                final Lookup lookup = (Lookup) iter.next();
+                final String key = combinedKey(lookup.system, lookup.centering);
+                final BasisChange fromStd = lookup.fromStd;
+                final int dim = fromStd.getDimension();
+                final List ops = SpaceGroupCatalogue.operators(dim, lookup.name);
+                final List convertedOps = convert(ops, fromStd);
+                sortOps(convertedOps);
+                ((Map) map.get(key)).put(lookup.name, convertedOps);
+            }
+            
+            // --- make everything unmodifyable
+            for (final Iterator iter = map.keySet().iterator(); iter.hasNext();) {
+                final String key = (String) iter.next();
+                map.put(key, Collections.unmodifiableList((List) map.get(key)));
+            }
+            _lookupMap = Collections.unmodifiableMap(map);
+        }
+
+        // --- return the map
+        return _lookupMap;
     }
     
     /**
@@ -388,17 +450,17 @@ public class SpaceGroupFinder {
             }
         }
         final Rational r = (Rational) v[0].get(k).abs();
-        final String centering;
+        final char centering;
         final Rational a;
         if (n == 1) {
             a = r;
-            centering = "P";
+            centering = 'P';
         } else if (n == 2) {
             a = (Rational) r.times(2);
-            centering = "F";
+            centering = 'F';
         } else if (n == 3) {
             a = (Rational) r.times(2);
-            centering = "I";
+            centering = 'I';
         } else {
             throw new RuntimeException("this should not happen");
         }
@@ -408,7 +470,7 @@ public class SpaceGroupFinder {
                 { o, a, o },
                 { o, o, a },
                 });
-        return new Object[] { Vector.rowVectors(A), centering };
+        return new Object[] { Vector.rowVectors(A), new Character(centering) };
     }
 
     /**
@@ -430,7 +492,7 @@ public class SpaceGroupFinder {
         }
         v[1] = (Vector) v[0].times(new Operator("-y, x-y, z"));
 
-        return new Object[] { v, "P" };
+        return new Object[] { v, new Character('P') };
     }
 
     /**
@@ -451,13 +513,13 @@ public class SpaceGroupFinder {
             v = new Vector[] { b[0], b[1], b[2] };
         }
 
-        String centering = "P";
+        char centering = 'P';
         for (int i = 0; i < 3; ++i) {
             if (!v[i].get(2).isZero()) {
                 final Vector r = v[i];
                 if (!z.isCollinearTo(r)) {
                     v[2] = (Vector) r.times(new Operator("0, 0, 3z"));
-                    centering = "R";
+                    centering = 'R';
                     v[0] = (Vector) r.times(new Operator("2x-y, x+y, 0"));
                 }
                 break;
@@ -465,7 +527,7 @@ public class SpaceGroupFinder {
         }
         v[1] = (Vector) v[0].times(new Operator("-y, x-y, z"));
 
-        return new Object[] { v, centering };
+        return new Object[] { v, new Character(centering) };
     }
 
     /**
@@ -476,14 +538,14 @@ public class SpaceGroupFinder {
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalLatticeBasisTetragonal(final Vector[] b) {
-        String centering = "P";
+        char centering = 'P';
         final Vector v[] = new Vector[] { b[0], b[1], b[2] };
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(v[0])) {
             v[2] = v[0];
             v[0] = v[1];
             if (!z.isOrthogonalTo(v[0])) {
-                centering = "I";
+                centering = 'I';
                 v[0] = (Vector) v[0].times(new Operator("x-y, x+y, 0"));
             }
         } else if (z.isOrthogonalTo(v[0])) {
@@ -492,17 +554,17 @@ public class SpaceGroupFinder {
             }
             if (!z.isCollinearTo(v[2])) {
                 v[2] = (Vector) v[2].times(new Operator("0, 0, 2z"));
-                centering = "I";
+                centering = 'I';
             }
         } else {
-            centering = "I";
+            centering = 'I';
             v[2] = (Vector) v[0].times(new Operator("0, 0, 2z"));
             v[0] = (Vector) v[0].times(new Operator("x-y, x+y, 0"));
         }
 
         v[1] = (Vector) v[0].times(new Operator("-y, x, z"));
 
-        return new Object[] { v, centering };
+        return new Object[] { v, new Character(centering) };
     }
 
     /**
@@ -568,7 +630,7 @@ public class SpaceGroupFinder {
         final IArithmetic a;
         final IArithmetic b;
         final IArithmetic c;
-        final String centering;
+        final char centering;
 
         switch (n) {
         case 3:
@@ -576,7 +638,7 @@ public class SpaceGroupFinder {
             a = u.get(0);
             b = u.get(1);
             c = u.get(2);
-            centering = "I";
+            centering = 'I';
             break;
         case 2:
             int p;
@@ -602,13 +664,13 @@ public class SpaceGroupFinder {
                 a = v[0].get(0).times(new Whole(2));
                 b = v[2].get(1).times(new Whole(m));
                 c = v[0].get(2).times(new Whole(2));
-                centering = m == 2 ? "F" : "B";
+                centering = m == 2 ? 'F' : 'B';
                 break;
             case 2:
                 a = v[0].get(0).times(new Whole(2));
                 b = v[0].get(1).times(new Whole(2));
                 c = v[2].get(2).times(new Whole(m));
-                centering = m == 2 ? "F" : "C";
+                centering = m == 2 ? 'F' : 'C';
                 break;
             default:
                 throw new RuntimeException("this should not happen");
@@ -633,7 +695,7 @@ public class SpaceGroupFinder {
                 final Vector s = (Vector) v[1].times(2);
                 b = s.get(1);
                 c = s.get(2);
-                centering = "A";
+                centering = 'A';
             } else {
                 if (!v[1].get(1).isZero()) {
                     b = v[1].get(1);
@@ -642,7 +704,7 @@ public class SpaceGroupFinder {
                     b = v[2].get(1);
                     c = v[1].get(2);
                 }
-                centering = "P";
+                centering = 'P';
             }
             break;
         default:
@@ -655,7 +717,7 @@ public class SpaceGroupFinder {
                 { o, b, o },
                 { o, o, c },
                 });
-        return new Object[] { Vector.rowVectors(A), centering };
+        return new Object[] { Vector.rowVectors(A), new Character(centering) };
     }
 
     /**
@@ -666,7 +728,7 @@ public class SpaceGroupFinder {
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalLatticeBasisMonoclinic(final Vector[] b) {
-        String centering = "P";
+        char centering = 'P';
         final Vector v[];
         final Vector z = new Vector(0, 0, 1);
 
@@ -687,15 +749,15 @@ public class SpaceGroupFinder {
                 final Vector t = new Vector(v[0]);
                 v[0] = (Vector) t.plus(v[1]).times(new Operator("x, y, 0"));
                 v[1] = (Vector) t.minus(v[1]).times(new Operator("x, y, 0"));
-                centering = "I";
+                centering = 'I';
             } else {
                 v[0] = (Vector) v[0].times(new Operator("2x, 2y, 0"));
-                centering = "B";
+                centering = 'B';
             }
         } else if (!v[1].isOrthogonalTo(z)) {
             h = v[1].get(2).times(two);
             v[1] = (Vector) v[1].times(new Operator("2x, 2y, 0"));
-            centering = "A";
+            centering = 'A';
         }
 
         if (!v[2].isCollinearTo(z)) {
@@ -703,31 +765,31 @@ public class SpaceGroupFinder {
                 h = v[2].get(2).times(two);
                 if (!v[0].isOrthogonalTo(v[2])) {
                     if (!v[1].isOrthogonalTo(v[2])) {
-                        centering = "I";
+                        centering = 'I';
                     } else {
-                        centering = "B";
+                        centering = 'B';
                     }
                 } else {
-                    centering = "A";
+                    centering = 'A';
                 }
             }
             final IArithmetic o = Whole.ZERO;
             v[2] = new Vector(new IArithmetic[] { o, o, h });
         }
 
-        if (centering == "B") {
-            centering = "A";
+        if (centering == 'B') {
+            centering = 'A';
             final Vector t = v[0];
             v[0] = v[1];
             v[1] = (Vector) t.negative();
-        } else if (centering == "I") {
-            centering = "A";
+        } else if (centering == 'I') {
+            centering = 'A';
             final Vector t = v[0];
             v[0] = v[1];
             v[1] = (Vector) t.plus(v[1]).negative();
         }
 
-        return new Object[] { v, centering };
+        return new Object[] { v, new Character(centering) };
     }
 
     /**
@@ -738,7 +800,7 @@ public class SpaceGroupFinder {
      * @return the canonical lattice basis and centering.
      */
     private Object[] canonicalLatticeBasisTriclinic(final Vector[] b) {
-        return new Object[] { b, "P" };
+        return new Object[] { b, new Character('P') };
     }
 
     /**
@@ -765,7 +827,7 @@ public class SpaceGroupFinder {
     /**
      * @return the centering code.
      */
-    public String getCentering() {
+    public char getCentering() {
         return this.centering;
     }
 }

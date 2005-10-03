@@ -26,7 +26,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.9 2005/09/28 23:51:20 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.10 2005/10/03 22:12:45 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
@@ -102,28 +102,28 @@ public class TestSpaceGroupFinder extends TestCase {
     }
     
     public void testGetCentering() {
-        assertEquals("A", new SpaceGroupFinder(new SpaceGroup(3, "A121")).getCentering());
-        assertEquals("A", new SpaceGroupFinder(new SpaceGroup(3, "B112")).getCentering());
-        assertEquals("A", new SpaceGroupFinder(new SpaceGroup(3, "C121")).getCentering());
-        assertEquals("A", new SpaceGroupFinder(new SpaceGroup(3, "I121")).getCentering());
+        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "A121")).getCentering());
+        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "B112")).getCentering());
+        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "C121")).getCentering());
+        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "I121")).getCentering());
         
-        assertEquals("A", new SpaceGroupFinder(new SpaceGroup(3, "A222")).getCentering());
-        assertEquals("B", new SpaceGroupFinder(new SpaceGroup(3, "B222")).getCentering());
-        assertEquals("C", new SpaceGroupFinder(new SpaceGroup(3, "C222")).getCentering());
-        assertEquals("F", new SpaceGroupFinder(new SpaceGroup(3, "F222")).getCentering());
-        assertEquals("I", new SpaceGroupFinder(new SpaceGroup(3, "I222")).getCentering());
+        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "A222")).getCentering());
+        assertEquals('B', new SpaceGroupFinder(new SpaceGroup(3, "B222")).getCentering());
+        assertEquals('C', new SpaceGroupFinder(new SpaceGroup(3, "C222")).getCentering());
+        assertEquals('F', new SpaceGroupFinder(new SpaceGroup(3, "F222")).getCentering());
+        assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I222")).getCentering());
         
-        assertEquals("P", new SpaceGroupFinder(new SpaceGroup(3, "P4")).getCentering());
-        assertEquals("I", new SpaceGroupFinder(new SpaceGroup(3, "I-4")).getCentering());
+        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P4")).getCentering());
+        assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I-4")).getCentering());
         
-        assertEquals("P", new SpaceGroupFinder(new SpaceGroup(3, "P-3")).getCentering());
-        assertEquals("R", new SpaceGroupFinder(new SpaceGroup(3, "R-3")).getCentering());
+        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P-3")).getCentering());
+        assertEquals('R', new SpaceGroupFinder(new SpaceGroup(3, "R-3")).getCentering());
         
-        assertEquals("P", new SpaceGroupFinder(new SpaceGroup(3, "P6")).getCentering());
-        assertEquals("P", new SpaceGroupFinder(new SpaceGroup(3, "P-62c")).getCentering());
+        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P6")).getCentering());
+        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P-62c")).getCentering());
         
-        assertEquals("P", new SpaceGroupFinder(new SpaceGroup(3, "P23")).getCentering());
-        assertEquals("F", new SpaceGroupFinder(new SpaceGroup(3, "F23")).getCentering());
-        assertEquals("I", new SpaceGroupFinder(new SpaceGroup(3, "I23")).getCentering());
+        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P23")).getCentering());
+        assertEquals('F', new SpaceGroupFinder(new SpaceGroup(3, "F23")).getCentering());
+        assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I23")).getCentering());
    }
 }
