@@ -41,7 +41,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.27 2005/10/03 22:12:45 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.28 2005/10/03 22:24:55 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -102,7 +102,7 @@ public class SpaceGroupFinder {
             
             // --- get the lookup list for the combined crystal system and centering
             final String key = combinedKey(this.crystalSystem, this.centering);
-            final List lookup = (List) lookupMap().get(key);
+            final Map lookup = (Map) lookupMap().get(key);
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
