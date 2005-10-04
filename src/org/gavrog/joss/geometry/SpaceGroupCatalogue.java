@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.7 2005/10/03 22:12:45 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.8 2005/10/04 22:18:04 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -68,10 +68,10 @@ public class SpaceGroupCatalogue {
         final public String name;
         final public int system;
         final public char centering;
-        final public BasisChange fromStd;
+        final public CoordinateChange fromStd;
         
         public Lookup(final String name, final int system, final char centering,
-                final BasisChange fromStd) {
+                final CoordinateChange fromStd) {
             this.name = name;
             this.system = system;
             this.centering = centering;
@@ -146,7 +146,7 @@ public class SpaceGroupCatalogue {
                         throw new RuntimeException(fields[2] + " system unknown");
                     }
                     final char centering = fields[3].charAt(0);
-                    final BasisChange fromStd = new BasisChange(new Operator(fields[4]));
+                    final CoordinateChange fromStd = new CoordinateChange(new Operator(fields[4]));
                     lookup.put(name, new Lookup(name, system, centering, fromStd));
                 } else {
                     currentName = fields[0];

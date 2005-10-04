@@ -22,26 +22,26 @@ import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
 
 /**
- * An basis change operator that can act on points, vectors and operators in
- * order to transform their representation into one fitting for a different
- * choice of basis and or/origin.
+ * An coordinate change operator that can act on points, vectors and operators in order to
+ * transform their representation into one fitting for a different choice of basis and
+ * or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: BasisChange.java,v 1.4 2005/10/02 23:14:44 odf Exp $
+ * @version $Id: CoordinateChange.java,v 1.1 2005/10/04 22:18:04 odf Exp $
  */
-public class BasisChange extends ArithmeticBase implements IArithmetic {
+public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
     final Matrix right;
     final int dimension;
     
     /**
-     * Creates a new basis transform. The input consists of a matrix, the rows of which
+     * Creates a new instance. The input consists of a matrix, the rows of which
      * represent the new basis vectors, and a point specifying the new origin.
      * 
      * @param basis the d x d matrix representing the new basis.
      * @param origin the new origin.
      */
-    public BasisChange(final Matrix basis, final Point origin) {
+    public CoordinateChange(final Matrix basis, final Point origin) {
         final int d = basis.numberOfRows();
         if (basis.numberOfColumns() != d) {
             throw new IllegalArgumentException("bad shape");
@@ -56,11 +56,11 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
     }
 
     /**
-     * Creates an instance from an explicit coordinate transformation.
+     * Creates an instance from an explicit coordinate change operator.
      * 
-     * @param transform maps points and vectors to new basis.
+     * @param transform maps points and vectors to new coordinate system.
      */
-    public BasisChange(final Operator transform) {
+    public CoordinateChange(final Operator transform) {
         //TODO check the argument
         this.right = transform.getCoordinates();
         this.left = (Matrix) this.right.inverse();
@@ -73,7 +73,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @param left the coordination matrix for the new instance.
      * @param right the inverse of the coordination matrix.
      */
-    private BasisChange(final Matrix left, final Matrix right) {
+    private CoordinateChange(final Matrix left, final Matrix right) {
         final int d = left.numberOfRows() - 1;
         this.left = left;
         this.right = right;
@@ -99,7 +99,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      */
     public IArithmetic one() {
         final int d = this.dimension;
-        return new BasisChange(Matrix.one(d), Point.origin(d));
+        return new CoordinateChange(Matrix.one(d), Point.origin(d));
     }
     
     /* (non-Javadoc)
@@ -113,7 +113,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.ArithmeticBase#inverse()
      */
     public IArithmetic inverse() {
-        return new BasisChange(this.right, this.left);
+        return new CoordinateChange(this.right, this.left);
     }
     
     /* (non-Javadoc)
@@ -127,9 +127,9 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.ArithmeticBase#times(java.lang.Object)
      */
     public IArithmetic times(final Object other) {
-        if (other instanceof BasisChange) {
-            final BasisChange bt = (BasisChange) other;
-            return new BasisChange((Matrix) bt.left.times(this.left),
+        if (other instanceof CoordinateChange) {
+            final CoordinateChange bt = (CoordinateChange) other;
+            return new CoordinateChange((Matrix) bt.left.times(this.left),
                     (Matrix) this.right.times(bt.right));
         } else if (other instanceof IArithmetic) {
             return ((IArithmetic) other).rtimes(this);
@@ -159,8 +159,8 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      * @see org.gavrog.jane.numbers.ArithmeticBase#compareTo(java.lang.Object)
      */
     public int compareTo(final Object other) {
-        if (other instanceof BasisChange) {
-            final BasisChange ob = (BasisChange) other;
+        if (other instanceof CoordinateChange) {
+            final CoordinateChange ob = (CoordinateChange) other;
             final int dim = getDimension();
             if (dim != ob.getDimension()) {
                 throw new IllegalArgumentException("dimensions must be equal");
@@ -193,7 +193,7 @@ public class BasisChange extends ArithmeticBase implements IArithmetic {
      */
     public String toString() {
         final StringBuffer buf = new StringBuffer(60);
-        buf.append("BasisChange(");
+        buf.append("CoordinateChange(");
         buf.append(getBasis().toString());
         buf.append(",");
         buf.append(getOrigin().toString());

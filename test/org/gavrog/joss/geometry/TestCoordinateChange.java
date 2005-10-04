@@ -21,15 +21,15 @@ import junit.framework.TestCase;
 import org.gavrog.jane.compounds.Matrix;
 
 /**
- * Unit tests for {@link org.gavrog.joss.geometry.BasisChange}.
+ * Unit tests for {@link org.gavrog.joss.geometry.CoordinateChange}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestBasisChange.java,v 1.2 2005/10/02 23:14:45 odf Exp $
+ * @version $Id: TestCoordinateChange.java,v 1.1 2005/10/04 22:18:04 odf Exp $
  */
-public class TestBasisChange extends TestCase {
+public class TestCoordinateChange extends TestCase {
     final Matrix M = new Matrix(new int[][] { { 0, 2, 0 }, { 0, 0, 1 }, { 1, 0, 0 } });
     final Point p = new Point(new int[] { -1, 1, 1 });
-    final BasisChange T = new BasisChange(M, p);
+    final CoordinateChange T = new CoordinateChange(M, p);
 
     /*
      * @see TestCase#setUp()
@@ -48,13 +48,13 @@ public class TestBasisChange extends TestCase {
     public void testHashCode() {
         final Matrix A = new Matrix(new int[][] { { 0, 2, 0 }, { 0, 0, 1 }, { 1, 0, 0 } });
         final Point q = new Point(new int[] { -1, 1, 1 });
-        assertEquals(T.hashCode(), new BasisChange(A, q).hashCode());
+        assertEquals(T.hashCode(), new CoordinateChange(A, q).hashCode());
     }
 
     public void testIsExact() {
         assertTrue(T.isExact());
         final Point q = new Point(new double[] { -1, 1, 1 });
-        assertFalse(new BasisChange(M, q).isExact());
+        assertFalse(new CoordinateChange(M, q).isExact());
     }
 
     public void testZero() {
@@ -102,15 +102,15 @@ public class TestBasisChange extends TestCase {
         final Point q = new Point(new int[] { 1, 0, 0 });
         final Matrix B = new Matrix(new int[][] { { 0, 2, 0 }, { 0, 0, 2 }, { 1, 0, 0 } });
         final Point r = new Point(new int[] { -1, 3, 1 });
-        assertEquals(new BasisChange(B, r), T.times(new BasisChange(A, q)));
+        assertEquals(new CoordinateChange(B, r), T.times(new CoordinateChange(A, q)));
     }
 
     public void testCompareTo() {
         final int[][] A = new int[][] { { 0, 2, 0 }, { 0, 0, 1 }, { 1, 0, 0 } };
         final Point q = new Point(new int[] { -1, 1, 1 });
-        assertEquals(0, T.compareTo(new BasisChange(new Matrix(A), q)));
+        assertEquals(0, T.compareTo(new CoordinateChange(new Matrix(A), q)));
         final Point r = new Point(new int[] { -1, 1, 2 });
-        assertTrue(T.compareTo(new BasisChange(new Matrix(A), r)) < 0);
+        assertTrue(T.compareTo(new CoordinateChange(new Matrix(A), r)) < 0);
     }
 
     public void testFloor() {
@@ -122,7 +122,7 @@ public class TestBasisChange extends TestCase {
     }
 
     public void testToString() {
-        final String s = "BasisChange(Matrix([[0,2,0],[0,0,1],[1,0,0]]),Point(-1,1,1))";
+        final String s = "CoordinateChange(Matrix([[0,2,0],[0,0,1],[1,0,0]]),Point(-1,1,1))";
         assertEquals(s, T.toString());
     }
 
@@ -141,7 +141,7 @@ public class TestBasisChange extends TestCase {
     }
     
     public void testConstructorFromOperator() {
-        final BasisChange S = new BasisChange(new Operator("z-1,2x+1,y+1"));
+        final CoordinateChange S = new CoordinateChange(new Operator("z-1,2x+1,y+1"));
         assertEquals(T.inverse(), S);
     }
 }
