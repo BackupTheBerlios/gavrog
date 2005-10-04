@@ -42,7 +42,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.29 2005/10/04 22:18:04 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.30 2005/10/04 22:27:19 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -63,7 +63,6 @@ public class SpaceGroupFinder {
     
     final private CoordinateChange variations[];
     final private Matrix preliminaryBasis;
-    final private List gensOriginalBasis;
     
     /**
      * Constructs a new instance.
@@ -80,7 +79,6 @@ public class SpaceGroupFinder {
             Object res[] = analyzePointGroup3D();
             crystalSystem = ((Integer) res[0]).intValue();
             preliminaryBasis = (Matrix) res[1];
-            gensOriginalBasis = (List) res[2];
             
             // --- compute the coordinate change to the preliminary basis
             final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis, o);
@@ -297,7 +295,6 @@ public class SpaceGroupFinder {
         
         // --- initialize some variables
         final int crystalSystem;
-        final List generators = new ArrayList();
         Vector x = null, y = null, z = null;
         Operator R = null;
         
@@ -311,18 +308,6 @@ public class SpaceGroupFinder {
             final Operator A = (Operator) sixFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) A.times(A);
-            for (final Iterator iter = twoFold.iterator(); iter.hasNext();) {
-                final Operator B = (Operator) iter.next();
-                final Vector t = B.linearAxis();
-                if (!t.isCollinearTo(z)) {
-                    generators.add(B);
-                    generators.add(A.times(B));
-                    break;
-                }
-            }
-            if (generators.size() == 0) {
-                generators.add(A);
-            }
         } else if (fourFold.size() > 1) {
             // --- there is more than one four-fold, but no six-fold, axis
             crystalSystem = CUBIC_SYSTEM;
@@ -331,25 +316,11 @@ public class SpaceGroupFinder {
             R = (Operator) threeFold.iterator().next();
             x = (Vector) z.times(R);
             y = (Vector) x.times(R);
-            generators.add(A);
-            generators.add(R);
         } else if (fourFold.size() > 0) {
             // --- there is exactly one four-fold, but no six-fold, axis
             crystalSystem = TETRAGONAL_SYSTEM;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
-            for (final Iterator iter = twoFold.iterator(); iter.hasNext();) {
-                final Operator B = (Operator) iter.next();
-                final Vector t = B.linearAxis();
-                if (!t.isCollinearTo(z)) {
-                    generators.add(B);
-                    generators.add(A.times(B));
-                    break;
-                }
-            }
-            if (generators.size() == 0) {
-                generators.add(A);
-            }
             R = A;
         } else if (threeFold.size() > 1) {
             // --- multiple three-fold, but no four- or six-fold, axes
@@ -359,20 +330,11 @@ public class SpaceGroupFinder {
             R = (Operator) threeFold.iterator().next();
             x = (Vector) z.times(R);
             y = (Vector) x.times(R);
-            generators.add(A);
-            generators.add(R);
         } else if (threeFold.size() > 0) {
             // --- exactly one three-fold axis, but no four- or six-fold axes
             crystalSystem = TRIGONAL_SYSTEM;
             R = (Operator) threeFold.iterator().next();
             z = R.linearAxis();
-            if (twoFold.size() > 0) {
-                final Operator B = (Operator) twoFold.iterator().next();
-                generators.add(B);
-                generators.add(R.times(B));
-            } else {
-                generators.add(R);
-            }
         } else if (twoFold.size() > 1) {
             // --- mutliply two-fold, no three-, four- or six-fold, axes
             crystalSystem = ORTHORHOMBIC_SYSTEM;
@@ -383,22 +345,15 @@ public class SpaceGroupFinder {
             x = A.linearAxis();
             y = B.linearAxis();
             z = C.linearAxis();
-            generators.add(A);
-            generators.add(B);
-            generators.add(C);
         } else if (twoFold.size() > 0) {
             // --- exactly one two-fold, but no three-, four- or six-fold
             crystalSystem = MONOCLINIC_SYSTEM;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
-            generators.add(A);
         } else {
             // --- no two-, three-, four- or six-fold axes
             crystalSystem = TRICLINIC_SYSTEM;
             z = new Vector(1, 0, 0);
-            if (inversions.size() == 0) {
-                generators.add(new Operator("x+1,y,z"));
-            }
         }
 
         // --- add a first basis vector, if missing
@@ -450,15 +405,9 @@ public class SpaceGroupFinder {
             z = (Vector) z.negative();
         }
 
-        // --- if there's an inversion, we always need it among the generators
-        if (inversions.size() > 0) {
-            generators.add(inversions.iterator().next());
-        }
-
         // --- return the results
         return new Object[] { new Integer(crystalSystem),
-                Vector.toMatrix(new Vector[] { x, y, z }),
-                Collections.unmodifiableList(generators) };
+                Vector.toMatrix(new Vector[] { x, y, z }) };
     }
     
     /**
@@ -915,13 +864,6 @@ public class SpaceGroupFinder {
      */
     Matrix getPreliminaryBasis() {
         return this.preliminaryBasis;
-    }
-
-    /**
-     * @return a set of group generators.
-     */
-    public List getGeneratorsOriginalBasis() {
-        return this.gensOriginalBasis;
     }
 
     /**

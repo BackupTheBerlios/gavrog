@@ -16,8 +16,6 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
-import java.util.List;
-
 import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
@@ -26,7 +24,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.10 2005/10/03 22:12:45 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.11 2005/10/04 22:27:19 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     private SpaceGroupFinder Fddd;
@@ -51,54 +49,17 @@ public class TestSpaceGroupFinder extends TestCase {
     }
 
     public void testGetPreliminaryBasis1() {
-        final List gens = Fddd.getGeneratorsOriginalBasis();
-        assertEquals(4, gens.size());
-        final Operator g[] = new Operator[4];
-        for (int i = 0; i < 4; ++i) {
-            g[i] = (Operator) gens.get(i);
-        }
-        for (int i = 0; i < 3; ++i) {
-            assertEquals(new OperatorType(3, true, 2, true), new OperatorType(g[i]));
-        }
-        assertEquals(new OperatorType(3, false, 1, true), new OperatorType(g[3]));
-        
-        assertEquals(g[2], g[0].times(g[1]));
-        
         final Matrix basis = Fddd.getPreliminaryBasis();
         assertEquals(3, basis.numberOfRows());
         assertEquals(3, basis.numberOfColumns());
         assertTrue(basis.determinant().isPositive());
-        for (int i = 0; i < 3; ++i) {
-            final Operator op = g[i];
-            int countFixed = 0;
-            int countTurned = 0;
-            for (int j = 0; j < 3; ++j) {
-                final Vector v = new Vector(basis.getRow(j));
-                final Vector w = (Vector) v.times(op);
-                if (v.equals(w)) {
-                    ++countFixed;
-                } else if (v.equals(w.negative())) {
-                    ++countTurned;
-                }
-            }
-            assertEquals(1, countFixed);
-            assertEquals(2, countTurned);
-        }
     }
 
     public void testGetPreliminaryBasis2() {
-        final List gens = P31.getGeneratorsOriginalBasis();
-        assertEquals(1, gens.size());
-        final Operator g = (Operator) gens.get(0);
-        assertEquals(new OperatorType(3, true, 3, true), new OperatorType(g));
-        
         final Matrix basis = P31.getPreliminaryBasis();
         assertEquals(3, basis.numberOfRows());
         assertEquals(3, basis.numberOfColumns());
         assertTrue(basis.determinant().isPositive());
-        final Vector v[] = Vector.fromMatrix(basis);
-        assertEquals(v[2], v[2].times(g));
-        assertEquals(v[1], v[0].times(g));
     }
     
     public void testGetCentering() {
