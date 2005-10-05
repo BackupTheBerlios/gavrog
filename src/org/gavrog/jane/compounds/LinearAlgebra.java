@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.2 2005/08/26 03:10:20 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.3 2005/10/05 19:59:29 odf Exp $
  */
 public class LinearAlgebra {
     /**
@@ -216,10 +216,10 @@ public class LinearAlgebra {
         
         // --- construct a solution
         final Matrix v = (Matrix) P.times(b);
-        final Matrix y = new Matrix(n, k);
+        final Matrix y = new Matrix(m, k);
         
-        for (int i = 0; i < n; ++i) {
-            final IArithmetic d = (i < m) ? D.get(i, i) : Whole.ZERO;
+        for (int i = 0; i < m; ++i) {
+            final IArithmetic d = (i < n) ? D.get(i, i) : Whole.ZERO;
             for (int j = 0; j < k; ++j) {
                 final IArithmetic r = v.get(i, j);
                 final IArithmetic s;
