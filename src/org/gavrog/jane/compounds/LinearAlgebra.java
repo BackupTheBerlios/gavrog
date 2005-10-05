@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.3 2005/10/05 19:59:29 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.4 2005/10/05 22:04:16 odf Exp $
  */
 public class LinearAlgebra {
     /**
@@ -119,10 +119,11 @@ public class LinearAlgebra {
     }
     
     /**
-     * Returns an array of 3 matrices P, D, Q, where D is a diagonal matrix and
-     * P and Q are unimodular matrices such that P*M*Q = D. If the parameter
-     * integral is set, both P and Q will have integer entries only, otherwise,
-     * Q will be the identity.
+     * Returns an array of 3 matrices P, D, Q, where D is a diagonal matrix and P and Q
+     * are unimodular matrices such that P*M*Q = D. Nonzero entries in D are consecutive
+     * along the diagonal and, if present, start at the first position. If the parameter
+     * integral is set, both P and Q will have integer entries only, otherwise, Q will be
+     * the identity.
      * 
      * @param M the matrix to transform into a Smith normal form.
      * @param integral if true, stay within integer (Whole) numbers.
