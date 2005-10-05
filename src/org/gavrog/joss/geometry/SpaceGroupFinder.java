@@ -20,20 +20,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.collections.HashMapWithDefault;
-import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
 
 
 /**
@@ -42,7 +38,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.30 2005/10/04 22:27:19 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.31 2005/10/05 00:21:05 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -53,13 +49,11 @@ public class SpaceGroupFinder {
     final public static int MONOCLINIC_SYSTEM = 2;
     final public static int TRICLINIC_SYSTEM = 1;
     
-    private static Map _lookupMap = null;
-    
     final private SpaceGroup G;
     final private int crystalSystem;
     final private char centering;
-    final private CoordinateChange toStd;
-    final private String groupName;
+    //final private CoordinateChange toStd;
+    //final private String groupName;
     
     final private CoordinateChange variations[];
     final private Matrix preliminaryBasis;
@@ -89,48 +83,26 @@ public class SpaceGroupFinder {
                 primitiveCell[i] = (Vector) primitiveCell[i].times(toPreliminary);
             }
             
-            // --- compute the centering and a normalized lattice basis
-            res = normalizedLatticeBasis(primitiveCell);
+            // --- compute the centering and a normalized basis
+            res = normalizedBasis(primitiveCell);
             final Matrix normalizedBasis = (Matrix) res[0];
             this.centering = ((Character) res[1]).charValue();
             
             // --- compute coordinate change to normalized basis
-            final CoordinateChange pre2Canon = new CoordinateChange(normalizedBasis, o);
-            final CoordinateChange toNormalized = (CoordinateChange) toPreliminary.times(pre2Canon);
+            final CoordinateChange pre2Normal = new CoordinateChange(normalizedBasis, o);
+            final CoordinateChange toNormalized = (CoordinateChange) toPreliminary
+                    .times(pre2Normal);
             
-            // --- convert full set of group operators to normalized basis and sort
-            final List ops = convert(G.getOperators(), toNormalized);
-            sortOps(ops);
+            // --- convert a primitive set of group operators to the normalized basis
+            final List ops = convert(G.primitiveOperators(), toNormalized);
             
-            // --- get the lookup map for the combined crystal system and centering
-            final String key = combinedKey(this.crystalSystem, this.centering);
-            final Map lookup = (Map) lookupMap().get(key);
+            // --- convert the primitive cell to the normalized basis
+            for (int i = 0; i < primitiveCell.length; ++i) {
+                primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal);
+            }
             
             // --- determine the coordinate variations the matching process needs to consider
             this.variations = makeVariations(this.crystalSystem, this.centering);
-
-            // --- step through the map to find a matching group
-            String name = null;
-            CoordinateChange match = null;
-            for (final Iterator iter = lookup.keySet().iterator(); iter.hasNext();) {
-                name = (String) iter.next();
-                final Pair entry = (Pair) lookup.get(name);
-                match = matchingTransformation(ops, (List) entry.getSecond());
-                if (match != null) {
-                    final CoordinateChange T = (CoordinateChange) entry.getFirst();
-                    match = (CoordinateChange) match.times(T);
-                    break;
-                }
-            }
-            
-            // --- if successful, store the results
-            if (match != null) {
-                this.toStd = match;
-                this.groupName = name;
-            } else {
-                this.toStd = null;
-                this.groupName = null;
-            }
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
@@ -167,17 +139,6 @@ public class SpaceGroupFinder {
                 return op1.compareTo(op2);
             }
         });
-    }
-    
-    /**
-     * Constructs a key for the combined crystal system and centering of a group.
-     * 
-     * @param crystalSystem the crystal system, encoded as an int.
-     * @param centering the centering, encoded as a one-letter string.
-     * @return the combined key.
-     */
-    private static String combinedKey(final int crystalSystem, final char centering) {
-        return String.valueOf(centering) + crystalSystem;
     }
     
     /**
@@ -223,49 +184,6 @@ public class SpaceGroupFinder {
         return res;
     }
 
-    /**
-     * Returns a map containing lists of space groups organized by their combined crystal
-     * systems and centerings. Each group is represented by a full list of operators,
-     * sorted lexicographically by their linear components.
-     * 
-     * The map returned is static and only constructed once.
-     * 
-     * @return the lookup map.
-     */
-    private static Map lookupMap() {
-        if (_lookupMap == null) {
-            // --- creating a map with default value simplifies the subsequent code
-            final Map map = new HashMapWithDefault() {
-                public Object makeDefault() {
-                    return new HashMap();
-                }
-            };
-            
-            // --- fill the map
-            for (final Iterator iter = SpaceGroupCatalogue.lookupInfo(); iter.hasNext();) {
-                final Lookup lookup = (Lookup) iter.next();
-                final String key = combinedKey(lookup.system, lookup.centering);
-                final CoordinateChange fromStd = lookup.fromStd;
-                final int dim = fromStd.getDimension();
-                final List ops = SpaceGroupCatalogue.operators(dim, lookup.name);
-                final List convertedOps = convert(ops, fromStd);
-                sortOps(convertedOps);
-                final Pair entry = new Pair(fromStd.inverse(), convertedOps);
-                ((Map) map.get(key)).put(lookup.name, entry);
-            }
-            
-            // --- make everything unmodifyable
-            for (final Iterator iter = map.keySet().iterator(); iter.hasNext();) {
-                final String key = (String) iter.next();
-                map.put(key, Collections.unmodifiableList((List) map.get(key)));
-            }
-            _lookupMap = Collections.unmodifiableMap(map);
-        }
-
-        // --- return the map
-        return _lookupMap;
-    }
-    
     /**
      * Analyzes the point group to determine the crystal system and find an
      * appropriate set of generators and a preliminary basis based on it.
@@ -411,13 +329,13 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * Takes a lattice basis and produces a normalized lattice basis and
+     * Takes a lattice basis and produces a normalized basis and
      * centering with respect to the group's crystal system.
      * 
      * @param lattice the lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasis(final Vector lattice[]) {
+    private Object[] normalizedBasis(final Vector lattice[]) {
         // --- compute a lattice basis of smallest Dirichlet vectors
         final Vector reduced[] = Vector.reducedLatticeBasis(lattice, Matrix.one(3));
         final Object res[];
@@ -425,25 +343,25 @@ public class SpaceGroupFinder {
         // --- call the appropriate method for the group's crystal system
         switch (this.crystalSystem) {
         case CUBIC_SYSTEM:
-            res = normalizedLatticeBasisCubic(reduced);
+            res = normalizedBasisCubic(reduced);
             break;
         case HEXAGONAL_SYSTEM:
-            res = normalizedLatticeBasisHexagonal(reduced);
+            res = normalizedBasisHexagonal(reduced);
             break;
         case TRIGONAL_SYSTEM:
-            res = normalizedLatticeBasisTrigonal(reduced);
+            res = normalizedBasisTrigonal(reduced);
             break;
         case TETRAGONAL_SYSTEM:
-            res = normalizedLatticeBasisTetragonal(reduced);
+            res = normalizedBasisTetragonal(reduced);
             break;
         case ORTHORHOMBIC_SYSTEM:
-            res = normalizedLatticeBasisOrthorhombic(reduced);
+            res = normalizedBasisOrthorhombic(reduced);
             break;
         case MONOCLINIC_SYSTEM:
-            res = normalizedLatticeBasisMonoclinic(reduced);
+            res = normalizedBasisMonoclinic(reduced);
             break;
         case TRICLINIC_SYSTEM:
-            res = normalizedLatticeBasisTriclinic(reduced);
+            res = normalizedBasisTriclinic(reduced);
         default:
             throw new RuntimeException("unknown crystal system");
         }
@@ -456,13 +374,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the cubic crystal system.
      * 
      * @param v the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisCubic(final Vector[] v) {
+    private Object[] normalizedBasisCubic(final Vector[] v) {
         int n = 0;
         int k = 3;
         for (int i = 2; i >= 0; --i) {
@@ -496,13 +414,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the hexagonal crystal system.
      * 
      * @param b the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisHexagonal(final Vector[] b) {
+    private Object[] normalizedBasisHexagonal(final Vector[] b) {
         final Vector v[];
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(b[0])) {
@@ -518,13 +436,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the trigonal crystal system.
      * 
      * @param b the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisTrigonal(final Vector[] b) {
+    private Object[] normalizedBasisTrigonal(final Vector[] b) {
         final Vector v[];
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(b[0])) {
@@ -553,13 +471,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the tetragonal crystal system.
      * 
      * @param b the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisTetragonal(final Vector[] b) {
+    private Object[] normalizedBasisTetragonal(final Vector[] b) {
         char centering = 'P';
         final Vector v[] = new Vector[] { b[0], b[1], b[2] };
         final Vector z = new Vector(0, 0, 1);
@@ -590,13 +508,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the orthorhombic crystal system.
      * 
      * @param basis the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisOrthorhombic(final Vector[] basis) {
+    private Object[] normalizedBasisOrthorhombic(final Vector[] basis) {
         final int d[] = new int[3];
         for (int i = 0; i < 3; ++i) {
             d[i] = 0;
@@ -743,13 +661,13 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the monoclinic crystal system.
      * 
      * @param b the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisMonoclinic(final Vector[] b) {
+    private Object[] normalizedBasisMonoclinic(final Vector[] b) {
         char centering = 'P';
         final Vector v[];
         final Vector z = new Vector(0, 0, 1);
@@ -815,43 +733,35 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Matches two operator list in normalized form by applying a restricted set of basis
-     * transformations and a possible shift of origin to the first of them. The basis
-     * transformations used depend on the crystal system and centering of the group under
-     * inspection.
-     * 
-     * @param ops the normalized operators for the group under inspection.
-     * @param opsToMatch the operator list to match.
-     * @return the coordinate change to apply to the first list, or null.
-     */
-    private CoordinateChange matchingTransformation(final List ops, final List opsToMatch) {
-        if (ops.size() != opsToMatch.size()) {
-            throw new IllegalArgumentException("list must have equal sizes");
-        }
-        for (int i = 0; i < this.variations.length; ++i) {
-            final CoordinateChange T = this.variations[i];
-            final List probes = convert(ops, T);
-            sortOps(probes);
-            for (int j = 0; j < probes.size(); ++j) {
-                final Matrix A = ((Operator) probes.get(j)).getCoordinates();
-                final Matrix B = ((Operator) opsToMatch.get(j)).getCoordinates();
-                //TODO finish this, taking centering into account
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Takes a reduced lattice basis and produces a normalized lattice basis and
+     * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the triclinic crystal system.
      * 
      * @param b the reduced lattice basis.
-     * @return the normalized lattice basis and centering.
+     * @return the normalized basis and centering.
      */
-    private Object[] normalizedLatticeBasisTriclinic(final Vector[] b) {
+    private Object[] normalizedBasisTriclinic(final Vector[] b) {
         return new Object[] { b, new Character('P') };
     }
 
+    /**
+     * Constructs a unique key for the group under inspection.
+     * 
+     * @param ops a primitive set of normalized ops for the group.
+     * @param latticeBasis a lattice basis expressed in terms of a normalized basis.
+     * 
+     * @return the unique key.
+     */
+    private String makeGroupKey(final List ops, final List latticeBasis) {
+        // TODO finish implementing makeGroupKey
+        String best = null;
+        CoordinateChange bestChange = null;
+        for (int i = 0; i < this.variations.length; ++i) {
+            final List probes = convert(ops, this.variations[i]);
+            sortOps(probes);
+        }
+        return best;
+    }
+    
     /**
      * @return the crystal system for the group.
      */
@@ -879,9 +789,9 @@ public class SpaceGroupFinder {
      * 
      * @return the name of the matched group.
      */
-    public String getGroupName() {
-        return this.groupName;
-    }
+//    public String getGroupName() {
+//        return this.groupName;
+//    }
     
     /**
      * Returns a basis change that maps the group under inspection to its standard setting
@@ -889,7 +799,7 @@ public class SpaceGroupFinder {
      * 
      * @return the transformation to the standard setting.
      */
-    public CoordinateChange getToStd() {
-        return this.toStd;
-    }
+//    public CoordinateChange getToStd() {
+//        return this.toStd;
+//    }
 }
