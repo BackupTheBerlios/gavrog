@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
@@ -38,7 +39,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.31 2005/10/05 00:21:05 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.32 2005/10/05 19:59:52 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -103,6 +104,9 @@ public class SpaceGroupFinder {
             
             // --- determine the coordinate variations the matching process needs to consider
             this.variations = makeVariations(this.crystalSystem, this.centering);
+            
+            // --- construct a unique key for the group
+            makeGroupKey(ops, primitiveCell);
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
@@ -751,13 +755,40 @@ public class SpaceGroupFinder {
      * 
      * @return the unique key.
      */
-    private String makeGroupKey(final List ops, final List latticeBasis) {
+    String makeGroupKey(final List ops, final Vector latticeBasis[]) {
         // TODO finish implementing makeGroupKey
+        int k = 12;
+        final int d = this.G.getDimension();
+        final Matrix I = Matrix.one(d);
+        final int n = ops.size();
+        
         String best = null;
-        CoordinateChange bestChange = null;
+        CoordinateChange bestVariation = null;
+        
+        // --- loop through the necessary coordinate system variations for this group
         for (int i = 0; i < this.variations.length; ++i) {
+            // --- convert the operators to this coordinate system and sort
             final List probes = convert(ops, this.variations[i]);
             sortOps(probes);
+            
+            // --- find 'nice' origin choices
+            final Matrix A = new Matrix(d, d * n);
+            final Matrix b = new Matrix(1, d * n);
+            for (int j = 0; j < n; ++j) {
+                final Matrix M = ((Operator) probes.get(j)).getCoordinates();
+                A.setSubMatrix(0, d * j, (Matrix) I.minus(M.getSubMatrix(0, 0, d, d)));
+                b.setSubMatrix(0, d * j, (Matrix) M.getSubMatrix(d, 0, 1, d).times(k));
+            }
+//            System.out.println("A = " + A);
+//            System.out.println("b = " + b);
+            final Matrix S = LinearAlgebra.solutionInRows(A, b, true);
+            final Point s = new Point(S);
+            final Matrix N = LinearAlgebra.rowNullSpace(A, true);
+            final Vector v[] = Vector.rowVectors(N);
+            System.out.println("  " + s);
+//            for (int j = 0; j < v.length; ++j) {
+//                System.out.println("  " + v[j]);
+//            }
         }
         return best;
     }
