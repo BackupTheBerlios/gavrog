@@ -39,7 +39,7 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.32 2005/10/05 19:59:52 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.33 2005/10/06 05:42:57 odf Exp $
  */
 public class SpaceGroupFinder {
     final public static int CUBIC_SYSTEM = 432;
@@ -105,8 +105,6 @@ public class SpaceGroupFinder {
             // --- determine the coordinate variations the matching process needs to consider
             this.variations = makeVariations(this.crystalSystem, this.centering);
             
-            // --- construct a unique key for the group
-            makeGroupKey(ops, primitiveCell);
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
@@ -756,7 +754,7 @@ public class SpaceGroupFinder {
      * @return the unique key.
      */
     String makeGroupKey(final List ops, final Vector latticeBasis[]) {
-        // TODO finish implementing makeGroupKey
+        // TODO obsolete, but keep as model for a little while
         int k = 12;
         final int d = this.G.getDimension();
         final Matrix I = Matrix.one(d);
