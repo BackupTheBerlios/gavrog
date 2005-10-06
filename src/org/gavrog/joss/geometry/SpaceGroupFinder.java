@@ -26,11 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
 
 
 /**
@@ -39,9 +41,11 @@ import org.gavrog.jane.numbers.Whole;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.33 2005/10/06 05:42:57 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.34 2005/10/06 23:04:31 odf Exp $
  */
 public class SpaceGroupFinder {
+    final private static boolean DEBUG = false;
+    
     final public static int CUBIC_SYSTEM = 432;
     final public static int ORTHORHOMBIC_SYSTEM = 222;
     final public static int HEXAGONAL_SYSTEM = 622;
@@ -57,7 +61,6 @@ public class SpaceGroupFinder {
     //final private String groupName;
     
     final private CoordinateChange variations[];
-    final private Matrix preliminaryBasis;
     
     /**
      * Constructs a new instance.
@@ -73,7 +76,7 @@ public class SpaceGroupFinder {
             // --- first step of analysis
             Object res[] = analyzePointGroup3D();
             crystalSystem = ((Integer) res[0]).intValue();
-            preliminaryBasis = (Matrix) res[1];
+            final Matrix preliminaryBasis = (Matrix) res[1];
             
             // --- compute the coordinate change to the preliminary basis
             final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis, o);
@@ -97,13 +100,11 @@ public class SpaceGroupFinder {
             // --- convert a primitive set of group operators to the normalized basis
             final List ops = convert(G.primitiveOperators(), toNormalized);
             
-            // --- convert the primitive cell to the normalized basis
-            for (int i = 0; i < primitiveCell.length; ++i) {
-                primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal);
-            }
-            
             // --- determine the coordinate variations the matching process needs to consider
             this.variations = makeVariations(this.crystalSystem, this.centering);
+            
+            // --- compare with lookup setting for all the 3d space groups
+            final Pair match = matchOperators(ops);
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
@@ -170,7 +171,7 @@ public class SpaceGroupFinder {
             }
             break;
         case TRIGONAL_SYSTEM:
-            codes = new String[] { "x,y,z", "x-y,y,z" };
+            codes = new String[] { "x,y,z", "x-y,x,z" };
             break;
         case CUBIC_SYSTEM:
             codes = new String[] { "x,y,z", "-y,x,z" };
@@ -746,63 +747,133 @@ public class SpaceGroupFinder {
     }
 
     /**
-     * Constructs a unique key for the group under inspection.
-     * 
+     * Matches a list of group operators to the catalogued space groups.
+
      * @param ops a primitive set of normalized ops for the group.
-     * @param latticeBasis a lattice basis expressed in terms of a normalized basis.
      * 
-     * @return the unique key.
+     * @return a pair containing the name found and the required basis change.
      */
-    String makeGroupKey(final List ops, final Vector latticeBasis[]) {
-        // TODO obsolete, but keep as model for a little while
-        int k = 12;
+    Pair matchOperators(final List ops) {
+        if (DEBUG) {
+            System.out.println("\nStarting lookup process...");
+        }
         final int d = this.G.getDimension();
         final Matrix I = Matrix.one(d);
         final int n = ops.size();
-        
-        String best = null;
-        CoordinateChange bestVariation = null;
-        
-        // --- loop through the necessary coordinate system variations for this group
-        for (int i = 0; i < this.variations.length; ++i) {
-            // --- convert the operators to this coordinate system and sort
-            final List probes = convert(ops, this.variations[i]);
-            sortOps(probes);
+
+        // --- iterate through the group catalogue
+        for (final Iterator iter = SpaceGroupCatalogue.lookupInfo(); iter.hasNext();) {
+            // --- retrieve the lookup info for the next group
+            final Lookup info = (Lookup) iter.next();
             
-            // --- find 'nice' origin choices
-            final Matrix A = new Matrix(d, d * n);
-            final Matrix b = new Matrix(1, d * n);
-            for (int j = 0; j < n; ++j) {
-                final Matrix M = ((Operator) probes.get(j)).getCoordinates();
-                A.setSubMatrix(0, d * j, (Matrix) I.minus(M.getSubMatrix(0, 0, d, d)));
-                b.setSubMatrix(0, d * j, (Matrix) M.getSubMatrix(d, 0, 1, d).times(k));
+            // --- skip if centering or system are different
+            if (info.centering != this.centering || info.system != this.crystalSystem) {
+                continue;
             }
-//            System.out.println("A = " + A);
-//            System.out.println("b = " + b);
-            final Matrix S = LinearAlgebra.solutionInRows(A, b, true);
-            final Point s = new Point(S);
-            final Matrix N = LinearAlgebra.rowNullSpace(A, true);
-            final Vector v[] = Vector.rowVectors(N);
-            System.out.println("  " + s);
-//            for (int j = 0; j < v.length; ++j) {
-//                System.out.println("  " + v[j]);
-//            }
+            
+            if (DEBUG) {
+                System.out.println("  comparing with group " + info.name);
+            }
+            
+            // --- get the list of operators to match
+            final SpaceGroup H = new SpaceGroup(d, info.name);
+            final List primitive = H.primitiveOperatorsSorted();
+            final List opsToMatch = convert(primitive, info.fromStd);
+            sortOps(opsToMatch);
+            
+            // --- both operator lists must have the same length
+            if (opsToMatch.size() != n) {
+                if (DEBUG) {
+                    System.out.println("    operator lists have different sizes: " + n
+                            + " <-> " + opsToMatch.size());
+                }
+                continue;
+            }
+            
+            // --- check if linear parts are equal
+            final List sortedOps = new ArrayList();
+            sortedOps.addAll(ops);
+            sortOps(sortedOps);
+            boolean good = true;
+            for (int j = 0; j < n; ++j) {
+                final Operator op1 = (Operator) sortedOps.get(j);
+                final Operator op2 = (Operator) opsToMatch.get(j);
+                if (!op1.linearPart().equals(op2.linearPart())) {
+                    good = false;
+                    break;
+                }
+            }
+            if (!good) {
+                if (DEBUG) {
+                    System.out.println("    operator lists have different linear parts");
+                    for (int k = 0; k < n; ++k) {
+                        System.out.println("      " + sortedOps.get(k) + " <-> "
+                                + opsToMatch.get(k));
+                    }
+                }
+                continue;
+            }
+            
+            // --- loop through the necessary coordinate system variations for this group
+            for (int i = 0; i < this.variations.length; ++i) {
+                // --- convert the operators to this coordinate system and sort
+                final List probes = convert(ops, this.variations[i]);
+                sortOps(probes);
+
+                // --- check if linear parts are still equal
+                for (int j = 0; j < n; ++j) {
+                    final Operator op1 = (Operator) probes.get(j);
+                    final Operator op2 = (Operator) opsToMatch.get(j);
+                    if (!op1.linearPart().equals(op2.linearPart())) {
+                        final String text = "serious program error encountered";
+                        throw new RuntimeException(text);
+                    }
+                }
+                
+                // --- find an origin shift that makes the lists coincide
+                final Matrix A = new Matrix(d, d * n);
+                final Matrix b = new Matrix(1, d * n);
+                for (int j = 0; j < n; ++j) {
+                    final Operator op1 = (Operator) probes.get(j);
+                    final Operator op2 = (Operator) opsToMatch.get(j);
+                    final Matrix L = op1.getCoordinates().getSubMatrix(0, 0, d, d);
+                    final Matrix s1 = op1.translationalPart().getCoordinates();
+                    final Matrix s2 = op2.translationalPart().getCoordinates();
+                    
+                    A.setSubMatrix(0, d * j, (Matrix) L.minus(I));
+                    b.setSubMatrix(0, d * j, (Matrix) s2.minus(s1));
+                }
+                if (DEBUG) {
+                    System.out.println("    solving p * " + A + " = " + b);
+                }
+                final Matrix S = LinearAlgebra.solutionInRows(A, b, true);
+                if (S == null) {
+                    continue;
+                } else {
+                    final Point origin = new Point(S);
+                    final CoordinateChange c1 = this.variations[i];
+                    final CoordinateChange c2 = new CoordinateChange(I, origin);
+                    final CoordinateChange c3 = (CoordinateChange) info.fromStd.inverse();
+                    final Pair res = new Pair(info.name, c1.times(c2).times(c3));
+                    if (DEBUG) {
+                        System.out.println("    success: " + res);
+                    }
+                    return res;
+                }
+            }
         }
-        return best;
+        
+        // --- nothing was found
+        if (DEBUG) {
+            System.out.println("no success");
+        }
+        return null;
     }
-    
     /**
      * @return the crystal system for the group.
      */
     public int getCrystalSystem() {
         return this.crystalSystem;
-    }
-
-    /**
-     * @return a preliminary basis based on the point group structure.
-     */
-    Matrix getPreliminaryBasis() {
-        return this.preliminaryBasis;
     }
 
     /**
