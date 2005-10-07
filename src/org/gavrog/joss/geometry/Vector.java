@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.19 2005/09/27 20:20:09 odf Exp $
+ * @version $Id: Vector.java,v 1.20 2005/10/07 23:40:40 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -566,7 +566,12 @@ public class Vector extends ArithmeticBase implements IArithmetic {
             public int compare(final Object o1, final Object o2) {
                 final Vector v1 = (Vector) o1;
                 final Vector v2 = (Vector) o2;
-                return dot(v1, v1, M).compareTo(dot(v2, v2, M));
+                final int d = dot(v1, v1, M).compareTo(dot(v2, v2, M));
+                if (d == 0) {
+                    return v2.abs().compareTo(v1.abs());
+                } else {
+                    return d;
+                }
             }
         });
         
@@ -577,7 +582,10 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         for (int i = 0; i < d; ++i) {
             while (k < tmp.length) {
                 w[i] = tmp[k];
-                if (dot(w[0], w[i], M).isPositive()) {
+                if (w[i].isNegative()) {
+                    w[i] = (Vector) w[i].negative();
+                }
+                if (i > 0 && dot(w[0], w[i], M).isPositive()) {
                     w[i] = (Vector) w[i].negative();
                 }
                 A.setRow(i, w[i].getCoordinates());
@@ -591,7 +599,7 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         if (!isBasis(v)) {
             throw new RuntimeException("serious problem: could not find a basis");
         }
-        if (A.determinant().sign() != toMatrix(v).determinant().sign()) {
+        if (toMatrix(w).determinant().sign() != toMatrix(v).determinant().sign()) {
             w[d-1] = (Vector) w[d-1].negative(); 
         }
         return w;
