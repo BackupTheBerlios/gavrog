@@ -17,6 +17,7 @@ limitations under the License.
 package org.gavrog.joss.geometry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,7 +42,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.37 2005/10/07 07:07:20 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.38 2005/10/07 23:42:19 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -76,11 +77,14 @@ public class SpaceGroupFinder {
         if (d == 3) {
             // --- first step of analysis
             Object res[] = analyzePointGroup3D();
-            crystalSystem = ((Integer) res[0]).intValue();
+            this.crystalSystem = ((Integer) res[0]).intValue();
             final Matrix preliminaryBasis = (Matrix) res[1];
             
             // --- compute the coordinate change to the preliminary basis
             final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis, o);
+            if (DEBUG > 0) {
+                System.err.println("to preliminary basis: " + toPreliminary);
+            }
             
             // --- get primitive cell vectors and convert to preliminary basis
             final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
@@ -97,6 +101,9 @@ public class SpaceGroupFinder {
             final CoordinateChange pre2Normal = new CoordinateChange(normalizedBasis, o);
             final CoordinateChange toNormalized = (CoordinateChange) toPreliminary
                     .times(pre2Normal);
+            if (DEBUG > 0) {
+                System.err.println("to normalized basis: " + toNormalized);
+            }
             
             // --- convert a primitive set of group operators to the normalized basis
             final List ops = convert(G.primitiveOperators(), toNormalized);
@@ -106,12 +113,22 @@ public class SpaceGroupFinder {
             
             // --- convert primitive cell vectors to normalized basis
             for (int i = 0; i < primitiveCell.length; ++i) {
-                primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal);
+                primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal).abs();
             }
+            Arrays.sort(primitiveCell, new Comparator() {
+                public int compare(final Object o1, final Object o2) {
+                    final Vector v1 = (Vector) o1;
+                    final Vector v2 = (Vector) o2;
+                    return v2.abs().compareTo(v1.abs());
+                }
+            });
             
             // --- compute the coordinate change operator to the primitive setting
             final Matrix M = Vector.toMatrix(primitiveCell);
             final CoordinateChange C = new CoordinateChange(M, Point.origin(d));
+            if (DEBUG > 0) {
+                System.err.println("normalized to primitive: " + C);
+            }
             
             // --- compare with lookup setting for all the 3d space groups
             final Pair match = matchOperators(ops, C);
@@ -130,6 +147,9 @@ public class SpaceGroupFinder {
                     this.extension = null;
                 }
                 final CoordinateChange c = (CoordinateChange) match.getSecond();
+                if (DEBUG > 0) {
+                    System.err.println("final coordinate change: " + c);
+                }
                 this.toStd = (CoordinateChange) toNormalized.times(c);
             }
             
@@ -301,7 +321,7 @@ public class SpaceGroupFinder {
         } else {
             // --- no two-, three-, four- or six-fold axes
             crystalSystem = TRICLINIC_SYSTEM;
-            z = new Vector(1, 0, 0);
+            z = new Vector(0, 0, 1);
         }
 
         // --- add a first basis vector, if missing
@@ -315,9 +335,9 @@ public class SpaceGroupFinder {
                 }
             }
             if (x == null) {
-                x = new Vector(0, 0, 1);
+                x = new Vector(1, 0, 0);
                 if (x.isCollinearTo(z)) {
-                    x = new Vector(1, 0, 0);
+                    x = new Vector(0, 1, 0);
                 }
                 if (mirrors.size() > 0) {
                     final Operator M = (Operator) mirrors.iterator().next();
@@ -352,9 +372,10 @@ public class SpaceGroupFinder {
             z = (Vector) z.negative();
         }
 
+        final Matrix M = Vector.toMatrix(new Vector[] { x, y, z });
+        
         // --- return the results
-        return new Object[] { new Integer(crystalSystem),
-                Vector.toMatrix(new Vector[] { x, y, z }) };
+        return new Object[] { new Integer(crystalSystem), M };
     }
     
     /**
@@ -800,7 +821,7 @@ public class SpaceGroupFinder {
      */
     private Pair matchOperators(final List ops, final CoordinateChange toPrimitive) {
         if (DEBUG > 0) {
-            System.out.println("\nStarting lookup process...");
+            System.err.println("\nStarting lookup process...");
         }
         final int d = this.G.getDimension();
         final Matrix I = Matrix.one(d);
@@ -817,7 +838,7 @@ public class SpaceGroupFinder {
             }
             
             if (DEBUG > 0) {
-                System.out.println("  comparing with group " + info.name);
+                System.err.println("  comparing with group " + info.name);
             }
             
             // --- get the list of operators to match
@@ -829,7 +850,7 @@ public class SpaceGroupFinder {
             // --- both operator lists must have the same length
             if (opsToMatch.size() != n) {
                 if (DEBUG > 0) {
-                    System.out.println("    operator lists have different sizes: " + n
+                    System.err.println("    operator lists have different sizes: " + n
                             + " <-> " + opsToMatch.size());
                 }
                 continue;
@@ -853,11 +874,11 @@ public class SpaceGroupFinder {
                 }
                 if (!good) {
                     if (DEBUG > 0) {
-                        System.out
+                        System.err
                                 .println("    operator lists have different linear parts");
                         if (DEBUG > 1) {
                             for (int k = 0; k < n; ++k) {
-                                System.out.println("      " + probes.get(k) + " <-> "
+                                System.err.println("      " + probes.get(k) + " <-> "
                                                    + opsToMatch.get(k));
                             }
                         }
@@ -881,19 +902,19 @@ public class SpaceGroupFinder {
                     b.setSubMatrix(0, d * j, (Matrix) s2.minus(s1));
                 }
                 if (DEBUG > 0) {
-                    System.out.println("    solving p * " + A + " = " + b);
+                    System.err.println("    solving p * " + A + " = " + b);
                 }
                 final Matrix S = LinearAlgebra.solutionInRows(A, b, true);
                 if (S == null) {
                     continue;
                 } else {
-                    final Point origin = new Point(S);
+                    final Point origin = (Point) new Point(S).times(toPrimitive.inverse());
                     final CoordinateChange c1 = this.variations[i];
                     final CoordinateChange c2 = new CoordinateChange(I, origin);
                     final CoordinateChange c3 = (CoordinateChange) info.fromStd.inverse();
                     final Pair res = new Pair(info.name, c1.times(c2).times(c3));
                     if (DEBUG > 0) {
-                        System.out.println("    success: " + res);
+                        System.err.println("    success: " + res);
                     }
                     return res;
                 }
@@ -902,7 +923,7 @@ public class SpaceGroupFinder {
         
         // --- nothing was found
         if (DEBUG > 0) {
-            System.out.println("no success");
+            System.err.println("no success");
         }
         return null;
     }
