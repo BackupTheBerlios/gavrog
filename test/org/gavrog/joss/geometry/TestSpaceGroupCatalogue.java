@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  * Unit tests for class {@link org.gavrog.joss.geometry.SpaceGroupCatalogue}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupCatalogue.java,v 1.2 2005/10/01 04:12:52 odf Exp $
+ * @version $Id: TestSpaceGroupCatalogue.java,v 1.3 2005/10/07 06:12:26 odf Exp $
  */
 public class TestSpaceGroupCatalogue extends TestCase {
     public void testOperators() {
@@ -36,8 +36,8 @@ public class TestSpaceGroupCatalogue extends TestCase {
     }
     
     public void testTransform() {
-        final Operator T = SpaceGroupCatalogue.transform(3, "Ia-3d");
+        final CoordinateChange T = SpaceGroupCatalogue.transform(3, "Ia-3d");
         assertNotNull(T);
-        assertEquals(Operator.identity(3), T);
+        assertEquals(new CoordinateChange(Operator.identity(3)), T);
     }
 }

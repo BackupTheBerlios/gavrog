@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,7 +36,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.8 2005/10/04 22:18:04 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.9 2005/10/07 06:12:27 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -52,6 +53,7 @@ public class SpaceGroupCatalogue {
         final public int dimension;
         final public Map nameToOps = new HashMap();
         final public Map nameToTransform = new HashMap();
+        final public List namesInOrder = new ArrayList();
         
         public Table(final int dimension) {
             this.dimension = dimension;
@@ -157,7 +159,8 @@ public class SpaceGroupCatalogue {
                     }
                     table = groupTables[d];
                     table.nameToOps.put(currentName, new LinkedList());
-                    table.nameToTransform.put(currentName, T);
+                    table.nameToTransform.put(currentName, new CoordinateChange(T));
+                    table.namesInOrder.add(currentName);
                 }
             } else if (currentName != null) {
                 final Operator op = new Operator(line).modZ();
@@ -176,10 +179,13 @@ public class SpaceGroupCatalogue {
     final private static String tablePath = packagePath + "/sgtable.data";
     
     /**
-     * Retrieves the list of all known names for group settings for a given dimension.
+     * Retrieves an iterator of all known names for group settings for a given
+     * dimension. Names are returned in the order they appear in in the data
+     * file. This order should be such that all settings for a given group
+     * appear consecutively.
      * 
-     * CAVEAT: a group may have multiple settings, so this method may return more than one
-     * name for each individual group.
+     * CAVEAT: a group may have multiple settings, so this method may return
+     * more than one name for each individual group.
      * 
      * @param dimension the common dimension of the space groups.
      * @return an iterator over the names of space group settings.
@@ -189,7 +195,7 @@ public class SpaceGroupCatalogue {
             parseGroups(tablePath);
         }
     
-        return groupTables[dimension].nameToOps.keySet().iterator();
+        return groupTables[dimension].namesInOrder.iterator();
     }
 
     /**
@@ -265,8 +271,8 @@ public class SpaceGroupCatalogue {
      * @param name the name of the group setting.
      * @return the transformation operator.
      */
-    public static Operator transform(final int dim, final String name) {
-        return (Operator) retrieve(dim, false, name);
+    public static CoordinateChange transform(final int dim, final String name) {
+        return (CoordinateChange) retrieve(dim, false, name);
     }
 
     /**

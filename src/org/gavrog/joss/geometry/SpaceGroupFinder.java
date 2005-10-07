@@ -41,7 +41,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.35 2005/10/07 01:37:19 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.36 2005/10/07 06:12:27 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -104,8 +104,19 @@ public class SpaceGroupFinder {
             // --- determine the coordinate variations the matching process needs to consider
             this.variations = makeVariations(this.crystalSystem, this.centering);
             
+            // --- convert primitive cell vectors to normalized basis
+            for (int i = 0; i < primitiveCell.length; ++i) {
+                primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal);
+            }
+            
+            // --- compute the coordinate change operator to the primitive setting
+            final Matrix M = Vector.toMatrix(primitiveCell);
+            final CoordinateChange C = new CoordinateChange(M, Point.origin(d));
+            
             // --- compare with lookup setting for all the 3d space groups
-            final Pair match = matchOperators(ops);
+            final Pair match = matchOperators(ops, C);
+            
+            // --- postprocess the output of the lookup
             if (match == null) {
                 this.groupName = null;
                 this.extension = null;
@@ -381,8 +392,9 @@ public class SpaceGroupFinder {
             break;
         case TRICLINIC_SYSTEM:
             res = normalizedBasisTriclinic(reduced);
+            break;
         default:
-            throw new RuntimeException("unknown crystal system");
+            throw new RuntimeException("unknown crystal system" + this.crystalSystem);
         }
         
         final Vector L[] = (Vector[]) res[0];
@@ -782,12 +794,12 @@ public class SpaceGroupFinder {
 
     /**
      * Matches a list of group operators to the catalogued space groups.
-
      * @param ops a primitive set of normalized ops for the group.
-     * 
+     * @param toPrimitive changes coordinates to primitive basis.
+
      * @return a pair containing the name found and the required basis change.
      */
-    Pair matchOperators(final List ops) {
+    private Pair matchOperators(final List ops, final CoordinateChange toPrimitive) {
         if (DEBUG > 0) {
             System.out.println("\nStarting lookup process...");
         }
@@ -824,32 +836,6 @@ public class SpaceGroupFinder {
                 continue;
             }
             
-            // --- check if linear parts are equal
-            final List sortedOps = new ArrayList();
-            sortedOps.addAll(ops);
-            sortOps(sortedOps);
-            boolean good = true;
-            for (int j = 0; j < n; ++j) {
-                final Operator op1 = (Operator) sortedOps.get(j);
-                final Operator op2 = (Operator) opsToMatch.get(j);
-                if (!op1.linearPart().equals(op2.linearPart())) {
-                    good = false;
-                    break;
-                }
-            }
-            if (!good) {
-                if (DEBUG > 0) {
-                    System.out.println("    operator lists have different linear parts");
-                    if (DEBUG > 1) {
-                        for (int k = 0; k < n; ++k) {
-                            System.out.println("      " + sortedOps.get(k) + " <-> "
-                                    + opsToMatch.get(k));
-                        }
-                    }
-                }
-                continue;
-            }
-            
             // --- loop through the necessary coordinate system variations for this group
             for (int i = 0; i < this.variations.length; ++i) {
                 // --- convert the operators to this coordinate system and sort
@@ -857,21 +843,37 @@ public class SpaceGroupFinder {
                 sortOps(probes);
 
                 // --- check if linear parts are still equal
+                boolean good = true;
                 for (int j = 0; j < n; ++j) {
                     final Operator op1 = (Operator) probes.get(j);
                     final Operator op2 = (Operator) opsToMatch.get(j);
                     if (!op1.linearPart().equals(op2.linearPart())) {
-                        final String text = "serious program error encountered";
-                        throw new RuntimeException(text);
+                        good = false;
+                        break;
                     }
+                }
+                if (!good) {
+                    if (DEBUG > 0) {
+                        System.out
+                                .println("    operator lists have different linear parts");
+                        if (DEBUG > 1) {
+                            for (int k = 0; k < n; ++k) {
+                                System.out.println("      " + probes.get(k) + " <-> "
+                                                   + opsToMatch.get(k));
+                            }
+                        }
+                    }
+                    continue;
                 }
                 
                 // --- find an origin shift that makes the lists coincide
                 final Matrix A = new Matrix(d, d * n);
                 final Matrix b = new Matrix(1, d * n);
                 for (int j = 0; j < n; ++j) {
-                    final Operator op1 = (Operator) probes.get(j);
-                    final Operator op2 = (Operator) opsToMatch.get(j);
+                    final Operator tmp1 = (Operator) probes.get(j);
+                    final Operator op1 = (Operator) tmp1.times(toPrimitive);
+                    final Operator tmp2 = (Operator) opsToMatch.get(j);
+                    final Operator op2 = (Operator) tmp2.times(toPrimitive);
                     final Matrix L = op1.getCoordinates().getSubMatrix(0, 0, d, d);
                     final Matrix s1 = op1.translationalPart().getCoordinates();
                     final Matrix s2 = op2.translationalPart().getCoordinates();
