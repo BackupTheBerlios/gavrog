@@ -41,10 +41,10 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.34 2005/10/06 23:04:31 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.35 2005/10/07 01:37:19 odf Exp $
  */
 public class SpaceGroupFinder {
-    final private static boolean DEBUG = false;
+    final private static int DEBUG = 0;
     
     final public static int CUBIC_SYSTEM = 432;
     final public static int ORTHORHOMBIC_SYSTEM = 222;
@@ -57,8 +57,9 @@ public class SpaceGroupFinder {
     final private SpaceGroup G;
     final private int crystalSystem;
     final private char centering;
-    //final private CoordinateChange toStd;
-    //final private String groupName;
+    final private CoordinateChange toStd;
+    final private String groupName;
+    final private String extension;
     
     final private CoordinateChange variations[];
     
@@ -105,6 +106,21 @@ public class SpaceGroupFinder {
             
             // --- compare with lookup setting for all the 3d space groups
             final Pair match = matchOperators(ops);
+            if (match == null) {
+                this.groupName = null;
+                this.extension = null;
+                this.toStd = null;
+            } else {
+                final String nameParts[] = ((String) match.getFirst()).split(":");
+                this.groupName = nameParts[0];
+                if (nameParts.length > 1) {
+                    this.extension = nameParts[1];
+                } else {
+                    this.extension = null;
+                }
+                final CoordinateChange c = (CoordinateChange) match.getSecond();
+                this.toStd = (CoordinateChange) toNormalized.times(c);
+            }
             
         } else if (d ==2) {
             throw new UnsupportedOperationException("dimension 2 not yet supported");
@@ -573,7 +589,7 @@ public class SpaceGroupFinder {
         final IArithmetic a;
         final IArithmetic b;
         final IArithmetic c;
-        final char centering;
+        char centering;
 
         switch (n) {
         case 3:
@@ -655,11 +671,29 @@ public class SpaceGroupFinder {
         }
 
         final Rational o = Whole.ZERO;
-        final Matrix A = new Matrix(new IArithmetic[][] {
-                { a, o, o },
-                { o, b, o },
-                { o, o, c },
-                });
+        final Matrix A;
+        if (centering == 'A') {
+            A = new Matrix(new IArithmetic[][] {
+                    { o, b, o },
+                    { o, o, c },
+                    { a, o, o },
+                    });
+            centering = 'C';
+        } else if (centering == 'B') {
+            A = new Matrix(new IArithmetic[][] {
+                    { o, o, c },
+                    { a, o, o },
+                    { o, b, o },
+                    });
+            centering = 'C';
+        } else {
+            A = new Matrix(new IArithmetic[][] {
+                    { a, o, o },
+                    { o, b, o },
+                    { o, o, c },
+                    });
+       }
+        
         return new Object[] { Vector.rowVectors(A), new Character(centering) };
     }
 
@@ -754,7 +788,7 @@ public class SpaceGroupFinder {
      * @return a pair containing the name found and the required basis change.
      */
     Pair matchOperators(final List ops) {
-        if (DEBUG) {
+        if (DEBUG > 0) {
             System.out.println("\nStarting lookup process...");
         }
         final int d = this.G.getDimension();
@@ -771,7 +805,7 @@ public class SpaceGroupFinder {
                 continue;
             }
             
-            if (DEBUG) {
+            if (DEBUG > 0) {
                 System.out.println("  comparing with group " + info.name);
             }
             
@@ -783,7 +817,7 @@ public class SpaceGroupFinder {
             
             // --- both operator lists must have the same length
             if (opsToMatch.size() != n) {
-                if (DEBUG) {
+                if (DEBUG > 0) {
                     System.out.println("    operator lists have different sizes: " + n
                             + " <-> " + opsToMatch.size());
                 }
@@ -804,11 +838,13 @@ public class SpaceGroupFinder {
                 }
             }
             if (!good) {
-                if (DEBUG) {
+                if (DEBUG > 0) {
                     System.out.println("    operator lists have different linear parts");
-                    for (int k = 0; k < n; ++k) {
-                        System.out.println("      " + sortedOps.get(k) + " <-> "
-                                + opsToMatch.get(k));
+                    if (DEBUG > 1) {
+                        for (int k = 0; k < n; ++k) {
+                            System.out.println("      " + sortedOps.get(k) + " <-> "
+                                    + opsToMatch.get(k));
+                        }
                     }
                 }
                 continue;
@@ -843,7 +879,7 @@ public class SpaceGroupFinder {
                     A.setSubMatrix(0, d * j, (Matrix) L.minus(I));
                     b.setSubMatrix(0, d * j, (Matrix) s2.minus(s1));
                 }
-                if (DEBUG) {
+                if (DEBUG > 0) {
                     System.out.println("    solving p * " + A + " = " + b);
                 }
                 final Matrix S = LinearAlgebra.solutionInRows(A, b, true);
@@ -855,7 +891,7 @@ public class SpaceGroupFinder {
                     final CoordinateChange c2 = new CoordinateChange(I, origin);
                     final CoordinateChange c3 = (CoordinateChange) info.fromStd.inverse();
                     final Pair res = new Pair(info.name, c1.times(c2).times(c3));
-                    if (DEBUG) {
+                    if (DEBUG > 0) {
                         System.out.println("    success: " + res);
                     }
                     return res;
@@ -864,7 +900,7 @@ public class SpaceGroupFinder {
         }
         
         // --- nothing was found
-        if (DEBUG) {
+        if (DEBUG > 0) {
             System.out.println("no success");
         }
         return null;
@@ -889,9 +925,9 @@ public class SpaceGroupFinder {
      * 
      * @return the name of the matched group.
      */
-//    public String getGroupName() {
-//        return this.groupName;
-//    }
+    public String getGroupName() {
+        return this.groupName;
+    }
     
     /**
      * Returns a basis change that maps the group under inspection to its standard setting
@@ -899,7 +935,16 @@ public class SpaceGroupFinder {
      * 
      * @return the transformation to the standard setting.
      */
-//    public CoordinateChange getToStd() {
-//        return this.toStd;
-//    }
+    public CoordinateChange getToStd() {
+        return this.toStd;
+    }
+    
+    /**
+     * An extension to the tabulated name of the group, if present.
+     * 
+     * @return the group name's extension.
+     */
+    public String getExtension() {
+        return this.extension;
+    }
 }

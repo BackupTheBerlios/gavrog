@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for class LinearAlgebra.
  * 
  * @author Olaf Delgado
- * @version $Id: TestLinearAlgebra.java,v 1.2 2005/08/26 03:10:20 odf Exp $
+ * @version $Id: TestLinearAlgebra.java,v 1.3 2005/10/07 01:37:19 odf Exp $
  */
 public class TestLinearAlgebra extends TestCase {
     // TODO add tests for matrices with floating point entries.
@@ -97,6 +97,10 @@ public class TestLinearAlgebra extends TestCase {
     public void testSmithNormalForm() {
         testSmithNormalForm(A, true);
         testSmithNormalForm(A, false);
+        final Matrix L = new Matrix(new int[][] { { -2, 0, 0, -2, 0, 0 },
+                { 0, -2, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, -2 } });
+        testSmithNormalForm(L, true);
+        //testSmithNormalForm(L, false);
     }
 
     private void testSmithNormalForm(final Matrix A, final boolean integral) {
@@ -140,6 +144,14 @@ public class TestLinearAlgebra extends TestCase {
         final Matrix b = new Matrix(new int[][] { { 0 }, { 1 } });
         testSolutionInColumns(M, b, true, true);
         testSolutionInColumns(M, b, false, false);
+        testSolutionInColumns(M, (Matrix) b.dividedBy(2), true, false);
+        
+        final Matrix L = new Matrix(
+                new int[][] { { -2, 0, 0 }, { 0, -2, 0 }, { 0, 0, 0 } });
+        final Matrix r = new Matrix(new int[][] { { 0 }, { -1 }, { 1 } });
+        testSolutionInColumns(L, r, true, true);
+        //testSolutionInColumns(L, r, false, false);
+        testSolutionInColumns(L, (Matrix) r.dividedBy(2), true, false);
     }
 
     private void testSolutionInColumns(final Matrix A, final Matrix b,
@@ -164,6 +176,14 @@ public class TestLinearAlgebra extends TestCase {
         final Matrix b = new Matrix(new int[][] { { 0, 1 } });
         testSolutionInRows(M, b, true, true);
         testSolutionInRows(M, b, false, false);
+        testSolutionInRows(M, (Matrix) b.dividedBy(2), true, false);
+        
+        final Matrix L = new Matrix(new int[][] { { -2, 0, 0, -2, 0, 0 },
+                { 0, -2, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, -2 } });
+        final Matrix r = new Matrix(new int[][] { { 0, -1, 1, -1, 1, 0 } });
+        testSolutionInRows(L, r, true, true);
+        //testSolutionInRows(L, r, false, false);
+        testSolutionInRows(L, (Matrix) r.dividedBy(2), true, false);
     }
 
     private void testSolutionInRows(final Matrix A, final Matrix b,

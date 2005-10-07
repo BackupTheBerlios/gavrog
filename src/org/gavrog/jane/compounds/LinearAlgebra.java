@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.4 2005/10/05 22:04:16 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.5 2005/10/07 01:37:19 odf Exp $
  */
 public class LinearAlgebra {
     /**
@@ -138,12 +138,16 @@ public class LinearAlgebra {
         final Matrix P = Matrix.one(n).mutableClone();
         final Matrix Q = Matrix.one(m).mutableClone();
         
-        do {
+        if (integral) {
+            do {
+                Matrix.triangulate(D, P, integral, true, 0);
+                D = D.transposed().mutableClone();
+                Matrix.triangulate(D, Q, integral, true, 0);
+                D = D.transposed().mutableClone();
+            } while (!isDiagonal(D));
+        } else {
             Matrix.triangulate(D, P, integral, true, 0);
-            D = D.transposed().mutableClone();
-            Matrix.triangulate(D, Q, integral, true, 0);
-            D = D.transposed().mutableClone();
-        } while (!isDiagonal(D));
+        }
         
         return new Matrix[] {P, D, Q.transposed()};
     }
@@ -219,8 +223,8 @@ public class LinearAlgebra {
         final Matrix v = (Matrix) P.times(b);
         final Matrix y = new Matrix(m, k);
         
-        for (int i = 0; i < m; ++i) {
-            final IArithmetic d = (i < n) ? D.get(i, i) : Whole.ZERO;
+        for (int i = 0; i < n; ++i) {
+            final IArithmetic d = (i < m) ? D.get(i, i) : Whole.ZERO;
             for (int j = 0; j < k; ++j) {
                 final IArithmetic r = v.get(i, j);
                 final IArithmetic s;
@@ -233,7 +237,9 @@ public class LinearAlgebra {
                 } else {
                     s = r.dividedBy(d);
                 }
-                y.set(i, j, s);
+                if (i < m) {
+                    y.set(i, j, s);
+                }
             }
         }
         
