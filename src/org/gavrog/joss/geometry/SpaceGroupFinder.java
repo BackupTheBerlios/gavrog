@@ -41,7 +41,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.36 2005/10/07 06:12:27 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.37 2005/10/07 07:07:20 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -325,9 +325,8 @@ public class SpaceGroupFinder {
                 } else if (twoFold.size() > 0) {
                     final Operator M = (Operator) twoFold.iterator().next();
                     x = (Vector) x.minus(x.times(M));
-                } else if (this.crystalSystem == TRIGONAL_SYSTEM) {
+                } else if (crystalSystem == TRIGONAL_SYSTEM) {
                     x = (Vector) x.minus(x.times(R));
-                    
                 }
             }
         }
