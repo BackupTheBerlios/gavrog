@@ -29,7 +29,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * Generates all minimal, locally euclidean, isohedral tilings by a given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: IsohedralPartial.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: IsohedralPartial.java,v 1.3 2005/10/11 04:28:33 odf Exp $
  */
 public class IsohedralPartial extends IteratorAdapter {
     private final int verbosityLevel;
@@ -81,5 +81,35 @@ public class IsohedralPartial extends IteratorAdapter {
     public String statistics() {
         return "Constructed " + count2dSymbols + " spherical symbols and " + count3dSets
                + " partial spatial symbols.";
+    }
+    
+    public static void main(final String[] args) {
+        int verbosityLevel = 0;
+        int i = 0;
+        while (i < args.length && args[i].startsWith("-")) {
+            if (args[i].startsWith("-v")) {
+                verbosityLevel = Integer.parseInt(args[i].substring(2));
+            } else {
+                System.err.println("Unknown option '" + args[i] + "'");
+            }
+            ++i;
+        }
+        
+        final DSymbol ds = new DSymbol(args[i]);
+        final IsohedralPartial iter = new IsohedralPartial(ds, verbosityLevel);
+
+        try {
+            while (iter.hasNext()) {
+                final DSymbol out = (DSymbol) iter.next();
+                System.out.println(out);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        
+        System.err.println(iter.statistics());
+        System.err.println("Options: "
+                + (verbosityLevel <= 0 ? "quiet" : ("verbosity level " + verbosityLevel))
+                + ".");
     }
 }

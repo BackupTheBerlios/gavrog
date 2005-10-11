@@ -23,13 +23,14 @@ import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
+import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 
 /**
  * Generates all minimal, locally euclidean, isohedral tilings by a given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: Isohedral.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: Isohedral.java,v 1.3 2005/10/11 04:28:33 odf Exp $
  */
 public class Isohedral extends IteratorAdapter {
     private final int verbosityLevel;
@@ -110,5 +111,57 @@ public class Isohedral extends IteratorAdapter {
         final String tmp = ds.toString();
         final int i = tmp.lastIndexOf(',');
         return tmp.substring(i+1);
+    }
+    
+    public static void main(final String[] args) {
+        int verbosityLevel = 0;
+        boolean check = true;
+        int i = 0;
+        while (i < args.length && args[i].startsWith("-")) {
+            if (args[i].startsWith("-v")) {
+                verbosityLevel = Integer.parseInt(args[i].substring(2));
+            } else if (args[i].equals("-e")){
+                check = !check;
+            } else {
+                System.err.println("Unknown option '" + args[i] + "'");
+            }
+            ++i;
+        }
+        
+        final DSymbol ds = new DSymbol(args[i]);
+        final Isohedral iter = new Isohedral(ds, verbosityLevel);
+        int countGood = 0;
+        int countAmbiguous = 0;
+
+        try {
+            while (iter.hasNext()) {
+                final DSymbol out = (DSymbol) iter.next();
+                if (check) {
+                    final EuclidicityTester tester = new EuclidicityTester(out);
+                    if (tester.isAmbiguous()) {
+                        System.out.println("??? " + out);
+                        ++countAmbiguous;
+                    } else if (tester.isGood()) {
+                        System.out.println(out);
+                        ++countGood;
+                    }
+                } else {
+                    System.out.println(out);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        
+        System.err.println(iter.statistics());
+        if (check) {
+            System.err.println("Of the latter, " + countGood + " were found euclidean.");
+            if (countAmbiguous > 0) {
+                System.err.println("For " + countAmbiguous
+                                   + " symbols, euclidicity could not yet be decided.");
+            }
+        }
+        System.err.println("Options: " + (check ? "" : "no") + " euclidicity check, "
+                           + (verbosityLevel <= 0 ? "quiet" : ("verbosity level " + verbosityLevel)) + ".");
     }
 }

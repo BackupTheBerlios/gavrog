@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.chosen;
+package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,8 +23,6 @@ import java.util.List;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
-import org.gavrog.joss.dsyms.generators.DefineBranching;
-import org.gavrog.joss.dsyms.generators.TileKTransitive;
 
 
 /**
@@ -32,30 +30,28 @@ import org.gavrog.joss.dsyms.generators.TileKTransitive;
  * 5.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateFrankKasper.java,v 1.1 2005/09/22 21:51:50 odf Exp $
+ * @version $Id: FrankKasper.java,v 1.1 2005/10/11 04:28:33 odf Exp $
  */
 
-public class GenerateFrankKasper {
-    private static class MyTileKTransitive extends TileKTransitive {
-        public MyTileKTransitive(final DelaneySymbol tile, final int k, final boolean verbose) {
-            super(tile, k, verbose);
-        }
-        
-        protected Iterator defineBranching(final DelaneySymbol ds) {
-            return new DefineBranching(ds) {
-                protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
-                    if (move.index == 2) {
-                        final Integer D = new Integer(move.element);
-                        if (ds.m(2, 3, D) < 5) {
-                            return null;
-                        }
-                    }
-                    return new ArrayList();
-                }
-            };
-        }
+public class FrankKasper extends TileKTransitive {
+    public FrankKasper(final DelaneySymbol tile, final int k, final boolean verbose) {
+        super(tile, k, verbose);
     }
-    
+
+    protected Iterator defineBranching(final DelaneySymbol ds) {
+        return new DefineBranching(ds) {
+            protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
+                if (move.index == 2) {
+                    final Integer D = new Integer(move.element);
+                    if (ds.m(2, 3, D) < 5) {
+                        return null;
+                    }
+                }
+                return new ArrayList();
+            }
+        };
+    }
+
     public static void main(final String[] args) {
         boolean verbose = false;
         boolean check = true;
@@ -73,7 +69,7 @@ public class GenerateFrankKasper {
         
         final DSymbol ds = new DSymbol("1:1,1,1:3,3");
         final int k = Integer.parseInt(args[i]);
-        final TileKTransitive iter = new MyTileKTransitive(ds, k, verbose);
+        final TileKTransitive iter = new FrankKasper(ds, k, verbose);
         int countGood = 0;
         int countAmbiguous = 0;
 

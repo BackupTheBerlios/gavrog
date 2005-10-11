@@ -26,6 +26,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
+import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 
 /**
@@ -33,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.3 2005/09/22 21:51:29 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.4 2005/10/11 04:28:33 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
@@ -132,5 +133,58 @@ public class TileKTransitive extends IteratorAdapter {
         final String tmp = ds.toString();
         final int i = tmp.lastIndexOf(':');
         return tmp.substring(i+1);
+    }
+    
+    public static void main(final String[] args) {
+        boolean verbose = false;
+        boolean check = true;
+        int i = 0;
+        while (i < args.length && args[i].startsWith("-")) {
+            if (args[i].equals("-v")) {
+                verbose = !verbose;
+            } else if (args[i].equals("-e")){
+                check = !check;
+            } else {
+                System.err.println("Unknown option '" + args[i] + "'");
+            }
+            ++i;
+        }
+        
+        final DSymbol ds = new DSymbol(args[i]);
+        final int k = Integer.parseInt(args[i+1]);
+        final TileKTransitive iter = new TileKTransitive(ds, k, verbose);
+        int countGood = 0;
+        int countAmbiguous = 0;
+
+        try {
+            while (iter.hasNext()) {
+                final DSymbol out = (DSymbol) iter.next();
+                if (check) {
+                    final EuclidicityTester tester = new EuclidicityTester(out);
+                    if (tester.isAmbiguous()) {
+                        System.out.println("??? " + out);
+                        ++countAmbiguous;
+                    } else if (tester.isGood()) {
+                        System.out.println(out);
+                        ++countGood;
+                    }
+                } else {
+                    System.out.println(out);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        
+        System.err.println(iter.statistics());
+        if (check) {
+            System.err.println("Of the latter, " + countGood + " were found euclidean.");
+            if (countAmbiguous > 0) {
+                System.err.println("For " + countAmbiguous
+                                   + " symbols, euclidicity could not yet be decided.");
+            }
+        }
+        System.err.println("Options: " + (check ? "" : "no") + " euclidicity check, "
+                           + (verbose ? "verbose" : "quiet") + ".");
     }
 }
