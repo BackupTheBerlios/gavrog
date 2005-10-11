@@ -34,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.4 2005/10/11 04:28:33 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.5 2005/10/11 23:51:26 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
@@ -82,7 +82,7 @@ public class TileKTransitive extends IteratorAdapter {
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
-                        extended = new ExtendTo3d(ds);
+                        extended = extendTo3d(ds);
                     } else {
                         throw new NoSuchElementException("At end");
                     }
@@ -115,6 +115,16 @@ public class TileKTransitive extends IteratorAdapter {
      */
     protected Iterator defineBranching(final DelaneySymbol ds) {
         return new DefineBranching(ds);
+    }
+    
+    /**
+     * Override this to restrict or change the generation of 3-neighbor relations.
+     * 
+     * @param ds a Delaney symbol.
+     * @return an iterator over all admissible extensions.
+     */
+    protected Iterator extendTo3d(final DSymbol ds) {
+        return new ExtendTo3d(ds);
     }
     
     public String statistics() {
