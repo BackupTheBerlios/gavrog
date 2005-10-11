@@ -51,7 +51,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * TODO test symbols (unfinished and finished) for being locally euclidean
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.3 2005/10/11 04:58:33 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.4 2005/10/11 23:51:53 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -76,7 +76,7 @@ public class ExtendTo3d extends IteratorAdapter {
      * The instances of this class represent individual moves of setting
      * 3-neighbor values. These become the entries of the trial stack.
      */
-    private class Move {
+    protected class Move {
         final public Object element;
         final public Object neighbor;
         final public int newType;
