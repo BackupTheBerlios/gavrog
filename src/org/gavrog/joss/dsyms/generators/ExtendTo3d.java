@@ -51,7 +51,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * TODO test symbols (unfinished and finished) for being locally euclidean
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.3 2005/10/11 04:58:33 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -370,6 +370,20 @@ public class ExtendTo3d extends IteratorAdapter {
             // --- record the move we have performed
             this.stack.addLast(move);
             
+            // --- handle deductions or contradictions specified by a derived class
+            final List extraDeductions = getExtraDeductions(ds, move);
+            if (extraDeductions == null) {
+                return false;
+            } else {
+                if (LOGGING) {
+                    for (final Iterator iter = extraDeductions.iterator(); iter.hasNext();) {
+                        final Move ded = (Move) iter.next();
+                        System.err.println("    found extra deduction " + ded);
+                    }
+                }
+                queue.addAll(extraDeductions);
+            }
+            
             // --- check for any problems with that move
             if (!this.signatures.get(D).equals(this.signatures.get(E))) {
                 if (LOGGING) {
@@ -647,5 +661,16 @@ public class ExtendTo3d extends IteratorAdapter {
         
         // --- finis
         return res;
+    }
+    
+    /**
+     * Hook for derived classes to specify additional deductions of a move.
+     * 
+     * @param ds the current symbol.
+     * @param move the last move performed.
+     * @return the list of deductions (may be empty) or null in case of a contradiction.
+     */
+    protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
+        return new ArrayList();
     }
 }
