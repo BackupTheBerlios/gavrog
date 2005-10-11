@@ -18,6 +18,7 @@ package org.gavrog.joss.geometry;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -25,7 +26,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.15 2005/10/07 07:07:20 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.16 2005/10/11 00:05:56 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     public void setUp() {
@@ -87,22 +88,39 @@ public class TestSpaceGroupFinder extends TestCase {
         assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I23")).getCentering());
    }
 
-    public void testGetGroupName() {
+    public void testSettings() {
         final StringBuffer failed = new StringBuffer(100);
         int countFailed = 0;
         String canonicalName = null;
+        Set canonicalOps = null;
         for (final Iterator iter = SpaceGroupCatalogue.settingNames(3); iter.hasNext();) {
             final String name = (String) iter.next();
             final List ops = SpaceGroupCatalogue.operators(3, name);
             final CoordinateChange trans = SpaceGroupCatalogue.transform(3, name);
             if (trans.isOne()) {
                 canonicalName = name.split(":")[0];
+                canonicalOps = new SpaceGroup(3, ops).primitiveOperators();
             }
             final SpaceGroupFinder finder = new SpaceGroupFinder(new SpaceGroup(3, ops));
             if (!canonicalName.equals(finder.getGroupName())) {
-                failed.append(name + " ==> " + finder.getGroupName() + " (should be "
-                              + canonicalName + ")\n");
+                final String text = name + " ==> " + finder.getGroupName()
+                        + " (should be " + canonicalName + ")\n";
+                //System.err.print(text);
+                failed.append(text);
                 ++countFailed;
+            } else {
+                final CoordinateChange c = finder.getToStd();
+                final List transformedOps = c.applyTo(ops);
+                final Set probes = new SpaceGroup(3, transformedOps).primitiveOperators();
+                if (!probes.equals(canonicalOps)) {
+                    final String text = name
+                            + ": transformation to standard setting not correct\n";
+                    //System.err.print(text);
+                    failed.append(text);
+                    ++countFailed;
+                } else {
+                    //System.err.println(name + ": OK!");
+                }
             }
         }
         if (countFailed > 0) {
