@@ -20,34 +20,89 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 
 /**
- * Generates all tile-k-transitive tetrahedra tilings with edge degrees not smaller than
- * 5.
+ * Generates all tile-k-transitive tetrahedra tilings with edge degrees 5 and 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasper.java,v 1.1 2005/10/11 04:28:33 odf Exp $
+ * @version $Id: FrankKasper.java,v 1.2 2005/10/11 23:52:35 odf Exp $
  */
 
 public class FrankKasper extends TileKTransitive {
-    public FrankKasper(final DelaneySymbol tile, final int k, final boolean verbose) {
-        super(tile, k, verbose);
+    public FrankKasper(final int k, final boolean verbose) {
+        super(new DSymbol("1:1,1,1:3,3"), k, verbose);
     }
 
     protected Iterator defineBranching(final DelaneySymbol ds) {
-        return new DefineBranching(ds) {
+        final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
+        final IndexList idx = new IndexList(2, 3);
+        for (final Iterator reps = out.orbitRepresentatives(idx); reps.hasNext();) {
+            final Object D = reps.next();
+            final int r = out.r(2, 3, D);
+            if (r == 5) {
+                out.redefineV(2, 3, D, 1);
+            } else if (r > 0 && 6 % r == 0) {
+                out.redefineV(2, 3, D, 6 / r);
+            } else {
+                throw new RuntimeException("this should not happen: r = " + r + " at D = " + D);
+            }
+        }
+        return Iterators.singleton(new DSymbol(out));
+    }
+    
+    protected Iterator extendTo3d(final DSymbol ds) {
+        return new ExtendTo3d(ds) {
             protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
-                if (move.index == 2) {
-                    final Integer D = new Integer(move.element);
-                    if (ds.m(2, 3, D) < 5) {
+                final List out = new ArrayList();
+                final Object D = move.element;
+                Object E = D;
+                int r = 0;
+                List cuts = new ArrayList();
+                do {
+                    E = ds.op(2, E);
+                    if (ds.definesOp(3, E)) {
+                        E = ds.op(3, E);
+                    } else {
+                        cuts.add(E);
+                    }
+                    ++r;
+                } while (E != D);
+                
+                switch (cuts.size()) {
+                case 0:
+                    if (r == 4 || r > 6) {
                         return null;
                     }
+                    break;
+                case 1:
+                    if (r > 6) {
+                        return null;
+                    } else if (r == 6) {
+                        final Object A = cuts.get(0);
+                        out.add(new Move(A, A, -1, -1, false));
+                    }
+                    break;
+                case 2:
+                    if (r > 12) {
+                        return null;
+                    } else if (r == 12) {
+                        final Object A = cuts.get(0);
+                        final Object B = cuts.get(1);
+                        out.add(new Move(A, B, -1, -1, false));
+                    }
+                    break;
+                default:
+                    throw new RuntimeException("this should not happen");
                 }
-                return new ArrayList();
+                
+                return out;
             }
         };
     }
@@ -67,9 +122,8 @@ public class FrankKasper extends TileKTransitive {
             ++i;
         }
         
-        final DSymbol ds = new DSymbol("1:1,1,1:3,3");
         final int k = Integer.parseInt(args[i]);
-        final TileKTransitive iter = new FrankKasper(ds, k, verbose);
+        final TileKTransitive iter = new FrankKasper(k, verbose);
         int countGood = 0;
         int countAmbiguous = 0;
 
