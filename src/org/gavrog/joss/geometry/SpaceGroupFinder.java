@@ -16,9 +16,7 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -42,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.38 2005/10/07 23:42:19 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.39 2005/10/11 00:05:10 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -106,7 +104,7 @@ public class SpaceGroupFinder {
             }
             
             // --- convert a primitive set of group operators to the normalized basis
-            final List ops = convert(G.primitiveOperators(), toNormalized);
+            final List ops = toNormalized.applyTo(G.primitiveOperators());
             
             // --- determine the coordinate variations the matching process needs to consider
             this.variations = makeVariations(this.crystalSystem, this.centering);
@@ -159,21 +157,6 @@ public class SpaceGroupFinder {
             final String msg = "group dimension is " + d + ", must be 2 or 3";
             throw new UnsupportedOperationException(msg);
         }
-    }
-    
-    /**
-     * Performs a basis change on a Collection of geometric objects.
-     * 
-     * @param gens the objects to convert to the new basis.
-     * @param T the basis change transformation.
-     * @return the list of converted objects.
-     */
-    private static List convert(final Collection gens, final CoordinateChange T) {
-        final List tmp = new ArrayList();
-        for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-            tmp.add(((Operator) iter.next()).times(T));
-        }
-        return tmp;
     }
     
     /**
@@ -844,7 +827,7 @@ public class SpaceGroupFinder {
             // --- get the list of operators to match
             final SpaceGroup H = new SpaceGroup(d, info.name);
             final List primitive = H.primitiveOperatorsSorted();
-            final List opsToMatch = convert(primitive, info.fromStd);
+            final List opsToMatch = info.fromStd.applyTo(primitive);
             sortOps(opsToMatch);
             
             // --- both operator lists must have the same length
@@ -859,7 +842,7 @@ public class SpaceGroupFinder {
             // --- loop through the necessary coordinate system variations for this group
             for (int i = 0; i < this.variations.length; ++i) {
                 // --- convert the operators to this coordinate system and sort
-                final List probes = convert(ops, this.variations[i]);
+                final List probes = this.variations[i].applyTo(ops);
                 sortOps(probes);
 
                 // --- check if linear parts are still equal
