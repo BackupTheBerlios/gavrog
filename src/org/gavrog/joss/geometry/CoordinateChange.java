@@ -16,6 +16,11 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
@@ -27,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: CoordinateChange.java,v 1.1 2005/10/04 22:18:04 odf Exp $
+ * @version $Id: CoordinateChange.java,v 1.2 2005/10/11 00:04:35 odf Exp $
  */
 public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
@@ -235,5 +240,19 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     public Point getOrigin() {
         final int d = getDimension();
         return new Point(this.left.getSubMatrix(d, 0, 1, d));
+    }
+    
+    /**
+     * Performs a basis change on a Collection of geometric objects.
+     * 
+     * @param gens the objects to convert to the new basis.
+     * @return the list of converted objects.
+     */
+    public List applyTo(final Collection gens) {
+        final List tmp = new ArrayList();
+        for (final Iterator iter = gens.iterator(); iter.hasNext();) {
+            tmp.add(((IArithmetic) iter.next()).times(this));
+        }
+        return tmp;
     }
 }
