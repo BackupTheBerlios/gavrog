@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.39 2005/10/11 00:05:10 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.40 2005/10/12 23:15:55 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -805,6 +805,8 @@ public class SpaceGroupFinder {
     private Pair matchOperators(final List ops, final CoordinateChange toPrimitive) {
         if (DEBUG > 0) {
             System.err.println("\nStarting lookup process...");
+            System.err.println("  centering = " + this.centering + ", system = "
+                    + this.crystalSystem);
         }
         final int d = this.G.getDimension();
         final Matrix I = Matrix.one(d);
