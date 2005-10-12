@@ -16,6 +16,7 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.16 2005/10/11 00:05:56 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.17 2005/10/12 23:16:20 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     public void setUp() {
@@ -127,5 +128,14 @@ public class TestSpaceGroupFinder extends TestCase {
             failed.append(countFailed + " groups were not recognized.\n");
         }
         assertEquals("", failed.toString());
+    }
+    
+    public void test_dme() {
+        final List ops = new ArrayList();
+        ops.add(new Operator("-x+1,-x+y-z,-z+1"));
+        ops.add(new Operator("-x+1,-y+1,-z+1"));
+        final SpaceGroup G = new SpaceGroup(3, ops, true, false);
+        final SpaceGroupFinder finder = new SpaceGroupFinder(G);
+        assertEquals("C12/m1", finder.getGroupName());
     }
 }
