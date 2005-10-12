@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.9 2005/10/07 06:12:27 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.10 2005/10/12 23:15:28 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -281,6 +281,9 @@ public class SpaceGroupCatalogue {
      * @return an iterator over the values in the lookup table.
      */
     static Iterator lookupInfo() {
+        if (groupTables[3] == null) {
+            parseGroups(tablePath);
+        }
         return lookup.values().iterator();
     }
 }
