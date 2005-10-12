@@ -46,7 +46,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.5 2005/08/29 22:53:54 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.6 2005/10/12 21:38:29 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
@@ -691,7 +691,7 @@ public class PeriodicGraph extends UndirectedGraph {
     
     /**
      * Derives the set of characteristic bases of this periodic graph. Each
-     * basis is represented by an orderes list of d directed edges, where d is
+     * basis is represented by an ordered list of d directed edges, where d is
      * the dimension of periodicity of the graph, such that the difference
      * vectors between the source and target of each edge in a barycentric
      * placement are linearly independent. The list of bases is characterstic in
