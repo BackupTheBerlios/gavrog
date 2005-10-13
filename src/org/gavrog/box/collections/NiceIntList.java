@@ -24,7 +24,7 @@ import java.util.List;
  * in a nice useful way.
  * 
  * @author Olaf Delgado
- * @version $Id: NiceIntList.java,v 1.1 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: NiceIntList.java,v 1.2 2005/10/13 05:23:00 odf Exp $
  */
 public class NiceIntList extends ArrayList implements Comparable {
 
@@ -76,14 +76,12 @@ public class NiceIntList extends ArrayList implements Comparable {
      */
     public String toString() {
         final StringBuffer buffer = new StringBuffer(50);
-        buffer.append("(");
         for (int i = 0; i < this.size(); ++i) {
             if (i > 0) {
-                buffer.append(", ");
+                buffer.append(" ");
             }
             buffer.append(this.get(i));
         }
-        buffer.append(")");
         return buffer.toString();
     }
 }
