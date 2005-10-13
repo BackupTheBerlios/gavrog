@@ -30,12 +30,13 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.jane.numbers.Whole;
 
 /**
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.6 2005/10/13 05:23:53 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.7 2005/10/13 22:31:57 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -447,6 +448,17 @@ public class TestPeriodicGraph extends TestCase {
                 .toString());
         assertEquals("3 1 1 -1 0 0 1 2 0 0 0 1 2 0 1 0 2 2 0 0 -1", cds.minimalImage()
                 .invariant().toString());
+        verifyKey("3 1 2 0 0 0 1 2 0 0 1 1 2 0 1 0 1 2 1 0 0");
+        verifyKey("3 1 1 -1 0 0 1 2 0 0 0 1 2 0 1 0 2 2 0 0 -1");
+        verifyKey("2 1 2 0 0 1 2 0 1 1 2 1 0");
+        verifyKey("3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 3 0 1 0 2 4 1 0 0 3 4 0 0 1");
+        verifyKey("3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 5 0 0 0 2 6 0 0 0 3 4 0 0 0 "
+                + "3 7 0 0 0 4 8 0 0 0 5 6 0 0 0 5 9 0 0 0 6 10 0 0 0 7 10 1 0 0 "
+                + "7 11 0 0 0 8 9 0 1 0 8 12 0 0 0 9 12 0 -1 0 10 11 -1 0 0 11 12 0 0 1");
+        verifyKey("3 1 2 0 0 0 1 2 0 1 0 1 3 0 0 0 1 3 1 0 0 2 3 0 0 1 2 3 1 -1 -1");
+        verifyKey("3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 5 0 0 0 2 6 0 0 0 3 7 0 0 0 "
+                + "3 8 0 0 0 4 8 0 0 0 4 9 0 0 0 5 10 0 0 0 5 11 0 0 0 6 10 0 0 0 "
+                + "6 12 0 0 0 7 11 0 1 0 7 12 1 0 0 8 10 0 0 1 9 11 -1 0 1 9 12 0 -1 1");
     }
     
     private PeriodicGraph makeTestGraph(final int type) {
@@ -468,6 +480,40 @@ public class TestPeriodicGraph extends TestCase {
         }
         G.newEdge(v3, v4, y);
         return G;
+    }
+    
+    private void verifyKey(final String key) {
+        final List numbers = new ArrayList();
+        final String fields[] = key.split("\\s+");
+        for (int i = 0; i < fields.length; ++i) {
+            numbers.add(new Integer(fields[i]));
+        }
+        final int d = ((Integer) numbers.get(0)).intValue();
+        final int n = (numbers.size() - 1) / (d + 2);
+        final PeriodicGraph G = new PeriodicGraph(d);
+        final List nodes = new ArrayList();
+        nodes.add(null);
+        for (int i = 0; i < n; ++i) {
+            final int offset = 1 + i * (d + 2);
+            final int s = ((Integer) numbers.get(offset)).intValue();
+            final int t = ((Integer) numbers.get(offset + 1)).intValue();
+            if (s == nodes.size()) {
+                nodes.add(G.newNode());
+            }
+            if (t == nodes.size()) {
+                nodes.add(G.newNode());
+            }
+            if (s >= nodes.size() || t >= nodes.size()) {
+                throw new RuntimeException("something's wrong here");
+            }
+            final Matrix shift = new Matrix(1, d);
+            for (int j = 0; j < d; ++j) {
+                final Integer x = (Integer) numbers.get(offset + 2 + j);
+                shift.set(0, j, new Whole(x.intValue()));
+            }
+            G.newEdge((INode) nodes.get(s), (INode) nodes.get(t), shift);
+        }
+        assertEquals(key, G.invariant().toString());
     }
     
     public void testEquals() {
