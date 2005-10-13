@@ -17,6 +17,7 @@
 package org.gavrog.joss.pgraphs.basic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,7 +47,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.6 2005/10/12 21:38:29 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.7 2005/10/13 05:23:53 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
@@ -1230,7 +1231,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final List bases = characteristicBases();
         final Matrix zero = Matrix.zero(1, d);
 
-        class EdgeCmd {
+        class EdgeCmd implements Comparable {
             public int source;
             public int target;
             public Matrix shift;
@@ -1431,9 +1432,28 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         final Matrix basisChange = (Matrix) A.inverse();
         
+        // --- apply the basis change to the best script
+        for (int i = 0; i < m; ++i) {
+            final EdgeCmd cmd = bestScript[i];
+            Matrix shift = (Matrix) cmd.shift.times(basisChange);
+            for (int j = 0; j < d; ++j) {
+                if (!(shift.get(0, j) instanceof Whole)) {
+                    throw new RuntimeException("internal error - please contact author");
+                }
+            }
+            if (cmd.source == cmd.target && signOfShift(shift) > 0) {
+                shift = (Matrix) shift.negative();
+            }
+            bestScript[i] = new EdgeCmd(cmd.source, cmd.target, shift);
+        }
+
+        // --- sort the converted script
+        Arrays.sort(bestScript);
+        
         // --- construct the canonical form and the invariant
         final PeriodicGraph canonical = new PeriodicGraph(d);
         final List invariant = new LinkedList();
+        invariant.add(new Integer(this.getDimension()));
         
         final int n = numberOfNodes();
         final INode nodes[] = new INode[n+1];
@@ -1442,17 +1462,11 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         for (int i = 0; i < m; ++i) {
             final EdgeCmd cmd = bestScript[i];
-            final Matrix shift = (Matrix) cmd.shift.times(basisChange);
-            for (int j = 0; j < d; ++j) {
-                if (!(shift.get(0, j) instanceof Whole)) {
-                    throw new RuntimeException("internal error - please contact author");
-                }
-            }
-            canonical.newEdge(nodes[cmd.source], nodes[cmd.target], shift);
+            canonical.newEdge(nodes[cmd.source], nodes[cmd.target], cmd.shift);
             invariant.add(new Integer(cmd.source));
             invariant.add(new Integer(cmd.target));
             for (int j = 0; j < d; ++j) {
-                invariant.add(new Integer(((Whole) shift.get(0, j)).intValue()));
+                invariant.add(new Integer(((Whole) cmd.shift.get(0, j)).intValue()));
             }
         }
         

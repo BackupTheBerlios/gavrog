@@ -35,7 +35,7 @@ import org.gavrog.jane.numbers.Real;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.5 2005/09/16 21:30:14 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.6 2005/10/13 05:23:53 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -430,7 +430,7 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testCanonical() {
-        assertEquals("(1,2,[0,0,0])(1,2,[1,0,0])(1,2,[0,1,0])(1,2,[0,0,1])",
+        assertEquals("(1,2,[0,0,0])(1,2,[0,0,1])(1,2,[0,1,0])(1,2,[1,0,0])",
                 dia.canonical().toString());
         assertEquals(G.canonical().toString(), cds.minimalImage().canonical().toString());
         assertFalse(G.canonical().toString().equals(dia.canonical().toString()));
@@ -442,6 +442,11 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(G.invariant(), cds.minimalImage().invariant());
         assertFalse(G.invariant().equals(dia.invariant()));
         assertEquals(makeTestGraph(2).invariant(), makeTestGraph(1).invariant());
+        
+        assertEquals("3 1 2 0 0 0 1 2 0 0 1 1 2 0 1 0 1 2 1 0 0", dia.invariant()
+                .toString());
+        assertEquals("3 1 1 -1 0 0 1 2 0 0 0 1 2 0 1 0 2 2 0 0 -1", cds.minimalImage()
+                .invariant().toString());
     }
     
     private PeriodicGraph makeTestGraph(final int type) {
