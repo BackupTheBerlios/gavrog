@@ -47,7 +47,7 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.7 2005/10/13 05:23:53 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.8 2005/10/13 22:41:15 odf Exp $
  */
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
@@ -843,7 +843,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final int d = getDimension();
         final int n = edges.size();
         if (n < d) {
-            throw new IllegalArgumentException("not enough edges to pick from");
+            return Iterators.empty();
         }
 
         return new IteratorAdapter() {
@@ -895,7 +895,7 @@ public class PeriodicGraph extends UndirectedGraph {
     
     /**
      * Determines the periodic automorphisms of this periodic graph. A periodic
-     * automorphism is one that reflects the periodicity if the graph. It can be
+     * automorphism is one that reflects the periodicity of the graph. It can be
      * represented as an automorphism of the representation graph that induces a
      * linear transformation on the edge shift vectors which is expressed by a
      * unimodular integer matrix.
