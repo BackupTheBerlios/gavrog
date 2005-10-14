@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.2 2005/08/26 03:08:05 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.3 2005/10/14 21:33:46 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;
@@ -59,26 +59,6 @@ public class TestMatrix extends TestCase {
         super.tearDown();
     }
 
-    public void testHashCode() {
-        //TODO Implement hashCode().
-    }
-
-    public void testIsExact() {
-        //TODO Implement isExact().
-    }
-
-    public void testZero() {
-        //TODO Implement zero().
-    }
-
-    public void testOne() {
-        //TODO Implement one().
-    }
-
-    public void testNegative() {
-        //TODO Implement negative().
-    }
-
     public void testInverse() {
         final Matrix A = new Matrix(3, 3);
         A.set(0, 0, new FloatingPoint(0.8164965809277261));
@@ -94,143 +74,6 @@ public class TestMatrix extends TestCase {
         final Real eps = new FloatingPoint(1e-12);
         final Matrix D = (Matrix) Matrix.one(3).minus(A.times(A.inverse()));
         assertTrue(D.norm().isLessOrEqual(eps));
-    }
-
-    /*
-     * Class under test for IArithmetic plus(Object)
-     */
-    public void testPlusObject() {
-        //TODO Implement plus().
-    }
-
-    /*
-     * Class under test for IArithmetic times(Object)
-     */
-    public void testTimesObject() {
-        //TODO Implement times().
-    }
-
-    public void testCompareTo() {
-        //TODO Implement compareTo().
-    }
-
-    /*
-     * Class under test for String toString()
-     */
-    public void testToString() {
-        //TODO Implement toString().
-    }
-
-    public void testRplus() {
-        //TODO Implement rplus().
-    }
-
-    /*
-     * Class under test for IArithmetic minus(Object)
-     */
-    public void testMinusObject() {
-        //TODO Implement minus().
-    }
-
-    public void testRminus() {
-        //TODO Implement rminus().
-    }
-
-    public void testRtimes() {
-        //TODO Implement rtimes().
-    }
-
-    public void testNorm() {
-        //TODO Implement norm().
-    }
-
-    /*
-     * Class under test for boolean equals(Object)
-     */
-    public void testEqualsObject() {
-        //TODO Implement equals().
-    }
-
-    /*
-     * Class under test for void Matrix(int, int)
-     */
-    public void testMatrixintint() {
-        //TODO Implement Matrix().
-    }
-
-    /*
-     * Class under test for void Matrix(IArithmetic[][])
-     */
-    public void testMatrixIArithmeticArrayArray() {
-        //TODO Implement Matrix().
-    }
-
-    /*
-     * Class under test for void Matrix(int[][])
-     */
-    public void testMatrixintArrayArray() {
-        //TODO Implement Matrix().
-    }
-
-    /*
-     * Class under test for void Matrix(long[][])
-     */
-    public void testMatrixlongArrayArray() {
-        //TODO Implement Matrix().
-    }
-
-    /*
-     * Class under test for void Matrix(double[][])
-     */
-    public void testMatrixdoubleArrayArray() {
-        //TODO Implement Matrix().
-    }
-
-    public void testGetShape() {
-        //TODO Implement getShape().
-    }
-
-    public void testMakeImmutable() {
-        //TODO Implement makeImmutable().
-    }
-
-    public void testIsMutable() {
-        //TODO Implement isMutable().
-    }
-
-    public void testGet() {
-        //TODO Implement get().
-    }
-
-    public void testSet() {
-        //TODO Implement set().
-    }
-
-    public void testIsScalar() {
-        //TODO Implement isScalar().
-    }
-
-    public void testTransposed() {
-        //TODO Implement transposed().
-    }
-
-    /*
-     * Class under test for Object clone()
-     */
-    public void testClone() {
-        //TODO Implement clone().
-    }
-
-    public void testMutableClone() {
-        //TODO Implement mutableClone().
-    }
-
-    public void testScaled() {
-        //TODO Implement scaled().
-    }
-
-    public void testRscaled() {
-        //TODO Implement rscaled().
     }
 
     public void testTriangulate() {
@@ -308,31 +151,6 @@ public class TestMatrix extends TestCase {
         } else {
             assertNull(x);
         }
-    }
-    
-    public void test__getitem__() {
-        //TODO Implement __getitem__().
-    }
-
-    /*
-     * Class under test for void __setitem__(int[], IArithmetic)
-     */
-    public void test__setitem__intArrayIArithmetic() {
-        //TODO Implement __setitem__().
-    }
-
-    /*
-     * Class under test for void __setitem__(int[], long)
-     */
-    public void test__setitem__intArraylong() {
-        //TODO Implement __setitem__().
-    }
-
-    /*
-     * Class under test for void __setitem__(int[], double)
-     */
-    public void test__setitem__intArraydouble() {
-        //TODO Implement __setitem__().
     }
     
     public void testGetSubMatrix() {
