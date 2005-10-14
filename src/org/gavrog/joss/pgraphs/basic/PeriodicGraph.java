@@ -47,8 +47,10 @@ import org.gavrog.jane.numbers.Whole;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.8 2005/10/13 22:41:15 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.9 2005/10/14 21:34:03 odf Exp $
  */
+//TODO use appropriate geometric types instead of raw Matrix objects
+
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
     private static final String BARYCENTRIC_PLACEMENT = "barycentricPlacement";
