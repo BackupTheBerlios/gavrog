@@ -59,6 +59,7 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
@@ -96,7 +97,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.4 2005/10/15 02:20:35 odf Exp $
+ * @version $Id: NetViewer.java,v 1.5 2005/10/15 02:41:55 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -374,8 +375,8 @@ public class NetViewer extends Applet {
         // --- construct an embedded portion of the net with default settings
         final INode v0 = (INode) G.nodes().next();
         final Map pos = G.barycentricPlacement();
-        final CoordinateChange B = new CoordinateChange(G.symmetricBasis(), Point
-                .origin(G.getDimension()));
+        final CoordinateChange B = new CoordinateChange((Matrix) G.symmetricBasis()
+                .inverse(), Point.origin(G.getDimension()));
         final Embedding E = G.embeddedNeighborhood(v0, radius, pos, B);
         
         // --- store it for later reference
