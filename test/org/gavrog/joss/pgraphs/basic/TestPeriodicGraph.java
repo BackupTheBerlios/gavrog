@@ -37,7 +37,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.9 2005/10/15 00:30:43 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.10 2005/10/15 00:46:31 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -404,11 +404,13 @@ public class TestPeriodicGraph extends TestCase {
     
     public void testSymmetricBasis(final PeriodicGraph G) {
         final Real eps = new FloatingPoint(1e-12);
-        final Matrix I = Matrix.one(G.getDimension());
+        final int d = G.getDimension();
+        final Matrix I = Matrix.one(d);
         final Matrix B = G.symmetricBasis();
         final Matrix B_1 = (Matrix) B.inverse();
         for (final Iterator syms = G.symmetries().iterator(); syms.hasNext();) {
-            final Matrix M = ((Morphism) syms.next()).getOperator().getCoordinates();
+            final Matrix M = ((Morphism) syms.next()).getOperator().getCoordinates()
+                    .getSubMatrix(0, 0, d, d);
             final Matrix A = (Matrix) B_1.times(M).times(B);
             final Matrix D = (Matrix) A.times(A.transposed());
             assertTrue(D.minus(I).norm().isLessThan(eps));

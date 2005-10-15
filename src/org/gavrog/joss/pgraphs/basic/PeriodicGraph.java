@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.10 2005/10/15 00:30:43 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.11 2005/10/15 00:46:31 odf Exp $
  */
 //TODO use appropriate geometric types instead of raw Matrix objects
 
@@ -934,6 +934,9 @@ public class PeriodicGraph extends UndirectedGraph {
             final Matrix B = differenceMatrix(b);
             final Matrix M = new Matrix(d+1, d+1);
             M.setSubMatrix(0, 0, Matrix.solve(B0, B));
+            M.set(d, d, Whole.ONE);
+            M.setSubMatrix(d, 0, Matrix.zero(1, d));
+            M.setSubMatrix(0, d, Matrix.zero(d, 1));
             if (isUnimodularIntegerMatrix(M)) {
                 final Morphism iso;
                 try {
@@ -1033,7 +1036,8 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- compute a symmetry-invariant quadratic form
         Matrix M = Matrix.zero(d, d);
         for (final Iterator iter = syms.iterator(); iter.hasNext();) {
-            final Matrix A = ((Morphism) iter.next()).getOperator().getCoordinates();
+            final Matrix A = ((Morphism) iter.next()).getOperator().getCoordinates()
+                    .getSubMatrix(0, 0, d, d);
             M = (Matrix) M.plus(A.times(A.transposed()));
         }
         M = (Matrix) M.times(new Fraction(1, syms.size()));
@@ -1224,7 +1228,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final int d = getDimension();
         final int m = numberOfEdges();
         final List bases = characteristicBases();
-        final Vector zero = Vector.zero(d);
+        final Point zero = Point.origin(d);
 
         class EdgeCmd implements Comparable {
             public int source;
@@ -1305,20 +1309,20 @@ public class PeriodicGraph extends UndirectedGraph {
                     final Pair entry = (Pair) Q.removeFirst();
                     final INode v = (INode) entry.getFirst();
                     final int vn = ((Integer) old2new.get(v)).intValue();
-                    final Matrix p = (Matrix) entry.getSecond();
+                    final Point p = (Point) entry.getSecond();
                     
                     // --- collect neighbors and sort by mapped difference vectors
                     final List incident = allIncidences(v);
                     final Matrix M = (Matrix) differenceMatrix(incident).times(B_1);
                     final Map edgeToRow = new HashMap();
                     for (int k = 0; k < incident.size(); ++k) {
-                        edgeToRow.put(incident.get(k), M.getRow(k));
+                        edgeToRow.put(incident.get(k), new Vector(M.getRow(k)));
                     }
                     Collections.sort(incident, new Comparator() {
                         public int compare(final Object arg0, final Object arg1) {
-                            final Matrix a = (Matrix) edgeToRow.get(arg0);
-                            final Matrix b = (Matrix) edgeToRow.get(arg1);
-                            return signOfShift((Matrix) a.minus(b));
+                            final Vector a = (Vector) edgeToRow.get(arg0);
+                            final Vector b = (Vector) edgeToRow.get(arg1);
+                            return a.compareTo(b);
                         }
                     });
                     
@@ -1326,7 +1330,7 @@ public class PeriodicGraph extends UndirectedGraph {
                     for (final Iterator it = incident.iterator(); it.hasNext();) {
                         final IEdge e = (IEdge) it.next();
                         final INode w = e.target();
-                        final Matrix s = (Matrix) p.plus(edgeToRow.get(e));
+                        final Point s = (Point) p.plus(edgeToRow.get(e));
                         final int wn;
                         final Vector shift;
                         
@@ -1336,7 +1340,7 @@ public class PeriodicGraph extends UndirectedGraph {
                             wn = nextVertex++;
                             old2new.put(w, new Integer(wn));
                             newPos.put(w, s);
-                            shift = zero;
+                            shift = Vector.zero(d);
                         } else {
                             wn = ((Integer) old2new.get(w)).intValue();
                             if (wn < vn) {
@@ -1425,7 +1429,7 @@ public class PeriodicGraph extends UndirectedGraph {
         if (!((Matrix) A.times(B)).determinant().abs().equals(Whole.ONE)) {
             throw new RuntimeException("internal error - please contact author");
         }
-        final Matrix basisChange = (Matrix) A.inverse();
+        final CoordinateChange basisChange = new CoordinateChange(A, Point.origin(d));
         
         // --- apply the basis change to the best script
         for (int i = 0; i < m; ++i) {
@@ -1466,7 +1470,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- consistency test
-        final Matrix B1 = (Matrix) B.inverse().times(basisChange);
+        final Matrix B1 = (Matrix) B.inverse().times(basisChange.getBasis().inverse());
         try {
             new Morphism(((IEdge) bestBasis.get(0)).source(), nodes[1], B1);
         } catch (Morphism.NoSuchMorphismException ex) {
