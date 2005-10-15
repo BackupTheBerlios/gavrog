@@ -59,8 +59,10 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.Embedding;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraph;
@@ -94,7 +96,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.3 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: NetViewer.java,v 1.4 2005/10/15 02:20:35 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -283,7 +285,7 @@ public class NetViewer extends Applet {
 
                     // --- get the representation address of the net element
                     final IGraphElement rep = graph.getRepresentative(picked);
-                    final Matrix shift = graph.getShift(picked);
+                    final Vector shift = graph.getShift(picked);
                     
                     // --- display the address in the status field
                     final StringBuffer buf = new StringBuffer(20);
@@ -297,11 +299,11 @@ public class NetViewer extends Applet {
                     buf.append(')');
                     if (!shift.equals(shift.zero())) {
                         buf.append(" + (");
-                        for (int j = 0; j < shift.numberOfColumns(); ++j) {
+                        for (int j = 0; j < shift.getDimension(); ++j) {
                             if (j > 0) {
                                 buf.append(',');
                             }
-                            buf.append(shift.get(0, j));
+                            buf.append(shift.get(j));
                         }
                         buf.append(')');
                     }
@@ -372,7 +374,8 @@ public class NetViewer extends Applet {
         // --- construct an embedded portion of the net with default settings
         final INode v0 = (INode) G.nodes().next();
         final Map pos = G.barycentricPlacement();
-        final Matrix B = G.symmetricBasis();
+        final CoordinateChange B = new CoordinateChange(G.symmetricBasis(), Point
+                .origin(G.getDimension()));
         final Embedding E = G.embeddedNeighborhood(v0, radius, pos, B);
         
         // --- store it for later reference
@@ -504,10 +507,10 @@ public class NetViewer extends Applet {
             final INode v = (INode) nodes.next();
             
             // --- find its position
-            final Matrix p = E.getPosition(v);
-            final double x = ((Real) p.get(0,0)).doubleValue();
-            final double y = ((Real) p.get(0,1)).doubleValue();
-            final double z = ((Real) p.get(0,2)).doubleValue();
+            final Point p = E.getPosition(v);
+            final double x = ((Real) p.get(0)).doubleValue();
+            final double y = ((Real) p.get(1)).doubleValue();
+            final double z = ((Real) p.get(2)).doubleValue();
             
             // --- create a small sphere to represent the node
             final Sphere sphere = new Sphere(0.1f, nodeAppearance);
@@ -537,19 +540,19 @@ public class NetViewer extends Applet {
             final IEdge e = (IEdge) edges.next();
             final INode v = e.source();
             final INode w = e.target();
-            final Matrix pp = E.getPosition(v);
-            final Matrix qq = E.getPosition(w);
+            final Point pp = E.getPosition(v);
+            final Point qq = E.getPosition(w);
             final Vector3d p = new Vector3d(
-                    ((Real) pp.get(0,0)).doubleValue(),
-                    ((Real) pp.get(0,1)).doubleValue(),
-                    ((Real) pp.get(0,2)).doubleValue()
+                    ((Real) pp.get(0)).doubleValue(),
+                    ((Real) pp.get(1)).doubleValue(),
+                    ((Real) pp.get(2)).doubleValue()
             );
 
-            final Matrix dd = (Matrix) qq.minus(pp);
+            final Vector dd = (Vector) qq.minus(pp);
             final Vector3d k = new Vector3d(
-                    ((Real) dd.get(0, 0)).doubleValue(),
-                    ((Real) dd.get(0, 1)).doubleValue(),
-                    ((Real) dd.get(0, 2)).doubleValue()
+                    ((Real) dd.get(0)).doubleValue(),
+                    ((Real) dd.get(1)).doubleValue(),
+                    ((Real) dd.get(2)).doubleValue()
             );
             final Vector3d l = new Vector3d();
             l.cross(k, new Vector3d(0, 0, 1));

@@ -30,6 +30,7 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
@@ -37,7 +38,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.10 2005/10/15 00:46:31 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.11 2005/10/15 02:20:35 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -426,7 +427,8 @@ public class TestPeriodicGraph extends TestCase {
             final int m) {
         final INode v = (INode) G.nodes().next();
         final Map pos = G.barycentricPlacement();
-        final Matrix basis = G.symmetricBasis();
+        final CoordinateChange basis = new CoordinateChange(G.symmetricBasis(), Point
+                .origin(G.getDimension()));
         final Embedding E = G.embeddedNeighborhood(v, d, pos, basis);
         final IGraph H = E.getGraph();
         assertEquals(n, H.numberOfNodes());

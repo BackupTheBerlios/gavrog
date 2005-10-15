@@ -24,9 +24,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Operator;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
 
@@ -44,7 +45,7 @@ import org.gavrog.joss.geometry.Vector;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.3 2005/10/15 00:30:43 odf Exp $
+ * @version $Id: Morphism.java,v 1.4 2005/10/15 02:20:35 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;
@@ -318,7 +319,7 @@ public class Morphism implements Map {
      * 
      * @return the translation part of the associated affine transformation.
      */
-    public Matrix getTranslation() {
+    public Vector getTranslation() {
         final Object x = src2img.keySet().iterator().next();
         final INode v;
         if (x instanceof INode) {
@@ -329,15 +330,15 @@ public class Morphism implements Map {
         final INode w = (INode) src2img.get(v);
         final Map pos1 = ((PeriodicGraph) v.owner()).barycentricPlacement();
         final Map pos2 = ((PeriodicGraph) w.owner()).barycentricPlacement();
-        final Matrix posv = (Matrix) pos1.get(v);
-        final Matrix posw = (Matrix) pos2.get(w);
-        final Matrix s = (Matrix) posw.minus(posv.times(getOperator()));
-        final int d = s.numberOfColumns();
-        final Matrix result = new Matrix(1, d);
+        final Point posv = (Point) pos1.get(v);
+        final Point posw = (Point) pos2.get(w);
+        final Vector s = (Vector) posw.minus(posv.times(getOperator()));
+        final int d = s.getDimension();
+        final Real result[] = new Real[d];
         for (int i = 0; i < d; ++i) {
-            result.set(0, i, ((Rational) s.get(0, i)).mod(1));
+            result[i] = (Real) ((Real) s.get(i)).mod(1);
         }
-        return result;
+        return new Vector(result);
     }
     
     // --- Implementation of map interface starts here.

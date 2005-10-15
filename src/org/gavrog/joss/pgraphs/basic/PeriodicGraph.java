@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.11 2005/10/15 00:46:31 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.12 2005/10/15 02:20:35 odf Exp $
  */
 //TODO use appropriate geometric types instead of raw Matrix objects
 
@@ -1057,9 +1057,9 @@ public class PeriodicGraph extends UndirectedGraph {
         final private Map elementIdToAddress = new HashMap();
         final private Map addressToElementId = new HashMap();
         final private Map placement;
-        final private Matrix basis;
+        final private CoordinateChange basis;
         
-        public EmbeddedPortion(final Map placement, final Matrix basis) {
+        public EmbeddedPortion(final Map placement, final CoordinateChange basis) {
             super(new UndirectedGraph());
             this.placement = placement;
             this.basis = basis;
@@ -1069,7 +1069,7 @@ public class PeriodicGraph extends UndirectedGraph {
             return PeriodicGraph.this;
         }
         
-        public INode newNode(final INode rep, final Matrix shift) {
+        public INode newNode(final INode rep, final Vector shift) {
             if (getElement(rep, shift) != null) {
                 throw new IllegalArgumentException("node already exists");
             }
@@ -1080,14 +1080,14 @@ public class PeriodicGraph extends UndirectedGraph {
             return v;
         }
         
-        public IEdge newEdge(final IEdge rep, final Matrix shift) {
+        public IEdge newEdge(final IEdge rep, final Vector shift) {
             if (getElement(rep, shift) != null) {
                 throw new IllegalArgumentException("edge already exists");
             }
             final INode sourceRep = rep.source();
             final INode targetRep = rep.target();
-            final Matrix sourceShift = shift;
-            final Matrix targetShift = (Matrix) shift.plus(PeriodicGraph.this.getShift(rep));
+            final Vector sourceShift = shift;
+            final Vector targetShift = (Vector) shift.plus(PeriodicGraph.this.getShift(rep));
 
             final Pair sourceAdr = new Pair(sourceRep, sourceShift);
             final Object sourceId = this.addressToElementId.get(sourceAdr);
@@ -1113,11 +1113,11 @@ public class PeriodicGraph extends UndirectedGraph {
             return null;
         }
         
-        public void setPosition(final INode v, final Matrix p) {
+        public void setPosition(final INode v, final Point p) {
             throw new UnsupportedOperationException("not allowed");
         }
         
-        public IGraphElement getElement(final IGraphElement rep, final Matrix shift) {
+        public IGraphElement getElement(final IGraphElement rep, final Vector shift) {
             final Object id = this.addressToElementId.get(new Pair(rep, shift));
             return getGraph().getElement(id);
         }
@@ -1130,17 +1130,17 @@ public class PeriodicGraph extends UndirectedGraph {
             return (IGraphElement) adr.getFirst();
         }
         
-        public Matrix getShift(final IGraphElement x) {
+        public Vector getShift(final IGraphElement x) {
             if (!getGraph().hasElement(x)) {
                 throw new IllegalArgumentException("no such node or edge");
             }
             final Pair adr = (Pair) elementIdToAddress.get(x.id());
-            return (Matrix) adr.getSecond();
+            return (Vector) adr.getSecond();
         }
 
-        public Matrix getPosition(final INode v) {
-            final Matrix p = (Matrix) this.placement.get(getRepresentative(v));
-            return (Matrix) p.plus(getShift(v)).times(this.basis);
+        public Point getPosition(final INode v) {
+            final Point p = (Point) this.placement.get(getRepresentative(v));
+            return (Point) p.plus(getShift(v)).times(this.basis);
         }
     }
     
@@ -1157,12 +1157,13 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the newly constructed graph.
      */
     public Embedding embeddedNeighborhood(final INode v0, final int radius,
-            final Map positions, final Matrix basis) {
+            final Map positions, final CoordinateChange basis) {
         final EmbeddedPortion result = new EmbeddedPortion(positions, basis);
         final Map nodeToDist = new HashMap();
-        final LinkedList queue = new LinkedList();        
+        final LinkedList queue = new LinkedList();
+        final int d = getDimension();
         
-        final INode w0 = result.newNode(v0, Matrix.zero(1, getDimension()));
+        final INode w0 = result.newNode(v0, Vector.zero(d));
         nodeToDist.put(w0, new Integer(0));
         queue.addLast(w0);
         
@@ -1173,11 +1174,11 @@ public class PeriodicGraph extends UndirectedGraph {
             
             if (distNew.intValue() <= radius) {
                 final INode vOld = (INode) result.getRepresentative(wOld);
-                final Matrix tOld = result.getShift(wOld);
+                final Vector tOld = result.getShift(wOld);
                 for (final Iterator iter = allIncidences(vOld).iterator(); iter.hasNext();) {
                     final IEdge e = (IEdge) iter.next();
                     final INode vNew = e.target();
-                    final Matrix tNew = (Matrix) tOld.plus(getShift(e));
+                    final Vector tNew = (Vector) tOld.plus(getShift(e));
                     INode wNew = (INode) result.getElement(vNew, tNew);
                     if (wNew == null) {
                         wNew = result.newNode(vNew, tNew);

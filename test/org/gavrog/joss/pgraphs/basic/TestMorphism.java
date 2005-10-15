@@ -22,26 +22,20 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.Fraction;
-import org.gavrog.jane.numbers.Rational;
-import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.pgraphs.basic.IEdge;
-import org.gavrog.joss.pgraphs.basic.INode;
-import org.gavrog.joss.pgraphs.basic.Morphism;
-import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-
 import junit.framework.TestCase;
+
+import org.gavrog.joss.geometry.Operator;
+import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMorphism.java,v 1.3 2005/10/15 00:30:43 odf Exp $
+ * @version $Id: TestMorphism.java,v 1.4 2005/10/15 02:20:35 odf Exp $
  */
 public class TestMorphism extends TestCase {
     private PeriodicGraph cds, dia, x, y;
     private INode v1, v2, w1, w2, x1, x2, y1;
     private IEdge e1, e2, e3, e4;
-    private Matrix inversion, rot_xyz, rot_y, stretch_x;
+    private Operator inversion, rot_xyz, rot_y, stretch_x;
     private Morphism autoDia1, autoDia2, autoCds1, nonInjective;
 
     /*
@@ -78,10 +72,10 @@ public class TestMorphism extends TestCase {
         y.newEdge(y1, y1, new int[] {1,0});
         y.newEdge(y1, y1, new int[] {0,1});
 
-        inversion = new Matrix(new int[][] {{-1,0,0},{0,-1,0},{0,0,-1}});
-        rot_xyz = new Matrix(new int[][] {{0,1,0},{0,0,1},{1,0,0}});
-        rot_y = new Matrix(new int[][] {{0,0,1}, {0,1,0}, {-1,0,0}});
-        stretch_x = new Matrix(new int[][] {{2,0}, {0,1}});
+        inversion = new Operator("-x,-y,-z");
+        rot_xyz = new Operator("z,x,y");
+        rot_y = new Operator("-z,y,x");
+        stretch_x = new Operator("2x,y");
 
         autoDia1 = new Morphism(w1, w2, inversion);
         autoDia2 = new Morphism(w1, w1, rot_xyz);
@@ -217,19 +211,16 @@ public class TestMorphism extends TestCase {
         }
     }
 
-    public void testGetMatrix() {
+    public void testGetOperator() {
         assertEquals(inversion, autoDia1.getOperator());
         assertEquals(rot_xyz, autoDia2.getOperator());
         assertEquals(rot_y, autoCds1.getOperator());
     }
     
     public void testGetTranslation() {
-        final Rational x = new Fraction(1, 4);
-        final Matrix t1 = new Matrix(new Rational[][] {{x, x, x}});
-        final Matrix t2 = Matrix.zero(1, 3);
-        final Rational y = new Fraction(1, 2);
-        final Rational z = Whole.ZERO;
-        final Matrix t3 = new Matrix(new Rational[][] {{z, y, z}});
+        final Vector t1 = (Vector) new Vector(1, 1, 1).dividedBy(4);
+        final Vector t2 = new Vector(0, 0, 0);
+        final Vector t3 = (Vector) new Vector(0, 1, 0).dividedBy(2);
         assertEquals(t1, autoDia1.getTranslation());
         assertEquals(t2, autoDia2.getTranslation());
         assertEquals(t3, autoCds1.getTranslation());

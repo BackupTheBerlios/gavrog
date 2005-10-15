@@ -19,14 +19,14 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.joss.geometry.Point;
 
 
 /**
  * Represents an embedding of a finite graph.
  * 
  * @author Olaf Delgado
- * @version $Id: Embedding.java,v 1.2 2005/07/31 19:44:58 odf Exp $
+ * @version $Id: Embedding.java,v 1.3 2005/10/15 02:20:35 odf Exp $
  */
 public class Embedding {
     final private IGraph G;
@@ -41,17 +41,17 @@ public class Embedding {
         return this.G;
     }
     
-    public void setPosition(final INode v, final Matrix p) {
+    public void setPosition(final INode v, final Point p) {
         if (!v.owner().equals(this.G)) {
             throw new IllegalArgumentException("no such node");
         }
         this.pos.put(v, p);
     }
     
-    public Matrix getPosition(final INode v) {
+    public Point getPosition(final INode v) {
         if (!v.owner().equals(this.G)) {
             throw new IllegalArgumentException("no such node");
         }
-        return (Matrix) this.pos.get(v);
+        return (Point) this.pos.get(v);
     }
 }
