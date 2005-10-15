@@ -18,6 +18,7 @@ package org.gavrog.joss.geometry;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
+import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
 
@@ -25,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.9 2005/09/25 21:59:13 odf Exp $
+ * @version $Id: Point.java,v 1.10 2005/10/15 00:30:17 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -265,6 +266,8 @@ public class Point extends ArithmeticBase implements IArithmetic {
     public IArithmetic times(final Object other) {
         if (other instanceof Operator) {
             return new Point(this, ((Operator) other).getCoordinates());
+        } else if (other instanceof Complex) {
+            return new Point((Matrix) getCoordinates().times(other));
         } else if (other instanceof IArithmetic) {
             return ((IArithmetic) other).rtimes(this);
         } else {
