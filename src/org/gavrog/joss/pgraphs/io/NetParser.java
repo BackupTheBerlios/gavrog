@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.43 2005/08/30 23:16:56 odf Exp $
+ * @version $Id: NetParser.java,v 1.44 2005/10/15 00:30:43 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -211,9 +211,9 @@ public class NetParser extends GenericParser {
                     w = G.newNode();
                     nameToNode.put(row.get(1), w);
                 }
-                final Matrix s = new Matrix(1, d);
+                final int s[] = new int[d];
                 for (int k = 0; k < d; ++k) {
-                    s.set(0, k, (Whole) row.get(k+2));
+                    s[k] = ((Whole) row.get(k+2)).intValue();
                 }
                 G.newEdge(v, w, s);
             }
@@ -386,9 +386,9 @@ public class NetParser extends GenericParser {
                 
                 final INode v = (INode) addressToNode.get(sourceAddress);
                 final INode w = (INode) addressToNode.get(targetAddress);
-                final Matrix shiftv = (Matrix) addressToShift.get(sourceAddress);
-                final Matrix shiftw = (Matrix) addressToShift.get(targetAddress);
-                final Matrix totalShift = (Matrix) edgeShift.plus(shiftw.minus(shiftv));
+                final Vector shiftv = (Vector) addressToShift.get(sourceAddress);
+                final Vector shiftw = (Vector) addressToShift.get(targetAddress);
+                final Vector totalShift = (Vector) edgeShift.plus(shiftw.minus(shiftv));
                 if (G.getEdge(v, w, totalShift) == null) {
                     G.newEdge(v, w, totalShift);
                 }
@@ -726,7 +726,7 @@ public class NetParser extends GenericParser {
                 final int index = ((Integer) entry.getSecond()).intValue();
                 final Pair adr = (Pair) extended.get(index);
                 final INode w = (INode) adr.getFirst();
-                final Matrix s = ((Vector) adr.getSecond()).getCoordinates();
+                final Vector s = (Vector) adr.getSecond();
                 if (dist < minEdgeLength) {
                     final String msg = "found points closer than minimal edge length of ";
                     throw new DataFormatException(msg + minEdgeLength);

@@ -18,13 +18,13 @@ package org.gavrog.joss.pgraphs.io;
 
 import junit.framework.TestCase;
 
-import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.16 2005/08/30 23:13:56 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.17 2005/10/15 00:30:43 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -99,9 +99,9 @@ public class TestNetParser extends TestCase {
         assertEquals(1, H.numberOfNodes());
         assertEquals(3, H.numberOfEdges());
         final INode v = (INode) H.nodes().next();
-        assertNotNull(H.getEdge(v, v, new Matrix(new int[][] {{1,0,0}})));
-        assertNotNull(H.getEdge(v, v, new Matrix(new int[][] {{0,1,0}})));
-        assertNotNull(H.getEdge(v, v, new Matrix(new int[][] {{0,0,1}})));
+        assertNotNull(H.getEdge(v, v, new Vector(1,0,0)));
+        assertNotNull(H.getEdge(v, v, new Vector(0,1,0)));
+        assertNotNull(H.getEdge(v, v, new Vector(0,0,1)));
 
         final PeriodicGraph D = NetParser.stringToNet(""
                 + "NET # the diamond net\n"
@@ -121,8 +121,8 @@ public class TestNetParser extends TestCase {
         assertEquals(1, sq.numberOfNodes());
         assertEquals(2, sq.numberOfEdges());
         final INode w = (INode) sq.nodes().next();
-        assertNotNull(sq.getEdge(w, w, new Matrix(new int[][] {{1,0}})));
-        assertNotNull(sq.getEdge(w, w, new Matrix(new int[][] {{0,1}})));
+        assertNotNull(sq.getEdge(w, w, new Vector(1,0)));
+        assertNotNull(sq.getEdge(w, w, new Vector(0,1)));
         
         final PeriodicGraph hex1 = NetParser.stringToNet(""
                 + "NET # planar honeycombs\n"

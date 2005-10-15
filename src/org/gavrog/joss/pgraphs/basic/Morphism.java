@@ -25,6 +25,9 @@ import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.geometry.Operator;
+import org.gavrog.joss.geometry.Vector;
 
 
 /**
@@ -41,12 +44,12 @@ import org.gavrog.jane.numbers.Rational;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.2 2005/07/31 19:44:58 odf Exp $
+ * @version $Id: Morphism.java,v 1.3 2005/10/15 00:30:43 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;
     final private Map img2src;
-    final private Matrix matrix;
+    final private Operator operator;
     final private boolean injective;
 
     /**
@@ -70,7 +73,7 @@ public class Morphism implements Map {
      * @param v2 the target node corresponding to v1.
      * @param M the linear part of the induced coordinate transformation.
      */
-    public Morphism(final INode v1, final INode v2, final Matrix M) {
+    public Morphism(final INode v1, final INode v2, final Operator M) {
         // --- retrieve some essential information
         final PeriodicGraph G1 = (PeriodicGraph) v1.owner();
         final PeriodicGraph G2 = (PeriodicGraph) v2.owner();
@@ -95,7 +98,7 @@ public class Morphism implements Map {
         
         // --- check the matrix
         if (M != null) {
-            if (M.numberOfRows() != d || M.numberOfColumns() != d) {
+            if (M.getDimension() != d) {
                 throw new IllegalArgumentException("bad transformation matrix");
             }
         }
@@ -117,7 +120,7 @@ public class Morphism implements Map {
             final Map n2 = neighborVectors(w2);
             
             for (final Iterator iter = n1.keySet().iterator(); iter.hasNext();) {
-                final Matrix dist = (Matrix) iter.next();
+                final Vector dist = (Vector) iter.next();
 
                 final IEdge e1 = (IEdge) n1.get(dist);
                 final IEdge e2 = (IEdge) n2.get(dist.times(M));
@@ -162,7 +165,7 @@ public class Morphism implements Map {
         // --- store the results
         this.src2img = src2img;
         this.img2src = img2src;
-        this.matrix = M;
+        this.operator = M;
         this.injective = injective;
     }
     
@@ -179,7 +182,7 @@ public class Morphism implements Map {
         
         for (final Iterator iter = v.incidences(); iter.hasNext();) {
             final IEdge e = ((IEdge) iter.next()).oriented();
-            final Matrix dist = G.differenceVector(e);
+            final Vector dist = G.differenceVector(e);
             result.put(dist, e);
             if (v.equals(e.target())) {
                 result.put(dist.negative(), e.reverse());
@@ -189,18 +192,44 @@ public class Morphism implements Map {
     }
     
     /**
+     * Constructs an instance.
+     * 
+     * @param v1 a node of the source graph.
+     * @param v2 the target node corresponding to v1.
+     * @param M the linear part of the induced coordinate transformation.
+     */
+    public Morphism(final INode v1, final INode v2, final Matrix M) {
+        this(v1, v2, opFromLinear(M));
+    }
+    
+    /**
+     * Constructs an operator from a matrix that only determines its linear part.
+     * @param M the input matrix.
+     * @return the new operator.
+     */
+    private static Operator opFromLinear(final Matrix M) {
+        final int d = M.numberOfColumns();
+        final Matrix M1 = new Matrix(d + 1, d + 1);
+        M1.setSubMatrix(0, 0, M);
+        M1.setSubMatrix(d, 0, Matrix.zero(1, d));
+        M1.setSubMatrix(0, d, Matrix.zero(d, 1));
+        M1.set(d, d, Whole.ONE);
+        return new Operator(M1);
+    }
+    
+    /**
      * Creates an instance with given values for its fields.
      * 
      * @param src2img the map for the nodes and edges.
      * @param img2src the (partial) inverse map.
-     * @param matrix the associated coordinate transformation.
+     * @param operator the associated coordinate transformation.
      * @param injective is the morphism injective?
      */
-    private Morphism(final Map src2img, final Map img2src, final Matrix matrix,
+    private Morphism(final Map src2img, final Map img2src, final Operator operator,
             final boolean injective) {
         this.src2img = src2img;
         this.img2src = img2src;
-        this.matrix = matrix;
+        this.operator = operator;
         this.injective = injective;
     }
     
@@ -209,7 +238,7 @@ public class Morphism implements Map {
      * @param model the model morphism.
      */
     public Morphism(final Morphism model) {
-        this(model.src2img, model.img2src, model.matrix, model.injective);
+        this(model.src2img, model.img2src, model.operator, model.injective);
     }
     
     /**
@@ -220,7 +249,7 @@ public class Morphism implements Map {
         if (!injective) {
             throw new IllegalArgumentException("not invertible");
         } else {
-            return new Morphism(img2src, src2img, (Matrix) matrix.inverse(), true);
+            return new Morphism(img2src, src2img, (Operator) operator.inverse(), true);
         }
     }
     
@@ -269,7 +298,7 @@ public class Morphism implements Map {
                 newI2S.put(y, x);
             }
         }
-        return new Morphism(newS2I, newI2S, (Matrix) this.matrix.times(other.matrix),
+        return new Morphism(newS2I, newI2S, (Operator) this.operator.times(other.operator),
                 this.injective && other.injective);
     }
     
@@ -279,8 +308,8 @@ public class Morphism implements Map {
      * 
      * @return the linear part of the associated affine transformation.
      */
-    public Matrix getMatrix() {
-        return matrix;
+    public Operator getOperator() {
+        return operator;
     }
     
     /**
@@ -302,7 +331,7 @@ public class Morphism implements Map {
         final Map pos2 = ((PeriodicGraph) w.owner()).barycentricPlacement();
         final Matrix posv = (Matrix) pos1.get(v);
         final Matrix posw = (Matrix) pos2.get(w);
-        final Matrix s = (Matrix) posw.minus(posv.times(getMatrix()));
+        final Matrix s = (Matrix) posw.minus(posv.times(getOperator()));
         final int d = s.numberOfColumns();
         final Matrix result = new Matrix(1, d);
         for (int i = 0; i < d; ++i) {

@@ -35,7 +35,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMorphism.java,v 1.2 2005/07/31 19:44:59 odf Exp $
+ * @version $Id: TestMorphism.java,v 1.3 2005/10/15 00:30:43 odf Exp $
  */
 public class TestMorphism extends TestCase {
     private PeriodicGraph cds, dia, x, y;
@@ -218,9 +218,9 @@ public class TestMorphism extends TestCase {
     }
 
     public void testGetMatrix() {
-        assertEquals(inversion, autoDia1.getMatrix());
-        assertEquals(rot_xyz, autoDia2.getMatrix());
-        assertEquals(rot_y, autoCds1.getMatrix());
+        assertEquals(inversion, autoDia1.getOperator());
+        assertEquals(rot_xyz, autoDia2.getOperator());
+        assertEquals(rot_y, autoCds1.getOperator());
     }
     
     public void testGetTranslation() {

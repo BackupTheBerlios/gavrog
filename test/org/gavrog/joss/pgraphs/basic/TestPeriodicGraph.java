@@ -30,13 +30,14 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
-import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.Vector;
 
 /**
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.8 2005/10/13 22:41:15 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.9 2005/10/15 00:30:43 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -127,14 +128,14 @@ public class TestPeriodicGraph extends TestCase {
     
     public void testNewEdge() {
         final IEdge e1 = G.newEdge(v1, v2, new int[] { 1, 1, 1 });
-        assertEquals(new Matrix(new int[][] { { 1, 1, 1 } }), G.getShift(e1));
+        assertEquals(new Vector(1, 1, 1), G.getShift(e1));
         final String s1 = "(1,1,[0,0,-1])(1,2,[0,0,0])(1,2,[0,1,0])(1,2,[1,1,1])"
                           + "(2,2,[-1,0,0])";
         assertEquals(s1, G.toString());
         G.delete(e1);
         final INode v3 = G.newNode();
         final IEdge e2 = G.newEdge(v1, v3);
-        assertEquals(new Matrix(new int[1][3]), G.getShift(e2));
+        assertEquals(new Vector(0, 0, 0), G.getShift(e2));
         final String s2 = "(1,1,[0,0,-1])(1,2,[0,0,0])(1,2,[0,1,0])(1,3,[0,0,0])"
                           + "(2,2,[-1,0,0])";
         assertEquals(s2, G.toString());
@@ -167,25 +168,25 @@ public class TestPeriodicGraph extends TestCase {
     }
 
     public void testGetShift() {
-        assertEquals(new Matrix(new int[][] { { 0, 0, 0 } }), G.getShift(e1));
-        assertEquals(new Matrix(new int[][] { { 1, 0, 0 } }), G.getShift(e2));
-        assertEquals(new Matrix(new int[][] { { 0, -1, 0 } }), G.getShift(e3));
-        assertEquals(new Matrix(new int[][] { { 0, 0, 1 } }), G.getShift(e4));
-        assertEquals(new Matrix(new int[][] { { 0, 0, 0 } }), G.getShift(e1.reverse()));
-        assertEquals(new Matrix(new int[][] { { -1, 0, 0 } }), G.getShift(e2.reverse()));
-        assertEquals(new Matrix(new int[][] { { 0, 1, 0 } }), G.getShift(e3.reverse()));
-        assertEquals(new Matrix(new int[][] { { 0, 0, -1 } }), G.getShift(e4.reverse()));
+        assertEquals(new Vector(0, 0, 0), G.getShift(e1));
+        assertEquals(new Vector(1, 0, 0), G.getShift(e2));
+        assertEquals(new Vector(0, -1, 0), G.getShift(e3));
+        assertEquals(new Vector(0, 0, 1), G.getShift(e4));
+        assertEquals(new Vector(0, 0, 0), G.getShift(e1.reverse()));
+        assertEquals(new Vector(-1, 0, 0), G.getShift(e2.reverse()));
+        assertEquals(new Vector(0, 1, 0), G.getShift(e3.reverse()));
+        assertEquals(new Vector(0, 0, -1), G.getShift(e4.reverse()));
     }
 
     public void testGetEdge() {
-        final IEdge test1 = G.getEdge(v1, v2, new Matrix(new int[][] { { 0, 1, 0 } }));
+        final IEdge test1 = G.getEdge(v1, v2, new Vector(0, 1, 0));
         assertEquals(e3.reverse(), test1);
         assertEquals(G.getShift(e3.reverse()), G.getShift(test1));
-        assertEquals(e3, G.getEdge(v2, v1, new Matrix(new int[][] { { 0, -1, 0 } })));
-        assertNull(G.getEdge(v2, v1, new Matrix(new int[][] { { 1, -1, 0 } })));
-        assertEquals(e2, G.getEdge(v2, v2, new Matrix(new int[][] { { 1, 0, 0 } })));
+        assertEquals(e3, G.getEdge(v2, v1, new Vector(0, -1, 0)));
+        assertNull(G.getEdge(v2, v1, new Vector(1, -1, 0)));
+        assertEquals(e2, G.getEdge(v2, v2, new Vector(1, 0, 0)));
 
-        final IEdge test2 = G.getEdge(v2, v2, new Matrix(new int[][] { { -1, 0, 0 } }));
+        final IEdge test2 = G.getEdge(v2, v2, new Vector(-1, 0, 0));
         assertEquals(e2.reverse(), test2);
         assertEquals(G.getShift(e2.reverse()), G.getShift(test2));
     }
@@ -245,17 +246,17 @@ public class TestPeriodicGraph extends TestCase {
     private boolean isBarycentric(final PeriodicGraph G, final Map pos) {
         for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
-            final Matrix p = (Matrix) pos.get(v);
-            Matrix t = new Matrix(new int[1][G.getDimension()]);
+            final Point p = (Point) pos.get(v);
+            Vector t = Vector.zero(G.getDimension());
             for (final Iterator iter = v.incidences(); iter.hasNext();) {
                 final IEdge e = (IEdge) iter.next();
                 final INode w = e.target();
                 if (w.equals(v)) {
                     continue; // loops cancel out with their reverses
                 }
-                final Matrix s = G.getShift(e);
-                final Matrix q = (Matrix) pos.get(w);
-                t = (Matrix) t.plus(q).plus(s).minus(p);
+                final Vector s = G.getShift(e);
+                final Point q = (Point) pos.get(w);
+                t = (Vector) t.plus(q).plus(s).minus(p);
             }
             if (!t.isZero()) {
                 System.out.println(v + ": " + t + "!");
@@ -370,10 +371,10 @@ public class TestPeriodicGraph extends TestCase {
                 final IEdge e = (IEdge) basis.get(i);
                 final INode v = e.source();
                 final INode w = e.target();
-                final Matrix pv = (Matrix) pos.get(v);
-                final Matrix pw = (Matrix) pos.get(w);
-                final Matrix s = G.getShift(e);
-                M.setRow(i, (Matrix) pw.minus(pv).plus(s));
+                final Point pv = (Point) pos.get(v);
+                final Point pw = (Point) pos.get(w);
+                final Vector s = G.getShift(e);
+                M.setRow(i, ((Vector) pw.minus(pv).plus(s)).getCoordinates());
                 key.add(new Pair(e, s));
             }
             assertEquals(d, M.rank());
@@ -407,7 +408,7 @@ public class TestPeriodicGraph extends TestCase {
         final Matrix B = G.symmetricBasis();
         final Matrix B_1 = (Matrix) B.inverse();
         for (final Iterator syms = G.symmetries().iterator(); syms.hasNext();) {
-            final Matrix M = ((Morphism) syms.next()).getMatrix();
+            final Matrix M = ((Morphism) syms.next()).getOperator().getCoordinates();
             final Matrix A = (Matrix) B_1.times(M).times(B);
             final Matrix D = (Matrix) A.times(A.transposed());
             assertTrue(D.minus(I).norm().isLessThan(eps));
@@ -464,8 +465,8 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     private PeriodicGraph makeTestGraph(final int type) {
-        final Matrix x = new Matrix(new int[][] { { 1, 0 } });
-        final Matrix y = new Matrix(new int[][] { { 0, 1 } });
+        final Vector x = new Vector(1, 0);
+        final Vector y = new Vector(0, 1);
         final PeriodicGraph G = new PeriodicGraph(2);
         final INode v1 = G.newNode();
         final INode v2 = G.newNode();
@@ -508,10 +509,10 @@ public class TestPeriodicGraph extends TestCase {
             if (s >= nodes.size() || t >= nodes.size()) {
                 throw new RuntimeException("something's wrong here");
             }
-            final Matrix shift = new Matrix(1, d);
+            final int[] shift = new int[d];
             for (int j = 0; j < d; ++j) {
                 final Integer x = (Integer) numbers.get(offset + 2 + j);
-                shift.set(0, j, new Whole(x.intValue()));
+                shift[j] = x.intValue();
             }
             G.newEdge((INode) nodes.get(s), (INode) nodes.get(t), shift);
         }
