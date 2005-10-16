@@ -16,6 +16,9 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import org.gavrog.jane.compounds.Matrix;
@@ -27,7 +30,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.11 2005/09/27 20:20:09 odf Exp $
+ * @version $Id: TestVector.java,v 1.12 2005/10/16 01:57:36 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(new int[] {1, 2, 3});
@@ -273,10 +276,15 @@ public class TestVector extends TestCase {
     public void testToMatrix() {
         final Matrix A = new Matrix(new int[][] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
         final Vector rows[] = new Vector[] {
-                new Vector(new int[] { 1, 2, 3 }),
-                new Vector(new int[] { 4, 5, 6 }),
-                new Vector(new int[] { 7, 8, 9 }),
+                new Vector(1, 2, 3),
+                new Vector(4, 5, 6),
+                new Vector(7, 8, 9),
         };
         assertEquals(A, Vector.toMatrix(rows));
+        final List list = new ArrayList();
+        list.add(new Vector(1, 2, 3));
+        list.add(new Vector(4, 5,6));
+        list.add(new Vector(7, 8, 9));
+        assertEquals(A, Vector.toMatrix(list));
     }
 }

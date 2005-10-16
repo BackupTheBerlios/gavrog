@@ -38,8 +38,6 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
-import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.CoordinateChange;
@@ -52,9 +50,8 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.12 2005/10/15 02:20:35 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.13 2005/10/16 01:57:36 odf Exp $
  */
-//TODO use appropriate geometric types instead of raw Matrix objects
 
 public class PeriodicGraph extends UndirectedGraph {
     private static final String IS_CONNECTED = "isConnected";
@@ -133,7 +130,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the newly created edge.
      */
     public IEdge newEdge(final INode source, final INode target) {
-        return newEdge(source, target, new int[this.dimension]);
+        return newEdge(source, target, Vector.zero(getDimension()));
     }
 
     /**
@@ -187,24 +184,6 @@ public class PeriodicGraph extends UndirectedGraph {
         super.delete(element);
     }
 
-    /**
-     * Returns the sign of a shift vector.
-     * 
-     * @param A the matrix containing the shift vector.
-     * @return the sign of the first non-zero entry, or zero, if none.
-     */
-    private int signOfShift(final Matrix A) {
-        for (int i = 0; i < this.dimension; ++i) {
-            final IArithmetic x = A.get(0, i);
-            if (x.isNegative()) {
-                return -1;
-            } else if (x.isPositive()) {
-                return 1;
-            }
-        }
-        return 0;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -216,7 +195,7 @@ public class PeriodicGraph extends UndirectedGraph {
         if (d != 0) {
             return d;
         } else {
-            return signOfShift((Matrix) (getShift(e1)).minus(getShift(e2)));
+            return getShift(e1).compareTo(getShift(e2));
         }
     }
 
@@ -357,14 +336,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- check if the reachable translations found generate all translations
-        final Matrix M = new Matrix(shifts.size(), this.dimension);
-        for (int i = 0; i < shifts.size(); ++i) {
-            final Vector s = (Vector) shifts.get(i);
-            for (int j = 0; j < this.dimension; ++j) {
-                M.set(i, j, s.get(j));
-            }
-        }
-        if (!M.determinant().norm().isOne()) {
+        if (!Vector.toMatrix(shifts).determinant().norm().isOne()) {
             cache.put(IS_CONNECTED, new Boolean(false));
             return false;
         }
@@ -566,21 +538,6 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-     * Reduces the coordinate values of a vector modulo one. All entries must be of type
-     * Real.
-     * 
-     * @param v the input vector.
-     * @return a copy of the input matrix with each entry reduced modulo one.
-     */
-    private static Vector modOne(final Vector v) {
-        final Real res[] = new Rational[v.getDimension()];
-        for (int i = 0; i < v.getDimension(); ++i) {
-            res[i] = (Real) ((Real) v.get(i)).mod(1);
-        }
-        return new Vector(res);
-    }
-    
-    /**
      * Returns a minimal image of the representation graph. This corresponds to
      * a maximal extension of the translation group of the periodic graph
      * consisting of topological translations of infinite order.
@@ -612,7 +569,7 @@ public class PeriodicGraph extends UndirectedGraph {
             while (iter.hasNext()) {
                 final INode w = (INode) iter.next();
                 final Point pw = (Point) pos.get(w);
-                final Vector t = modOne((Vector) pw.minus(pv));
+                final Vector t = ((Vector) pw.minus(pv)).modZ();
                 if (t.isZero()) {
                     final String s = "found translation of finite order";
                     throw new UnsupportedOperationException(s);
@@ -640,13 +597,8 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- determine a basis for the extended translation group
         final Matrix M = new Matrix(vectors.size() + d, d);
-        final Matrix I = Matrix.one(d);
-        for (int i = 0; i < vectors.size(); ++i) {
-            M.setRow(i, ((Vector) vectors.get(i)).getCoordinates());
-        }
-        for (int i = 0; i < d; ++i) {
-            M.setRow(vectors.size() + i, I.getRow(i));
-        }
+        M.setSubMatrix(0, 0, Vector.toMatrix(vectors));
+        M.setSubMatrix(vectors.size(), 0, Matrix.one(d));
         Matrix.triangulate(M, null, true, false, 0);
         if (M.rank() != d) {
             throw new RuntimeException("internal error - please contact author");
@@ -732,7 +684,6 @@ public class PeriodicGraph extends UndirectedGraph {
                 final LinkedList iterators = new LinkedList();
                 final LinkedList edges = new LinkedList();
                 final Matrix M = Matrix.zero(d, d).mutableClone();
-                final Matrix z = Matrix.zero(1, d);
                 iterators.addLast(allIncidences(v0).iterator());
                 edges.addLast(null);
                 
@@ -768,7 +719,7 @@ public class PeriodicGraph extends UndirectedGraph {
                         // --- backtracking
                         iterators.removeLast();
                         edges.removeLast();
-                        M.setRow(k-1, z);
+                        M.setRow(k-1, Matrix.zero(1, d));
                     }
                 }
             }

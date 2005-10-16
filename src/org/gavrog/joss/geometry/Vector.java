@@ -18,12 +18,14 @@ package org.gavrog.joss.geometry;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
@@ -32,7 +34,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.20 2005/10/07 23:40:40 odf Exp $
+ * @version $Id: Vector.java,v 1.21 2005/10/16 01:57:36 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -304,6 +306,20 @@ public class Vector extends ArithmeticBase implements IArithmetic {
     }
 
     /**
+     * Reduces the coordinate values of a vector modulo one. All entries must be of type
+     * Real.
+     * 
+     * @return a copy of the input vector with each entry reduced modulo one.
+     */
+    public Vector modZ() {
+        final Real res[] = new Rational[getDimension()];
+        for (int i = 0; i < getDimension(); ++i) {
+            res[i] = (Real) ((Real) get(i)).mod(1);
+        }
+        return new Vector(res);
+    }
+    
+    /**
      * Compares two vectors lexicographically.
      * 
      * @param other the vector to compare with.
@@ -445,24 +461,16 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      * @return the rows of M as vectors.
      */
     public static Vector[] rowVectors(final Matrix M) {
-        final int n = M.numberOfRows();
-        final Vector v[] = new Vector[n];
-        for (int i = 0; i < n; ++i) {
-            v[i] = new Vector(M.getRow(i));
-        }
-        return v;
+        return fromMatrix(M);
     }
     
-    public static boolean isBasis(Vector[] v) {
-        final int d = v.length;
-        final Matrix M = new Matrix(d, d);
-        for (int i = 0; i < d; ++i) {
-            if (v[i].getDimension() != d) {
-                return false;
-            }
-            M.setRow(i, v[i].getCoordinates());
-        }
-        return !M.determinant().isZero();
+    /**
+     * Determines if the given vectors form a basis.
+     * @param v an array of vectors.
+     * @return true if the vectors form a basis.
+     */
+    public static boolean isBasis(final Vector[] v) {
+        return !toMatrix(v).determinant().isZero();
     }
     
     /**
@@ -664,6 +672,26 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         final Matrix M = new Matrix(n, m);
         for (int i = 0; i < n; ++i) {
             M.setRow(i, rows[i].getCoordinates());
+        }
+        M.makeImmutable();
+        return M;
+    }
+    
+    /**
+     * Makes vectors of common dimension into rows of a matrix.
+     * 
+     * @param rows a list of vectors.
+     * @return the matrix with the given vectors as its rows.
+     */
+    public static Matrix toMatrix(final List rows) {
+        final int n = rows.size();
+        if (n == 0) {
+            return new Matrix(0, 0);
+        }
+        final int m = ((Vector) rows.get(0)).dimension;
+        final Matrix M = new Matrix(n, m);
+        for (int i = 0; i < n; ++i) {
+            M.setRow(i, ((Vector) rows.get(i)).getCoordinates());
         }
         M.makeImmutable();
         return M;
