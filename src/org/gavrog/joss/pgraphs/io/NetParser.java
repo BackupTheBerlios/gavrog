@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.45 2005/10/15 02:20:35 odf Exp $
+ * @version $Id: NetParser.java,v 1.46 2005/10/16 05:07:11 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -151,6 +151,9 @@ public class NetParser extends GenericParser {
      */
     public PeriodicGraph parseNet() {
         final Entry block[] = parseBlock();
+        if (block == null) {
+            return null;
+        }
         final String type = lastBlockType().toLowerCase();
         if (type.equals("periodic_graph")) {
             return parsePeriodicGraph(block);
@@ -444,6 +447,7 @@ public class NetParser extends GenericParser {
      */
     private static PeriodicGraph parseCrystal(final Entry[] block) {
         // TODO make this work for general dimensions
+        // TODO implement edge specs (explicit and by mid-point)
         final Set seen = new HashSet();
         
         String groupName = null;
