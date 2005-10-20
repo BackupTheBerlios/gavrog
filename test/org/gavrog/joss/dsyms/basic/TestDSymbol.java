@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class DSymbol.
  * @author Olaf Delgado
- * @version $Id: TestDSymbol.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: TestDSymbol.java,v 1.3 2005/10/20 00:01:44 odf Exp $
  */
 public class TestDSymbol extends TestCase {
 	private DSymbol ds1;
@@ -137,6 +137,10 @@ public class TestDSymbol extends TestCase {
 		Assert.assertEquals(
 				new DSymbol(op, v).toString(),
 				new DSymbol(s).toString());
+        final String s1 = "<1.1:2:1 2, 1 2, 2:6 3,4>";
+        Assert.assertEquals(
+                new DSymbol(op, v).toString(),
+                new DSymbol(s1).toString());
 		final String code = "8 3:2 8 7 6,3 4 5 6 8,1 2 8 5 7,2 4 6 8:3 4,5 3,4 3";
 		final DSymbol tmp = new DSymbol(code);
 		final DelaneySymbol sub = new Subsymbol(tmp, new IndexList(1, 2),
