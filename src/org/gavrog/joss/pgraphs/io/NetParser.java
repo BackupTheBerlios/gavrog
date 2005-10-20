@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.46 2005/10/16 05:07:11 odf Exp $
+ * @version $Id: NetParser.java,v 1.47 2005/10/20 22:46:27 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -447,7 +447,6 @@ public class NetParser extends GenericParser {
      */
     private static PeriodicGraph parseCrystal(final Entry[] block) {
         // TODO make this work for general dimensions
-        // TODO implement edge specs (explicit and by mid-point)
         final Set seen = new HashSet();
         
         String groupName = null;
@@ -462,6 +461,7 @@ public class NetParser extends GenericParser {
         
         final List nodeDescriptors = new LinkedList();
         final Map nodeNameToDesc = new HashMap();
+        final List edgeDescriptors = new LinkedList();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -530,6 +530,40 @@ public class NetParser extends GenericParser {
                 final NodeDescriptor node = new NodeDescriptor(name, c, op);
                 nodeDescriptors.add(node);
                 nodeNameToDesc.put(name, node);
+            } else if (block[i].key.equals("edge")) {
+                final Object source;
+                final Object target;
+                if (row.size() == 2) {
+                    // --- two node names given
+                    source = row.get(0);
+                    target = row.get(1);
+                } else if (row.size() == dim + 1) {
+                    // --- a node name and a neighbor position
+                    source = row.get(0);
+                    final double a[] = new double[dim];
+                    for (int k = 0; k < dim; ++k) {
+                        a[k] = ((Real) row.get(k + 1)).doubleValue();
+                    }
+                    target = new Vector(a);
+                } else if (row.size() == 2 * dim) {
+                    // --- two node positions
+                    final double a[] = new double[dim];
+                    for (int k = 0; k < dim; ++k) {
+                        a[k] = ((Real) row.get(k)).doubleValue();
+                    }
+                    source = new Vector(a);
+                    final double b[] = new double[dim];
+                    for (int k = 0; k < dim; ++k) {
+                        b[k] = ((Real) row.get(k + dim)).doubleValue();
+                    }
+                    target = new Vector(b);
+                } else {
+                    final String msg = "Expected 2, " + (dim + 1) + " or " + 2 * dim
+                            + " arguments at line";
+                    throw new DataFormatException(msg + block[i].lineNumber);
+                }
+                final EdgeDescriptor edge = new EdgeDescriptor(source, target, null);
+                edgeDescriptors.add(edge);
             }
             seen.add(key);
         }
@@ -550,20 +584,31 @@ public class NetParser extends GenericParser {
             for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
                 System.err.println("  " + iter.next());
             }
+            
+            System.err.println("Edges:");
+            for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
+                System.err.println("  " + iter.next());
+            }
         }
         
-        // --- convert to primitive setting
+        // --- get info for converting to a primitive setting
         final Matrix primitiveCell = group.primitiveCell();
-        final Set primitiveOps = group.primitiveOperators();
         final Operator to = group.transformationToPrimitive();
         final Operator from = (Operator) to.inverse();
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Primitive cell: " + primitiveCell);
+        }
         
+        // --- extract and convert operators
+        final Set primitiveOps = group.primitiveOperators();
         ops.clear();
         for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
             final Operator op = (Operator) iter.next();
             ops.add(((Operator) from.times(op).times(to)).modZ());
         }
         
+        // --- convert node descriptors
         final List nodeDescsTmp = new LinkedList();
         for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) iter.next();
@@ -573,22 +618,38 @@ public class NetParser extends GenericParser {
         nodeDescriptors.clear();
         nodeDescriptors.addAll(nodeDescsTmp);
         
-        cellGram = (Matrix) primitiveCell.times(cellGram).times(
-                primitiveCell.transposed());
-        
-        if (DEBUG) {
-            System.err.println();
-            System.err.println("Primitive cell: " + primitiveCell);
+        // --- convert edge descriptors
+        final List edgeDescsTmp = new LinkedList();
+        for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
+            final EdgeDescriptor desc = (EdgeDescriptor) iter.next();
+            final Object source;
+            if (desc.source instanceof Vector) {
+                source = ((Vector) desc.source).times(to);
+            } else {
+                source = desc.source;
+            }
+            final Object target;
+            if (desc.target instanceof Vector) {
+                target = ((Vector) desc.target).times(to);
+            } else {
+                target = desc.target;
+            }
+            edgeDescsTmp.add(new EdgeDescriptor(source, target, desc.shift));
         }
+        edgeDescriptors.clear();
+        edgeDescriptors.addAll(edgeDescsTmp);
         
-        // --- construct a Dirichlet domain for the translation group
-        final Vector basis[] = Vector.rowVectors(Matrix.one(group.getDimension()));
-        final Vector dirichletVectors[] = Vector.dirichletVectors(basis, cellGram);
+        // --- convert gram matrix
+        if (cellGram != null) {
+            cellGram = (Matrix) primitiveCell.times(cellGram).times(
+                    primitiveCell.transposed());
+        }
         
         // --- apply group operators to generate all nodes
         final PeriodicGraph G = new PeriodicGraph(dim);
         final Map nodeToPosition = new HashMap();
-        final Map nodeToDescriptor = new HashMap();
+        final Map addressToNode = new HashMap();
+        final Map nodeToAddress = new HashMap();
         
         for (final Iterator itNodes = nodeDescriptors.iterator(); itNodes.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
@@ -616,19 +677,27 @@ public class NetParser extends GenericParser {
                     final INode v = G.newNode();
                     // --- store some data for it
                     nodeToPosition.put(v, p.translationalPart().getCoordinates());
-                    nodeToDescriptor.put(v, desc);
+                    nodeToAddress.put(v, new Pair(desc, op));
                     for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
                         final Operator a = (Operator) itStab.next();
-                        opsSeen.add(((Operator) a.times(op)).modZ());
+                        final Operator a1 = ((Operator) a.times(op)).modZ();
+                        opsSeen.add(a1);
+                        addressToNode.put(new Pair(desc, a1), v);
                     }
                 }
             }
         }
 
+        // TODO insert implementation of explicit edges here
+        
         if (DEBUG) {
             System.err.println();
             System.err.println("Generated " + G.numberOfNodes() + " nodes in unit cell.");
         }
+        
+        // --- construct a Dirichlet domain for the translation group
+        final Vector basis[] = Vector.rowVectors(Matrix.one(group.getDimension()));
+        final Vector dirichletVectors[] = Vector.dirichletVectors(basis, cellGram);
         
         // --- shift generated nodes into the Dirichlet domain
         for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
@@ -714,7 +783,8 @@ public class NetParser extends GenericParser {
                 }
             }
 
-            final NodeDescriptor desc = (NodeDescriptor) nodeToDescriptor.get(v);
+            final Pair address = (Pair) nodeToAddress.get(v);
+            final NodeDescriptor desc = (NodeDescriptor) address.getFirst();
             final int connectivity = desc.connectivity;
             int neighbors = 0;
             
