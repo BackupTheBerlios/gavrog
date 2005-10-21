@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,7 +50,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.47 2005/10/20 22:46:27 odf Exp $
+ * @version $Id: NetParser.java,v 1.48 2005/10/21 03:59:18 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -658,7 +659,7 @@ public class NetParser extends GenericParser {
                 System.err.println("Mapping node " + desc);
             }
             final Operator site = desc.site;
-            final Set stabilizer = stabilizer(site, ops, precision);
+            final Set stabilizer = pointStabilizer(site, ops, precision);
             if (DEBUG) {
                 System.err.println("  stabilizer has size " + stabilizer.size());
             }
@@ -888,44 +889,111 @@ public class NetParser extends GenericParser {
      * @param precision points this close are considered equal.
      * @return the set of operators forming the stabilizer
      */
-    private static Set stabilizer(final Operator site, final List ops, final double precision) {
-        final int dim = site.getDimension();
+    private static Set pointStabilizer(final Operator site, final List ops, final double precision) {
         final Set stabilizer = new HashSet();
-        final Whole one = Whole.ONE;
         
         for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
             final Operator op = (Operator) it2.next();
-            final Matrix diff = (Matrix) site.getCoordinates().minus(
-                    ((Operator) site.times(op)).getCoordinates());
-            double maxD = 0.0;
-            for (int i = 0; i < dim-1; ++i) {
-                for (int j = 0; j < dim; ++j) {
-                    final double d = ((Real) diff.get(i, j)).doubleValue();
-                    maxD = Math.max(maxD, d);
-                }
-            }
-            for (int j = 0; j < dim; ++j) {
-                final double d = ((Real) diff.get(dim, j).mod(one)).doubleValue();
-                maxD = Math.max(maxD, Math.min(d, 1.0 - d));
-            }
-            if (maxD <= precision) { // using "<=" allows for precision 0
+            final double dist = distModZ(site, (Operator) site.times(op));
+            if (dist <= precision) { // using "<=" allows for precision 0
                 stabilizer.add(op.modZ());
             }
         }
         
         // --- check if stabilizer forms a group
-        for (final Iterator iter1 = stabilizer.iterator(); iter1.hasNext();) {
-            final Operator A = (Operator) iter1.next();
-            for (final Iterator iter2 = stabilizer.iterator(); iter2.hasNext();) {
-                final Operator B = (Operator) iter2.next();
-                final Operator AB_ = ((Operator) A.times(B.inverse())).modZ();
-                if (!stabilizer.contains(AB_)) {
-                    throw new RuntimeException("precision problem in stabilizer computation");
-                }
-            }
+        if (!formGroup(stabilizer)) {
+            throw new RuntimeException("precision problem in stabilizer computation");
         }
 
         return stabilizer;
+    }
+    
+    /**
+     * Computes the stabilizer of an edge modulo lattice translations.The
+     * infinity norm (largest absolute value of a matrix entry) is used to
+     * determine the distances between points.
+     * 
+     * Currently only tested for point sites.
+     * 
+     * @param site1 one end of the edge.
+     * @param site2 the other end.
+     * @param ops operators forming the symmetry group.
+     * @param precision points this close are considered equal.
+     * @return the set of operators forming the stabilizer
+     */
+    private static Set edgeStabilizer(final Operator site1, final Operator site2,
+            final List ops, final double precision) {
+        final Operator sites[] = new Operator[] { site1, site2 };
+        final boolean close[][] = new boolean[2][2];
+        final Set stabilizer = new HashSet();
+        
+        for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
+            final Operator op = (Operator) it2.next();
+            for (int i = 0; i <= 1; ++i) {
+                for (int j = 0; j <= 1; ++j) {
+                    final double dist = distModZ(sites[i], (Operator) sites[j].times(op));
+                    close[i][j] = (dist <= precision); // using "<=" allows for precision 0
+                }
+            }
+            if ((close[0][0] && close[1][1]) || (close[0][1] && close[1][0])) {
+                stabilizer.add(op.modZ());
+            }
+        }
+        
+        // --- check if stabilizer forms a group
+        if (!formGroup(stabilizer)) {
+            throw new RuntimeException("precision problem in stabilizer computation");
+        }
+
+        return stabilizer;
+    }
+
+    /**
+     * Measures the distance between two sites in terms of the infinity norm of
+     * the representing matrices. The distance is computed modulo Z^d, where Z
+     * is the dimension of the sites, thus, sites are interpreted as residing in
+     * the d-dimensional torus.
+     * 
+     * Currently only tested for point sites.
+     * 
+     * @param site1 first point site.
+     * @param site2 second point site.
+     * @return the distance.
+     */
+    private static double distModZ(final Operator site1, final Operator site2) {
+        final int dim = site1.getDimension();
+        final Matrix diff = (Matrix) site1.getCoordinates().minus(site2.getCoordinates());
+        double maxD = 0.0;
+        for (int i = 0; i < dim-1; ++i) {
+            for (int j = 0; j < dim; ++j) {
+                final double d = ((Real) diff.get(i, j)).doubleValue();
+                maxD = Math.max(maxD, d);
+            }
+        }
+        for (int j = 0; j < dim; ++j) {
+            final double d = ((Real) diff.get(dim, j).mod(Whole.ONE)).doubleValue();
+            maxD = Math.max(maxD, Math.min(d, 1.0 - d));
+        }
+        return maxD;
+    }
+    
+    /**
+     * Determines if the given operators form a group modulo Z^d.
+     * @param operators a collection of operators.
+     * @return true if the operators form a group.
+     */
+    final static boolean formGroup(final Collection operators) {
+        for (final Iterator iter1 = operators.iterator(); iter1.hasNext();) {
+            final Operator A = (Operator) iter1.next();
+            for (final Iterator iter2 = operators.iterator(); iter2.hasNext();) {
+                final Operator B = (Operator) iter2.next();
+                final Operator AB_ = ((Operator) A.times(B.inverse())).modZ();
+                if (!operators.contains(AB_)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     
     /**
