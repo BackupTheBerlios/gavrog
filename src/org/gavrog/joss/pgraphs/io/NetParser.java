@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.49 2005/10/21 04:48:10 odf Exp $
+ * @version $Id: NetParser.java,v 1.50 2005/10/21 05:24:38 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -688,13 +688,38 @@ public class NetParser extends GenericParser {
             }
         }
 
-        // TODO insert implementation of explicit edges here
+        // --- handle explicit edges
+        final Operator id = Operator.identity(dim);
+        final Vector zero = Vector.zero(dim);
         for (final Iterator itEdges = edgeDescriptors.iterator(); itEdges.hasNext();) {
             final EdgeDescriptor desc = (EdgeDescriptor) itEdges.next();
             if (DEBUG) {
                 System.err.println();
                 System.err.println("Adding edge " + desc);
             }
+            final Point sourcePos;
+            final Pair sourceAdr;
+            if (desc.source instanceof Point) {
+                sourcePos = (Point) desc.source;
+                sourceAdr = lookup(sourcePos, nodeToPosition, precision);
+            } else {
+                final NodeDescriptor n = (NodeDescriptor) nodeNameToDesc.get(desc.source);
+                sourcePos = (Point) n.site;
+                final INode v = (INode) addressToNode.get(new Pair(n, id));
+                sourceAdr = new Pair(v, zero);
+            }
+            final Point targetPos;
+            final Pair targetAdr;
+            if (desc.target instanceof Point) {
+                targetPos = (Point) desc.target;
+                targetAdr = lookup(targetPos, nodeToPosition, precision);
+            } else {
+                final NodeDescriptor n = (NodeDescriptor) nodeNameToDesc.get(desc.target);
+                targetPos = (Point) n.site;
+                final INode v = (INode) addressToNode.get(new Pair(n, id));
+                targetAdr = new Pair(v, zero);
+            }
+            // TODO make the actual edge
         }
         
         if (DEBUG) {
@@ -718,7 +743,6 @@ public class NetParser extends GenericParser {
         // --- compute nodes in two times extended Dirichlet domain
         final List extended = new ArrayList();
         final Map addressToPosition = new HashMap();
-        final Vector zero = Vector.zero(dim);
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Point pv = (Point) nodeToPosition.get(v);
@@ -833,6 +857,33 @@ public class NetParser extends GenericParser {
         return G;
     }
     
+    /**
+     * Finds the node and shift associated to a point position.
+     * @param pos the position to look up.
+     * @param nodeToPos maps nodes to positions.
+     * @param precision how close must points be to considered equal.
+     * 
+     * @return the (node, shift) pair found or else null.
+     */
+    private static Pair lookup(final Point pos, final Map nodeToPos,
+            final double precision) {
+        final int d = pos.getDimension();
+        for (final Iterator iter = nodeToPos.keySet().iterator(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            final Point p = (Point) nodeToPos.get(v);
+            if (distModZ(pos, p) <= precision) {
+                final Vector diff = (Vector) pos.minus(p);
+                final int s[] = new int[d];
+                for (int i = 0; i < d; ++i) {
+                    final double x = ((Real) diff.get(i)).doubleValue();
+                    s[i] = (int) Math.round(x);
+                }
+                return new Pair(v, new Vector(s));
+            }
+        }
+        return null;
+    }
+
     /**
      * Constructs a gram matrix for the edge vectors of a unit cell which is specified by
      * its cell parameters as according to crystallographic conventions.
