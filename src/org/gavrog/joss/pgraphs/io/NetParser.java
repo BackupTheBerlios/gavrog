@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.52 2005/10/21 23:30:56 odf Exp $
+ * @version $Id: NetParser.java,v 1.53 2005/10/21 23:45:29 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -748,10 +748,14 @@ public class NetParser extends GenericParser {
                         System.err.println("  applying " + op);
                     }
                     // --- get the ends of the mapped edge
-                    //TODO order of factors correct?
-                    final INode source = (INode) addressToNode.get(new Pair(sourceDesc, sourceOp.times(op)));
-                    final INode target = (INode) addressToNode.get(new Pair(targetDesc, targetOp.times(op)));
-                    //TODO continue from here
+                    final INode source = (INode) addressToNode.get(new Pair(sourceDesc,
+                            sourceOp.times(op)));
+                    final INode target = (INode) addressToNode.get(new Pair(targetDesc,
+                            targetOp.times(op)));
+                    final Vector s = (Vector) shift.times(op);
+                    if (G.getEdge(source, target, s) == null) {
+                        G.newEdge(source, target, s);
+                    }
                 }
             }
         }
