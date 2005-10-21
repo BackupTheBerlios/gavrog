@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.51 2005/10/21 05:26:58 odf Exp $
+ * @version $Id: NetParser.java,v 1.52 2005/10/21 23:30:56 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -698,28 +698,62 @@ public class NetParser extends GenericParser {
                 System.err.println("Adding edge " + desc);
             }
             final Point sourcePos;
-            final Pair sourceAdr;
+            final INode sourceNode;
+            final Vector sourceShift;
             if (desc.source instanceof Point) {
                 sourcePos = (Point) desc.source;
-                sourceAdr = lookup(sourcePos, nodeToPosition, precision);
+                final Pair tmp = lookup(sourcePos, nodeToPosition, precision);
+                sourceNode = (INode) tmp.getFirst();
+                sourceShift = (Vector) tmp.getSecond();
             } else {
                 final NodeDescriptor n = (NodeDescriptor) nodeNameToDesc.get(desc.source);
                 sourcePos = (Point) n.site;
-                final INode v = (INode) addressToNode.get(new Pair(n, id));
-                sourceAdr = new Pair(v, zero);
+                sourceNode = (INode) addressToNode.get(new Pair(n, id));
+                sourceShift = zero;
             }
             final Point targetPos;
-            final Pair targetAdr;
+            final INode targetNode;
+            final Vector targetShift;
             if (desc.target instanceof Point) {
                 targetPos = (Point) desc.target;
-                targetAdr = lookup(targetPos, nodeToPosition, precision);
+                final Pair tmp = lookup(targetPos, nodeToPosition, precision);
+                targetNode = (INode) tmp.getFirst();
+                targetShift = (Vector) tmp.getSecond();
             } else {
                 final NodeDescriptor n = (NodeDescriptor) nodeNameToDesc.get(desc.target);
                 targetPos = (Point) n.site;
-                final INode v = (INode) addressToNode.get(new Pair(n, id));
-                targetAdr = new Pair(v, zero);
+                targetNode = (INode) addressToNode.get(new Pair(n, id));
+                targetShift = zero;
             }
-            // TODO make the actual edge
+            
+            final Pair sourceAdr = (Pair) nodeToAddress.get(sourceNode);
+            final NodeDescriptor sourceDesc = (NodeDescriptor) sourceAdr.getFirst();
+            final Operator sourceOp = (Operator) sourceAdr.getSecond();
+            final Pair targetAdr = (Pair) nodeToAddress.get(targetNode);
+            final NodeDescriptor targetDesc = (NodeDescriptor) targetAdr.getFirst();
+            final Operator targetOp = (Operator) targetAdr.getSecond();
+            final Vector shift = (Vector) targetShift.minus(sourceShift);
+            
+            // --- loop through the cosets of the stabilizer to generate all images
+            final Set stabilizer = edgeStabilizer(sourcePos, targetPos, ops, precision);
+            if (DEBUG) {
+                System.err.println("  stabilizer has size " + stabilizer.size());
+            }
+            final Set opsSeen = new HashSet();
+            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                // --- get the next coset representative
+                final Operator op = ((Operator) itOps.next()).modZ();
+                if (!opsSeen.contains(op)) {
+                    if (DEBUG) {
+                        System.err.println("  applying " + op);
+                    }
+                    // --- get the ends of the mapped edge
+                    //TODO order of factors correct?
+                    final INode source = (INode) addressToNode.get(new Pair(sourceDesc, sourceOp.times(op)));
+                    final INode target = (INode) addressToNode.get(new Pair(targetDesc, targetOp.times(op)));
+                    //TODO continue from here
+                }
+            }
         }
         
         if (DEBUG) {
