@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.48 2005/10/21 03:59:18 odf Exp $
+ * @version $Id: NetParser.java,v 1.49 2005/10/21 04:48:10 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -62,9 +62,10 @@ public class NetParser extends GenericParser {
     private static class NodeDescriptor {
         public final Object name;     // the node's name
         public final int connectivity; // the node's connectivity
-        public final Operator site;     // the position or site of the node
+        public final IArithmetic site;     // the position or site of the node
         
-        public NodeDescriptor(final Object name, final int connectivity, final Operator site) {
+        public NodeDescriptor(final Object name, final int connectivity,
+                final IArithmetic site) {
             this.name = name;
             this.connectivity = connectivity;
             this.site = site;
@@ -330,7 +331,7 @@ public class NetParser extends GenericParser {
         final List nodeDescsTmp = new LinkedList();
         for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) iter.next();
-            final Operator site = (Operator) desc.site.times(to);
+            final Operator site = (Operator) ((Operator) desc.site).times(to);
             nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site));
         }
         nodeDescriptors.clear();
@@ -356,7 +357,7 @@ public class NetParser extends GenericParser {
             // --- find the next node
             final NodeDescriptor node = (NodeDescriptor) it1.next();
             final Object name = node.name;
-            final Operator site = node.site;
+            final Operator site = (Operator) node.site;
             final Map siteToNode = new HashMap();
             for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
                 final Operator op = (Operator) it2.next();
@@ -521,14 +522,12 @@ public class NetParser extends GenericParser {
                     final String msg = "Connectivity must be a positive integer ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-                final Matrix position = Matrix.zero(dim+1, dim+1).mutableClone();
+                final IArithmetic pos[] = new IArithmetic[dim];
                 for (int j = 0; j < dim; ++j) {
-                    position.set(dim, j, (IArithmetic) row.get(j + 2));
+                    pos[j] = (IArithmetic) row.get(j + 2);
                 }
-                position.set(dim, dim, Whole.ONE);
                 final int c = ((Whole) conn).intValue();
-                final Operator op = new Operator(position).modZ();
-                final NodeDescriptor node = new NodeDescriptor(name, c, op);
+                final NodeDescriptor node = new NodeDescriptor(name, c, new Point(pos));
                 nodeDescriptors.add(node);
                 nodeNameToDesc.put(name, node);
             } else if (block[i].key.equals("edge")) {
@@ -545,19 +544,19 @@ public class NetParser extends GenericParser {
                     for (int k = 0; k < dim; ++k) {
                         a[k] = ((Real) row.get(k + 1)).doubleValue();
                     }
-                    target = new Vector(a);
+                    target = new Point(a);
                 } else if (row.size() == 2 * dim) {
                     // --- two node positions
                     final double a[] = new double[dim];
                     for (int k = 0; k < dim; ++k) {
                         a[k] = ((Real) row.get(k)).doubleValue();
                     }
-                    source = new Vector(a);
+                    source = new Point(a);
                     final double b[] = new double[dim];
                     for (int k = 0; k < dim; ++k) {
                         b[k] = ((Real) row.get(k + dim)).doubleValue();
                     }
-                    target = new Vector(b);
+                    target = new Point(b);
                 } else {
                     final String msg = "Expected 2, " + (dim + 1) + " or " + 2 * dim
                             + " arguments at line";
@@ -613,7 +612,7 @@ public class NetParser extends GenericParser {
         final List nodeDescsTmp = new LinkedList();
         for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) iter.next();
-            final Operator site = (Operator) desc.site.times(to);
+            final Point site = (Point) desc.site.times(to);
             nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site));
         }
         nodeDescriptors.clear();
@@ -624,14 +623,14 @@ public class NetParser extends GenericParser {
         for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
             final EdgeDescriptor desc = (EdgeDescriptor) iter.next();
             final Object source;
-            if (desc.source instanceof Vector) {
-                source = ((Vector) desc.source).times(to);
+            if (desc.source instanceof Point) {
+                source = ((Point) desc.source).times(to);
             } else {
                 source = desc.source;
             }
             final Object target;
-            if (desc.target instanceof Vector) {
-                target = ((Vector) desc.target).times(to);
+            if (desc.target instanceof Point) {
+                target = ((Point) desc.target).times(to);
             } else {
                 target = desc.target;
             }
@@ -658,7 +657,7 @@ public class NetParser extends GenericParser {
                 System.err.println();
                 System.err.println("Mapping node " + desc);
             }
-            final Operator site = desc.site;
+            final Point site = (Point) desc.site;
             final Set stabilizer = pointStabilizer(site, ops, precision);
             if (DEBUG) {
                 System.err.println("  stabilizer has size " + stabilizer.size());
@@ -673,11 +672,11 @@ public class NetParser extends GenericParser {
                         System.err.println("  applying " + op);
                     }
                     // --- compute mapped node position
-                    final Operator p = (Operator) site.times(op);
+                    final Point p = (Point) site.times(op);
                     // --- construct a new node
                     final INode v = G.newNode();
                     // --- store some data for it
-                    nodeToPosition.put(v, p.translationalPart().getCoordinates());
+                    nodeToPosition.put(v, p);
                     nodeToAddress.put(v, new Pair(desc, op));
                     for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
                         final Operator a = (Operator) itStab.next();
@@ -690,6 +689,13 @@ public class NetParser extends GenericParser {
         }
 
         // TODO insert implementation of explicit edges here
+        for (final Iterator itEdges = edgeDescriptors.iterator(); itEdges.hasNext();) {
+            final EdgeDescriptor desc = (EdgeDescriptor) itEdges.next();
+            if (DEBUG) {
+                System.err.println();
+                System.err.println("Adding edge " + desc);
+            }
+        }
         
         if (DEBUG) {
             System.err.println();
@@ -703,7 +709,7 @@ public class NetParser extends GenericParser {
         // --- shift generated nodes into the Dirichlet domain
         for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
             final INode v = (INode) iter.next();
-            final Point p = new Point((Matrix) nodeToPosition.get(v));
+            final Point p = (Point) nodeToPosition.get(v);
             // --- shift into Dirichlet domain
             final Vector shift = dirichletShifts(p, dirichletVectors, cellGram, 1)[0];
             nodeToPosition.put(v, p.plus(shift));
@@ -889,12 +895,12 @@ public class NetParser extends GenericParser {
      * @param precision points this close are considered equal.
      * @return the set of operators forming the stabilizer
      */
-    private static Set pointStabilizer(final Operator site, final List ops, final double precision) {
+    private static Set pointStabilizer(final Point site, final List ops, final double precision) {
         final Set stabilizer = new HashSet();
         
         for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
             final Operator op = (Operator) it2.next();
-            final double dist = distModZ(site, (Operator) site.times(op));
+            final double dist = distModZ(site, (Point) site.times(op));
             if (dist <= precision) { // using "<=" allows for precision 0
                 stabilizer.add(op.modZ());
             }
@@ -921,9 +927,9 @@ public class NetParser extends GenericParser {
      * @param precision points this close are considered equal.
      * @return the set of operators forming the stabilizer
      */
-    private static Set edgeStabilizer(final Operator site1, final Operator site2,
+    private static Set edgeStabilizer(final Point site1, final Point site2,
             final List ops, final double precision) {
-        final Operator sites[] = new Operator[] { site1, site2 };
+        final Point sites[] = new Point[] { site1, site2 };
         final boolean close[][] = new boolean[2][2];
         final Set stabilizer = new HashSet();
         
@@ -931,7 +937,7 @@ public class NetParser extends GenericParser {
             final Operator op = (Operator) it2.next();
             for (int i = 0; i <= 1; ++i) {
                 for (int j = 0; j <= 1; ++j) {
-                    final double dist = distModZ(sites[i], (Operator) sites[j].times(op));
+                    final double dist = distModZ(sites[i], (Point) sites[j].times(op));
                     close[i][j] = (dist <= precision); // using "<=" allows for precision 0
                 }
             }
@@ -954,24 +960,18 @@ public class NetParser extends GenericParser {
      * is the dimension of the sites, thus, sites are interpreted as residing in
      * the d-dimensional torus.
      * 
-     * Currently only tested for point sites.
+     * Currently only implemented for point sites.
      * 
      * @param site1 first point site.
      * @param site2 second point site.
      * @return the distance.
      */
-    private static double distModZ(final Operator site1, final Operator site2) {
+    private static double distModZ(final Point site1, final Point site2) {
         final int dim = site1.getDimension();
-        final Matrix diff = (Matrix) site1.getCoordinates().minus(site2.getCoordinates());
+        final Vector diff = (Vector) site1.minus(site2);
         double maxD = 0.0;
-        for (int i = 0; i < dim-1; ++i) {
-            for (int j = 0; j < dim; ++j) {
-                final double d = ((Real) diff.get(i, j)).doubleValue();
-                maxD = Math.max(maxD, d);
-            }
-        }
         for (int j = 0; j < dim; ++j) {
-            final double d = ((Real) diff.get(dim, j).mod(Whole.ONE)).doubleValue();
+            final double d = ((Real) diff.get(j).mod(Whole.ONE)).doubleValue();
             maxD = Math.max(maxD, Math.min(d, 1.0 - d));
         }
         return maxD;
