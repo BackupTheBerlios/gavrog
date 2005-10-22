@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.18 2005/10/16 05:07:46 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.19 2005/10/22 05:24:16 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -235,32 +235,32 @@ public class TestNetParser extends TestCase {
         assertEquals(hex2, hex1);
         
         // TODO add this when parser can do explicit edges
-//        final PeriodicGraph cds1 = NetParser.stringToNet(""
-//                + "CRYSTAL\n"
-//                + "GROUP Pmn21\n"
-//                + "CELL  6.558 4.698 4.719 90.0 90.0 90.0\n"
-//                + "ATOM  1 4  0.0000  0.6657  0.7306\n"
-//                + "EDGE  1 2\n"
-//                + "EDGE  1    0.0000  0.1416  0.2500\n"
-//                + "EDGE  0.0000  0.6657  0.7306    0.0000  1.1416  1.2500\n"
-//                + "     1   -0.5000  0.8584  0.7500\n"
-//                + "ATOM  2 4  0.5000  0.8584  0.7500\n"
-//                + "EDGE  2    0.0000  0.6657  0.7306\n"
-//                + "      2    1.0000  0.6657  0.7306\n"
-//                + "      2    0.5000  1.3343  0.2306\n"
-//                + "      2    0.5000  0.3343  1.2306\n"
-//                + "END\n");
-//        final PeriodicGraph cds2 = NetParser.stringToNet(""
-//                + "PERIODIC_GRAPH\n"
-//                + "1 3 -1 0 0\n"
-//                + "1 3 0 0 0\n"
-//                + "1 4 0 0 0\n"
-//                + "1 4 0 1 1\n"
-//                + "2 3 0 -1 0\n"
-//                + "2 3 0 0 -1\n"
-//                + "2 4 0 0 0\n"
-//                + "2 4 1 0 0\n"
-//                + "END\n");
-//        assertEquals(cds2.canonical().toString(), cds1.canonical().toString());
+        final PeriodicGraph cds1 = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "GROUP Pmn21\n"
+                + "CELL  6.558 4.698 4.719 90.0 90.0 90.0\n"
+                + "ATOM  1 4  0.0000  0.6657  0.7306\n"
+                + "EDGE  1 2\n"
+                + "EDGE  1    0.0000  0.1416  0.2500\n"
+                + "EDGE  0.0000  0.6657  0.7306    0.0000  1.1416  1.2500\n"
+                + "     1   -0.5000  0.8584  0.7500\n"
+                + "ATOM  2 4  0.5000  0.8584  0.7500\n"
+                + "EDGE  2    0.0000  0.6657  0.7306\n"
+                + "      2    1.0000  0.6657  0.7306\n"
+                + "      2    0.5000  1.3343  0.2306\n"
+                + "      2    0.5000  0.3343  1.2306\n"
+                + "END\n");
+        final PeriodicGraph cds2 = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "1 3 -1 0 0\n"
+                + "1 3 0 0 0\n"
+                + "1 4 0 0 0\n"
+                + "1 4 0 1 1\n"
+                + "2 3 0 -1 0\n"
+                + "2 3 0 0 -1\n"
+                + "2 4 0 0 0\n"
+                + "2 4 1 0 0\n"
+                + "END\n");
+        assertEquals(cds2.canonical().toString(), cds1.canonical().toString());
     }
 }

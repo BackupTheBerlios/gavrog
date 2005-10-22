@@ -50,11 +50,11 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.53 2005/10/21 23:45:29 odf Exp $
+ * @version $Id: NetParser.java,v 1.54 2005/10/22 05:24:17 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
-    private final static boolean DEBUG = false;
+    private final static boolean DEBUG = true;
     
     /**
      * Helper class - encapsulates the preliminary specification of a node.
@@ -613,7 +613,10 @@ public class NetParser extends GenericParser {
         for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) iter.next();
             final Point site = (Point) desc.site.times(to);
-            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site));
+            final NodeDescriptor newDesc = new NodeDescriptor(desc.name,
+                    desc.connectivity, site);
+            nodeDescsTmp.add(newDesc);
+            nodeNameToDesc.put(desc.name, newDesc);
         }
         nodeDescriptors.clear();
         nodeDescriptors.addAll(nodeDescsTmp);
@@ -682,12 +685,20 @@ public class NetParser extends GenericParser {
                         final Operator a = (Operator) itStab.next();
                         final Operator a1 = ((Operator) a.times(op)).modZ();
                         opsSeen.add(a1);
+                        if (DEBUG) {
+                            System.err.println("  marking operator " + a1 + " as used");
+                        }
                         addressToNode.put(new Pair(desc, a1), v);
                     }
                 }
             }
         }
 
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Generated " + G.numberOfNodes() + " nodes in unit cell.");
+        }
+        
         // --- handle explicit edges
         final Operator id = Operator.identity(dim);
         final Vector zero = Vector.zero(dim);
@@ -726,6 +737,10 @@ public class NetParser extends GenericParser {
                 targetShift = zero;
             }
             
+            if (DEBUG) {
+                System.err.println("  source node " + sourceNode);
+                System.err.println("  target node " + targetNode);
+            }
             final Pair sourceAdr = (Pair) nodeToAddress.get(sourceNode);
             final NodeDescriptor sourceDesc = (NodeDescriptor) sourceAdr.getFirst();
             final Operator sourceOp = (Operator) sourceAdr.getSecond();
@@ -749,9 +764,10 @@ public class NetParser extends GenericParser {
                     }
                     // --- get the ends of the mapped edge
                     final INode source = (INode) addressToNode.get(new Pair(sourceDesc,
-                            sourceOp.times(op)));
+                            ((Operator) sourceOp.times(op)).modZ()));
                     final INode target = (INode) addressToNode.get(new Pair(targetDesc,
-                            targetOp.times(op)));
+                            ((Operator) targetOp.times(op)).modZ()));
+                    //TODO consider shifts when applying op
                     final Vector s = (Vector) shift.times(op);
                     if (G.getEdge(source, target, s) == null) {
                         G.newEdge(source, target, s);
@@ -761,8 +777,7 @@ public class NetParser extends GenericParser {
         }
         
         if (DEBUG) {
-            System.err.println();
-            System.err.println("Generated " + G.numberOfNodes() + " nodes in unit cell.");
+            System.err.println("Graph after adding explicit edges: " + G);
         }
         
         // --- construct a Dirichlet domain for the translation group
@@ -776,7 +791,7 @@ public class NetParser extends GenericParser {
             // --- shift into Dirichlet domain
             final Vector shift = dirichletShifts(p, dirichletVectors, cellGram, 1)[0];
             nodeToPosition.put(v, p.plus(shift));
-            // TODO update the shifts associated to the graphs edges
+            G.shiftNode(v, shift);
         }
         
         // --- compute nodes in two times extended Dirichlet domain
