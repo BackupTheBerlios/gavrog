@@ -38,7 +38,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.11 2005/10/15 02:20:35 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.12 2005/10/22 01:45:26 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -168,6 +168,10 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals("(1,1,[0,0,-1])(1,2,[0,0,0])(2,2,[-1,0,0])", G.toString());
     }
 
+    public void testShiftNode() {
+        //TODO implement this test.
+    }
+    
     public void testGetShift() {
         assertEquals(new Vector(0, 0, 0), G.getShift(e1));
         assertEquals(new Vector(1, 0, 0), G.getShift(e2));

@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.14 2005/10/16 05:06:46 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.15 2005/10/22 01:45:26 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -184,6 +184,44 @@ public class PeriodicGraph extends UndirectedGraph {
         super.delete(element);
     }
 
+    /**
+     * Modifies the shift vectors assigned to the edges of this graph to reflect
+     * a conceptual replacement of one node by an integral vector.
+     * 
+     * @param node the node to move.
+     * @param amount the amount the node is moved.
+     */
+    public void shiftNode(final INode node, final Vector amount) {
+        if (!amount.isIntegral()) {
+            throw new IllegalArgumentException("argument vector must be integral");
+        }
+        if (amount.getDimension() != getDimension()) {
+            throw new IllegalArgumentException("argument vector has dimension "
+                                               + amount.getDimension()
+                                               + ", but should have " + getDimension());
+        }
+        for (final Iterator iter = node.incidences(); iter.hasNext();) {
+            final IEdge e = (IEdge) iter.next();
+            
+            if (((Edge) e).isReverse) {
+                final Object id = e.reverse().id();
+                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).plus(amount));
+            } else {
+                final Object id = e.id();
+                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).minus(amount));
+            }
+            
+            // --- adjust barycentric placement, if any
+            final Map placement = (Map) cache.get(BARYCENTRIC_PLACEMENT);
+            if (placement != null) {
+                final Map tmp = new HashMap();
+                tmp.putAll(placement);
+                tmp.put(node, ((Point) tmp.get(node)).plus(amount));
+                cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
+            }
+        }
+    }
+    
     /*
      * (non-Javadoc)
      * 
@@ -416,10 +454,11 @@ public class PeriodicGraph extends UndirectedGraph {
         final Matrix P = Matrix.solve(new Matrix(M), new Matrix(t));
 
         // --- extract the positions found
-        final Map result = new HashMap();
+        final Map tmp = new HashMap();
         for (int i = 0; i < n; ++i) {
-            result.put(getElement(indexToId.get(i)), new Point(P.getRow(i)));
+            tmp.put(getElement(indexToId.get(i)), new Point(P.getRow(i)));
         }
+        final Map result = Collections.unmodifiableMap(tmp);
         
         // --- cache and return the result
         cache.put(BARYCENTRIC_PLACEMENT, result);
@@ -640,7 +679,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * basis is represented by an ordered list of d directed edges, where d is
      * the dimension of periodicity of the graph, such that the difference
      * vectors between the source and target of each edge in a barycentric
-     * placement are linearly independent. The list of bases is characterstic in
+     * placement are linearly independent. The list of bases is characteristic in
      * the sense that an isomorphism between periodic graphs will induce a
      * bijection between their associated sets of bases.
      * 
