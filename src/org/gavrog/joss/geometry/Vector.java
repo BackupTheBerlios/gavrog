@@ -34,7 +34,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.21 2005/10/16 01:57:36 odf Exp $
+ * @version $Id: Vector.java,v 1.22 2005/10/22 00:59:05 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -317,6 +317,20 @@ public class Vector extends ArithmeticBase implements IArithmetic {
             res[i] = (Real) ((Real) get(i)).mod(1);
         }
         return new Vector(res);
+    }
+    
+    /**
+     * Checks if all vector entries are integers.
+     * 
+     * @return true if vector consists completely of integers.
+     */
+    public boolean isIntegral() {
+        for (int i = 0; i < getDimension(); ++i) {
+            if (! (get(i) instanceof Whole)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     /**

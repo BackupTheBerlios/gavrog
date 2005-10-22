@@ -30,10 +30,10 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.12 2005/10/16 01:57:36 odf Exp $
+ * @version $Id: TestVector.java,v 1.13 2005/10/22 00:59:05 odf Exp $
  */
 public class TestVector extends TestCase {
-    final Vector v = new Vector(new int[] {1, 2, 3});
+    final Vector v = new Vector(1, 2, 3);
     final Vector w = new Vector(new double[] {1, 2, 4});
     final Matrix M = new Matrix(new int[][] {
             { 0, 1, 0, 0 },
@@ -43,8 +43,8 @@ public class TestVector extends TestCase {
             });
 
     public void testHashCode() {
-        final Vector a = new Vector(new int[] {1, 2, 3});
-        final Vector b = new Vector(new int[] {1, 2, 4});
+        final Vector a = new Vector(1, 2, 3);
+        final Vector b = new Vector(1, 2, 4);
         assertEquals(v.hashCode(), a.hashCode());
         assertFalse(v.hashCode() == b.hashCode());
     }
@@ -54,8 +54,16 @@ public class TestVector extends TestCase {
         assertFalse(w.isExact());
     }
 
+    public void testIsIntegral() {
+        final Vector u = new Vector(2, 4, 8);
+        assertTrue(v.isIntegral());
+        assertFalse(w.isIntegral());
+        assertFalse(((Vector) v.dividedBy(2)).isIntegral());
+        assertTrue(((Vector) u.dividedBy(2)).isIntegral());
+    }
+
     public void testZero() {
-        final Vector z = new Vector(new int[] {0, 0, 0});
+        final Vector z = new Vector(0, 0, 0);
         assertEquals(z, v.zero());
     }
 
@@ -68,7 +76,7 @@ public class TestVector extends TestCase {
     }
 
     public void testNegative() {
-        final Vector n = new Vector(new int[] {-1, -2, -3});
+        final Vector n = new Vector(-1, -2, -3);
         assertEquals(n, v.negative());
     }
 
@@ -94,7 +102,7 @@ public class TestVector extends TestCase {
     }
 
     public void testCompareTo() {
-        final Vector a = new Vector(new int[] {1, 2, 3});
+        final Vector a = new Vector(1, 2, 3);
         assertTrue(v.compareTo(w) < 0);
         assertTrue(w.compareTo(v) > 0);
         assertTrue(v.compareTo(a) == 0);
@@ -114,7 +122,7 @@ public class TestVector extends TestCase {
     }
 
     public void testVectorMatrix() {
-        final Vector a = new Vector(new int[] {1, 2, 3});
+        final Vector a = new Vector(new Matrix(new int[][] {{1, 2, 3}}));
         assertEquals(v, a);
     }
 
