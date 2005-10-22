@@ -38,7 +38,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.12 2005/10/22 01:45:26 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.13 2005/10/22 02:18:31 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -169,7 +169,11 @@ public class TestPeriodicGraph extends TestCase {
     }
 
     public void testShiftNode() {
-        //TODO implement this test.
+        assertTrue(isBarycentric(G, G.barycentricPlacement()));
+        G.shiftNode(v2, new Vector(1, 1, 0));
+        final String s = "(1,1,[0,0,-1])(1,2,[-1,-1,0])(1,2,[-1,0,0])(2,2,[-1,0,0])";
+        assertEquals(s, G.toString());
+        assertTrue(isBarycentric(G, G.barycentricPlacement()));
     }
     
     public void testGetShift() {

@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.15 2005/10/22 01:45:26 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.16 2005/10/22 02:18:31 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -186,10 +186,10 @@ public class PeriodicGraph extends UndirectedGraph {
 
     /**
      * Modifies the shift vectors assigned to the edges of this graph to reflect
-     * a conceptual replacement of one node by an integral vector.
+     * a conceptual replacement of one node representative by another copy.
      * 
-     * @param node the node to move.
-     * @param amount the amount the node is moved.
+     * @param node the node to replace.
+     * @param amount the vector towards the new representative.
      */
     public void shiftNode(final INode node, final Vector amount) {
         if (!amount.isIntegral()) {
@@ -202,23 +202,26 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         for (final Iterator iter = node.incidences(); iter.hasNext();) {
             final IEdge e = (IEdge) iter.next();
+            if (e.source().equals(e.target())) {
+                continue;
+            }
             
             if (((Edge) e).isReverse) {
                 final Object id = e.reverse().id();
-                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).plus(amount));
+                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).minus(amount));
             } else {
                 final Object id = e.id();
-                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).minus(amount));
+                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).plus(amount));
             }
+        }
             
             // --- adjust barycentric placement, if any
-            final Map placement = (Map) cache.get(BARYCENTRIC_PLACEMENT);
-            if (placement != null) {
-                final Map tmp = new HashMap();
-                tmp.putAll(placement);
-                tmp.put(node, ((Point) tmp.get(node)).plus(amount));
-                cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
-            }
+        final Map placement = (Map) cache.get(BARYCENTRIC_PLACEMENT);
+        if (placement != null) {
+            final Map tmp = new HashMap();
+            tmp.putAll(placement);
+            tmp.put(node, ((Point) tmp.get(node)).plus(amount));
+            cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
         }
     }
     
@@ -226,7 +229,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * (non-Javadoc)
      * 
      * @see javaPGraphs.UndirectedGraph#compareEdges(javaPGraphs.IEdge,
-     *      javaPGraphs.IEdge)
+     *           javaPGraphs.IEdge)
      */
     protected int compareEdges(IEdge e1, IEdge e2) {
         final int d = super.compareEdges(e1, e2);
