@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.13 2005/09/25 01:37:26 odf Exp $
+ * @version $Id: Operator.java,v 1.14 2005/10/23 05:06:26 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -238,19 +238,19 @@ public class Operator extends ArithmeticBase implements IArithmetic {
     }
 
     /**
-     * Creates a matrix which contains the difference between this operator and its
-     * modZ() image. In other words, the matrix contains the floor values of all the
-     * translation components.
+     * Creates a vector which contains the difference between this operator and
+     * its modZ() image. In other words, the vector contains the floor values of
+     * all the translation components.
      * 
-     * @return the matrix of floor values.
+     * @return the vector of floor values.
      */
-    public Matrix floorZ() {
+    public Vector floorZ() {
         final int d = getDimension();
-        final Matrix M = new Matrix(1, d);
+        final IArithmetic a[] = new IArithmetic[d];
         for (int i = 0; i < d; ++i) {
-            M.set(0, i, ((Real) get(d, i)).div(1));
+            a[i] = ((Real) get(d, i)).div(1);
         }
-        return M;
+        return new Vector(a);
     }
 
     /* (non-Javadoc)
