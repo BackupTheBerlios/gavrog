@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.19 2005/10/22 05:24:16 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.20 2005/10/23 05:07:32 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -234,7 +234,6 @@ public class TestNetParser extends TestCase {
                 + "END\n");
         assertEquals(hex2, hex1);
         
-        // TODO add this when parser can do explicit edges
         final PeriodicGraph cds1 = NetParser.stringToNet(""
                 + "CRYSTAL\n"
                 + "GROUP Pmn21\n"

@@ -50,11 +50,11 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.54 2005/10/22 05:24:17 odf Exp $
+ * @version $Id: NetParser.java,v 1.55 2005/10/23 05:07:32 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
-    private final static boolean DEBUG = true;
+    private final static boolean DEBUG = false;
     
     /**
      * Helper class - encapsulates the preliminary specification of a node.
@@ -387,14 +387,13 @@ public class NetParser extends GenericParser {
                 final Operator trgOp = (Operator) shift.times(srcOp);
                 final Pair sourceAddress = new Pair(sourceName, srcOp.modZ());
                 final Pair targetAddress = new Pair(targetName, trgOp.modZ());
-                final Matrix edgeShift = (Matrix) trgOp.floorZ().minus(srcOp.floorZ());
+                final Vector edgeShift = (Vector) trgOp.floorZ().minus(srcOp.floorZ());
                 
                 final INode v = (INode) addressToNode.get(sourceAddress);
                 final INode w = (INode) addressToNode.get(targetAddress);
-                final Matrix shiftv = (Matrix) addressToShift.get(sourceAddress);
-                final Matrix shiftw = (Matrix) addressToShift.get(targetAddress);
-                final Vector totalShift = new Vector((Matrix) edgeShift.plus(shiftw
-                        .minus(shiftv)));
+                final Vector shiftv = (Vector) addressToShift.get(sourceAddress);
+                final Vector shiftw = (Vector) addressToShift.get(targetAddress);
+                final Vector totalShift = (Vector) edgeShift.plus(shiftw.minus(shiftv));
                 if (G.getEdge(v, w, totalShift) == null) {
                     G.newEdge(v, w, totalShift);
                 }
@@ -462,7 +461,7 @@ public class NetParser extends GenericParser {
         double maxEdgeLength = Double.MAX_VALUE;
         
         final List nodeDescriptors = new LinkedList();
-        final Map nodeNameToDesc = new HashMap();
+        final Map nameToDesc = new HashMap();
         final List edgeDescriptors = new LinkedList();
         
         // --- collect data from the input
@@ -513,7 +512,7 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final Object name = row.get(0);
-                if (nodeNameToDesc.containsKey(name)) {
+                if (nameToDesc.containsKey(name)) {
                     final String msg = "Node specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
@@ -529,7 +528,7 @@ public class NetParser extends GenericParser {
                 final int c = ((Whole) conn).intValue();
                 final NodeDescriptor node = new NodeDescriptor(name, c, new Point(pos));
                 nodeDescriptors.add(node);
-                nodeNameToDesc.put(name, node);
+                nameToDesc.put(name, node);
             } else if (block[i].key.equals("edge")) {
                 final Object source;
                 final Object target;
@@ -616,7 +615,7 @@ public class NetParser extends GenericParser {
             final NodeDescriptor newDesc = new NodeDescriptor(desc.name,
                     desc.connectivity, site);
             nodeDescsTmp.add(newDesc);
-            nodeNameToDesc.put(desc.name, newDesc);
+            nameToDesc.put(desc.name, newDesc);
         }
         nodeDescriptors.clear();
         nodeDescriptors.addAll(nodeDescsTmp);
@@ -651,7 +650,6 @@ public class NetParser extends GenericParser {
         // --- apply group operators to generate all nodes
         final PeriodicGraph G = new PeriodicGraph(dim);
         final Map nodeToPosition = new HashMap();
-        final Map addressToNode = new HashMap();
         final Map nodeToAddress = new HashMap();
         
         for (final Iterator itNodes = nodeDescriptors.iterator(); itNodes.hasNext();) {
@@ -681,14 +679,13 @@ public class NetParser extends GenericParser {
                     // --- store some data for it
                     nodeToPosition.put(v, p);
                     nodeToAddress.put(v, new Pair(desc, op));
-                    for (final Iterator itStab = stabilizer.iterator(); itStab.hasNext();) {
-                        final Operator a = (Operator) itStab.next();
-                        final Operator a1 = ((Operator) a.times(op)).modZ();
-                        opsSeen.add(a1);
+                    for (final Iterator iter = stabilizer.iterator(); iter.hasNext();) {
+                        final Operator a = (Operator) ((Operator) iter.next()).times(op);
+                        final Operator aModZ = a.modZ();
+                        opsSeen.add(aModZ);
                         if (DEBUG) {
-                            System.err.println("  marking operator " + a1 + " as used");
+                            System.err.println("  marking operator " + aModZ + " as used");
                         }
-                        addressToNode.put(new Pair(desc, a1), v);
                     }
                 }
             }
@@ -700,7 +697,6 @@ public class NetParser extends GenericParser {
         }
         
         // --- handle explicit edges
-        final Operator id = Operator.identity(dim);
         final Vector zero = Vector.zero(dim);
         for (final Iterator itEdges = edgeDescriptors.iterator(); itEdges.hasNext();) {
             final EdgeDescriptor desc = (EdgeDescriptor) itEdges.next();
@@ -709,69 +705,36 @@ public class NetParser extends GenericParser {
                 System.err.println("Adding edge " + desc);
             }
             final Point sourcePos;
-            final INode sourceNode;
-            final Vector sourceShift;
             if (desc.source instanceof Point) {
                 sourcePos = (Point) desc.source;
-                final Pair tmp = lookup(sourcePos, nodeToPosition, precision);
-                sourceNode = (INode) tmp.getFirst();
-                sourceShift = (Vector) tmp.getSecond();
             } else {
-                final NodeDescriptor n = (NodeDescriptor) nodeNameToDesc.get(desc.source);
-                sourcePos = (Point) n.site;
-                sourceNode = (INode) addressToNode.get(new Pair(n, id));
-                sourceShift = zero;
+                sourcePos = (Point) ((NodeDescriptor) nameToDesc.get(desc.source)).site;
             }
             final Point targetPos;
-            final INode targetNode;
-            final Vector targetShift;
             if (desc.target instanceof Point) {
                 targetPos = (Point) desc.target;
-                final Pair tmp = lookup(targetPos, nodeToPosition, precision);
-                targetNode = (INode) tmp.getFirst();
-                targetShift = (Vector) tmp.getSecond();
             } else {
-                final NodeDescriptor n = (NodeDescriptor) nodeNameToDesc.get(desc.target);
-                targetPos = (Point) n.site;
-                targetNode = (INode) addressToNode.get(new Pair(n, id));
-                targetShift = zero;
+                targetPos = (Point) ((NodeDescriptor) nameToDesc.get(desc.target)).site;
             }
             
-            if (DEBUG) {
-                System.err.println("  source node " + sourceNode);
-                System.err.println("  target node " + targetNode);
-            }
-            final Pair sourceAdr = (Pair) nodeToAddress.get(sourceNode);
-            final NodeDescriptor sourceDesc = (NodeDescriptor) sourceAdr.getFirst();
-            final Operator sourceOp = (Operator) sourceAdr.getSecond();
-            final Pair targetAdr = (Pair) nodeToAddress.get(targetNode);
-            final NodeDescriptor targetDesc = (NodeDescriptor) targetAdr.getFirst();
-            final Operator targetOp = (Operator) targetAdr.getSecond();
-            final Vector shift = (Vector) targetShift.minus(sourceShift);
-            
-            // --- loop through the cosets of the stabilizer to generate all images
-            final Set stabilizer = edgeStabilizer(sourcePos, targetPos, ops, precision);
-            if (DEBUG) {
-                System.err.println("  stabilizer has size " + stabilizer.size());
-            }
-            final Set opsSeen = new HashSet();
+            // --- loop through the operators to generate all images
             for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
                 // --- get the next coset representative
                 final Operator op = ((Operator) itOps.next()).modZ();
-                if (!opsSeen.contains(op)) {
-                    if (DEBUG) {
-                        System.err.println("  applying " + op);
-                    }
-                    // --- get the ends of the mapped edge
-                    final INode source = (INode) addressToNode.get(new Pair(sourceDesc,
-                            ((Operator) sourceOp.times(op)).modZ()));
-                    final INode target = (INode) addressToNode.get(new Pair(targetDesc,
-                            ((Operator) targetOp.times(op)).modZ()));
-                    //TODO consider shifts when applying op
-                    final Vector s = (Vector) shift.times(op);
-                    if (G.getEdge(source, target, s) == null) {
-                        G.newEdge(source, target, s);
-                    }
+                if (DEBUG) {
+                    System.err.println("  applying " + op);
+                }
+                final Point p = (Point) sourcePos.times(op);
+                final Point q = (Point) targetPos.times(op);
+                final Pair pAdr = lookup(p, nodeToPosition, precision);
+                final Pair qAdr = lookup(q, nodeToPosition, precision);
+                final INode v = (INode) pAdr.getFirst();
+                final INode w = (INode) qAdr.getFirst();
+                final Vector vShift = (Vector) pAdr.getSecond();
+                final Vector wShift = (Vector) qAdr.getSecond();
+                final Vector s = (Vector) wShift.minus(vShift);
+                if (G.getEdge(v, w, s) == null) {
+                    G.newEdge(v, w, s);
                 }
             }
         }
@@ -1019,46 +982,6 @@ public class NetParser extends GenericParser {
         return stabilizer;
     }
     
-    /**
-     * Computes the stabilizer of an edge modulo lattice translations.The
-     * infinity norm (largest absolute value of a matrix entry) is used to
-     * determine the distances between points.
-     * 
-     * Currently only tested for point sites.
-     * 
-     * @param site1 one end of the edge.
-     * @param site2 the other end.
-     * @param ops operators forming the symmetry group.
-     * @param precision points this close are considered equal.
-     * @return the set of operators forming the stabilizer
-     */
-    private static Set edgeStabilizer(final Point site1, final Point site2,
-            final List ops, final double precision) {
-        final Point sites[] = new Point[] { site1, site2 };
-        final boolean close[][] = new boolean[2][2];
-        final Set stabilizer = new HashSet();
-        
-        for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
-            final Operator op = (Operator) it2.next();
-            for (int i = 0; i <= 1; ++i) {
-                for (int j = 0; j <= 1; ++j) {
-                    final double dist = distModZ(sites[i], (Point) sites[j].times(op));
-                    close[i][j] = (dist <= precision); // using "<=" allows for precision 0
-                }
-            }
-            if ((close[0][0] && close[1][1]) || (close[0][1] && close[1][0])) {
-                stabilizer.add(op.modZ());
-            }
-        }
-        
-        // --- check if stabilizer forms a group
-        if (!formGroup(stabilizer)) {
-            throw new RuntimeException("precision problem in stabilizer computation");
-        }
-
-        return stabilizer;
-    }
-
     /**
      * Measures the distance between two sites in terms of the infinity norm of
      * the representing matrices. The distance is computed modulo Z^d, where Z
