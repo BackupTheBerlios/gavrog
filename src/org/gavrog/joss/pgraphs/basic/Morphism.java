@@ -45,7 +45,7 @@ import org.gavrog.joss.geometry.Vector;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.4 2005/10/15 02:20:35 odf Exp $
+ * @version $Id: Morphism.java,v 1.5 2005/10/23 19:31:18 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;
@@ -309,7 +309,7 @@ public class Morphism implements Map {
      * 
      * @return the linear part of the associated affine transformation.
      */
-    public Operator getOperator() {
+    public Operator getLinearOperator() {
         return operator;
     }
     
@@ -332,13 +332,23 @@ public class Morphism implements Map {
         final Map pos2 = ((PeriodicGraph) w.owner()).barycentricPlacement();
         final Point posv = (Point) pos1.get(v);
         final Point posw = (Point) pos2.get(w);
-        final Vector s = (Vector) posw.minus(posv.times(getOperator()));
+        final Vector s = (Vector) posw.minus(posv.times(getLinearOperator()));
         final int d = s.getDimension();
         final Real result[] = new Real[d];
         for (int i = 0; i < d; ++i) {
             result[i] = (Real) ((Real) s.get(i)).mod(1);
         }
         return new Vector(result);
+    }
+    
+    /**
+     * Returns the affine transformation of barycentric placements associated to
+     * this morphism.
+     * 
+     * @return the associated affine transformation.
+     */
+    public Operator getAffineOperator() {
+        return (Operator) getLinearOperator().times(getTranslation());
     }
     
     // --- Implementation of map interface starts here.

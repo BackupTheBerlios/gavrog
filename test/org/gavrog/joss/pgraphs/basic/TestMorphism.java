@@ -29,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMorphism.java,v 1.4 2005/10/15 02:20:35 odf Exp $
+ * @version $Id: TestMorphism.java,v 1.5 2005/10/23 19:31:18 odf Exp $
  */
 public class TestMorphism extends TestCase {
     private PeriodicGraph cds, dia, x, y;
@@ -211,10 +211,10 @@ public class TestMorphism extends TestCase {
         }
     }
 
-    public void testGetOperator() {
-        assertEquals(inversion, autoDia1.getOperator());
-        assertEquals(rot_xyz, autoDia2.getOperator());
-        assertEquals(rot_y, autoCds1.getOperator());
+    public void testGetLinearOperator() {
+        assertEquals(inversion, autoDia1.getLinearOperator());
+        assertEquals(rot_xyz, autoDia2.getLinearOperator());
+        assertEquals(rot_y, autoCds1.getLinearOperator());
     }
     
     public void testGetTranslation() {
@@ -224,6 +224,12 @@ public class TestMorphism extends TestCase {
         assertEquals(t1, autoDia1.getTranslation());
         assertEquals(t2, autoDia2.getTranslation());
         assertEquals(t3, autoCds1.getTranslation());
+    }
+    
+    public void testGetAffineOperator() {
+        assertEquals(new Operator("1/4-x,1/4-y,1/4-z"), autoDia1.getAffineOperator());
+        assertEquals(rot_xyz, autoDia2.getAffineOperator());
+        assertEquals(new Operator("-z,y+1/2,x"), autoCds1.getAffineOperator());
     }
     
     public void testSize() {
