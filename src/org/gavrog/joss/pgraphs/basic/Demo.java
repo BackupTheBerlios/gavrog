@@ -26,7 +26,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.1 2005/10/16 05:07:56 odf Exp $
+ * @version $Id: Demo.java,v 1.2 2005/10/23 05:20:19 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -66,6 +66,9 @@ public class Demo {
                 System.out.println("  extra translations: " + (r - 1));
                 if (r > 1) {
                     System.out.println("  --- continuing with minimal repeat unit ---");
+                    System.out.println("  # of nodes: " + G1.numberOfNodes());
+                    System.out.println("  # of edges: " + G1.numberOfEdges());
+                    System.out.flush();
                 }
                 final List ops = G1.symmetryOperators();
                 System.out.println("  point syms: " + ops.size());
@@ -76,7 +79,7 @@ public class Demo {
                 System.out.println("  spacegroup: "
                                    + (group == null ? "not found" : group));
                 System.out.flush();
-                System.out.println("  invariant: " + G.invariant().toString());
+                System.out.println("  invariant: " + G1.invariant().toString());
                 System.out.println();
                 System.out.flush();
             }
