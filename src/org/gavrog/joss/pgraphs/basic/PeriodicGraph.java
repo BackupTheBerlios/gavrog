@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.16 2005/10/22 02:18:31 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.17 2005/10/23 05:26:30 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -974,6 +974,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the list of operators.
      */
     public List symmetryOperators() {
+        //TODO extend this to the affine operators
         final List res = new ArrayList();
         for (final Iterator iter = symmetries().iterator(); iter.hasNext();) {
             res.add(((Morphism) iter.next()).getOperator());
