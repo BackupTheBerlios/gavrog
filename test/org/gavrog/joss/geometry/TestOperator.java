@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.9 2005/09/20 05:12:54 odf Exp $
+ * @version $Id: TestOperator.java,v 1.10 2005/10/23 19:30:01 odf Exp $
  */
 public class TestOperator extends TestCase {
     final int M[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
@@ -90,6 +90,7 @@ public class TestOperator extends TestCase {
         final int A[][] = new int[][] {{-1, 0, 0}, {0, -1, 0}, {1, 1, 1}};
         final Operator opA = new Operator(A);
         assertEquals(opA, op1.times(op1));
+        assertEquals(new Operator("3-x,-y"), opA.times(new Vector(2, -1)));
     }
 
     public void testCompareTo() {
@@ -122,8 +123,8 @@ public class TestOperator extends TestCase {
     public void testFloorZ() {
         final double[][] A = new double[][] {{0, 1.1, 0 }, {-1, 0, 0}, {-1.25, 0, 1}};
         final Operator opA = new Operator(A);
-        final Matrix B = new Matrix(new double[][] { { -2, 0 } });
-        assertEquals(B, opA.floorZ());
+        final Vector v = new Vector(-2, 0);
+        assertEquals(v, opA.floorZ());
     }
 
     public void testToString() {
@@ -162,6 +163,11 @@ public class TestOperator extends TestCase {
     public void testOperatorString() {
         final Operator opA = new Operator("1-y,x");
         assertEquals(op1, opA);
+    }
+
+    public void testOperatorVector() {
+        final Vector s = new Vector(1, -2, 3);
+        assertEquals(new Operator("x+1,y-2,z+3"), new Operator(s));
     }
     
     public void testGetDimension() {
