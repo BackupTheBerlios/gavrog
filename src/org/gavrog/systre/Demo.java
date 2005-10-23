@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.systre;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -22,11 +22,12 @@ import java.util.List;
 
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.2 2005/10/23 05:20:19 odf Exp $
+ * @version $Id: Demo.java,v 1.1 2005/10/23 21:43:31 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
