@@ -50,10 +50,12 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.19 2005/10/23 19:33:07 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.20 2005/10/24 00:12:36 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
+    public final String invariantVersion = "1.0";
+
     private static final String IS_CONNECTED = "isConnected";
     private static final String BARYCENTRIC_PLACEMENT = "barycentricPlacement";
     private static final String IS_LOCALLY_STABLE = "isLocallyStable";
