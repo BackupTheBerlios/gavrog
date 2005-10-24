@@ -16,18 +16,21 @@ limitations under the License.
 
 package org.gavrog.systre;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.2 2005/10/24 04:47:52 odf Exp $
+ * @version $Id: Archive.java,v 1.3 2005/10/24 05:18:23 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -138,6 +141,54 @@ public class Archive {
             buf.append("\n");
             buf.append("end\n");
             return buf.toString();
+        }
+        
+        /**
+         * Reads an entry from a stream.
+         * @param input represents the input stream.
+         * @return the entry read or null if the stream is at its end.
+         */
+        public static Entry read(final BufferedReader input) {
+            String line;
+            final Map fields = new HashMap();
+            while (true) {
+                try {
+                    line = input.readLine();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                if (line == null) {
+                    break;
+                }
+                line = line.trim().replaceAll("\\s+", " ");
+                if (line.length() == 0) {
+                    continue;
+                }
+                int k = line.indexOf(" ");
+                final String tag;
+                final String arg;
+                if (k < 0) {
+                    tag = line;
+                    arg = null;
+                } else {
+                    tag = line.substring(0, k);
+                    arg = line.substring(k + 1);
+                }
+                if (tag.equals("end")) {
+                    final String key = (String) fields.get("key");
+                    final String version = (String) fields.get("version");
+                    final String name = (String) fields.get("id");
+                    final String checksum = (String) fields.get("checksum");
+                    final Entry entry = new Entry(key, version, name);
+                    if (!entry.getDigestString().equals(checksum)) {
+                        throw new DataFormatException("checksum does not match");
+                    }
+                    return entry;
+                } else {
+                    fields.put(tag, arg);
+                }
+            }
+            return null;
         }
     }
     
