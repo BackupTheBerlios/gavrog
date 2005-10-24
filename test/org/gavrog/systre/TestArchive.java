@@ -17,6 +17,8 @@ limitations under the License.
 package org.gavrog.systre;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
@@ -27,7 +29,7 @@ import org.gavrog.systre.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.3 2005/10/24 22:36:48 odf Exp $
+ * @version $Id: TestArchive.java,v 1.4 2005/10/24 22:58:24 odf Exp $
  */
 public class TestArchive extends TestCase {
     final PeriodicGraph srs = NetParser.stringToNet(""
@@ -70,5 +72,25 @@ public class TestArchive extends TestCase {
         assertEquals(srs_key, entry.getKey());
         assertEquals(srs_digest, entry.getDigestString());
         assertEquals(keyVersion, entry.getKeyVersion());
+        assertNull(Entry.read(input));
+    }
+    
+    public void testArchiveRead() {
+        final Package pkg = Archive.class.getPackage();
+        final String packagePath = pkg.getName().replaceAll("\\.", "/");
+        final String archivePath = packagePath + "/rcsr.arc";
+
+        final Archive rcsr = new Archive("1.0");
+        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
+        rcsr.addAll(reader);
+        
+        final String key = srs.invariant().toString();
+        final Entry entry = rcsr.get(key);
+        assertEquals(srs_name, entry.getName());
+        assertEquals(srs_key, entry.getKey());
+        assertEquals(srs_digest, entry.getDigestString());
+        assertEquals(keyVersion, entry.getKeyVersion());
+        assertEquals(rcsr.get(srs_name), entry);
     }
 }
