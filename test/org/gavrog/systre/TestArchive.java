@@ -16,6 +16,9 @@ limitations under the License.
 
 package org.gavrog.systre;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
+
 import junit.framework.TestCase;
 
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -24,7 +27,7 @@ import org.gavrog.systre.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.2 2005/10/24 04:47:53 odf Exp $
+ * @version $Id: TestArchive.java,v 1.3 2005/10/24 22:36:48 odf Exp $
  */
 public class TestArchive extends TestCase {
     final PeriodicGraph srs = NetParser.stringToNet(""
@@ -36,25 +39,36 @@ public class TestArchive extends TestCase {
             + "  2 4  0 1 0\n"
             + "  3 4  0 0 1\n"
             + "END\n");
+    final String srs_key = "3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 3 0 1 0 2 4 1 0 0 3 4 0 0 1";
+    final String keyVersion = srs.invariantVersion;
+    final String srs_name = "srs";
+    final String srs_digest = "d01d26b1ad1122626f6c4c98415129f8";
+    
+    final String srs_entry = ""
+        + "key      " + srs_key + "\n"
+        + "version  " + keyVersion + "\n"
+        + "id       " + srs_name + "\n"
+        + "checksum " + srs_digest + "\n"
+        + "end\n";
     
     public void testEntryChecksum() {
-        final String digest = "d01d26b1ad1122626f6c4c98415129f8";
+        final Entry entry1 = new Entry(srs_key, keyVersion, srs_name);
+        assertEquals(srs_digest, entry1.getDigestString());
         
-        final String key = "3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 3 0 1 0 2 4 1 0 0 3 4 0 0 1";
-        final Entry entry1 = new Entry(key, "1.0", "srs");
-        assertEquals(digest, entry1.getDigestString());
-        
-        final Entry entry2 = new Entry(srs, "srs");
-        assertEquals(digest, entry2.getDigestString());
+        final Entry entry2 = new Entry(srs, srs_name);
+        assertEquals(srs_digest, entry2.getDigestString());
     }
     
     public void testToString() {
-        final String expected = ""
-            + "key      3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 3 0 1 0 2 4 1 0 0 3 4 0 0 1\n"
-            + "version  1.0\n"
-            + "id       srs\n"
-            + "checksum d01d26b1ad1122626f6c4c98415129f8\n"
-            + "end\n";
-        assertEquals(expected, new Entry(srs, "srs").toString());
+        assertEquals(srs_entry, new Entry(srs, srs_name).toString());
+    }
+    
+    public void testEntryRead() {
+        final BufferedReader input = new BufferedReader(new StringReader(srs_entry));
+        final Entry entry = Entry.read(input);
+        assertEquals(srs_name, entry.getName());
+        assertEquals(srs_key, entry.getKey());
+        assertEquals(srs_digest, entry.getDigestString());
+        assertEquals(keyVersion, entry.getKeyVersion());
     }
 }
