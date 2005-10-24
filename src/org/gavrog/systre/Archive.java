@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.3 2005/10/24 05:18:23 odf Exp $
+ * @version $Id: Archive.java,v 1.4 2005/10/24 22:57:52 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -204,6 +204,14 @@ public class Archive {
     }
     
     /**
+     * Returns the number of entries in this archive.
+     * @return the number of entries.
+     */
+    public int size() {
+        return this.byKey.size();
+    }
+    
+    /**
      * @return Returns the version string.
      */
     public String getKeyVersion() {
@@ -303,6 +311,21 @@ public class Archive {
             return e;
         } else {
             return getByName(keyOrName);
+        }
+    }
+    
+    /**
+     * Adds all archive entries read from a stream.
+     * @param input represents the input stream.
+     */
+    public void addAll(final BufferedReader input) {
+        while (true) {
+            final Entry entry = Entry.read(input);
+            if (entry == null) {
+                return;
+            } else {
+                add(entry);
+            }
         }
     }
 }
