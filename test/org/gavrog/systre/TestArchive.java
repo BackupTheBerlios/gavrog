@@ -24,9 +24,19 @@ import org.gavrog.systre.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.1 2005/10/24 00:12:50 odf Exp $
+ * @version $Id: TestArchive.java,v 1.2 2005/10/24 04:47:53 odf Exp $
  */
 public class TestArchive extends TestCase {
+    final PeriodicGraph srs = NetParser.stringToNet(""
+            + "PERIODIC_GRAPH\n"
+            + "  1 2  0 0 0\n"
+            + "  1 3  0 0 0\n"
+            + "  1 4  0 0 0\n"
+            + "  2 3  1 0 0\n"
+            + "  2 4  0 1 0\n"
+            + "  3 4  0 0 1\n"
+            + "END\n");
+    
     public void testEntryChecksum() {
         final String digest = "d01d26b1ad1122626f6c4c98415129f8";
         
@@ -34,16 +44,17 @@ public class TestArchive extends TestCase {
         final Entry entry1 = new Entry(key, "1.0", "srs");
         assertEquals(digest, entry1.getDigestString());
         
-        final PeriodicGraph srs = NetParser.stringToNet(""
-                + "PERIODIC_GRAPH\n"
-                + "  1 2  0 0 0\n"
-                + "  1 3  0 0 0\n"
-                + "  1 4  0 0 0\n"
-                + "  2 3  1 0 0\n"
-                + "  2 4  0 1 0\n"
-                + "  3 4  0 0 1\n"
-                + "END\n");
         final Entry entry2 = new Entry(srs, "srs");
         assertEquals(digest, entry2.getDigestString());
+    }
+    
+    public void testToString() {
+        final String expected = ""
+            + "key      3 1 2 0 0 0 1 3 0 0 0 1 4 0 0 0 2 3 0 1 0 2 4 1 0 0 3 4 0 0 1\n"
+            + "version  1.0\n"
+            + "id       srs\n"
+            + "checksum d01d26b1ad1122626f6c4c98415129f8\n"
+            + "end\n";
+        assertEquals(expected, new Entry(srs, "srs").toString());
     }
 }
