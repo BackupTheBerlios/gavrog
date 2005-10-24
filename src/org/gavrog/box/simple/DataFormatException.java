@@ -14,14 +14,14 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.pgraphs.io;
+package org.gavrog.box.simple;
 
 /**
  * Exception thrown if some parsing method encounters an ill-formatted input
  * string.
  * 
  * @author Olaf Delgado
- * @version $Id: DataFormatException.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
+ * @version $Id: DataFormatException.java,v 1.1 2005/10/24 05:17:57 odf Exp $
  */
 public class DataFormatException extends IllegalArgumentException {
     public DataFormatException(final String msg) {

@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
@@ -32,7 +33,7 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.1.1.1 2005/07/15 21:58:39 odf Exp $
+ * @version $Id: GenericParser.java,v 1.2 2005/10/24 05:17:42 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;

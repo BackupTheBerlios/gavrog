@@ -28,15 +28,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Strings;
-import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * This class handles catalogues of known space groups. For the time being, everything
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.10 2005/10/12 23:15:28 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.11 2005/10/24 05:17:44 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**

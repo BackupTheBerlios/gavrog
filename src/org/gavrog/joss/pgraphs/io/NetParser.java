@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -50,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.55 2005/10/23 05:07:32 odf Exp $
+ * @version $Id: NetParser.java,v 1.56 2005/10/24 05:17:42 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process

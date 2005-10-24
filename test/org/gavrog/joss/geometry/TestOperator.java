@@ -18,17 +18,17 @@ package org.gavrog.joss.geometry;
 
 import junit.framework.TestCase;
 
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.10 2005/10/23 19:30:01 odf Exp $
+ * @version $Id: TestOperator.java,v 1.11 2005/10/24 05:17:44 odf Exp $
  */
 public class TestOperator extends TestCase {
     final int M[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};

@@ -16,13 +16,13 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.pgraphs.io.DataFormatException;
 
 /**
  * An operator acting on d-dimensional space by projective transformation.
@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.DataFormatException;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.15 2005/10/23 19:29:59 odf Exp $
+ * @version $Id: Operator.java,v 1.16 2005/10/24 05:17:44 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
