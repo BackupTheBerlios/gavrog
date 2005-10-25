@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.2 2005/10/25 02:15:09 odf Exp $
+ * @version $Id: Demo.java,v 1.3 2005/10/25 04:27:10 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -57,15 +57,15 @@ public class Demo {
             ++count;
             System.out.println("Graph " + count + ":");
             final int d = G.getDimension();
-            System.out.println("  dimension: " + d);
-            System.out.println("  # of nodes: " + G.numberOfNodes());
-            System.out.println("  # of edges: " + G.numberOfEdges());
+            System.out.println("  dimension:\t\t" + d);
+            System.out.println("  # of nodes:\t\t" + G.numberOfNodes());
+            System.out.println("  # of edges:\t\t" + G.numberOfEdges());
             System.out.flush();
-            System.out.println("  connected: " + (G.isConnected() ? "yes" : "no"));
+            System.out.println("  connected:\t\t" + (G.isConnected() ? "yes" : "no"));
             System.out.flush();
-            System.out.println("  stable       : " + (G.isStable() ? "yes" : "no"));
+            System.out.println("  stable:\t\t\t" + (G.isStable() ? "yes" : "no"));
             System.out.flush();
-            System.out.println("  loc. stable: " + (G.isLocallyStable() ? "yes" : "no"));
+            System.out.println("  locally stable:\t\t" + (G.isLocallyStable() ? "yes" : "no"));
             System.out.flush();
             
             if (!G.isStable()) {
@@ -75,25 +75,25 @@ public class Demo {
             } else {
                 final PeriodicGraph G1 = G.minimalImage();
                 final int r = G.numberOfNodes() / G1.numberOfNodes();
-                System.out.println("  extra translations: " + (r - 1));
+                System.out.println("  extra translations:\t" + (r - 1));
                 if (r > 1) {
                     System.out.println("  --- continuing with minimal repeat unit ---");
-                    System.out.println("  # of nodes: " + G1.numberOfNodes());
-                    System.out.println("  # of edges: " + G1.numberOfEdges());
+                    System.out.println("  # of nodes:\t\t" + G1.numberOfNodes());
+                    System.out.println("  # of edges:\t\t" + G1.numberOfEdges());
                     System.out.flush();
                 }
                 final List ops = G1.symmetryOperators();
-                System.out.println("  point syms: " + ops.size());
+                System.out.println("  point syms:\t\t" + ops.size());
                 System.out.flush();
                 final SpaceGroupFinder finder = new SpaceGroupFinder(new SpaceGroup(d,
                         ops));
                 final String group = finder.getGroupName();
-                System.out.println("  spacegroup: "
+                System.out.println("  spacegroup:\t\t"
                                    + (group == null ? "not found" : group));
                 System.out.flush();
                 final String invariant = G1.invariant().toString();
                 if (invariant.length() <= 60) {
-                    System.out.println("  Systre key: " + invariant);
+                    System.out.println("  Systre key:\t\t" + invariant);
                 } else {
                     System.out.println("  --- Systre key of length " + invariant.length() + " not displayed ---");
                 }
@@ -102,7 +102,7 @@ public class Demo {
                 if (found == null) {
                     System.out.println("  --- not found in RCSR ---");
                 } else {
-                    System.out.println("  RCSR name: " + found.getName());
+                    System.out.println("  RCSR name:\t" + found.getName());
                 }
                 System.out.println();
                 System.out.flush();
