@@ -29,8 +29,10 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
+ * First preview of the upcoming Gavrog version of Systre.
+ * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.4 2005/10/25 19:51:55 odf Exp $
+ * @version $Id: Demo.java,v 1.5 2005/10/25 21:49:12 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -83,7 +85,7 @@ public class Demo {
                     System.out.flush();
                 }
                 final List ops = G1.symmetryOperators();
-                System.out.println("  point syms:\t\t" + ops.size());
+                System.out.println("  point symmetries:\t" + ops.size());
                 System.out.flush();
                 final SpaceGroupFinder finder = new SpaceGroupFinder(new SpaceGroup(d,
                         ops));
