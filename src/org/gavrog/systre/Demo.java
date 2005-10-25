@@ -30,7 +30,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.3 2005/10/25 04:27:10 odf Exp $
+ * @version $Id: Demo.java,v 1.4 2005/10/25 19:51:55 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -58,14 +58,14 @@ public class Demo {
             System.out.println("Graph " + count + ":");
             final int d = G.getDimension();
             System.out.println("  dimension:\t\t" + d);
-            System.out.println("  # of nodes:\t\t" + G.numberOfNodes());
-            System.out.println("  # of edges:\t\t" + G.numberOfEdges());
+            System.out.println("  number of nodes:\t" + G.numberOfNodes());
+            System.out.println("  number of edges:\t" + G.numberOfEdges());
             System.out.flush();
             System.out.println("  connected:\t\t" + (G.isConnected() ? "yes" : "no"));
             System.out.flush();
-            System.out.println("  stable:\t\t\t" + (G.isStable() ? "yes" : "no"));
+            System.out.println("  stable:\t\t" + (G.isStable() ? "yes" : "no"));
             System.out.flush();
-            System.out.println("  locally stable:\t\t" + (G.isLocallyStable() ? "yes" : "no"));
+            System.out.println("  locally stable:\t" + (G.isLocallyStable() ? "yes" : "no"));
             System.out.flush();
             
             if (!G.isStable()) {
@@ -78,8 +78,8 @@ public class Demo {
                 System.out.println("  extra translations:\t" + (r - 1));
                 if (r > 1) {
                     System.out.println("  --- continuing with minimal repeat unit ---");
-                    System.out.println("  # of nodes:\t\t" + G1.numberOfNodes());
-                    System.out.println("  # of edges:\t\t" + G1.numberOfEdges());
+                    System.out.println("  number of nodes:\t" + G1.numberOfNodes());
+                    System.out.println("  number of edges:\t" + G1.numberOfEdges());
                     System.out.flush();
                 }
                 final List ops = G1.symmetryOperators();
@@ -102,7 +102,7 @@ public class Demo {
                 if (found == null) {
                     System.out.println("  --- not found in RCSR ---");
                 } else {
-                    System.out.println("  RCSR name:\t" + found.getName());
+                    System.out.println("  RCSR name:\t\t" + found.getName());
                 }
                 System.out.println();
                 System.out.flush();
