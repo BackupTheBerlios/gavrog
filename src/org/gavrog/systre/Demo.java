@@ -16,8 +16,11 @@ limitations under the License.
 
 package org.gavrog.systre;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import org.gavrog.joss.geometry.SpaceGroup;
@@ -27,10 +30,18 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.1 2005/10/23 21:43:31 odf Exp $
+ * @version $Id: Demo.java,v 1.2 2005/10/25 02:15:09 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
+        final Package pkg = Archive.class.getPackage();
+        final String packagePath = pkg.getName().replaceAll("\\.", "/");
+        final String archivePath = packagePath + "/rcsr.arc";
+        final Archive rcsr = new Archive("1.0");
+        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
+        rcsr.addAll(reader);
+        
         NetParser parser = null;
         int count = 0;
         try {
@@ -80,7 +91,19 @@ public class Demo {
                 System.out.println("  spacegroup: "
                                    + (group == null ? "not found" : group));
                 System.out.flush();
-                System.out.println("  invariant: " + G1.invariant().toString());
+                final String invariant = G1.invariant().toString();
+                if (invariant.length() <= 60) {
+                    System.out.println("  Systre key: " + invariant);
+                } else {
+                    System.out.println("  --- Systre key of length " + invariant.length() + " not displayed ---");
+                }
+                System.out.flush();
+                final Archive.Entry found  = rcsr.getByKey(invariant);
+                if (found == null) {
+                    System.out.println("  --- not found in RCSR ---");
+                } else {
+                    System.out.println("  RCSR name: " + found.getName());
+                }
                 System.out.println();
                 System.out.flush();
             }
