@@ -22,6 +22,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -30,7 +31,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.4 2005/10/24 22:57:52 odf Exp $
+ * @version $Id: Archive.java,v 1.5 2005/10/26 02:07:09 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -327,5 +328,9 @@ public class Archive {
                 add(entry);
             }
         }
+    }
+    
+    public Set keySet() {
+        return this.byKey.keySet();
     }
 }
