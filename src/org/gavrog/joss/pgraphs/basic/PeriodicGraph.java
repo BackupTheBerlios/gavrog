@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.20 2005/10/24 00:12:36 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.21 2005/10/26 22:13:15 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1286,7 +1286,8 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         final EdgeCmd bestScript[] = new EdgeCmd[m];
-        List bestBasis = null;
+        Matrix bestBasis = null;
+        INode bestStart = null;
         if (DEBUG) {
             System.out.println("  Found " + bases.size() + " bases\n");
         }
@@ -1310,6 +1311,9 @@ public class PeriodicGraph extends UndirectedGraph {
             int nextVertex = 2;
             int edgesSoFar = 0;
             boolean equal = (bestBasis != null);
+            CoordinateChange basisAdjustment = null;
+            final Matrix essentialShifts = Matrix.zero(d, d).mutableClone();
+            int r = 0;
             
             class Break extends Throwable {
             }
@@ -1342,7 +1346,7 @@ public class PeriodicGraph extends UndirectedGraph {
                         final INode w = e.target();
                         final Point s = (Point) p.plus(edgeToRow.get(e));
                         final int wn;
-                        final Vector shift;
+                        Vector shift;
                         
                         if (!old2new.containsKey(w)) {
                             // --- edge connects to new vertex class
@@ -1359,6 +1363,28 @@ public class PeriodicGraph extends UndirectedGraph {
                             }
                             // --- compute shift vector for new edge
                             shift = (Vector) s.minus(newPos.get(w));
+                            if (basisAdjustment != null) {
+                                // --- convert to a precomputed basis of shifts
+                                shift = (Vector) shift.times(basisAdjustment);
+                            } else {
+                                // --- see if new vector contributes to a basis of shifts
+                                essentialShifts.setRow(r, shift.getCoordinates());
+                                if (essentialShifts.rank() > r) {
+                                    // --- yes, it does
+                                    shift = Vector.unit(d, r);
+                                    ++r;
+                                    if (r == d) {
+                                        basisAdjustment = new CoordinateChange(
+                                                essentialShifts, Point.origin(d));
+                                    }
+                                } else {
+                                    // --- no, so express as sum of former shifts
+                                    essentialShifts.setRow(r, Matrix.zero(1, d));
+                                    shift = new Vector(LinearAlgebra.solutionInRows(
+                                            essentialShifts, shift.getCoordinates(),
+                                            false));
+                                }
+                            }
                         }
                         if (vn < wn || (vn == wn && shift.sign() < 0)) {
                             // --- compare with the best result to date
@@ -1377,7 +1403,6 @@ public class PeriodicGraph extends UndirectedGraph {
                                         System.out.print(" is a winner.");
                                     }
                                     equal = false;
-                                    bestBasis = b;
                                 } else if (cmp > 0) {
                                     if (DEBUG) {
                                         System.out.println(" is a loser.");
@@ -1405,41 +1430,20 @@ public class PeriodicGraph extends UndirectedGraph {
             } catch (Break done) {
                 continue;
             }
-            bestBasis = b;
+            bestBasis = (Matrix) basisAdjustment.getBasis().times(differenceMatrix(b));
+            bestStart = ((IEdge) b.get(0)).source();
         }
         
-        // --- collect basis vectors for the lattice
+        // --- collect the shift vectors and extract a basis
         
-        final Matrix A = Matrix.zero(d, d).mutableClone();
-        int k = 0;
+        final Matrix A = Matrix.zero(m, d).mutableClone();
         for (int i = 0; i < m; ++i) {
-            A.setRow(k, bestScript[i].shift.getCoordinates());
-            if (A.rank() == k + 1) {
-                ++k;
-                if (k == d) {
-                    break;
-                }
-            }
+            A.setRow(i, bestScript[i].shift.getCoordinates());
         }
-        final Matrix B = differenceMatrix(bestBasis);
+        Matrix.triangulate(A, null, true, false, 0);
+        final Matrix B = A.getSubMatrix(0, 0, d, d);
 
-        if (!((Matrix) A.times(B)).determinant().abs().equals(Whole.ONE)) {
-            final Matrix M = Matrix.zero(m, d).mutableClone();
-            for (int i = 0; i < m; ++i) {
-                M.setRow(i, bestScript[i].shift.getCoordinates());
-            }
-            Matrix.triangulate(M, null, true, false, 0);
-
-            for (int i = 0; i < d; ++i) {
-                A.setRow(i, M.getRow(i));
-            }
-        }
-        
-        // --- compute the basis change matrix
-        if (!((Matrix) A.times(B)).determinant().abs().equals(Whole.ONE)) {
-            throw new RuntimeException("internal error - please contact author");
-        }
-        final CoordinateChange basisChange = new CoordinateChange(A, Point.origin(d));
+        final CoordinateChange basisChange = new CoordinateChange(B, Point.origin(d));
         
         // --- apply the basis change to the best script
         for (int i = 0; i < m; ++i) {
@@ -1480,9 +1484,10 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- consistency test
-        final Matrix B1 = (Matrix) B.inverse().times(basisChange.getBasis().inverse());
+        final Matrix B1 = (Matrix) bestBasis.inverse().times(
+                basisChange.getBasis().inverse());
         try {
-            new Morphism(((IEdge) bestBasis.get(0)).source(), nodes[1], B1);
+            new Morphism(bestStart, nodes[1], B1);
         } catch (Morphism.NoSuchMorphismException ex) {
             throw new RuntimeException("internal error - please contact author");
         }
