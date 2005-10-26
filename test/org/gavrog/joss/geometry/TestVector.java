@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.13 2005/10/22 00:59:05 odf Exp $
+ * @version $Id: TestVector.java,v 1.14 2005/10/26 21:05:57 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(1, 2, 3);
@@ -65,6 +65,11 @@ public class TestVector extends TestCase {
     public void testZero() {
         final Vector z = new Vector(0, 0, 0);
         assertEquals(z, v.zero());
+    }
+
+    public void testUnit() {
+        assertEquals(new Vector(0, 1, 0), Vector.unit(3, 1));
+        assertEquals(new Vector(1, 0, 0), Vector.unit(3, 0));
     }
 
     public void testOne() {
