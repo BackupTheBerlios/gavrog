@@ -21,10 +21,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
+import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
@@ -32,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.5 2005/10/25 21:49:12 odf Exp $
+ * @version $Id: Demo.java,v 1.6 2005/10/27 04:47:12 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -93,6 +96,19 @@ public class Demo {
                 System.out.println("  spacegroup:\t\t"
                                    + (group == null ? "not found" : group));
                 System.out.flush();
+                System.out.print("  coordination sequences:");
+                for (final Iterator orbits = G1.nodeOrbits(); orbits.hasNext();) {
+                    final Set orbit = (Set) orbits.next();
+                    final INode v = (INode) orbit.iterator().next();
+                    final Iterator cs = G1.coordinationSequence(v);
+                    for (int i = 0; i <= 10; ++i) {
+                        System.out.print(" " + ((Integer) cs.next()).intValue());
+                    }
+                    if (orbits.hasNext()) {
+                        System.out.print("\n\t\t\t ");
+                    }
+                }
+                System.out.println();
                 final String invariant = G1.invariant().toString();
                 if (invariant.length() <= 60) {
                     System.out.println("  Systre key:\t\t" + invariant);
