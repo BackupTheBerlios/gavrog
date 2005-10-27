@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.21 2005/10/26 22:13:15 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.22 2005/10/27 04:46:55 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1204,7 +1204,25 @@ public class PeriodicGraph extends UndirectedGraph {
         return result;
     }
     
-    // TODO compute orbits and stabilizers
+    /**
+     * Returns the orbits of the set of nodes under the full combinatorial
+     * symmetry group.
+     * 
+     * @return an iterator over the set of orbits.
+     */
+    public Iterator nodeOrbits() {
+        final Partition P = new Partition();
+        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
+            final Morphism a = (Morphism) syms.next();
+            for (final Iterator nodes = nodes(); nodes.hasNext();) {
+                final INode v = (INode) nodes.next();
+                P.unite(v, a.get(v));
+            }
+        }
+        return P.classes();
+    }
+    
+    // TODO compute more orbits and stabilizers
     
     /**
      * Computes a invariant for this periodic graph. An invariant is an object,

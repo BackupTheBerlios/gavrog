@@ -38,7 +38,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.17 2005/10/27 00:19:30 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.18 2005/10/27 04:46:55 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -441,6 +441,12 @@ public class TestPeriodicGraph extends TestCase {
         final IGraph H = E.getGraph();
         assertEquals(n, H.numberOfNodes());
         assertEquals(m, H.numberOfEdges());
+    }
+    
+    public void testOrbits() {
+        final List orbits = Iterators.asList(G.nodeOrbits());
+        assertEquals(1, orbits.size());
+        assertEquals(2, ((Set) orbits.get(0)).size());
     }
     
     public void testCanonical() {
