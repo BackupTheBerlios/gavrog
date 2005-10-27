@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.6 2005/10/27 04:47:12 odf Exp $
+ * @version $Id: Demo.java,v 1.7 2005/10/27 18:27:11 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -118,9 +118,9 @@ public class Demo {
                 System.out.flush();
                 final Archive.Entry found  = rcsr.getByKey(invariant);
                 if (found == null) {
-                    System.out.println("  --- not found in RCSR ---");
+                    System.out.println("  --- no recognized RCSR structure ---");
                 } else {
-                    System.out.println("  RCSR name:\t\t" + found.getName());
+                    System.out.println("  RCSR symbol:\t\t" + found.getName());
                 }
                 System.out.println();
                 System.out.flush();
