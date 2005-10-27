@@ -16,12 +16,7 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -38,13 +33,12 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
-import org.gavrog.systre.Archive;
 
 /**
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.16 2005/10/26 02:07:45 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.17 2005/10/27 00:19:30 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -544,36 +538,40 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(key, G.invariant().toString());
     }
     
-    public void testArchiveKeys() {
-        final Package pkg = Archive.class.getPackage();
-        final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        final String archivePath = packagePath + "/rcsr.arc";
-
-        final Archive rcsr = new Archive("1.0");
-        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-        rcsr.addAll(reader);
-        
-        final List keys = new ArrayList();
-        keys.addAll(rcsr.keySet());
-        Collections.sort(keys, new Comparator() {
-            public int compare(final Object arg0, final Object arg1) {
-                final String s0 = (String) arg0;
-                final String s1 = (String) arg1;
-                final int d = s0.length() - s1.length();
-                if (d != 0) {
-                    return d;
-                } else {
-                    return s0.compareTo(s1);
-                }
-            }
-        });
-        
-        for (final Iterator iter = keys.iterator(); iter.hasNext();) {
-            final String key = (String) iter.next();
-            verifyKey(key);
-        }
-    }
+    // CAVEAT: the following test takes hours. Run only after considerable changes.
+    
+//    public void testInvariantsRCSR() {
+//        final Package pkg = Archive.class.getPackage();
+//        final String packagePath = pkg.getName().replaceAll("\\.", "/");
+//        final String archivePath = packagePath + "/rcsr.arc";
+//
+//        final Archive rcsr = new Archive("1.0");
+//        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
+//        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
+//        rcsr.addAll(reader);
+//        
+//        final List keys = new ArrayList();
+//        keys.addAll(rcsr.keySet());
+//        Collections.sort(keys, new Comparator() {
+//            public int compare(final Object arg0, final Object arg1) {
+//                final String s0 = (String) arg0;
+//                final String s1 = (String) arg1;
+//                final int d = s0.length() - s1.length();
+//                if (d != 0) {
+//                    return d;
+//                } else {
+//                    return s0.compareTo(s1);
+//                }
+//            }
+//        });
+//        
+//        int i = 0;
+//        for (final Iterator iter = keys.iterator(); iter.hasNext();) {
+//            //System.err.println(++i);
+//            final String key = (String) iter.next();
+//            verifyKey(key);
+//        }
+//    }
     
     public void testEquals() {
         assertEquals(G, G);
