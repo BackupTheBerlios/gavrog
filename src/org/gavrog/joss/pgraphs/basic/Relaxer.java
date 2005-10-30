@@ -26,26 +26,49 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph.Node;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.1 2005/10/30 05:11:01 odf Exp $
+ * @version $Id: Relaxer.java,v 1.2 2005/10/30 05:28:33 odf Exp $
  */
 public class Relaxer {
     private PeriodicGraph graph;
     private Map positions;
     private int dimension;
+    private HashSet neighbors;
+    private HashSet secondNeighbors;
+    
+    private class Relation {
+        public INode source;
+        public INode target;
+        public Vector shift;
+
+        public Relation(final Node v, final Node w) {
+            this.source = v.getOrbitNode();
+            this.target = w.getOrbitNode();
+            this.shift = (Vector) w.getShift().minus(v.getShift());
+        }
+        
+        //TODO add appropriate hashCode() and equals()
+    }
     
     public Relaxer(final PeriodicGraph graph, final Map positions) {
         this.graph = graph;
         this.positions = positions;
         this.dimension = graph.getDimension();
+        this.neighbors = new HashSet();
+        this.secondNeighbors = new HashSet();
+        
         final Vector zero = Vector.zero(this.dimension);
         
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final Node v = graph.new Node((INode) nodes.next(), zero);
-            final Set neighbors = new HashSet();
             for (final Iterator edges = v.incidences(); edges.hasNext();) {
                 final IEdge e = (IEdge) edges.next();
-                final INode w = e.target();
-                neighbors.add(w);
+                final Node w = (Node) e.target();
+                this.neighbors.add(new Relation(v, w));
+                for (final Iterator moreEdges = w.incidences(); moreEdges.hasNext();) {
+                    final IEdge f = (IEdge) moreEdges.next();
+                    final Node u = (Node) f.target();
+                    this.secondNeighbors.add(new Relation(v, w));
+                }
             }
         }
     }
