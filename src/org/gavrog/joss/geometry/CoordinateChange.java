@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: CoordinateChange.java,v 1.2 2005/10/11 00:04:35 odf Exp $
+ * @version $Id: CoordinateChange.java,v 1.3 2005/10/30 02:22:24 odf Exp $
  */
 public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
@@ -54,6 +54,26 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
         this.left = new Matrix(d+1, d+1);
         this.left.setSubMatrix(0, 0, basis);
         this.left.setSubMatrix(d, 0, origin.getCoordinates());
+        this.left.setSubMatrix(0, d, Matrix.zero(d, 1));
+        this.left.set(d, d, Whole.ONE);
+        this.right = (Matrix) this.left.inverse();
+        this.dimension = d;
+    }
+
+    /**
+     * Creates a new instance. The input is a matrix the rows of which
+     * represent the new basis vectors. The origin is not changed.
+     * 
+     * @param basis the d x d matrix representing the new basis.
+     */
+    public CoordinateChange(final Matrix basis) {
+        final int d = basis.numberOfRows();
+        if (basis.numberOfColumns() != d) {
+            throw new IllegalArgumentException("bad shape");
+        }
+        this.left = new Matrix(d+1, d+1);
+        this.left.setSubMatrix(0, 0, basis);
+        this.left.setSubMatrix(d, 0, Matrix.zero(1, d));
         this.left.setSubMatrix(0, d, Matrix.zero(d, 1));
         this.left.set(d, d, Whole.ONE);
         this.right = (Matrix) this.left.inverse();
@@ -104,7 +124,7 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
      */
     public IArithmetic one() {
         final int d = this.dimension;
-        return new CoordinateChange(Matrix.one(d), Point.origin(d));
+        return new CoordinateChange(Matrix.one(d));
     }
     
     /* (non-Javadoc)
