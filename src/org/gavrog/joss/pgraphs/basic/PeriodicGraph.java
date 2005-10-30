@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.23 2005/10/30 02:00:18 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.24 2005/10/30 05:10:49 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -82,6 +82,275 @@ public class PeriodicGraph extends UndirectedGraph {
     }
 
     /**
+     * Implements a node of the covering graph - as opposed to the representing
+     * orbit graph. Each node is given as a pair consisting of a node of the
+     * orbit graph and an integral shift vector.
+     */
+    public class Node implements INode {
+        //TODO test embedded Node and Edge classes.
+        private INode v;
+        private Vector shift;
+        private int degree = -1;
+
+        /**
+         * Creates a new node.
+         * 
+         * @param v the orbit graph node.
+         * @param shift the shift vector.
+         */
+        public Node(final INode v, final Vector shift) {
+            if (!PeriodicGraph.this.hasElement(v)) {
+                throw new IllegalArgumentException("no such node");
+            }
+            if (!shift.isIntegral()) {
+                throw new IllegalArgumentException("vector must be integral");
+            }
+            
+            this.v = v;
+            this.shift = shift;
+        }
+        
+        /**
+         * Retrieves the associated node in the orbit graph.
+         * 
+         * @return the orbit node for this node.
+         */
+        public INode getOrbitNode() {
+            return this.v;
+        }
+        
+        /**
+         * Retrieves the associated shift vector 
+         * 
+         * @return the shift for this node.
+         */
+        public Vector getShift() {
+            return this.shift;
+        }
+        
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.INode#degree()
+         */
+        public int degree() {
+            if (this.degree < 0) {
+                incidences();
+            }
+            return this.degree;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#owner()
+         */
+        public IGraph owner() {
+            return PeriodicGraph.this;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#incidences()
+         */
+        public Iterator incidences() {
+            final List result = new ArrayList();
+            for (final Iterator iter = v.incidences(); iter.hasNext();) {
+                final IEdge e = ((IEdge) iter.next()).oriented();
+                result.add(new Edge(e, this.shift));
+                if (e.source().equals(e.target())) {
+                    result.add(new Edge(e.reverse(), this.shift));
+                }
+            }
+            this.degree = result.size();
+            return result.iterator();
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#id()
+         */
+        public Object id() {
+            return new Pair(this.v.id(), this.shift);
+        }
+        
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        public boolean equals(final Object other) {
+            if (other instanceof Node) {
+                final Node x = (Node) other;
+                return this.owner().id().equals(x.owner().id())
+                       && this.id().equals(x.id());
+            } else {
+                return false;
+            }
+        }
+        
+        /* (non-Javadoc)
+         * @see java.lang.Object#hashCode()
+         */
+        public int hashCode() {
+            return this.v.hashCode() * 37 + this.shift.hashCode();
+        }
+        
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        public String toString() {
+            return "(" + this.v.id() + ", " + this.shift + ")";
+        }
+    }
+    
+    /**
+     * Implements a edge of the covering graph - as opposed to the representing
+     * orbit graph. Each edge is given as a pair consisting of an edge of the
+     * orbit graph and an integral shift vector.
+     */
+    public class Edge implements IEdge {
+        private IEdge e;
+        private Vector shift;
+
+        /**
+         * Creates a new edge.
+         * 
+         * @param e the orbit graph edge.
+         * @param shift the shift vector.
+         */
+        public Edge(final IEdge e, final Vector shift) {
+            if (!PeriodicGraph.this.hasElement(e)) {
+                throw new IllegalArgumentException("no such edge");
+            }
+            if (!shift.isIntegral()) {
+                throw new IllegalArgumentException("vector must be integral");
+            }
+            
+            this.e = e;
+            this.shift = shift;
+        }
+        
+        /**
+         * Retrieves the associated edge in the orbit graph.
+         * 
+         * @return the orbit edge for this edge.
+         */
+        public IEdge getOrbitNode() {
+            return this.e;
+        }
+        
+        /**
+         * Retrieves the associated shift vector 
+         * 
+         * @return the shift for this node.
+         */
+        public Vector getShift() {
+            return this.shift;
+        }
+        
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#source()
+         */
+        public INode source() {
+            return new Node(this.e.source(), this.shift);
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#target()
+         */
+        public INode target() {
+            final Vector s = PeriodicGraph.this.getShift(this.e);
+            return new Node(this.e.target(), (Vector) this.shift.plus(s));
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#opposite(org.gavrog.joss.pgraphs.basic.INode)
+         */
+        public INode opposite(INode oneEnd) {
+            if (source().equals(oneEnd)) {
+                return target();
+            } else if (target().equals(oneEnd)) {
+                return source();
+            } else {
+                throw new IllegalArgumentException("edge has no such vertex");
+            }
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#reverse()
+         */
+        public IEdge reverse() throws UnsupportedOperationException {
+            final Vector s = PeriodicGraph.this.getShift(this.e);
+            return new Edge(this.e.reverse(), (Vector) this.shift.plus(s));
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#oriented()
+         */
+        public IEdge oriented() {
+            return new Edge(this.e.oriented(), this.shift);
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#unoriented()
+         */
+        public IEdge unoriented() {
+            return new Edge(this.e.unoriented(), this.shift);
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#owner()
+         */
+        public IGraph owner() {
+            return PeriodicGraph.this;
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#incidences()
+         */
+        public Iterator incidences() {
+            final List tmp = new LinkedList();
+            tmp.add(source());
+            if (!source().equals(target())) {
+                tmp.add(target());
+            }
+            return tmp.iterator();
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#id()
+         */
+        public Object id() {
+            return new Pair(this.e.id(), this.shift);
+        }
+        
+        
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        public boolean equals(final Object other) {
+            if (other instanceof Edge) {
+                final Edge x = (Edge) other;
+                return this.owner().id().equals(x.owner().id())
+                       && this.id().equals(x.id());
+            } else {
+                return false;
+            }
+        }
+        
+        /* (non-Javadoc)
+         * @see java.lang.Object#hashCode()
+         */
+        public int hashCode() {
+            return this.e.hashCode() * 37 + this.shift.hashCode();
+        }
+        
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        public String toString() {
+            return "(" + this.e + ", " + this.shift + ")";
+        }
+    }
+    
+    /**
      * @return Returns the dimension.
      */
     public int getDimension() {
@@ -96,7 +365,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public Vector getShift(final IEdge e) {
         if (hasElement(e)) {
             final Vector s = (Vector) edgeIdToShift.get(e.id());
-            if (((Edge) e).isReverse) {
+            if (((UndirectedGraph.Edge) e).isReverse) {
                 return (Vector) s.negative();
             } else {
                 return s;
@@ -208,7 +477,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 continue;
             }
             
-            if (((Edge) e).isReverse) {
+            if (((UndirectedGraph.Edge) e).isReverse) {
                 final Object id = e.reverse().id();
                 edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).minus(amount));
             } else {
@@ -788,7 +1057,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param v the common source node.
      * @return the list of edges found.
      */
-    private List allIncidences(final INode v) {
+    public List allIncidences(final INode v) {
         final List result = new ArrayList();
         for (final Iterator iter = v.incidences(); iter.hasNext();) {
             final IEdge e = ((IEdge) iter.next()).oriented();
