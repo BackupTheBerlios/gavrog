@@ -31,6 +31,7 @@ import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
@@ -38,7 +39,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.18 2005/10/27 04:46:55 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.19 2005/10/30 02:22:51 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -414,13 +415,11 @@ public class TestPeriodicGraph extends TestCase {
     public void testSymmetricBasis(final PeriodicGraph G) {
         final Real eps = new FloatingPoint(1e-12);
         final int d = G.getDimension();
-        final Matrix I = Matrix.one(d);
-        final Matrix B = G.symmetricBasis();
-        final Matrix B_1 = (Matrix) B.inverse();
+        final Matrix I = Matrix.one(d+1);
+        final CoordinateChange c = new CoordinateChange(G.symmetricBasis());
         for (final Iterator syms = G.symmetries().iterator(); syms.hasNext();) {
-            final Matrix M = ((Morphism) syms.next()).getLinearOperator().getCoordinates()
-                    .getSubMatrix(0, 0, d, d);
-            final Matrix A = (Matrix) B_1.times(M).times(B);
+            final Operator op = ((Morphism) syms.next()).getLinearOperator();
+            final Matrix A = ((Operator) op.times(c)).getCoordinates();
             final Matrix D = (Matrix) A.times(A.transposed());
             assertTrue(D.minus(I).norm().isLessThan(eps));
         }
@@ -435,8 +434,7 @@ public class TestPeriodicGraph extends TestCase {
             final int m) {
         final INode v = (INode) G.nodes().next();
         final Map pos = G.barycentricPlacement();
-        final CoordinateChange basis = new CoordinateChange(G.symmetricBasis(), Point
-                .origin(G.getDimension()));
+        final CoordinateChange basis = new CoordinateChange(G.symmetricBasis());
         final Embedding E = G.embeddedNeighborhood(v, d, pos, basis);
         final IGraph H = E.getGraph();
         assertEquals(n, H.numberOfNodes());

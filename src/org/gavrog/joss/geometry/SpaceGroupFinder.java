@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.40 2005/10/12 23:15:55 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.41 2005/10/30 02:22:51 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -70,7 +70,6 @@ public class SpaceGroupFinder {
     public SpaceGroupFinder(final SpaceGroup G) {
         final int d = G.getDimension();
         this.G = G;
-        final Point o = Point.origin(d);
         
         if (d == 3) {
             // --- first step of analysis
@@ -79,7 +78,7 @@ public class SpaceGroupFinder {
             final Matrix preliminaryBasis = (Matrix) res[1];
             
             // --- compute the coordinate change to the preliminary basis
-            final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis, o);
+            final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis);
             if (DEBUG > 0) {
                 System.err.println("to preliminary basis: " + toPreliminary);
             }
@@ -96,7 +95,7 @@ public class SpaceGroupFinder {
             this.centering = ((Character) res[1]).charValue();
             
             // --- compute coordinate change to normalized basis
-            final CoordinateChange pre2Normal = new CoordinateChange(normalizedBasis, o);
+            final CoordinateChange pre2Normal = new CoordinateChange(normalizedBasis);
             final CoordinateChange toNormalized = (CoordinateChange) toPreliminary
                     .times(pre2Normal);
             if (DEBUG > 0) {
@@ -123,7 +122,7 @@ public class SpaceGroupFinder {
             
             // --- compute the coordinate change operator to the primitive setting
             final Matrix M = Vector.toMatrix(primitiveCell);
-            final CoordinateChange C = new CoordinateChange(M, Point.origin(d));
+            final CoordinateChange C = new CoordinateChange(M);
             if (DEBUG > 0) {
                 System.err.println("normalized to primitive: " + C);
             }
