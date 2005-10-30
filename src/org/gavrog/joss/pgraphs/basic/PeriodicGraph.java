@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.22 2005/10/27 04:46:55 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.23 2005/10/30 02:00:18 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -650,7 +650,7 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- compute the basis change matrix
         final Matrix A = M.getSubMatrix(0, 0, d, d);
-        final CoordinateChange basisChange = new CoordinateChange(A, Point.origin(d));
+        final CoordinateChange basisChange = new CoordinateChange(A);
         
         // --- now add the edges for the new graph
         for (final Iterator iter = edges(); iter.hasNext();) {
@@ -1051,11 +1051,8 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         M = (Matrix) M.times(new Fraction(1, syms.size()));
         
-        // --- compute an orthonormal basis for the new form
-        final Matrix B = LinearAlgebra.orthonormalRowBasis(M);
-        
-        // --- result is old basis expressed in terms of new
-        return (Matrix) B.inverse();
+        // --- compute and return an orthonormal basis for the new form
+        return LinearAlgebra.orthonormalRowBasis(M);
     }
 
     /**
@@ -1393,7 +1390,7 @@ public class PeriodicGraph extends UndirectedGraph {
                                     ++r;
                                     if (r == d) {
                                         basisAdjustment = new CoordinateChange(
-                                                essentialShifts, Point.origin(d));
+                                                essentialShifts);
                                     }
                                 } else {
                                     // --- no, so express as sum of former shifts
@@ -1461,7 +1458,7 @@ public class PeriodicGraph extends UndirectedGraph {
         Matrix.triangulate(A, null, true, false, 0);
         final Matrix B = A.getSubMatrix(0, 0, d, d);
 
-        final CoordinateChange basisChange = new CoordinateChange(B, Point.origin(d));
+        final CoordinateChange basisChange = new CoordinateChange(B);
         
         // --- apply the basis change to the best script
         for (int i = 0; i < m; ++i) {
