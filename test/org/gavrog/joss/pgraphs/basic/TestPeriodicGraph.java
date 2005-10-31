@@ -39,16 +39,16 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.20 2005/10/31 01:05:21 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.21 2005/10/31 22:23:59 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
 
     private INode v1, v2;
-    private PeriodicGraph.Node w1, w2;
+    private PeriodicGraph.CoverNode w1, w2;
 
     private IEdge e1, e2, e3, e4;
-    private PeriodicGraph.Edge f1, f2, f3, f4;
+    private PeriodicGraph.CoverEdge f1, f2, f3, f4;
 
     /*
      * @see TestCase#setUp()
@@ -63,12 +63,12 @@ public class TestPeriodicGraph extends TestCase {
         e3 = G.newEdge(v2, v1, new int[] { 0, -1, 0 });
         e4 = G.newEdge(v1, v1, new int[] { 0, 0, 1 });
 
-        w1 = G.new Node(v1, new Vector(1, 2, 3));
-        w2 = G.new Node(v2, new Vector(1, 0, 2));
-        f1 = G.new Edge(e1, new Vector(0, 0, 0));
-        f2 = G.new Edge(e2, new Vector(0, 1, 0));
-        f3 = G.new Edge(e3, new Vector(1, 0, 1));
-        f4 = G.new Edge(e4, new Vector(0, -1, 40));
+        w1 = G.new CoverNode(v1, new Vector(1, 2, 3));
+        w2 = G.new CoverNode(v2, new Vector(1, 0, 2));
+        f1 = G.new CoverEdge(e1, new Vector(0, 0, 0));
+        f2 = G.new CoverEdge(e2, new Vector(0, 1, 0));
+        f3 = G.new CoverEdge(e3, new Vector(1, 0, 1));
+        f4 = G.new CoverEdge(e4, new Vector(0, -1, 40));
 
         dia = diamond();
         cds = CdSO4();
@@ -211,23 +211,70 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(G.getShift(e2.reverse()), G.getShift(test2));
     }
 
-    public void testNodeDegree() {
+    public void testCoverNodeDegree() {
         assertEquals(4, w1.degree());
         assertEquals(4, w2.degree());
     }
     
-    public void testEdgeSource() {
-        assertEquals(G.new Node(v1, new Vector(0, 0, 0)), f1.source());
-        assertEquals(G.new Node(v2, new Vector(0, 1, 0)), f2.source());
-        assertEquals(G.new Node(v2, new Vector(1, 0, 1)), f3.source());
-        assertEquals(G.new Node(v1, new Vector(0, -1, 40)), f4.source());
+    public void testCoverEdgeSource() {
+        assertEquals(G.new CoverNode(v1, new Vector(0, 0, 0)), f1.source());
+        assertEquals(G.new CoverNode(v2, new Vector(0, 1, 0)), f2.source());
+        assertEquals(G.new CoverNode(v2, new Vector(1, 0, 1)), f3.source());
+        assertEquals(G.new CoverNode(v1, new Vector(0, -1, 40)), f4.source());
     }
     
-    public void testEdgeTarget() {
-        assertEquals(G.new Node(v2, new Vector(0, 0, 0)), f1.target());
-        assertEquals(G.new Node(v2, new Vector(1, 1, 0)), f2.target());
-        assertEquals(G.new Node(v1, new Vector(1, -1, 1)), f3.target());
-        assertEquals(G.new Node(v1, new Vector(0, -1, 41)), f4.target());
+    public void testCoverEdgeTarget() {
+        assertEquals(G.new CoverNode(v2, new Vector(0, 0, 0)), f1.target());
+        assertEquals(G.new CoverNode(v2, new Vector(1, 1, 0)), f2.target());
+        assertEquals(G.new CoverNode(v1, new Vector(1, -1, 1)), f3.target());
+        assertEquals(G.new CoverNode(v1, new Vector(0, -1, 41)), f4.target());
+    }
+    
+    public void testCoverEdgeOpposite() {
+        final PeriodicGraph.CoverNode w1 = G.new CoverNode(v1, new Vector(0, 0, 0));
+        final PeriodicGraph.CoverNode w2 = G.new CoverNode(v2, new Vector(0, 0, 0));
+        final PeriodicGraph.CoverNode w3 = G.new CoverNode(v2, new Vector(0, 1, 0));
+        final PeriodicGraph.CoverNode w4 = G.new CoverNode(v2, new Vector(1, 1, 0));
+        assertEquals(w2, f1.opposite(w1));
+        assertEquals(w1, f1.opposite(w2));
+        try {
+            e1.opposite(w3);
+            fail("should have thrown an IllegalArgumentException");
+        } catch (IllegalArgumentException success) {
+        }
+        assertEquals(w3, f2.opposite(w4));
+        assertEquals(w4, f2.opposite(w3));
+    }
+    
+    public void testCoverEdgeReverse() {
+        final IEdge r1 = f1.reverse();
+        assertEquals(f1.target(), r1.source());
+        assertEquals(f1.source(), r1.target());
+        assertEquals(f1.unoriented(), r1.unoriented());
+        assertFalse(f1.oriented().equals(r1.unoriented()));
+        assertFalse(f1.equals(r1));
+    }
+    
+    public void testCoverElementOwner() {
+        assertEquals(G, w1.owner());
+        assertEquals(G, f1.owner());
+    }
+    
+    public void testElementIncidences() {
+        List incidences;
+        
+        // --- nodes:
+        incidences = Iterators.asList(w2.incidences());
+        assertEquals(4, incidences.size());
+        assertTrue(incidences.contains(G.new CoverEdge(e1.reverse(), new Vector(1, 0, 2))));
+        assertTrue(incidences.contains(G.new CoverEdge(e3, new Vector(1, 0, 2))));
+        assertTrue(incidences.contains(G.new CoverEdge(e2, new Vector(1, 0, 2))));
+        assertTrue(incidences.contains(G.new CoverEdge(e2, new Vector(0, 0, 2))));
+        
+        // --- edges:
+        incidences = Iterators.asList(e3.incidences());
+        assertEquals(2, incidences.size());
+        assertTrue(incidences.contains(v1));
     }
     
     public void testHashCodes() {

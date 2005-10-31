@@ -43,7 +43,7 @@ import org.gavrog.box.collections.Pair;
  * reverse.
  * 
  * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.3 2005/08/28 23:23:59 odf Exp $
+ * @version $Id: UndirectedGraph.java,v 1.4 2005/10/31 22:23:56 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;
@@ -132,10 +132,10 @@ public class UndirectedGraph implements IGraph {
             final Set ids = (Set) nodeIdToIncidentEdgesIds.get(this.id);
             return new FilteredIterator(ids.iterator()) {
                 public Object filter(final Object x) {
-                    if (edgeIdToTargetNodeId.get(x).equals(id())) {
-                        return new Edge(x, true);
-                    } else if (edgeIdToSourceNodeId.get(x).equals(id())) {
+                    if (edgeIdToSourceNodeId.get(x).equals(id())) {
                         return new Edge(x, false);
+                    } else if (edgeIdToTargetNodeId.get(x).equals(id())) {
+                        return new Edge(x, true);
                     } else {
                         throw new RuntimeException("inconsistency in graph");
                     }

@@ -22,11 +22,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.joss.geometry.Vector;
-import org.gavrog.joss.pgraphs.basic.PeriodicGraph.Node;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph.CoverNode;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.2 2005/10/30 05:28:33 odf Exp $
+ * @version $Id: Relaxer.java,v 1.3 2005/10/31 22:23:56 odf Exp $
  */
 public class Relaxer {
     private PeriodicGraph graph;
@@ -40,7 +40,7 @@ public class Relaxer {
         public INode target;
         public Vector shift;
 
-        public Relation(final Node v, final Node w) {
+        public Relation(final CoverNode v, final CoverNode w) {
             this.source = v.getOrbitNode();
             this.target = w.getOrbitNode();
             this.shift = (Vector) w.getShift().minus(v.getShift());
@@ -59,14 +59,14 @@ public class Relaxer {
         final Vector zero = Vector.zero(this.dimension);
         
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
-            final Node v = graph.new Node((INode) nodes.next(), zero);
+            final CoverNode v = graph.new CoverNode((INode) nodes.next(), zero);
             for (final Iterator edges = v.incidences(); edges.hasNext();) {
                 final IEdge e = (IEdge) edges.next();
-                final Node w = (Node) e.target();
+                final CoverNode w = (CoverNode) e.target();
                 this.neighbors.add(new Relation(v, w));
                 for (final Iterator moreEdges = w.incidences(); moreEdges.hasNext();) {
                     final IEdge f = (IEdge) moreEdges.next();
-                    final Node u = (Node) f.target();
+                    final CoverNode u = (CoverNode) f.target();
                     this.secondNeighbors.add(new Relation(v, w));
                 }
             }
