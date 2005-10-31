@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.26 2005/10/31 22:23:56 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.27 2005/10/31 22:28:56 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -87,7 +87,6 @@ public class PeriodicGraph extends UndirectedGraph {
      * orbit graph and an integral shift vector.
      */
     public class CoverNode implements INode {
-        //TODO test embedded Node and Edge classes.
         private INode v;
         private Vector shift;
         private int degree = -1;

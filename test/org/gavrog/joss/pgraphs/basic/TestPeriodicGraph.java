@@ -39,7 +39,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.21 2005/10/31 22:23:59 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.22 2005/10/31 22:28:56 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -260,7 +260,7 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(G, f1.owner());
     }
     
-    public void testElementIncidences() {
+    public void testCoverElementIncidences() {
         List incidences;
         
         // --- nodes:
@@ -272,9 +272,10 @@ public class TestPeriodicGraph extends TestCase {
         assertTrue(incidences.contains(G.new CoverEdge(e2, new Vector(0, 0, 2))));
         
         // --- edges:
-        incidences = Iterators.asList(e3.incidences());
+        incidences = Iterators.asList(f3.incidences());
         assertEquals(2, incidences.size());
-        assertTrue(incidences.contains(v1));
+        assertTrue(incidences.contains(G.new CoverNode(v1, new Vector(1, -1, 1))));
+        assertTrue(incidences.contains(G.new CoverNode(v2, new Vector(1, 0, 1))));
     }
     
     public void testHashCodes() {
