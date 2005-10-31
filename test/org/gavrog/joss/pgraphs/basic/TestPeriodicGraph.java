@@ -39,14 +39,16 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.19 2005/10/30 02:22:51 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.20 2005/10/31 01:05:21 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
 
     private INode v1, v2;
+    private PeriodicGraph.Node w1, w2;
 
     private IEdge e1, e2, e3, e4;
+    private PeriodicGraph.Edge f1, f2, f3, f4;
 
     /*
      * @see TestCase#setUp()
@@ -60,6 +62,14 @@ public class TestPeriodicGraph extends TestCase {
         e2 = G.newEdge(v2, v2, new int[] { 1, 0, 0 });
         e3 = G.newEdge(v2, v1, new int[] { 0, -1, 0 });
         e4 = G.newEdge(v1, v1, new int[] { 0, 0, 1 });
+
+        w1 = G.new Node(v1, new Vector(1, 2, 3));
+        w2 = G.new Node(v2, new Vector(1, 0, 2));
+        f1 = G.new Edge(e1, new Vector(0, 0, 0));
+        f2 = G.new Edge(e2, new Vector(0, 1, 0));
+        f3 = G.new Edge(e3, new Vector(1, 0, 1));
+        f4 = G.new Edge(e4, new Vector(0, -1, 40));
+
         dia = diamond();
         cds = CdSO4();
     }
@@ -201,6 +211,25 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(G.getShift(e2.reverse()), G.getShift(test2));
     }
 
+    public void testNodeDegree() {
+        assertEquals(4, w1.degree());
+        assertEquals(4, w2.degree());
+    }
+    
+    public void testEdgeSource() {
+        assertEquals(G.new Node(v1, new Vector(0, 0, 0)), f1.source());
+        assertEquals(G.new Node(v2, new Vector(0, 1, 0)), f2.source());
+        assertEquals(G.new Node(v2, new Vector(1, 0, 1)), f3.source());
+        assertEquals(G.new Node(v1, new Vector(0, -1, 40)), f4.source());
+    }
+    
+    public void testEdgeTarget() {
+        assertEquals(G.new Node(v2, new Vector(0, 0, 0)), f1.target());
+        assertEquals(G.new Node(v2, new Vector(1, 1, 0)), f2.target());
+        assertEquals(G.new Node(v1, new Vector(1, -1, 1)), f3.target());
+        assertEquals(G.new Node(v1, new Vector(0, -1, 41)), f4.target());
+    }
+    
     public void testHashCodes() {
         final INode v = v1;
         final INode w = (INode) G.getElement(v.id());
