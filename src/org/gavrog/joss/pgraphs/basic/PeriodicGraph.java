@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.29 2005/11/01 05:23:36 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.30 2005/11/01 05:40:01 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -727,21 +727,21 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- assign an integer index to each node representative
-        final Map idToIndex = new HashMap();
-        final List indexToId = new ArrayList();
+        final Map nodeToIndex = new HashMap();
+        final List indexToNode = new ArrayList();
         for (final Iterator iter = nodes(); iter.hasNext();) {
-            final Object id = ((INode) iter.next()).id();
-            idToIndex.put(id, new Integer(indexToId.size()));
-            indexToId.add(id);
+            final INode v = (INode) iter.next();
+            nodeToIndex.put(v, new Integer(indexToNode.size()));
+            indexToNode.add(v);
         }
         
         // --- set up a system of equations
-        final int n = indexToId.size(); // the number of nodes
+        final int n = indexToNode.size(); // the number of nodes
         final int[][] M = new int[n+1][n];
-        final int[][] t = new int[n+1][this.dimension];
+        final Matrix t = Matrix.zero(n+1, this.dimension);
         
         for (int i = 0; i < n; ++i) {
-            final INode v = (INode) getElement(indexToId.get(i));
+            final INode v = (INode) indexToNode.get(i);
             for (final Iterator iter = v.incidences(); iter.hasNext();) {
                 final IEdge e = (IEdge) iter.next();
                 final INode w = e.target();
@@ -751,23 +751,21 @@ public class PeriodicGraph extends UndirectedGraph {
                     continue;
                 }
                 final Vector s = getShift(e);
-                final int j = ((Integer) idToIndex.get(w.id())).intValue();
+                final int j = ((Integer) nodeToIndex.get(w)).intValue();
                 --M[i][j];
                 ++M[i][i];
-                for (int k = 0; k < this.dimension; ++k) {
-                    t[i][k] += ((Whole) s.get(k)).intValue();
-                }
+                t.setRow(i, (Matrix) t.getRow(i).plus(s.getCoordinates()));
             }
         }
         M[n][0] = 1;
         
         // --- solve the system
-        final Matrix P = Matrix.solve(new Matrix(M), new Matrix(t));
+        final Matrix P = Matrix.solve(new Matrix(M), t);
 
         // --- extract the positions found
         final Map tmp = new HashMap();
         for (int i = 0; i < n; ++i) {
-            tmp.put(getElement(indexToId.get(i)), new Point(P.getRow(i)));
+            tmp.put(indexToNode.get(i), new Point(P.getRow(i)));
         }
         final Map result = Collections.unmodifiableMap(tmp);
         
