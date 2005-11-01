@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.28 2005/11/01 05:15:43 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.29 2005/11/01 05:23:36 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -646,35 +646,31 @@ public class PeriodicGraph extends UndirectedGraph {
             return true;
         }
         
-        // --- little shortcut
-        final Vector zero = Vector.zero(getDimension());
-        
         // --- start node for traversing the representation graph
-        final INode start = (INode) nodes().next();
+        final CoverNode start = new CoverNode((INode) nodes().next());
         
         // --- make a breadth first traversal on the representation graph,
         //     determining reachable vertex classes and reachable translations
-        final Map nodeClassToSeenShift = new HashMap();
+        final Map repSeen = new HashMap();
         final LinkedList queue = new LinkedList();
         final List shifts = new ArrayList();
         
-        nodeClassToSeenShift.put(start, zero);
+        repSeen.put(start.getOrbitNode(), start);
         queue.addLast(start);
         
         while (queue.size() > 0) {
-            final INode v = (INode) queue.removeFirst();
-            final Vector s = (Vector) nodeClassToSeenShift.get(v);
-            for (Iterator edges = v.incidences(); edges.hasNext();) {
-                final IEdge e = (IEdge) edges.next();
-                final INode w = e.target();
-                final Vector t = (Vector) s.plus(getShift(e));
-                if (nodeClassToSeenShift.containsKey(w)) {
-                    final Vector d = (Vector) t.minus(nodeClassToSeenShift.get(w));
+            final CoverNode v = (CoverNode) queue.removeFirst();
+            for (final Iterator edges = v.incidences(); edges.hasNext();) {
+                final CoverEdge e = (CoverEdge) edges.next();
+                final CoverNode w = (CoverNode) e.target();
+                final CoverNode rw = (CoverNode) repSeen.get(w.getOrbitNode());
+                if (rw != null) {
+                    final Vector d = (Vector) w.getShift().minus(rw.getShift());
                     if (!d.isZero()) {
                         shifts.add(d);
                     }
                 } else {
-                    nodeClassToSeenShift.put(w, t);
+                    repSeen.put(w.getOrbitNode(), w);
                     queue.addLast(w);
                 }
             }
@@ -682,7 +678,7 @@ public class PeriodicGraph extends UndirectedGraph {
 
         // --- check if all vertex representatives have been reached
         for (final Iterator iter = nodes(); iter.hasNext();) {
-            if (!nodeClassToSeenShift.containsKey(iter.next())) {
+            if (!repSeen.containsKey(iter.next())) {
                 cache.put(IS_CONNECTED, new Boolean(false));
                 return false;
             }
