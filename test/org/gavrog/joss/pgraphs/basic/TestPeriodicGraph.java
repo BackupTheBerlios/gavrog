@@ -39,7 +39,7 @@ import org.gavrog.joss.geometry.Vector;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.22 2005/10/31 22:28:56 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.23 2005/11/01 05:15:44 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -65,7 +65,7 @@ public class TestPeriodicGraph extends TestCase {
 
         w1 = G.new CoverNode(v1, new Vector(1, 2, 3));
         w2 = G.new CoverNode(v2, new Vector(1, 0, 2));
-        f1 = G.new CoverEdge(e1, new Vector(0, 0, 0));
+        f1 = G.new CoverEdge(e1);
         f2 = G.new CoverEdge(e2, new Vector(0, 1, 0));
         f3 = G.new CoverEdge(e3, new Vector(1, 0, 1));
         f4 = G.new CoverEdge(e4, new Vector(0, -1, 40));
@@ -217,22 +217,22 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testCoverEdgeSource() {
-        assertEquals(G.new CoverNode(v1, new Vector(0, 0, 0)), f1.source());
+        assertEquals(G.new CoverNode(v1), f1.source());
         assertEquals(G.new CoverNode(v2, new Vector(0, 1, 0)), f2.source());
         assertEquals(G.new CoverNode(v2, new Vector(1, 0, 1)), f3.source());
         assertEquals(G.new CoverNode(v1, new Vector(0, -1, 40)), f4.source());
     }
     
     public void testCoverEdgeTarget() {
-        assertEquals(G.new CoverNode(v2, new Vector(0, 0, 0)), f1.target());
+        assertEquals(G.new CoverNode(v2), f1.target());
         assertEquals(G.new CoverNode(v2, new Vector(1, 1, 0)), f2.target());
         assertEquals(G.new CoverNode(v1, new Vector(1, -1, 1)), f3.target());
         assertEquals(G.new CoverNode(v1, new Vector(0, -1, 41)), f4.target());
     }
     
     public void testCoverEdgeOpposite() {
-        final PeriodicGraph.CoverNode w1 = G.new CoverNode(v1, new Vector(0, 0, 0));
-        final PeriodicGraph.CoverNode w2 = G.new CoverNode(v2, new Vector(0, 0, 0));
+        final PeriodicGraph.CoverNode w1 = G.new CoverNode(v1);
+        final PeriodicGraph.CoverNode w2 = G.new CoverNode(v2);
         final PeriodicGraph.CoverNode w3 = G.new CoverNode(v2, new Vector(0, 1, 0));
         final PeriodicGraph.CoverNode w4 = G.new CoverNode(v2, new Vector(1, 1, 0));
         assertEquals(w2, f1.opposite(w1));

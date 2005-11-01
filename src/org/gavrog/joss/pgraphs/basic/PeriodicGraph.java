@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.27 2005/10/31 22:28:56 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.28 2005/11/01 05:15:43 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -107,6 +107,15 @@ public class PeriodicGraph extends UndirectedGraph {
             
             this.v = v;
             this.shift = shift;
+        }
+        
+        /**
+         * Creates a new node with a zero shift.
+         * 
+         * @param v the orbit graph node.
+         */
+        public CoverNode(final INode v) {
+            this(v, Vector.zero(PeriodicGraph.this.getDimension()));
         }
         
         /**
@@ -226,6 +235,15 @@ public class PeriodicGraph extends UndirectedGraph {
             this.e = e.oriented();
             this.shift = shift;
             this.compareAsOriented = compareAsOriented;
+        }
+        
+        /**
+         * Creates a new edge with a zero shift.
+         * 
+         * @param e the orbit graph edge.
+         */
+        public CoverEdge(final IEdge e) {
+            this(e, Vector.zero(PeriodicGraph.this.getDimension()));
         }
         
         /**
@@ -585,22 +603,18 @@ public class PeriodicGraph extends UndirectedGraph {
         return new IteratorAdapter() {
             protected Object findNext() throws NoSuchElementException {
                 if (currentShell.size() == 0) {
-                    final Vector zero = Vector.zero(getDimension());
-                    currentShell.add(new Pair(start, zero));
+                    currentShell.add(new CoverNode(start));
                 } else {
                     final Set nextShell = new HashSet();
-                    for (Iterator iter = currentShell.iterator(); iter.hasNext();) {
-                        final Pair point = (Pair) iter.next();
-                        final INode v = (INode) point.getFirst();
-                        final Vector s = (Vector) point.getSecond();
-                        for (Iterator edges = v.incidences(); edges.hasNext();) {
-                            final IEdge e = (IEdge) edges.next();
-                            final Vector t = (Vector) s.plus(getShift(e));
-                            final Pair newPoint = new Pair(e.target(), t);
-                            if (!previousShell.contains(newPoint)
-                                    && !currentShell.contains(newPoint)
-                                    && !nextShell.contains(newPoint)) {
-                                nextShell.add(newPoint);
+                    for (final Iterator nodes = currentShell.iterator(); nodes.hasNext();) {
+                        final CoverNode v = (CoverNode) nodes.next();
+                        for (final Iterator edges = v.incidences(); edges.hasNext();) {
+                            final CoverEdge e = (CoverEdge) edges.next();
+                            final CoverNode w = (CoverNode) e.target();
+                            if (!previousShell.contains(w)
+                                    && !currentShell.contains(w)
+                                    && !nextShell.contains(w)) {
+                                nextShell.add(w);
                             }
                         }
                     }
@@ -615,7 +629,9 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-     * Tests if the periodic graph (not just the representing multigraph) is connected.
+     * Tests if the covering graph (not just the representing multigraph) is
+     * connected.
+     * 
      * @return true if the periodic graph is connected.
      */
     public boolean isConnected() {
