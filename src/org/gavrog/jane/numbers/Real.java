@@ -49,4 +49,8 @@ public abstract class Real extends Complex implements Comparable {
     public int compareTo(Object other) {
         return (this.minus(other)).sign();
     }
+    
+    public Real sqrt() {
+        return new FloatingPoint(Math.sqrt(this.doubleValue()));
+    }
 }
