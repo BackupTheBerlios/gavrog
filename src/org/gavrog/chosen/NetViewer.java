@@ -59,6 +59,8 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
+import org.gavrog.jane.compounds.LinearAlgebra;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
@@ -69,6 +71,7 @@ import org.gavrog.joss.pgraphs.basic.IGraph;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.basic.Relaxer;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 import com.sun.j3d.utils.applet.MainFrame;
@@ -96,7 +99,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.6 2005/10/30 02:22:51 odf Exp $
+ * @version $Id: NetViewer.java,v 1.7 2005/11/02 22:28:26 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -372,9 +375,20 @@ public class NetViewer extends Applet {
         final PeriodicGraph G = NetParser.stringToNet(spec);
         
         // --- construct an embedded portion of the net with default settings
+        final Matrix M = (Matrix) G.symmetricBasis().inverse();
+        final Matrix gram = (Matrix) M.times(M.transposed());
+        final Relaxer relaxer = new Relaxer(G, G.barycentricPlacement(), gram);
+        for (int i = 0; i < 200; ++i) {
+            relaxer.step();
+        }
+        final Map pos = relaxer.getPositions();
+        final Matrix A = LinearAlgebra.orthonormalRowBasis(relaxer.getGramMatrix());
+        final CoordinateChange B = new CoordinateChange(A);
+        
+//        final Map pos = G.barycentricPlacement();
+//        final CoordinateChange B = new CoordinateChange(G.symmetricBasis());
+
         final INode v0 = (INode) G.nodes().next();
-        final Map pos = G.barycentricPlacement();
-        final CoordinateChange B = new CoordinateChange(G.symmetricBasis());
         final Embedding E = G.embeddedNeighborhood(v0, radius, pos, B);
         
         // --- store it for later reference
