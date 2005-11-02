@@ -495,6 +495,9 @@ public class Matrix extends ArithmeticBase {
                         final IArithmetic b = A.get(i, j);
                         A.set(i, j, b.minus(f.times(a)));
                     }
+                    if (!useTruncatedDivision) {
+                        A.set(i, col, Whole.ZERO);
+                    }
                     if (B != null) {
                         for (int j = 0; j < B.ncols; ++j) {
                             final IArithmetic a = B.get(row, j);
