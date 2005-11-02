@@ -22,12 +22,13 @@ import java.util.Map;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.5 2005/11/02 02:05:28 odf Exp $
+ * @version $Id: Relaxer.java,v 1.6 2005/11/02 04:23:36 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -57,6 +58,37 @@ public class Relaxer {
             }
         }
         this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(minLength);
+        
+        // --- compute displacements
+        final Vector zero = Vector.zero(this.graph.getDimension());
+        Vector globalPull = zero;
+        final Map displacements = new HashMap();
+        for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            displacements.put(v, zero);
+        }
+        
+        for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
+            final IEdge e = (IEdge) edges.next();
+            final INode v = e.source();
+            final INode w = e.target();
+            final Point pv = (Point) this.positions.get(v);
+            final Point pw = (Point) this.positions.get(w);
+            final Vector s = this.graph.getShift(e);
+            final Vector d = (Vector) pw.plus(s).minus(pv);
+            final Real squareLength = (Real) Vector.dot(d, d, this.gramMatrix);
+            final double length = Math.sqrt(squareLength.doubleValue());
+            if (length > 1) {
+                final Vector delta = (Vector) d.times(0.25 * (length - 1) / length);
+                displacements.put(v, ((Vector) displacements.get(v)).plus(delta));
+                displacements.put(w, ((Vector) displacements.get(w)).minus(delta));
+                if (delta.isNegative()) {
+                    globalPull = (Vector) globalPull.minus(delta);
+                } else {
+                    globalPull = (Vector) globalPull.plus(delta);
+                }
+            }
+        }
         
         //TODO continue from here
     }
