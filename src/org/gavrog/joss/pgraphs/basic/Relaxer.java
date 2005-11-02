@@ -28,7 +28,6 @@ import java.util.Map;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
-import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
@@ -37,7 +36,7 @@ import org.gavrog.systre.Archive;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.8 2005/11/02 07:33:20 odf Exp $
+ * @version $Id: Relaxer.java,v 1.9 2005/11/02 22:28:00 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -53,27 +52,34 @@ public class Relaxer {
         this.gramMatrix = gramMatrix;
     }
 
-    public void step() {
-        // --- scale so shortest edge has unit length
-        IArithmetic minLength = null;
-        IArithmetic maxLength = null;
+    public double[] edgeStatistics() {
+        double minLength = Double.MAX_VALUE;
+        double maxLength = 0.0;
+        double sumLength = 0.0;
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
             final Point p = (Point) this.positions.get(e.source());
             final Point q = (Point) this.positions.get(e.target());
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) q.plus(s).minus(p);
-            final IArithmetic length = Vector.dot(d, d, this.gramMatrix);
-            if (minLength == null
-                || (length.isPositive() && length.isLessThan(minLength))) {
-                minLength = length;
+            final double length = ((Real) Vector.dot(d, d, this.gramMatrix)).doubleValue();
+            if (length > 0) {
+                minLength = Math.min(minLength, length);
             }
-            if (maxLength == null || length.isGreaterThan(maxLength)) {
-                maxLength = length;
-            }
+            maxLength = Math.max(maxLength, length);
+            sumLength += length;
         }
-        this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(minLength);
-        System.out.print(maxLength + "  " + minLength);
+        final double avgLength = sumLength / this.graph.numberOfEdges();
+        return new double[] { minLength, maxLength, avgLength };
+    }
+    
+    private double clamp(final double value, final double lo, final double hi) {
+        return Math.min(Math.max(value, lo), hi);
+    }
+    
+    public void step() {
+        // --- scale so shortest edge has unit length
+        this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / edgeStatistics()[2]);
 
         // --- compute displacements
         final int dim = this.graph.getDimension();
@@ -95,18 +101,16 @@ public class Relaxer {
             final Vector d = (Vector) pw.plus(s).minus(pv);
             final Real squareLength = (Real) Vector.dot(d, d, this.gramMatrix);
             final double length = Math.sqrt(squareLength.doubleValue());
-            if (length > 1) {
-                final Vector movement = (Vector) d.times(0.25 * (length - 1) / length);
-                deltas.put(v, ((Vector) deltas.get(v)).plus(movement));
-                deltas.put(w, ((Vector) deltas.get(w)).minus(movement));
-                if (movement.isNegative()) {
-                    globalPull = (Vector) globalPull.minus(movement);
-                } else {
-                    globalPull = (Vector) globalPull.plus(movement);
-                }
+            final double f = clamp(0.25 * (length - 1) / length, -0.1, 0.1);
+            final Vector movement = (Vector) d.times(f);
+            deltas.put(v, ((Vector) deltas.get(v)).plus(movement));
+            deltas.put(w, ((Vector) deltas.get(w)).minus(movement));
+            if ((movement.times(length-1)).isNegative()) {
+                globalPull = (Vector) globalPull.minus(movement);
+            } else {
+                globalPull = (Vector) globalPull.plus(movement);
             }
         }
-        System.out.println("  " + globalPull);
 
         // --- apply displacements
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
@@ -116,7 +120,7 @@ public class Relaxer {
 
         // --- apply global pull
         final Real len = (Real) Vector.dot(globalPull, globalPull, this.gramMatrix);
-        if (Math.sqrt(len.doubleValue()) > 0.001) {
+        if (Math.sqrt(len.doubleValue()) > 0.0001) {
             final Matrix A = Matrix.zero(dim, dim).mutableClone();
             A.setRow(0, globalPull.getCoordinates());
             int r = 1;
@@ -131,10 +135,7 @@ public class Relaxer {
                 }
             }
 
-            System.out.println("G = " + this.gramMatrix);
-            System.out.println("A = " + A);
             final Matrix B = LinearAlgebra.rowOrthonormalized(A, this.gramMatrix);
-            System.out.println("B = " + B);
             final Vector v = new Vector(B.getRow(0));
             double lo = 0;
             double hi = 0;
@@ -149,18 +150,14 @@ public class Relaxer {
                 }
             }
             final double width = hi - lo;
-            final double delta = Math.abs(((Real) Vector.dot(globalPull, v)).doubleValue());
-            double f = (width - delta) / width;
-            if (f < 0.9) {
-                f = 0.9;
+            double delta = Math.abs(((Real) Vector.dot(globalPull, v)).doubleValue());
+            if (globalPull.isNegative()) {
+                delta = -delta;
             }
-            System.out.println("f = " + f);
+            final double f = clamp((width - delta) / width, 0.9, 1.1);
             final Matrix C = Matrix.one(dim).mutableClone();
             C.set(0, 0, new FloatingPoint(f));
-            System.out.print("inverting B...");
-            System.out.flush();
             final Matrix Binv = (Matrix) B.inverse();
-            System.out.println("done");
             final Matrix G = (Matrix) Binv.times(C).times(Binv.transposed());
             this.gramMatrix = (Matrix) ((Matrix) G.plus(G.transposed())).dividedBy(2);
         }
@@ -225,11 +222,22 @@ public class Relaxer {
                 System.out.println();
                 System.out.flush();
             } else {
-                System.out.println(" --- relaxing ... ---");
                 final Matrix M = (Matrix) G.symmetricBasis().inverse();
                 final Matrix gram = (Matrix) M.times(M.transposed());
                 final Relaxer relaxer = new Relaxer(G, G.barycentricPlacement(), gram);
-                for (int i = 0; i < 20; ++i) {
+                System.out.println(" --- relaxing ... ---");
+                for (int i = 0; i < 201; ++i) {
+                    if (i % 20 == 0) {
+                        final Matrix gr = relaxer.getGramMatrix();
+                        final double det = ((Real) gr.determinant()).doubleValue();
+                        final double vol = Math.sqrt(det) / G.numberOfNodes();
+                        final double stats[] = relaxer.edgeStatistics();
+                        System.out.println("  edge lengths: min = "
+                                + Math.rint(stats[0] * 1000) / 1000 + ", max = "
+                                + Math.rint(stats[1] * 1000) / 1000 + ", avg = "
+                                + Math.rint(stats[2] * 1000) / 1000
+                                + ";  volume/vertex = " + Math.rint(vol * 1000) / 1000);
+                    }
                     relaxer.step();
                 }
                 System.out.println();
