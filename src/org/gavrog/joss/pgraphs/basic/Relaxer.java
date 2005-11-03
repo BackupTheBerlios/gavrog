@@ -25,9 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
@@ -37,7 +35,7 @@ import org.gavrog.systre.Archive;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.11 2005/11/03 02:16:55 odf Exp $
+ * @version $Id: Relaxer.java,v 1.12 2005/11/03 06:04:09 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -89,7 +87,7 @@ public class Relaxer {
     
     public void step() {
         // --- scale so shortest edge has unit length
-        this.gramMatrix = (Matrix) this.gramMatrix.times(1.01 / edgeStatistics()[2]);
+        this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / edgeStatistics()[0]);
 
         // --- compute displacements and stresses
         final int dim = this.graph.getDimension();
@@ -126,52 +124,8 @@ public class Relaxer {
                 move(this.positions, v, (Vector) delta.times(d / length));
             }
         }
-
-        // --- determine stress on unit cell
-        final Vector globalPull = zero;
         
-        // --- apply global pull
-        if (length(globalPull) > 0.0001) {
-            final Matrix A = Matrix.zero(dim, dim).mutableClone();
-            A.setRow(0, globalPull.getCoordinates());
-            int r = 1;
-            final Matrix I = Matrix.one(dim);
-            for (int i = 0; i < dim; ++i) {
-                A.setRow(r, I.getRow(i));
-                if (A.rank() > r) {
-                    ++r;
-                    if (r == dim) {
-                        break;
-                    }
-                }
-            }
-
-            final Matrix B = LinearAlgebra.rowOrthonormalized(A, this.gramMatrix);
-            final Vector v = new Vector(B.getRow(0));
-            double lo = 0;
-            double hi = 0;
-            for (int i = 0; i <= 1; ++i) {
-                for (int j = 0; j <= 1; ++j) {
-                    for (int k = 0; k <= 1; ++k) {
-                        final Vector t = new Vector(i, j, k);
-                        final double x = ((Real) Vector.dot(t, v)).doubleValue();
-                        lo = Math.min(lo, x);
-                        hi = Math.max(hi, x);
-                    }
-                }
-            }
-            final double width = hi - lo;
-            double delta = Math.abs(((Real) Vector.dot(globalPull, v)).doubleValue());
-            if (globalPull.isNegative()) {
-                delta = -delta;
-            }
-            final double f = clamp((width - delta) / width, 0.9, 1.01);
-            final Matrix C = Matrix.one(dim).mutableClone();
-            C.set(0, 0, new FloatingPoint(f));
-            final Matrix Binv = (Matrix) B.inverse();
-            this.gramMatrix = ((Matrix) Binv.times(C).times(Binv.transposed()))
-                    .symmetric();
-        }
+        //TODO adjust gram matrix
     }
 
     public void setPositions(final Map map) {
