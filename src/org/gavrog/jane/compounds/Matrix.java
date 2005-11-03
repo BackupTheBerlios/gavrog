@@ -184,6 +184,13 @@ public class Matrix extends ArithmeticBase {
         return res;
     }
     
+    /**
+     * Yields the result of deleting a specific row and column from this matrix.
+     * 
+     * @param i the index of the row to delete.
+     * @param j the index of the column to delete.
+     * @return the result of the deletions.
+     */
     public Matrix getMinor(final int i, final int j) {
         final int n = this.nrows;
         final int m = this.ncols;
