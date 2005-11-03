@@ -37,7 +37,7 @@ import org.gavrog.systre.Archive;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.10 2005/11/03 00:45:42 odf Exp $
+ * @version $Id: Relaxer.java,v 1.11 2005/11/03 02:16:55 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -89,17 +89,15 @@ public class Relaxer {
     
     public void step() {
         // --- scale so shortest edge has unit length
-        this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / edgeStatistics()[2]);
+        this.gramMatrix = (Matrix) this.gramMatrix.times(1.01 / edgeStatistics()[2]);
 
         // --- compute displacements and stresses
         final int dim = this.graph.getDimension();
         final Vector zero = Vector.zero(dim);
         final Map deltas = new HashMap();
-        final Map stress = new HashMap();
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             deltas.put(v, zero);
-            stress.put(v, zero);
         }
 
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
@@ -111,16 +109,10 @@ public class Relaxer {
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
             final double length = length(d);
-            final Vector positive = (Vector) d.times(0.5 * (length - 1) / length);
-            final Vector negative = (Vector) positive.negative();
-            move(deltas, v, positive);
-            move(deltas, w, negative);
-            if (positive.times(length-1).isNegative()) {
-                move(stress, v, negative);
-                move(stress, w, negative);
-            } else {
-                move(stress, v, positive);
-                move(stress, w, positive);
+            if (length > 1) {
+                final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
+                move(deltas, v, movement);
+                move(deltas, w, (Vector) movement.negative());
             }
         }
 
@@ -135,19 +127,10 @@ public class Relaxer {
             }
         }
 
-        // --- determine maximum stress
-        Vector maxStress = zero;
-        for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            final Vector s = (Vector) stress.get(v);
-            if (length(s) > length(maxStress)) {
-                maxStress = s;
-            }
-        }
-        final Vector globalPull = maxStress;
+        // --- determine stress on unit cell
+        final Vector globalPull = zero;
         
         // --- apply global pull
-//        if (false) {
         if (length(globalPull) > 0.0001) {
             final Matrix A = Matrix.zero(dim, dim).mutableClone();
             A.setRow(0, globalPull.getCoordinates());
@@ -182,11 +165,12 @@ public class Relaxer {
             if (globalPull.isNegative()) {
                 delta = -delta;
             }
-            final double f = clamp((width - delta) / width, 0.9, 1.1);
+            final double f = clamp((width - delta) / width, 0.9, 1.01);
             final Matrix C = Matrix.one(dim).mutableClone();
             C.set(0, 0, new FloatingPoint(f));
             final Matrix Binv = (Matrix) B.inverse();
-            this.gramMatrix = (Matrix) Binv.times(C).times(Binv.transposed());
+            this.gramMatrix = ((Matrix) Binv.times(C).times(Binv.transposed()))
+                    .symmetric();
         }
     }
 
