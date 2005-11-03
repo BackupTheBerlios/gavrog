@@ -320,6 +320,25 @@ public class Matrix extends ArithmeticBase {
         return res;
     }
 
+    public Matrix symmetric() {
+        final int n = this.nrows;
+        if (n != this.ncols) {
+            throw new IllegalArgumentException("must be a square matrix");
+        }
+        final Whole two = new Whole(2);
+        Matrix res = new Matrix(n, n);
+        for (int i = 0; i < n; ++i) {
+            res.set(i, i, this.get(i, i));
+            for (int j = 0; j < i; ++j) {
+                final IArithmetic x = this.get(i, j).plus(this.get(j, i)).dividedBy(two);
+                res.set(i, j, x);
+                res.set(j, i, x);
+            }
+        }
+        res.makeImmutable();
+        return res;
+    }
+    
     public Object clone() {
         Matrix res = new Matrix(this.nrows, this.ncols);
             
