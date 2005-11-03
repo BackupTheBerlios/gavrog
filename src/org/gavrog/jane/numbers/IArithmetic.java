@@ -24,7 +24,7 @@ package org.gavrog.jane.numbers;
  * superclass, an exception is thrown.
  * 
  * @author delgado
- * @version $Id: IArithmetic.java,v 1.4 2005/08/27 04:32:13 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.5 2005/11/03 21:23:17 odf Exp $
  */
 public interface IArithmetic extends Comparable {
     
@@ -67,11 +67,25 @@ public interface IArithmetic extends Comparable {
     public IArithmetic inverse();
 
     /**
-     * Adds an object to this one.
+     * Adds an object to this number.
      * @param other the object to add.
      * @return the result of the addition.
      */
     public IArithmetic plus(Object other);
+    
+    /**
+     * Adds a long integer to this number.
+     * @param other the number to add.
+     * @return the result of the addition.
+     */
+    public IArithmetic plus(long other);
+    
+    /**
+     * Adds a double to this number.
+     * @param other the number to add.
+     * @return the result of the addition.
+     */
+    public IArithmetic plus(double other);
     
     /**
      * Subtracts an object from this one.
@@ -81,11 +95,39 @@ public interface IArithmetic extends Comparable {
     public IArithmetic minus(Object other);
     
     /**
+     * Subtracts a long integer from this number.
+     * @param other the number to subtract.
+     * @return the result of the subtraction.
+     */
+    public IArithmetic minus(long other);
+    
+    /**
+     * Subtracts a double from this number.
+     * @param other the number to subtract.
+     * @return the result of the subtraction.
+     */
+    public IArithmetic minus(double other);
+    
+    /**
      * Multiplies an object to this one (from the right).
      * @param other the object to multiply.
      * @return the result of the multiplication.
      */
     public IArithmetic times(Object other);
+    
+    /**
+     * Multiplies this number with a long integer.
+     * @param other the number to multiply with.
+     * @return the result of the multiplication.
+     */
+    public IArithmetic times(long other);
+    
+    /**
+     * Multiplies this number with a double.
+     * @param other the number to multiply with.
+     * @return the result of the multiplication.
+     */
+    public IArithmetic times(double other);
     
     /**
      * Divides this arithmetic object by another object.
@@ -94,6 +136,20 @@ public interface IArithmetic extends Comparable {
      */
     public IArithmetic dividedBy(Object other);
 
+    /**
+     * Divides this number by a long integer.
+     * @param other the number to divide by.
+     * @return the result of the division.
+     */
+    public IArithmetic dividedBy(long other);
+    
+    /**
+     * Divides this number by a double.
+     * @param other the number to divide by.
+     * @return the result of the division.
+     */
+    public IArithmetic dividedBy(double other);
+    
     /**
      * Truncated division: returns the largest whole number not smaller than the quotient.
      * 

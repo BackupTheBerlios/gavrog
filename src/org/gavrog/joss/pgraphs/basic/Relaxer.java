@@ -35,7 +35,7 @@ import org.gavrog.systre.Archive;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.12 2005/11/03 06:04:09 odf Exp $
+ * @version $Id: Relaxer.java,v 1.13 2005/11/03 21:23:16 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -106,23 +106,29 @@ public class Relaxer {
             final Point pw = (Point) this.positions.get(w);
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
-            final double length = length(d);
-            if (length > 1) {
-                final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
-                move(deltas, v, movement);
-                move(deltas, w, (Vector) movement.negative());
-            }
+            final Matrix G = this.gramMatrix;
+            final Real f = (Real) Vector.dot(d, d, G).minus(1).times(4);
+            final Vector grad = new Vector((Matrix) d.getCoordinates().times(G).times(f));
+            move(deltas, v, grad);
+            move(deltas, w, (Vector) grad.negative());
+//            final double length = length(d);
+//            if (length > 1) {
+//                final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
+//                move(deltas, v, movement);
+//                move(deltas, w, (Vector) movement.negative());
+//            }
         }
 
         // --- limit and apply displacements
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             final Vector delta = (Vector) deltas.get(v);
-            final double length = length(delta);
-            if (length > 0.0001) {
-                final double d = clamp(length, 0.0, 0.1);
-                move(this.positions, v, (Vector) delta.times(d / length));
-            }
+            move(this.positions, v, (Vector) delta.times(0.0003));
+//            final double length = length(delta);
+//            if (length > 0.0001) {
+//                final double d = clamp(length, -0.1, 0.1);
+//                move(this.positions, v, (Vector) delta.times(d / length));
+//            }
         }
         
         //TODO adjust gram matrix
