@@ -24,7 +24,7 @@ package org.gavrog.jane.numbers;
  * superclass, an exception is thrown.
  * 
  * @author delgado
- * @version $Id: IArithmetic.java,v 1.5 2005/11/03 21:23:17 odf Exp $
+ * @version $Id: IArithmetic.java,v 1.6 2005/11/03 22:29:28 odf Exp $
  */
 public interface IArithmetic extends Comparable {
     
@@ -172,6 +172,13 @@ public interface IArithmetic extends Comparable {
      * @return the result of the exponentiation.
      */
     public IArithmetic raisedTo(Object other);
+
+    /**
+     * Raises this arithmetic object to a certain power.
+     * @param other the exponent to raise to.
+     * @return the result of the exponentiation.
+     */
+    public IArithmetic raisedTo(long other);
 
     // --- Reverse arithmetic for delegating operations to argument objects.
     
