@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.3 2005/10/14 21:33:46 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.4 2005/11/03 22:04:24 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;
@@ -156,6 +156,12 @@ public class TestMatrix extends TestCase {
     public void testGetSubMatrix() {
         final Matrix T = new Matrix(new int [][] {{10, 11, 12}, {14, 15, 16}});
         assertEquals(T, A.getSubMatrix(2, 1, 2, 3));
+    }
+    
+    public void testGetMinor() {
+        final Matrix T = new Matrix(new int[][] { { 1, 3, 4 }, { 5, 7, 8 },
+                { 13, 15, 16 } });
+        assertEquals(T, A.getMinor(2, 1));
     }
     
     public void testSetSubMatrix() {

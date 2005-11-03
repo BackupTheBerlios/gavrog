@@ -184,6 +184,26 @@ public class Matrix extends ArithmeticBase {
         return res;
     }
     
+    public Matrix getMinor(final int i, final int j) {
+        final int n = this.nrows;
+        final int m = this.ncols;
+        final Matrix res = new Matrix(n - 1, m - 1);
+        int k = 0;
+        for (int r = 0; r < n; ++r) {
+            if (r != i) {
+                int l = 0;
+                for (int c = 0; c < m; ++c) {
+                    if (c != j) {
+                        res.set(k, l, this.get(r, c));
+                        ++l;
+                    }
+                }
+                ++k;
+            }
+        }
+        return res;
+    }
+    
     public void setSubMatrix(final int i, final int j, final Matrix A) {
         for (int r = 0; r < A.numberOfRows(); ++r) {
             for (int s = 0; s < A.numberOfColumns(); ++s) {
