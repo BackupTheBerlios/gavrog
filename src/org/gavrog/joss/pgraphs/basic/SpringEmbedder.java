@@ -32,16 +32,16 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.16 2005/11/04 21:32:20 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.1 2005/11/04 22:32:51 odf Exp $
  */
-public class Relaxer {
+public class SpringEmbedder {
     private final PeriodicGraph graph;
 
     private final Map positions;
 
     private Matrix gramMatrix;
 
-    public Relaxer(final PeriodicGraph graph, final Map positions, final Matrix gramMatrix) {
+    public SpringEmbedder(final PeriodicGraph graph, final Map positions, final Matrix gramMatrix) {
         this.graph = graph;
         this.positions = new HashMap();
         this.positions.putAll(positions);
@@ -225,7 +225,7 @@ public class Relaxer {
             } else {
                 final Matrix M = (Matrix) G.symmetricBasis().inverse();
                 final Matrix gram = (Matrix) M.times(M.transposed());
-                final Relaxer relaxer = new Relaxer(G, G.barycentricPlacement(), gram);
+                final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
                 System.out.println(" --- relaxing ... ---");
                 for (int i = 0; i < 201; ++i) {
                     if (i % 20 == 0) {

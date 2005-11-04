@@ -71,7 +71,7 @@ import org.gavrog.joss.pgraphs.basic.IGraph;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.basic.Relaxer;
+import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 import com.sun.j3d.utils.applet.MainFrame;
@@ -99,7 +99,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.8 2005/11/04 00:28:35 odf Exp $
+ * @version $Id: NetViewer.java,v 1.9 2005/11/04 22:32:51 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -376,7 +376,7 @@ public class NetViewer extends Applet {
         // --- construct an embedded portion of the net with default settings
         final Matrix M = (Matrix) G.symmetricBasis().inverse();
         final Matrix gram = (Matrix) M.times(M.transposed());
-        final Relaxer relaxer = new Relaxer(G, G.barycentricPlacement(), gram);
+        final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
         for (int i = 0; i < 200; ++i) {
             relaxer.step();
             relaxer.stepCell();
