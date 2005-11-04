@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.7 2005/10/27 18:27:11 odf Exp $
+ * @version $Id: Demo.java,v 1.8 2005/11/04 19:48:20 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -122,6 +122,7 @@ public class Demo {
                 } else {
                     System.out.println("  RCSR symbol:\t\t" + found.getName());
                 }
+                System.out.println("Done.");
                 System.out.println();
                 System.out.flush();
             }
