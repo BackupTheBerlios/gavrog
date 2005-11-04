@@ -16,11 +16,8 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,11 +29,10 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.NetParser;
-import org.gavrog.systre.Archive;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.14 2005/11/04 00:28:34 odf Exp $
+ * @version $Id: Relaxer.java,v 1.15 2005/11/04 20:10:26 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -193,14 +189,6 @@ public class Relaxer {
     }
 
     public static void main(final String args[]) {
-        final Package pkg = Archive.class.getPackage();
-        final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        final String archivePath = packagePath + "/rcsr.arc";
-        final Archive rcsr = new Archive("1.0");
-        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-        rcsr.addAll(reader);
-
         NetParser parser = null;
         int count = 0;
         try {
