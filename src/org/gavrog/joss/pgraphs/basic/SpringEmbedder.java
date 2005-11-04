@@ -32,7 +32,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.1 2005/11/04 22:32:51 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.2 2005/11/04 22:51:01 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -41,7 +41,8 @@ public class SpringEmbedder {
 
     private Matrix gramMatrix;
 
-    public SpringEmbedder(final PeriodicGraph graph, final Map positions, final Matrix gramMatrix) {
+    public SpringEmbedder(final PeriodicGraph graph, final Map positions,
+            final Matrix gramMatrix) {
         this.graph = graph;
         this.positions = new HashMap();
         this.positions.putAll(positions);
@@ -57,8 +58,7 @@ public class SpringEmbedder {
             final Point p = (Point) this.positions.get(e.source());
             final Point q = (Point) this.positions.get(e.target());
             final Vector s = this.graph.getShift(e);
-            final Vector d = (Vector) q.plus(s).minus(p);
-            final double length = ((Real) Vector.dot(d, d, this.gramMatrix)).doubleValue();
+            final double length = length((Vector) q.plus(s).minus(p));
             if (length > 0) {
                 minLength = Math.min(minLength, length);
             }
@@ -66,24 +66,33 @@ public class SpringEmbedder {
             sumLength += length;
         }
         final double avgLength = sumLength / this.graph.numberOfEdges();
-        return new double[] { Math.sqrt(minLength), Math.sqrt(maxLength),
-                Math.sqrt(avgLength) };
+        return new double[] { minLength, maxLength, avgLength };
     }
-    
+
     private double length(final Vector v) {
         final Real squareLength = (Real) Vector.dot(v, v, this.gramMatrix);
         return Math.sqrt(squareLength.doubleValue());
     }
-    
+
     private void move(final Map pos, final INode v, final Vector amount) {
         pos.put(v, ((IArithmetic) pos.get(v)).plus(amount));
     }
-    
+
+    public void normalize() {
+        final double avg = edgeStatistics()[2];
+        this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
+    }
+
+    private void normalizeUp() {
+        final double avg = edgeStatistics()[0];
+        this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
+    }
+
     public void step() {
-        //TODO keep symmetries intact
+        // TODO keep symmetries intact
+
         // --- scale so shortest edge has unit length
-        final double x = edgeStatistics()[0];
-        this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / (x * x));
+        normalizeUp();
 
         // --- initialize displacements
         final Map deltas = new HashMap();
@@ -126,13 +135,16 @@ public class SpringEmbedder {
             move(this.positions, v, (Vector) delta.times(f));
         }
     }
-    
+
     public void stepCell() {
-        //TODO keep symmetries intact
+        // TODO keep symmetries intact
+
+        normalizeUp();
+
         final int dim = this.graph.getDimension();
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
-        
+
         // --- evaluate the gradient of the inverse cell volume
         for (int i = 0; i < dim; ++i) {
             dG.set(i, i, G.getMinor(i, i).determinant());
@@ -146,7 +158,7 @@ public class SpringEmbedder {
         final Real vol = (Real) G.determinant();
         final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
         dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
-        
+
         // --- evaluate the gradients of the edge energies
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
@@ -168,7 +180,7 @@ public class SpringEmbedder {
             dE = (Matrix) dE.times(Vector.dot(d, d, G).minus(1)).times(4);
             dG = (Matrix) dG.plus(dE);
         }
-        
+
         this.gramMatrix = (Matrix) G.minus(dG.times(0.01));
     }
 
@@ -215,7 +227,7 @@ public class SpringEmbedder {
             System.out.println("  stable:\t\t" + (G.isStable() ? "yes" : "no"));
             System.out.flush();
             System.out.println("  locally stable:\t"
-                               + (G.isLocallyStable() ? "yes" : "no"));
+                    + (G.isLocallyStable() ? "yes" : "no"));
             System.out.flush();
 
             if (!G.isStable()) {
@@ -225,22 +237,23 @@ public class SpringEmbedder {
             } else {
                 final Matrix M = (Matrix) G.symmetricBasis().inverse();
                 final Matrix gram = (Matrix) M.times(M.transposed());
-                final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
+                final SpringEmbedder relaxer = new SpringEmbedder(G, G
+                        .barycentricPlacement(), gram);
                 System.out.println(" --- relaxing ... ---");
-                for (int i = 0; i < 201; ++i) {
-                    if (i % 20 == 0) {
+                for (int i = 0; i < 501; ++i) {
+                    if (i % 50 == 0) {
+                        relaxer.normalize();
                         final double stats[] = relaxer.edgeStatistics();
+                        final double min = stats[0];
+                        final double max = stats[1];
                         final double avg = stats[2];
-                        final double min = stats[0] / avg;
-                        final double max = stats[1] / avg;
-                        final double cubedAvg = Math.pow(avg, 3);
                         final Matrix gr = relaxer.getGramMatrix();
                         final double det = ((Real) gr.determinant()).doubleValue();
-                        final double vol = Math.sqrt(det) / cubedAvg / G.numberOfNodes();
-                        System.out.println("  edge lengths: min = "
-                                + Math.rint(min * 1000) / 1000 + ", max = "
-                                + Math.rint(max * 1000) / 1000 + ", avg = "
-                                + Math.rint(1.0 * 1000) / 1000 + ";  volume/vertex = "
+                        final double vol = Math.sqrt(det) / G.numberOfNodes();
+                        System.out.println("  After " + i + " steps:"
+                                + " edge lengths: min = " + Math.rint(min * 1000) / 1000
+                                + ", max = " + Math.rint(max * 1000) / 1000 + ", avg = "
+                                + Math.rint(avg * 1000) / 1000 + ";  volume/vertex = "
                                 + Math.rint(vol * 1000) / 1000);
                     }
                     relaxer.step();

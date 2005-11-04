@@ -99,7 +99,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.9 2005/11/04 22:32:51 odf Exp $
+ * @version $Id: NetViewer.java,v 1.10 2005/11/04 22:51:01 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -381,6 +381,7 @@ public class NetViewer extends Applet {
             relaxer.step();
             relaxer.stepCell();
         }
+        relaxer.normalize();
         final Map pos = relaxer.getPositions();
         final Matrix A = LinearAlgebra.orthonormalRowBasis(relaxer.getGramMatrix());
         final CoordinateChange B = new CoordinateChange(A);
