@@ -32,7 +32,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.15 2005/11/04 20:10:26 odf Exp $
+ * @version $Id: Relaxer.java,v 1.16 2005/11/04 21:32:20 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -66,7 +66,8 @@ public class Relaxer {
             sumLength += length;
         }
         final double avgLength = sumLength / this.graph.numberOfEdges();
-        return new double[] { minLength, maxLength, avgLength };
+        return new double[] { Math.sqrt(minLength), Math.sqrt(maxLength),
+                Math.sqrt(avgLength) };
     }
     
     private double length(final Vector v) {
@@ -81,7 +82,8 @@ public class Relaxer {
     public void step() {
         //TODO keep symmetries intact
         // --- scale so shortest edge has unit length
-        this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / edgeStatistics()[0]);
+        final double x = edgeStatistics()[0];
+        this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / (x * x));
 
         // --- initialize displacements
         final Map deltas = new HashMap();
@@ -227,15 +229,19 @@ public class Relaxer {
                 System.out.println(" --- relaxing ... ---");
                 for (int i = 0; i < 201; ++i) {
                     if (i % 20 == 0) {
+                        final double stats[] = relaxer.edgeStatistics();
+                        final double avg = stats[2];
+                        final double min = stats[0] / avg;
+                        final double max = stats[1] / avg;
+                        final double cubedAvg = Math.pow(avg, 3);
                         final Matrix gr = relaxer.getGramMatrix();
                         final double det = ((Real) gr.determinant()).doubleValue();
-                        final double vol = Math.sqrt(det) / G.numberOfNodes();
-                        final double stats[] = relaxer.edgeStatistics();
+                        final double vol = Math.sqrt(det) / cubedAvg / G.numberOfNodes();
                         System.out.println("  edge lengths: min = "
-                                + Math.rint(stats[0] * 1000) / 1000 + ", max = "
-                                + Math.rint(stats[1] * 1000) / 1000 + ", avg = "
-                                + Math.rint(stats[2] * 1000) / 1000
-                                + ";  volume/vertex = " + Math.rint(vol * 1000) / 1000);
+                                + Math.rint(min * 1000) / 1000 + ", max = "
+                                + Math.rint(max * 1000) / 1000 + ", avg = "
+                                + Math.rint(1.0 * 1000) / 1000 + ";  volume/vertex = "
+                                + Math.rint(vol * 1000) / 1000);
                     }
                     relaxer.step();
                     relaxer.stepCell();
