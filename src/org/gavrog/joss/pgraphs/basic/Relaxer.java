@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
@@ -35,7 +36,7 @@ import org.gavrog.systre.Archive;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Relaxer.java,v 1.13 2005/11/03 21:23:16 odf Exp $
+ * @version $Id: Relaxer.java,v 1.14 2005/11/04 00:28:34 odf Exp $
  */
 public class Relaxer {
     private final PeriodicGraph graph;
@@ -72,10 +73,6 @@ public class Relaxer {
         return new double[] { minLength, maxLength, avgLength };
     }
     
-    private double clamp(final double value, final double lo, final double hi) {
-        return Math.min(Math.max(value, lo), hi);
-    }
-    
     private double length(final Vector v) {
         final Real squareLength = (Real) Vector.dot(v, v, this.gramMatrix);
         return Math.sqrt(squareLength.doubleValue());
@@ -86,18 +83,19 @@ public class Relaxer {
     }
     
     public void step() {
+        //TODO keep symmetries intact
         // --- scale so shortest edge has unit length
         this.gramMatrix = (Matrix) this.gramMatrix.times(1.0 / edgeStatistics()[0]);
 
-        // --- compute displacements and stresses
-        final int dim = this.graph.getDimension();
-        final Vector zero = Vector.zero(dim);
+        // --- initialize displacements
         final Map deltas = new HashMap();
+        final Vector zero = Vector.zero(this.graph.getDimension());
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             deltas.put(v, zero);
         }
 
+        // --- compute displacements
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
             final INode v = e.source();
@@ -106,32 +104,74 @@ public class Relaxer {
             final Point pw = (Point) this.positions.get(w);
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
-            final Matrix G = this.gramMatrix;
-            final Real f = (Real) Vector.dot(d, d, G).minus(1).times(4);
-            final Vector grad = new Vector((Matrix) d.getCoordinates().times(G).times(f));
-            move(deltas, v, grad);
-            move(deltas, w, (Vector) grad.negative());
-//            final double length = length(d);
-//            if (length > 1) {
-//                final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
-//                move(deltas, v, movement);
-//                move(deltas, w, (Vector) movement.negative());
-//            }
+            final double length = length(d);
+            if (length > 1) {
+                final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
+                move(deltas, v, movement);
+                move(deltas, w, (Vector) movement.negative());
+            }
         }
 
         // --- limit and apply displacements
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             final Vector delta = (Vector) deltas.get(v);
-            move(this.positions, v, (Vector) delta.times(0.0003));
-//            final double length = length(delta);
-//            if (length > 0.0001) {
-//                final double d = clamp(length, -0.1, 0.1);
-//                move(this.positions, v, (Vector) delta.times(d / length));
-//            }
+            final double length = length(delta);
+            final double f;
+            if (length > 0.1) {
+                f = 0.1 / length;
+            } else if (length < 0.0) {
+                f = 0.0;
+            } else {
+                f = 1.0;
+            }
+            move(this.positions, v, (Vector) delta.times(f));
+        }
+    }
+    
+    public void stepCell() {
+        //TODO keep symmetries intact
+        final int dim = this.graph.getDimension();
+        final Matrix G = this.gramMatrix;
+        Matrix dG = new Matrix(dim, dim);
+        
+        // --- evaluate the gradient of the inverse cell volume
+        for (int i = 0; i < dim; ++i) {
+            dG.set(i, i, G.getMinor(i, i).determinant());
+            for (int j = 0; j < i; ++j) {
+                final Matrix M = G.getMinor(i, i).getMinor(j, j);
+                final Real x = (Real) G.get(i, j).times(-2).times(M.determinant());
+                dG.set(i, j, x);
+                dG.set(j, i, x);
+            }
+        }
+        final Real vol = (Real) G.determinant();
+        final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
+        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
+        
+        // --- evaluate the gradients of the edge energies
+        for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
+            final IEdge e = (IEdge) edges.next();
+            final INode v = e.source();
+            final INode w = e.target();
+            final Point pv = (Point) this.positions.get(v);
+            final Point pw = (Point) this.positions.get(w);
+            final Vector s = this.graph.getShift(e);
+            final Vector d = (Vector) pw.plus(s).minus(pv);
+            Matrix dE = new Matrix(dim, dim);
+            for (int i = 0; i < dim; ++i) {
+                dE.set(i, i, d.get(i).raisedTo(2));
+                for (int j = 0; j < i; ++j) {
+                    final Real x = (Real) d.get(i).times(d.get(j)).times(2);
+                    dE.set(i, j, x);
+                    dE.set(j, i, x);
+                }
+            }
+            dE = (Matrix) dE.times(Vector.dot(d, d, G).minus(1)).times(4);
+            dG = (Matrix) dG.plus(dE);
         }
         
-        //TODO adjust gram matrix
+        this.gramMatrix = (Matrix) G.minus(dG.times(0.01));
     }
 
     public void setPositions(final Map map) {
@@ -210,6 +250,7 @@ public class Relaxer {
                                 + ";  volume/vertex = " + Math.rint(vol * 1000) / 1000);
                     }
                     relaxer.step();
+                    relaxer.stepCell();
                 }
                 System.out.println();
             }
