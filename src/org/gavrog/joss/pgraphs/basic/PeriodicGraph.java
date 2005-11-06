@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.31 2005/11/06 05:06:28 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.32 2005/11/06 05:23:11 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1924,7 +1924,6 @@ public class PeriodicGraph extends UndirectedGraph {
             A.setRow(i, (Matrix) eqns.get(i));
         }
         Matrix.triangulate(A, null, false, true, 0);
-        System.out.println(A.getSubMatrix(0, 0, A.rank(), m));
         
         // --- solve the system and return the solution
         return LinearAlgebra.columnNullSpace(A, true).transposed();
