@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for class LinearAlgebra.
  * 
  * @author Olaf Delgado
- * @version $Id: TestLinearAlgebra.java,v 1.3 2005/10/07 01:37:19 odf Exp $
+ * @version $Id: TestLinearAlgebra.java,v 1.4 2005/11/06 05:04:41 odf Exp $
  */
 public class TestLinearAlgebra extends TestCase {
     // TODO add tests for matrices with floating point entries.
@@ -100,7 +100,7 @@ public class TestLinearAlgebra extends TestCase {
         final Matrix L = new Matrix(new int[][] { { -2, 0, 0, -2, 0, 0 },
                 { 0, -2, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, -2 } });
         testSmithNormalForm(L, true);
-        //testSmithNormalForm(L, false);
+        testSmithNormalForm(L, false);
     }
 
     private void testSmithNormalForm(final Matrix A, final boolean integral) {
@@ -116,14 +116,17 @@ public class TestLinearAlgebra extends TestCase {
         if (integral) {
             assertTrue(isIntegral(P));
             assertTrue(isIntegral(Q));
-        } else {
-            assertEquals(I, Q);
         }
     }
 
     public void testNullSpace() {
         testColumnNullSpace(A, true);
         testColumnNullSpace(A, false);
+        final Matrix M = new Matrix(new int[][] { { 1, 0, 0, 0, 0, -1 },
+                { 0, 1, 0, 0, 0, 0 }, { 0, 0, 1, 0, 0, 0 }, { 0, 0, 0, 1, 0, -1 },
+                { 0, 0, 0, 0, 1, 0 } });
+        testColumnNullSpace(M, true);
+        testColumnNullSpace(M, false);
     }
 
     private void testColumnNullSpace(final Matrix A, final boolean integral) {
@@ -150,7 +153,7 @@ public class TestLinearAlgebra extends TestCase {
                 new int[][] { { -2, 0, 0 }, { 0, -2, 0 }, { 0, 0, 0 } });
         final Matrix r = new Matrix(new int[][] { { 0 }, { -1 }, { 1 } });
         testSolutionInColumns(L, r, true, true);
-        //testSolutionInColumns(L, r, false, false);
+        testSolutionInColumns(L, r, false, false);
         testSolutionInColumns(L, (Matrix) r.dividedBy(2), true, false);
     }
 
