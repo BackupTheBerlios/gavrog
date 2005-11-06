@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.Whole;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.16 2005/10/24 05:17:44 odf Exp $
+ * @version $Id: Operator.java,v 1.17 2005/11/06 03:56:56 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -155,6 +155,16 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         M.setSubMatrix(d, 0, Matrix.zero(1, d));
         M.setSubMatrix(0, d, Matrix.zero(d, 1));
         return new Operator(M);
+    }
+    
+    /**
+     * Returns a matrix representing the linear portion of this operator.
+     * 
+     * @return the linear part of the operator as a matrix.
+     */
+    public Matrix linearPartAsMatrix() {
+        final int d = getDimension();
+        return this.coords.getSubMatrix(0, 0, d, d);
     }
 
     /**

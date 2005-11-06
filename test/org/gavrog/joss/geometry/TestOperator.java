@@ -28,7 +28,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.11 2005/10/24 05:17:44 odf Exp $
+ * @version $Id: TestOperator.java,v 1.12 2005/11/06 03:56:57 odf Exp $
  */
 public class TestOperator extends TestCase {
     final int M[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
@@ -186,6 +186,11 @@ public class TestOperator extends TestCase {
         final int[][] A = new int[][] {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}};
         final Operator opA = new Operator(A);
         assertEquals(opA, op1.linearPart());
+    }
+
+    public void testLinearPartAsMatrix() {
+        final Matrix A = new Matrix(new int[][] {{0, 1}, {-1, 0}});
+        assertEquals(A, op1.linearPartAsMatrix());
     }
 
     public void testTranslationalPart() {
