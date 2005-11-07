@@ -24,6 +24,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -73,6 +76,7 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
+import org.gavrog.systre.Archive;
 
 import com.sun.j3d.utils.applet.MainFrame;
 import com.sun.j3d.utils.behaviors.keyboard.KeyNavigatorBehavior;
@@ -99,7 +103,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.10 2005/11/04 22:51:01 odf Exp $
+ * @version $Id: NetViewer.java,v 1.11 2005/11/07 22:34:47 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -119,6 +123,9 @@ public class NetViewer extends Applet {
     
     // --- contains the string specification for the current graph
     final JTextArea inputArea;
+    
+    // --- an archive of known structures
+    private Archive rcsr = null;
     
     // --- the currently displayed portion of the net
     private PeriodicGraph.EmbeddedPortion graph;
@@ -371,7 +378,28 @@ public class NetViewer extends Applet {
      */
     private void changeNet(final String spec, final int radius) {
         // --- parse the specification
-        final PeriodicGraph G = NetParser.stringToNet(spec);
+        PeriodicGraph G;
+        try {
+            G = NetParser.stringToNet(spec);
+        } catch (Exception ex) {
+            if (this.rcsr == null) {
+                final Package pkg = Archive.class.getPackage();
+                final String packagePath = pkg.getName().replaceAll("\\.", "/");
+                final String archivePath = packagePath + "/rcsr.arc";
+                this.rcsr = new Archive("1.0");
+                final InputStream inStream = ClassLoader
+                        .getSystemResourceAsStream(archivePath);
+                final BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        inStream));
+                this.rcsr.addAll(reader);
+            }
+            final Archive.Entry entry = this.rcsr.getByName(spec.trim());
+            if (entry == null) {
+                throw new IllegalArgumentException("don't understand structure spec");
+            } else {
+                G = PeriodicGraph.reconstructFromInvariantString(entry.getKey());
+            }
+        }
         
         // --- construct an embedded portion of the net with default settings
         final Matrix M = (Matrix) G.symmetricBasis().inverse();
