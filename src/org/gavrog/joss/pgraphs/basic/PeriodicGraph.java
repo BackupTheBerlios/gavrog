@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.32 2005/11/06 05:23:11 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.33 2005/11/07 22:34:03 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1864,6 +1864,47 @@ public class PeriodicGraph extends UndirectedGraph {
         } else {
             return this.invariant().compareTo(other.invariant());
         }
+    }
+    
+    /**
+     * Takes the textual representation of an invariant and reconstructs the associated
+     * periodic graph.
+     * 
+     * @param key the invariant as text.
+     * @return the associated periodic graph.
+     */
+    public static PeriodicGraph reconstructFromInvariantString(final String key) {
+        final List numbers = new ArrayList();
+        final String fields[] = key.split("\\s+");
+        for (int i = 0; i < fields.length; ++i) {
+            numbers.add(new Integer(fields[i]));
+        }
+        final int d = ((Integer) numbers.get(0)).intValue();
+        final int n = (numbers.size() - 1) / (d + 2);
+        final PeriodicGraph G = new PeriodicGraph(d);
+        final List nodes = new ArrayList();
+        nodes.add(null);
+        for (int i = 0; i < n; ++i) {
+            final int offset = 1 + i * (d + 2);
+            final int s = ((Integer) numbers.get(offset)).intValue();
+            final int t = ((Integer) numbers.get(offset + 1)).intValue();
+            if (s == nodes.size()) {
+                nodes.add(G.newNode());
+            }
+            if (t == nodes.size()) {
+                nodes.add(G.newNode());
+            }
+            if (s >= nodes.size() || t >= nodes.size()) {
+                throw new RuntimeException("something's wrong here");
+            }
+            final int[] shift = new int[d];
+            for (int j = 0; j < d; ++j) {
+                final Integer x = (Integer) numbers.get(offset + 2 + j);
+                shift[j] = x.intValue();
+            }
+            G.newEdge((INode) nodes.get(s), (INode) nodes.get(t), shift);
+        }
+        return G;
     }
     
     /*
