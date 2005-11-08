@@ -16,6 +16,8 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,11 +31,13 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
+import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 import org.gavrog.joss.dsyms.derived.Morphism;
 
 
@@ -49,7 +53,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: DefineBranching.java,v 1.3 2005/11/08 21:45:14 odf Exp $
  */
 public class DefineBranching extends IteratorAdapter {
     // --- set to true to enable logging
@@ -717,5 +721,72 @@ public class DefineBranching extends IteratorAdapter {
      */
     protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
         return new ArrayList();
+    }
+    
+    public static void main(String[] args) {
+        boolean verbose = false;
+        boolean check = true;
+        int i = 0;
+        while (i < args.length && args[i].startsWith("-")) {
+            if (args[i].equals("-v")) {
+                verbose = !verbose;
+            } else if (args[i].equals("-e")){
+                check = !check;
+            } else {
+                System.err.println("Unknown option '" + args[i] + "'");
+            }
+            ++i;
+        }
+        
+        final Iterator syms;
+        if (args.length > i) {
+            final DSymbol ds = new DSymbol(args[i]);
+            syms = Iterators.singleton(ds);
+        } else {
+            syms = new InputIterator(new BufferedReader(new InputStreamReader(System.in)));
+        }
+        
+        int inCount = 0;
+        int outCount = 0;
+        int countGood = 0;
+        int countAmbiguous = 0;
+        
+        while (syms.hasNext()) {
+            final DSymbol ds = (DSymbol) syms.next();
+            final Iterator iter = new DefineBranching(ds);
+            ++inCount;
+
+            try {
+                while (iter.hasNext()) {
+                    final DSymbol out = (DSymbol) iter.next();
+                    ++outCount;
+                    if (check) {
+                        final EuclidicityTester tester = new EuclidicityTester(out);
+                        if (tester.isAmbiguous()) {
+                            System.out.println("??? " + out);
+                            ++countAmbiguous;
+                        } else if (tester.isGood()) {
+                            System.out.println(out);
+                            ++countGood;
+                        }
+                    } else {
+                        System.out.println(out);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace(System.err);
+            }
+        }
+        System.err.println("Processed " + inCount + " input symbols.");
+        System.err.println("Produced " + outCount + " output symbols.");
+        if (check) {
+            System.err.println("Of the latter, " + countGood + " were found euclidean.");
+            if (countAmbiguous > 0) {
+                System.err.println("For " + countAmbiguous
+                                   + " symbols, euclidicity could not yet be decided.");
+            }
+        }
+        System.err.println("Options: " + (check ? "" : "no") + " euclidicity check, "
+                           + (verbose ? "verbose" : "quiet") + ".");
     }
 }
