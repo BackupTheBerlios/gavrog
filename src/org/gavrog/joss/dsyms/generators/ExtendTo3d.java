@@ -51,7 +51,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * TODO test symbols (unfinished and finished) for being locally euclidean
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.5 2005/10/31 22:50:59 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.6 2005/11/08 21:44:41 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -689,6 +689,6 @@ public class ExtendTo3d extends IteratorAdapter {
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
-        System.err.print("produced " + count + " symbols");
+        System.err.println("produced " + count + " symbols");
     }
 }
