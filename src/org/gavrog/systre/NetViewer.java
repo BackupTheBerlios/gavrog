@@ -102,7 +102,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.1 2005/11/07 22:40:31 odf Exp $
+ * @version $Id: NetViewer.java,v 1.2 2005/11/12 05:33:24 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -201,15 +201,6 @@ public class NetViewer extends Applet {
         // --- make a box for buttons
         final Box buttonBox = Box.createVerticalBox();
         
-        // --- add some buttons for selecting nets
-        buttonBox.add(makeButton(pcu(), "pcu"));
-        buttonBox.add(makeButton(dia(), "dia"));
-        buttonBox.add(makeButton(cds(), "cds"));
-        buttonBox.add(makeButton(hms(), "hms"));
-        buttonBox.add(makeButton(tfa(), "tfa"));
-        buttonBox.add(makeButton(tfc(), "tfc"));
-        buttonBox.add(makeButton(srs(), "srs"));
-        
         buttonBox.add(Box.createVerticalGlue());
         
         // --- add a text area for graph input
@@ -255,7 +246,7 @@ public class NetViewer extends Applet {
         add(BorderLayout.WEST, buttonBox);
         
         // --- display the initial graph
-        changeNet(dia(), 5);
+        changeNet("dia", 5);
 
         // --- create an object to use for picking
         final PickCanvas pickCanvas = new PickCanvas(canvas3D, objRoot);
@@ -405,7 +396,7 @@ public class NetViewer extends Applet {
         final Matrix gram = (Matrix) M.times(M.transposed());
         final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
         for (int i = 0; i < 200; ++i) {
-            relaxer.step();
+            //relaxer.step();
             relaxer.stepCell();
         }
         relaxer.normalize();
@@ -413,9 +404,6 @@ public class NetViewer extends Applet {
         final Matrix A = LinearAlgebra.orthonormalRowBasis(relaxer.getGramMatrix());
         final CoordinateChange B = new CoordinateChange(A);
         
-//        final Map pos = G.barycentricPlacement();
-//        final CoordinateChange B = new CoordinateChange(G.symmetricBasis());
-
         final INode v0 = (INode) G.nodes().next();
         final Embedding E = G.embeddedNeighborhood(v0, radius, pos, B);
         
@@ -439,25 +427,6 @@ public class NetViewer extends Applet {
         
         // --- show the graph specification
         inputArea.setText(spec);
-    }
-    
-    /**
-     * Constructs a button for switching to a new net.
-     * 
-     * @param spec string specification for the new net.
-     * @param label the label on the button.
-     * @return the new button.
-     */
-    private JButton makeButton(final String spec, final String label) {
-        final JButton button = new JButton();
-        button.setAlignmentX(0.5f);
-        button.add(new JLabel(label));
-        button.setAction(new AbstractAction() {
-            public void actionPerformed(ActionEvent arg0) {
-                changeNet(spec, 5);
-            }
-        });
-        return button;
     }
     
     /**
@@ -631,91 +600,6 @@ public class NetViewer extends Applet {
         PickTool.setCapabilities(shape, PickTool.INTERSECT_TEST);
         shape.setCapability(Shape3D.ALLOW_APPEARANCE_READ);
         shape.setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
-    }
-    
-    public String pcu() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 1  1 0 0\n"
-        + "  1 1  0 1 0\n"
-        + "  1 1  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String dia() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 2  1 0 0\n"
-        + "  1 2  0 1 0\n"
-        + "  1 2  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String cds() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 2  1 0 0\n"
-        + "  1 1  0 1 0\n"
-        + "  2 2  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String hms() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 2  1 0 0\n"
-        + "  1 2  0 1 0\n"
-        + "  2 2  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String tfa() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 3  0 0 0\n"
-        + "  1 3  1 0 0\n"
-        + "  2 3  0 1 0\n"
-        + "  2 3  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String tfc() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 3  0 0 0\n"
-        + "  1 2  1 0 0\n"
-        + "  2 3  0 1 0\n"
-        + "  3 3  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String srs() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 3  0 0 0\n"
-        + "  1 4  0 0 0\n"
-        + "  2 3  1 0 0\n"
-        + "  2 4  0 1 0\n"
-        + "  3 4  0 0 1\n"
-        + "END\n";
-    }
-    
-    public String ths() {
-        return ""
-        + "PERIODIC_GRAPH\n"
-        + "  1 2  0 0 0\n"
-        + "  1 3  0 0 0\n"
-        + "  2 4  0 0 0\n"
-        + "  1 3  1 0 0\n"
-        + "  2 4  0 1 0\n"
-        + "  3 4  0 0 1\n"
-        + "END\n";
     }
     
     /**
