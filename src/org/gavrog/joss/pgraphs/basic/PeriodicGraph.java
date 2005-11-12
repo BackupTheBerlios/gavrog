@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.33 2005/11/07 22:34:03 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.34 2005/11/12 05:36:46 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1914,60 +1914,6 @@ public class PeriodicGraph extends UndirectedGraph {
      */
     public int hashCode() {
         return this.invariant().hashCode();
-    }
-    
-    /**
-     * Computes the configuration space for the gram matrix parameters of the
-     * primitive unit as dictated by the ideal symmetry group. Each row of the
-     * returned matrix encodes a basis vector of that space.
-     * 
-     * @return a matrix describing the configuration space.
-     */
-    public Matrix configurationSpaceForGramMatrix() {
-        // --- some preliminaries
-        final int d = getDimension();
-        final int m = d * (d+1) / 2;
-        
-        // --- make a parametrized Gram matrix with unknowns encoded by vectors
-        final Matrix M = new Matrix(d, d);
-        int k = 0;
-        for (int i = 0; i < d; ++i) {
-            for (int j = i; j < d; ++j) {
-                final Vector v = Vector.unit(m, k++);
-                M.set(i, j, v);
-                M.set(j, i, v);
-            }
-        }
-        M.makeImmutable();
-        
-        // --- start with an empty equation list
-        final List eqns = new ArrayList();
-
-        // --- iterate through the ideal symmetries
-        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
-            // --- get the next symmetry
-            final Morphism sym = (Morphism) syms.next();
-            // --- extract the associated linear matrix
-            final Matrix S = sym.getLinearOperator().linearPartAsMatrix();
-            // --- construct difference of virtual Gram matrix with its conjugate by S
-            final Matrix A = (Matrix) S.times(M).times(S.inverse()).minus(M);
-            // --- add the entries of that parametric matrix to the equation list
-            for (int i = 0; i < d; ++i) {
-                for (int j = i; j < d; ++j) {
-                    eqns.add(((Vector) A.get(i, j)).getCoordinates());
-                }
-            }
-        }
-        
-        // --- construct a matrix with all the equations as rows
-        final Matrix A = new Matrix(eqns.size(), m);
-        for (int i = 0; i < eqns.size(); ++i) {
-            A.setRow(i, (Matrix) eqns.get(i));
-        }
-        Matrix.triangulate(A, null, false, true, 0);
-        
-        // --- solve the system and return the solution
-        return LinearAlgebra.columnNullSpace(A, true).transposed();
     }
     
     // TODO compute node configuration space

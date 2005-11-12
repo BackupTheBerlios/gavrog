@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.HashMapWithDefault;
+import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
@@ -66,7 +67,7 @@ import org.gavrog.jane.numbers.Whole;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.20 2005/10/01 00:40:12 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.21 2005/11/12 05:36:46 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -334,5 +335,59 @@ public class SpaceGroup {
         }
         
         return res;
+    }
+
+    /**
+     * Computes the configuration space for the gram matrix parameters of the
+     * unit cell of this group. Each row of the returned matrix encodes a basis
+     * vector of that space.
+     * 
+     * @return a matrix describing the configuration space.
+     */
+    public Matrix configurationSpaceForGramMatrix() {
+        // --- some preliminaries
+        final int d = getDimension();
+        final int m = d * (d+1) / 2;
+        
+        // --- make a parametrized Gram matrix with unknowns encoded by vectors
+        final Matrix M = new Matrix(d, d);
+        int k = 0;
+        for (int i = 0; i < d; ++i) {
+            for (int j = i; j < d; ++j) {
+                final Vector v = Vector.unit(m, k++);
+                M.set(i, j, v);
+                M.set(j, i, v);
+            }
+        }
+        M.makeImmutable();
+        
+        // --- start with an empty equation list
+        final List eqns = new ArrayList();
+    
+        // --- iterate through the ideal symmetries
+        for (final Iterator syms = getOperators().iterator(); syms.hasNext();) {
+            // --- get the next symmetry
+            final Operator sym = (Operator) syms.next();
+            // --- extract the associated linear matrix
+            final Matrix S = sym.linearPartAsMatrix();
+            // --- construct difference of virtual Gram matrix with its conjugate by S
+            final Matrix A = (Matrix) S.times(M).times(S.inverse()).minus(M);
+            // --- add the entries of that parametric matrix to the equation list
+            for (int i = 0; i < d; ++i) {
+                for (int j = i; j < d; ++j) {
+                    eqns.add(((Vector) A.get(i, j)).getCoordinates());
+                }
+            }
+        }
+        
+        // --- construct a matrix with all the equations as rows
+        final Matrix A = new Matrix(eqns.size(), m);
+        for (int i = 0; i < eqns.size(); ++i) {
+            A.setRow(i, (Matrix) eqns.get(i));
+        }
+        Matrix.triangulate(A, null, false, true, 0);
+        
+        // --- solve the system and return the solution
+        return LinearAlgebra.columnNullSpace(A, true).transposed();
     }
 }

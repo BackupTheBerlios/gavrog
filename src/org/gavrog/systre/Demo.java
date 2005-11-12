@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.9 2005/11/06 05:06:28 odf Exp $
+ * @version $Id: Demo.java,v 1.10 2005/11/12 05:36:46 odf Exp $
  */
 public class Demo {
     public static void main(final String args[]) {
@@ -90,11 +90,11 @@ public class Demo {
                 final List ops = G1.symmetryOperators();
                 System.out.println("  point symmetries:\t" + ops.size());
                 System.out.flush();
-                final SpaceGroupFinder finder = new SpaceGroupFinder(new SpaceGroup(d,
-                        ops));
-                final String group = finder.getGroupName();
+                final SpaceGroup group = new SpaceGroup(d, ops);
+                final SpaceGroupFinder finder = new SpaceGroupFinder(group);
+                final String groupName = finder.getGroupName();
                 System.out.println("  spacegroup:\t\t"
-                                   + (group == null ? "not found" : group));
+                                   + (groupName == null ? "not found" : groupName));
                 System.out.flush();
                 System.out.print("  coordination sequences:");
                 for (final Iterator orbits = G1.nodeOrbits(); orbits.hasNext();) {
@@ -123,7 +123,7 @@ public class Demo {
                     System.out.println("  RCSR symbol:\t\t" + found.getName());
                 }
                 System.out.println("  Gram matrix configuration space: "
-                                   + G1.configurationSpaceForGramMatrix());
+                                   + group.configurationSpaceForGramMatrix());
                 System.out.println("Done.");
                 System.out.println();
                 System.out.flush();
