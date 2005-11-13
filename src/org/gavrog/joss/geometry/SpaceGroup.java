@@ -67,7 +67,7 @@ import org.gavrog.jane.numbers.Whole;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.21 2005/11/12 05:36:46 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.22 2005/11/13 04:32:01 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -251,7 +251,7 @@ public class SpaceGroup {
         }
         
         // --- triangulate to extract a basis
-        Matrix.triangulate(B, null, true, true, 0);
+        Matrix.triangulate(B, null, true, true);
         if (B.rank() != d) {
             throw new RuntimeException("sorry, encountered a program bug");
         }
@@ -385,7 +385,7 @@ public class SpaceGroup {
         for (int i = 0; i < eqns.size(); ++i) {
             A.setRow(i, (Matrix) eqns.get(i));
         }
-        Matrix.triangulate(A, null, false, true, 0);
+        Matrix.triangulate(A, null, false, true);
         
         // --- solve the system and return the solution
         return LinearAlgebra.columnNullSpace(A, true).transposed();

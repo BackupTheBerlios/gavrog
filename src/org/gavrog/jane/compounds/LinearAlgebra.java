@@ -25,7 +25,7 @@ import org.gavrog.jane.numbers.Whole;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.6 2005/11/06 05:04:42 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.7 2005/11/13 04:32:01 odf Exp $
  */
 public class LinearAlgebra {
     /**
@@ -139,9 +139,9 @@ public class LinearAlgebra {
         final Matrix Q = Matrix.one(m).mutableClone();
         
             do {
-                Matrix.triangulate(D, P, integral, true, 0);
+                Matrix.triangulate(D, P, integral, true);
                 D = D.transposed().mutableClone();
-                Matrix.triangulate(D, Q, integral, true, 0);
+                Matrix.triangulate(D, Q, integral, true);
                 D = D.transposed().mutableClone();
             } while (!isDiagonal(D) && integral);
         

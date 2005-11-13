@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.4 2005/11/03 22:04:24 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.5 2005/11/13 04:32:01 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;
@@ -91,7 +91,7 @@ public class TestMatrix extends TestCase {
 
         M = A.mutableClone();
         B = ((Matrix) A.one()).mutableClone();
-        sign = Matrix.triangulate(M, B, false, true, 0);
+        sign = Matrix.triangulate(M, B, false, true);
         assertEquals(M, B.times(A));
         if (A.numberOfRows() == 2 && A.numberOfColumns() == 2) {
             assertEquals(det, M.get(0, 0).times(M.get(1, 1)).times(new Whole(sign)));
@@ -99,7 +99,7 @@ public class TestMatrix extends TestCase {
 
         M = A.mutableClone();
         B = ((Matrix) A.one()).mutableClone();
-        sign = Matrix.triangulate(M, B, true, true, 0);
+        sign = Matrix.triangulate(M, B, true, true);
         for (int i = 0; i < M.numberOfColumns(); ++i) {
             for (int j = 0; j < M.numberOfRows(); ++j) {
                 assertTrue(M.get(i, j) instanceof Whole);

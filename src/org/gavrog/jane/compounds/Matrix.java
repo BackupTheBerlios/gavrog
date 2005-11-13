@@ -436,18 +436,15 @@ public class Matrix extends ArithmeticBase {
 
     /**
      * Converts a matrix into upper triangular form using row operations.
-     * 
      * @param A the matrix to triangulate.
      * @param B if present, takes the same sequence of row operations.
      * @param useTruncatedDivision if true, stay within integer (Whole) numbers.
      * @param clearAboveDiagonal if true, clear above diagonal as far as possible.
-     * @param startRow don't change anything above this row.
      * 
      * @return a number indicating the sign change in the determinant.
      */
     public static int triangulate(final Matrix A, final Matrix B,
-            boolean useTruncatedDivision, final boolean clearAboveDiagonal,
-            final int startRow) {
+            boolean useTruncatedDivision, final boolean clearAboveDiagonal) {
 
         // --- verify arguments
         if (!A.isMutable()) {
@@ -464,7 +461,7 @@ public class Matrix extends ArithmeticBase {
 
         // --- "global" variables
         int sign = 1;
-        int row = startRow;
+        int row = 0;
         int col = 0;
 
         // --- try to annihilate one entry at a time
@@ -607,7 +604,7 @@ public class Matrix extends ArithmeticBase {
      */
     public int rank() {
         final Matrix A = this.mutableClone();
-        triangulate(A, null, false, false, 0);
+        triangulate(A, null, false, false);
         int row = 0;
         for (int col = 0; col < numberOfColumns(); ++col) {
             if (row < numberOfRows() && !A.get(row, col).isZero()) {
@@ -626,7 +623,7 @@ public class Matrix extends ArithmeticBase {
             return Whole.ZERO;
         }
         final Matrix A = this.mutableClone(); 
-        final int sign = triangulate(A, null, false, false, 0);
+        final int sign = triangulate(A, null, false, false);
         IArithmetic result = new Whole(sign);
         final int k = Math.min(numberOfRows(), numberOfColumns());
         for (int i = 0; i < k; ++i) {
@@ -662,7 +659,7 @@ public class Matrix extends ArithmeticBase {
         // --- triangulate the left side
         final Matrix A1 = A.mutableClone();
         final Matrix b1 = b.mutableClone();
-        triangulate(A1, b1, false, false, 0);
+        triangulate(A1, b1, false, false);
         
         // --- determine a solution
         final Matrix x = new Matrix(m, k);
