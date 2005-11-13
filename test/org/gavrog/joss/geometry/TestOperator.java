@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Whole;
@@ -28,7 +29,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Operator class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestOperator.java,v 1.12 2005/11/06 03:56:57 odf Exp $
+ * @version $Id: TestOperator.java,v 1.13 2005/11/13 06:22:56 odf Exp $
  */
 public class TestOperator extends TestCase {
     final int M[][] = new int[][] {{0, 1, 0}, {-1, 0, 0}, {1, 0, 1}};
@@ -270,5 +271,17 @@ public class TestOperator extends TestCase {
         assertNull(op7.linearAxis());
         assertTrue(op8.linearAxis().isCollinearTo(new Vector(new int[] {1, 1, 1})));
         assertTrue(op9.linearAxis().isCollinearTo(new Vector(new int[] {0, 0, 1})));
+    }
+    
+    public void testOrthogonalProjection() {
+        final Matrix I = Matrix.one(3);
+        assertEquals(new Operator("x, y, 0"), Operator.orthogonalProjection(new Matrix(
+                new int[][] { { 1, 0, 0 }, { 0, 1, 0 } }), I));
+        final Operator op1 = new Operator(
+                "1/3x+1/3y+1/3z, 1/3x+1/3y+1/3z, 1/3x+1/3y+1/3z");
+        final Operator op2 = Operator.orthogonalProjection(new Matrix(new int[][] { { 1,
+                1, 1 } }), I);
+        final Matrix D = (Matrix) op1.getCoordinates().minus(op2.getCoordinates());
+        assertTrue(D.norm().isLessThan(new FloatingPoint(1e-10)));
     }
 }

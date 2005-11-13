@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.Whole;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.17 2005/11/06 03:56:56 odf Exp $
+ * @version $Id: Operator.java,v 1.18 2005/11/13 06:22:56 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -347,6 +347,44 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         throw new UnsupportedOperationException("operation not defined");
     }
 
+    /**
+     * Constructs the orthogonal projection of a real vector space onto a subspace.
+     * 
+     * @param spanning a matrix the rows of which span the subspace.
+     * @param G the gram matrix defining the metric.
+     * @return an operator implementing the projection.
+     */
+    public static Operator orthogonalProjection(final Matrix spanning, final Matrix G) {
+        // --- extract the dimensions of the total space and the subspace
+        final int d = spanning.numberOfColumns();
+        final int k = spanning.rank();
+
+        // --- triangulate to extract a basis
+        Matrix basisSub = spanning.mutableClone();
+        Matrix.triangulate(basisSub, null, true, false);
+        basisSub = basisSub.getSubMatrix(0, 0, k, d);
+        
+        // --- extend to a full basis
+        final Matrix basisComplement = LinearAlgebra.columnNullSpace(basisSub, true)
+                .transposed();
+        final Matrix basisFull = new Matrix(d, d);
+        basisFull.setSubMatrix(0, 0, basisSub);
+        basisFull.setSubMatrix(k, 0, basisComplement);
+        
+        // --- orthonormalize
+        final Matrix basisOrtho = LinearAlgebra.rowOrthonormalized(basisFull, G);
+        
+        // --- the projection expressed in the new orthonormal basis
+        final Matrix A = Matrix.one(d+1).mutableClone();
+        for (int i = k; i < d; ++i) {
+            A.set(i, i, Whole.ZERO);
+        }
+        final Operator projection = new Operator(A);
+        
+        // --- return the projection transformed to the standard basis
+        return (Operator) projection.times(new CoordinateChange(basisOrtho).inverse());
+    }
+    
     /**
      * Parses an operator given in symbolic form, as in "y+x,-x,z+1/2", and returns the
      * corresponding matrix, which can then be used as input to the constructor. In the
