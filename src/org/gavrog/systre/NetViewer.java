@@ -102,7 +102,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.2 2005/11/12 05:33:24 odf Exp $
+ * @version $Id: NetViewer.java,v 1.3 2005/11/14 00:47:47 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -122,6 +122,9 @@ public class NetViewer extends Applet {
     
     // --- contains the string specification for the current graph
     final JTextArea inputArea;
+    
+    // --- for status messages from the program
+    final private JTextField status;
     
     // --- an archive of known structures
     private Archive rcsr = null;
@@ -192,8 +195,7 @@ public class NetViewer extends Applet {
         setLayout(new BorderLayout());
         add(BorderLayout.CENTER, graphPanel);
         
-        // --- add a status display
-        final JTextField status = new JTextField();
+        status = new JTextField();
         status.setColumns(30);
         status.setEditable(false);
         add(BorderLayout.SOUTH, status);
@@ -220,7 +222,6 @@ public class NetViewer extends Applet {
             public void actionPerformed(ActionEvent arg0) {
                 try {
                     changeNet(inputArea.getText(), 5);
-                    status.setText("");
                 } catch (Exception ex) {
                     status.setText(String.valueOf(ex));
                 }
@@ -391,15 +392,28 @@ public class NetViewer extends Applet {
             }
         }
         
-        // --- construct an embedded portion of the net with default settings
+        // --- relax the atom configuration
         final Matrix M = (Matrix) G.symmetricBasis().inverse();
         final Matrix gram = (Matrix) M.times(M.transposed());
         final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
         for (int i = 0; i < 200; ++i) {
-            //relaxer.step();
+            relaxer.step();
             relaxer.stepCell();
         }
         relaxer.normalize();
+        final double stats[] = relaxer.edgeStatistics();
+        final double min = stats[0];
+        final double max = stats[1];
+        final double avg = stats[2];
+        final Matrix gr = relaxer.getGramMatrix();
+        final double det = ((Real) gr.determinant()).doubleValue();
+        final double vol = Math.sqrt(det) / G.numberOfNodes();
+        status.setText("Edge lengths: min = " + Math.rint(min * 1000) / 1000 + ", max = "
+                       + Math.rint(max * 1000) / 1000 + ", avg = "
+                       + Math.rint(avg * 1000) / 1000 + ";  volume/vertex = "
+                       + Math.rint(vol * 1000) / 1000);
+
+        // --- construct an embedded portion of the net using the relaxed configuration
         final Map pos = relaxer.getPositions();
         final Matrix A = LinearAlgebra.orthonormalRowBasis(relaxer.getGramMatrix());
         final CoordinateChange B = new CoordinateChange(A);
