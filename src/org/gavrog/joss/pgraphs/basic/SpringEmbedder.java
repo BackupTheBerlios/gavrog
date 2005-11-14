@@ -26,20 +26,21 @@ import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.2 2005/11/04 22:51:01 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.3 2005/11/14 00:15:16 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
-
     private final Map positions;
-
     private Matrix gramMatrix;
+    private Operator gramProjection;
 
     public SpringEmbedder(final PeriodicGraph graph, final Map positions,
             final Matrix gramMatrix) {
@@ -47,6 +48,10 @@ public class SpringEmbedder {
         this.positions = new HashMap();
         this.positions.putAll(positions);
         this.gramMatrix = gramMatrix;
+        final int d = graph.getDimension();
+        final SpaceGroup G = new SpaceGroup(d, graph.symmetryOperators());
+        final Matrix M = G.configurationSpaceForGramMatrix();
+        this.gramProjection = Operator.orthogonalProjection(M, Matrix.one(d * (d+1) / 2));
     }
 
     public double[] edgeStatistics() {
@@ -137,8 +142,6 @@ public class SpringEmbedder {
     }
 
     public void stepCell() {
-        // TODO keep symmetries intact
-
         normalizeUp();
 
         final int dim = this.graph.getDimension();
@@ -182,6 +185,7 @@ public class SpringEmbedder {
         }
 
         this.gramMatrix = (Matrix) G.minus(dG.times(0.01));
+        decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
     }
 
     public void setPositions(final Map map) {
@@ -202,6 +206,31 @@ public class SpringEmbedder {
         return (Matrix) this.gramMatrix.clone();
     }
 
+    private Point encodeGramMatrix() {
+        final int d = this.graph.getDimension();
+        final IArithmetic a[] = new IArithmetic[d * (d + 1) / 2];
+        int k = 0;
+        for (int i = 0; i < d; ++i) {
+            for (int j = i; j < d; ++j) {
+                a[k++] = this.gramMatrix.get(i, j);
+            }
+        }
+        return new Point(a);
+    }
+    
+    private void decodeGramMatrix(final Point p) {
+        final int d = this.graph.getDimension();
+        this.gramMatrix = new Matrix(d, d);
+        int k = 0;
+        for (int i = 0; i < d; ++i) {
+            for (int j = i; j < d; ++j) {
+                final IArithmetic x = p.get(k++);
+                this.gramMatrix.set(i, j, x);
+                this.gramMatrix.set(j, i, x);
+            }
+        }
+    }
+    
     public static void main(final String args[]) {
         NetParser parser = null;
         int count = 0;
