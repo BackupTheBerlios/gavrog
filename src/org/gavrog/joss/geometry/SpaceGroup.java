@@ -67,7 +67,7 @@ import org.gavrog.jane.numbers.Whole;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.22 2005/11/13 04:32:01 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.23 2005/11/14 00:13:57 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -370,8 +370,8 @@ public class SpaceGroup {
             final Operator sym = (Operator) syms.next();
             // --- extract the associated linear matrix
             final Matrix S = sym.linearPartAsMatrix();
-            // --- construct difference of virtual Gram matrix with its conjugate by S
-            final Matrix A = (Matrix) S.times(M).times(S.inverse()).minus(M);
+            // --- construct difference of virtual Gram matrix with its "image" by S
+            final Matrix A = (Matrix) S.times(M).times(S.transposed()).minus(M);
             // --- add the entries of that parametric matrix to the equation list
             for (int i = 0; i < d; ++i) {
                 for (int j = i; j < d; ++j) {
