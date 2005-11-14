@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.35 2005/11/13 04:32:01 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.36 2005/11/14 04:41:04 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -162,8 +162,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 final IEdge e = ((IEdge) iter.next());
                 result.add(new CoverEdge(e, this.shift));
                 if (e.source().equals(e.target())) {
-                    final Vector s = PeriodicGraph.this.getShift(e);
-                    result.add(new CoverEdge(e, (Vector) this.shift.minus(s)));
+                    result.add(new CoverEdge(e.reverse(), this.shift));
                 }
             }
             this.degree = result.size();

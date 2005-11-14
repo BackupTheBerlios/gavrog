@@ -45,7 +45,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.24 2005/11/06 05:23:11 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.25 2005/11/14 04:41:05 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -275,7 +275,7 @@ public class TestPeriodicGraph extends TestCase {
         assertTrue(incidences.contains(G.new CoverEdge(e1.reverse(), new Vector(1, 0, 2))));
         assertTrue(incidences.contains(G.new CoverEdge(e3, new Vector(1, 0, 2))));
         assertTrue(incidences.contains(G.new CoverEdge(e2, new Vector(1, 0, 2))));
-        assertTrue(incidences.contains(G.new CoverEdge(e2, new Vector(0, 0, 2))));
+        assertTrue(incidences.contains(G.new CoverEdge(e2.reverse(), new Vector(1, 0, 2))));
         
         // --- edges:
         incidences = Iterators.asList(f3.incidences());
