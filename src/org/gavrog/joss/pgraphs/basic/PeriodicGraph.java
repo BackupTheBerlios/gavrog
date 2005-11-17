@@ -50,7 +50,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.36 2005/11/14 04:41:04 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.37 2005/11/17 07:35:10 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1815,6 +1815,23 @@ public class PeriodicGraph extends UndirectedGraph {
         cache.put(INVARIANT, new NiceIntList(invariant));
         
         return new NiceIntList(invariant);
+    }
+    
+    /**
+     * Returns the Systre key for this graph.
+     * 
+     * @return the Systre key as a simple string.
+     */
+    public String getSystreKey() {
+        final List inv = invariant();
+        final StringBuffer buffer = new StringBuffer(50);
+        for (int i = 0; i < inv.size(); ++i) {
+            if (i > 0) {
+                buffer.append(" ");
+            }
+            buffer.append(inv.get(i));
+        }
+        return buffer.toString();
     }
     
     /**
