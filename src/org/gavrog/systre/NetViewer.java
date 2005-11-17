@@ -102,7 +102,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.3 2005/11/14 00:47:47 odf Exp $
+ * @version $Id: NetViewer.java,v 1.4 2005/11/17 01:41:26 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -394,10 +394,11 @@ public class NetViewer extends Applet {
         
         // --- relax the atom configuration
         final Matrix M = (Matrix) G.symmetricBasis().inverse();
-        final Matrix gram = (Matrix) M.times(M.transposed());
+        final Matrix gram = ((Matrix) M.times(M.transposed())).symmetric();
         final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
+        relaxer.step();
         for (int i = 0; i < 200; ++i) {
-            relaxer.step();
+            //relaxer.step();
             relaxer.stepCell();
         }
         relaxer.normalize();

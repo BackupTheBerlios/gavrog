@@ -34,7 +34,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.3 2005/11/14 00:15:16 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.4 2005/11/17 01:41:26 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -184,7 +184,8 @@ public class SpringEmbedder {
             dG = (Matrix) dG.plus(dE);
         }
 
-        this.gramMatrix = (Matrix) G.minus(dG.times(0.01));
+        //this.gramMatrix = (Matrix) G.minus(dG.times(0.01));
+        this.gramMatrix = (Matrix) G.minus(dG.times(0.001));
         decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
     }
 
@@ -285,7 +286,7 @@ public class SpringEmbedder {
                                 + Math.rint(avg * 1000) / 1000 + ";  volume/vertex = "
                                 + Math.rint(vol * 1000) / 1000);
                     }
-                    relaxer.step();
+                    //relaxer.step();
                     relaxer.stepCell();
                 }
                 System.out.println();
