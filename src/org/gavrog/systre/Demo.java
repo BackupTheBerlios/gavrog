@@ -35,10 +35,10 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.10 2005/11/12 05:36:46 odf Exp $
+ * @version $Id: Demo.java,v 1.11 2005/11/17 01:40:29 odf Exp $
  */
 public class Demo {
-    public static void main(final String args[]) {
+    public static void run(final String arg) {
         final Package pkg = Archive.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
         final String archivePath = packagePath + "/rcsr.arc";
@@ -50,7 +50,7 @@ public class Demo {
         NetParser parser = null;
         int count = 0;
         try {
-            parser = new NetParser(new FileReader(args[0]));
+            parser = new NetParser(new FileReader(arg));
         } catch (FileNotFoundException ex) {
             ex.printStackTrace();
         }
@@ -129,5 +129,9 @@ public class Demo {
                 System.out.flush();
             }
         }
+    }
+    
+    public static void main(final String args[]) {
+        run(args[0]);
     }
 }
