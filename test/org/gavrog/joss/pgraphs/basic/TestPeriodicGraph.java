@@ -45,7 +45,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.25 2005/11/14 04:41:05 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.26 2005/11/17 07:38:38 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -622,7 +622,7 @@ public class TestPeriodicGraph extends TestCase {
             }
             G.newEdge((INode) nodes.get(s), (INode) nodes.get(t), shift);
         }
-        assertEquals(key, G.invariant().toString());
+        assertEquals(key, G.getSystreKey());
     }
     
     // CAVEAT: the following test takes hours. Run only under special circumstances.
