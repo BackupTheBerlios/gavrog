@@ -51,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.56 2005/10/24 05:17:42 odf Exp $
+ * @version $Id: NetParser.java,v 1.57 2005/11/17 07:37:32 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -117,7 +117,7 @@ public class NetParser extends GenericParser {
     }
     
     /**
-     * Sets up a keyword map to be used by {@link GenericParser#parseBlock()}.
+     * Sets up a keyword map to be used by {@link GenericParser#parseDataBlock()}.
      * 
      * @return the mapping of keywords.
      */
@@ -133,6 +133,7 @@ public class NetParser extends GenericParser {
         result.put("bonds", "edge");
         result.put("edges", "edge");
         result.put("spacegroup", "group");
+        result.put("id", "name");
         return Collections.unmodifiableMap(result);
     }
     
@@ -153,20 +154,48 @@ public class NetParser extends GenericParser {
      * @return the periodic net constructed from the input.
      */
     public PeriodicGraph parseNet() {
-        final Entry block[] = parseBlock();
-        if (block == null) {
+        parseDataBlock();
+        final Entry entries[] = getDataEntries();
+        if (entries == null) {
             return null;
         }
-        final String type = lastBlockType().toLowerCase();
+        final String type = getDataType().toLowerCase();
         if (type.equals("periodic_graph")) {
-            return parsePeriodicGraph(block);
+            return parsePeriodicGraph(entries);
         } else if (type.equals("crystal")) {
-            return parseCrystal(block);
+            return parseCrystal(entries);
         } else if (type.equals("net")) {
-            return parseSymmetricNet(block);
+            return parseSymmetricNet(entries);
         } else {
             throw new UnsupportedOperationException("type " + type + " not supported");
         }
+    }
+    
+    /**
+     * Retrieves the name of the net last read, if any.
+     * 
+     * @return everything present under the "name" of "id" key.
+     */
+    public String getName() {
+        final List entries = getDataEntries("name");
+        if (entries == null) {
+            return null;
+        }
+        final StringBuffer buf = new StringBuffer(20);
+        for  (int i = 0; i < entries.size(); ++i) {
+            final Entry entry = (Entry) entries.get(i);
+            final List values = entry.values;
+            if (i > 0) {
+                buf.append("; ");
+            }
+            for (int j = 0; j < values.size(); ++j) {
+                if (j > 0) {
+                    buf.append(" ");
+                }
+                buf.append(String.valueOf(values.get(j)));
+            }
+        }
+        return buf.toString();
     }
     
     /**
