@@ -19,10 +19,13 @@ package org.gavrog.joss.pgraphs.io;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -33,14 +36,16 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.2 2005/10/24 05:17:42 odf Exp $
+ * @version $Id: GenericParser.java,v 1.3 2005/11/17 07:36:58 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
     protected Map synonyms;
     protected String defaultKey;
     private int lineno;
-    private String blockType;
+    private String dataType;
+    private Entry dataEntries[];
+    private Map entriesByKey;
 
     public class Entry {
         public final int lineNumber;
@@ -130,13 +135,17 @@ public class GenericParser {
         }
     }
     
-    public Entry[] parseBlock() {
+    public void parseDataBlock() {
+        this.dataEntries = null;
+        this.entriesByKey = null;
+        
         final LinkedList fields0 = nextLineChopped();
         if (fields0 == null) {
-            return null;
+            return;
         }
-        this.blockType = ((String) fields0.getFirst()).toLowerCase();
+        this.dataType = ((String) fields0.getFirst()).toLowerCase();
         final List result = new LinkedList();
+        final Map byKey = new HashMap();
         String key = this.defaultKey;
         
         while (true) {
@@ -199,7 +208,12 @@ public class GenericParser {
             }
             if (key != null) {
                 if (row.size() > 0) {
-                    result.add(new Entry(this.lineno, key, row));
+                    final Entry entry = new Entry(this.lineno, key, row);
+                    result.add(entry);
+                    if (!byKey.containsKey(key)) {
+                        byKey.put(key, new LinkedList());
+                    }
+                    ((List) byKey.get(key)).add(entry);
                 }
             } else {
                 final String msg = "keyless data found at line ";
@@ -207,22 +221,22 @@ public class GenericParser {
             }
         }
         
-        final Entry output[] = new Entry[result.size()];
-        result.toArray(output);
-        return output;
+        this.dataEntries = new Entry[result.size()];
+        result.toArray(this.dataEntries);
+        this.entriesByKey = byKey;
     }
     
     /**
      * @return the type of the block last parsed.
      */
-    public String lastBlockType() {
-        return this.blockType;
+    public String getDataType() {
+        return this.dataType;
     }
 
     /**
      * @return the last line number.
      */
-    public int lastLineNumber() {
+    public int getLineNumber() {
         return this.lineno;
     }
     
@@ -258,5 +272,35 @@ public class GenericParser {
      */
     public void setDefaultKey(String defaultKey) {
         this.defaultKey = defaultKey;
+    }
+    
+    /**
+     * @return the data entries as they occur in the current block.
+     */
+    public Entry[] getDataEntries() {
+        return dataEntries;
+    }
+    
+    /**
+     * Retrieves entries for a specific key only.
+     * 
+     * @param key the key to look up.
+     * @return the entries for the given key.
+     */
+    public List getDataEntries(final String key) {
+        final List entries = (List) entriesByKey.get(key);
+        if (entries == null) {
+            return null;
+        } else {
+            return Collections.unmodifiableList((List) entriesByKey.get(key));
+        }
+    }
+    
+    /**
+     * Retrieves all keys present in the current data block.
+     * @return the set of keys.
+     */
+    public Set getKeys() {
+        return this.entriesByKey.keySet();
     }
 }

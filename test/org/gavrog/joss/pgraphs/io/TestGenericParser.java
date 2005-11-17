@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestGenericParser.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestGenericParser.java,v 1.2 2005/11/17 07:36:58 odf Exp $
  */
 public class TestGenericParser extends TestCase {
     public void testParseBlock() {
@@ -38,9 +38,10 @@ public class TestGenericParser extends TestCase {
             + "VOID\n"
             + "END\n");
         final GenericParser emptyParser = new GenericParser(empty);
-        assertEquals(0, emptyParser.parseBlock().length);
-        assertEquals("void", emptyParser.lastBlockType());
-        assertEquals(2, emptyParser.lastLineNumber());
+        emptyParser.parseDataBlock();
+        assertEquals(0, emptyParser.getDataEntries().length);
+        assertEquals("void", emptyParser.getDataType());
+        assertEquals(2, emptyParser.getLineNumber());
         
         final StringReader test = new StringReader(""
             + "GARBAGE\n"
@@ -55,38 +56,43 @@ public class TestGenericParser extends TestCase {
         synonyms.put("trash", "junk");
         final GenericParser parser = new GenericParser(test);
         parser.setSynonyms(synonyms);
-        final GenericParser.Entry block[] = parser.parseBlock();
-        assertEquals(4, block.length);
+        parser.parseDataBlock();
+        final GenericParser.Entry entries[] = parser.getDataEntries();
+        assertEquals(4, entries.length);
 
         List row;
 
-        assertEquals("junk", block[0].key);
-        assertEquals(3, block[0].lineNumber);
-        row = block[0].values;
+        assertEquals("junk", entries[0].key);
+        assertEquals(3, entries[0].lineNumber);
+        row = entries[0].values;
         assertEquals(3, row.size());
         assertEquals("a", row.get(0));
         assertEquals("1", row.get(1));
         assertEquals(new Fraction(-1, 2), row.get(2));
 
-        assertEquals("junk", block[1].key);
-        assertEquals(4, block[1].lineNumber);
-        row = block[1].values;
+        assertEquals("junk", entries[1].key);
+        assertEquals(4, entries[1].lineNumber);
+        row = entries[1].values;
         assertEquals(2, row.size());
         assertEquals("JUNK", row.get(0));
         assertEquals("asdf", row.get(1));
 
-        assertEquals("junk", block[2].key);
-        assertEquals(5, block[2].lineNumber);
-        row = block[2].values;
+        assertEquals("junk", entries[2].key);
+        assertEquals(5, entries[2].lineNumber);
+        row = entries[2].values;
         assertEquals(3, row.size());
         assertEquals(new Whole(127), row.get(0));
         assertEquals(new FloatingPoint(1.2e7), row.get(1));
         assertEquals("1.2i8", row.get(2));
 
-        assertEquals("void", block[3].key);
-        assertEquals(7, block[3].lineNumber);
-        row = block[3].values;
+        assertEquals("void", entries[3].key);
+        assertEquals(7, entries[3].lineNumber);
+        row = entries[3].values;
         assertEquals(1, row.size());
         assertEquals("1/2.3", row.get(0));
+        
+        assertEquals(2, parser.getKeys().size());
+        assertEquals(3, parser.getDataEntries("junk").size());
+        assertEquals(1, parser.getDataEntries("void").size());
     }
 }
