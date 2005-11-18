@@ -43,6 +43,7 @@ import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
 
 
@@ -50,7 +51,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.37 2005/11/17 07:35:10 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.38 2005/11/18 00:47:14 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1284,6 +1285,14 @@ public class PeriodicGraph extends UndirectedGraph {
             res.add(((Morphism) iter.next()).getAffineOperator());
         }
         return res;
+    }
+    
+    /**
+     * Returns a space group object defined by the symmetry operators of this graph.
+     * @return the space group object.
+     */
+    public SpaceGroup getSpaceGroup() {
+        return new SpaceGroup(getDimension(), symmetryOperators());
     }
     
     /**
