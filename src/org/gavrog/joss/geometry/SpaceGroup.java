@@ -67,7 +67,7 @@ import org.gavrog.jane.numbers.Whole;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.23 2005/11/14 00:13:57 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.24 2005/11/18 00:46:31 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -219,6 +219,15 @@ public class SpaceGroup {
      */
     public Set getOperators() {
         return operators;
+    }
+    
+    /**
+     * Attempts to identify this group.
+     * 
+     * @return the crystallographic name of this space group.
+     */
+    public String getName() {
+        return new SpaceGroupFinder(this).getGroupName();
     }
     
     /**
