@@ -17,6 +17,8 @@
 package org.gavrog.joss.pgraphs.io;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -51,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.57 2005/11/17 07:37:32 odf Exp $
+ * @version $Id: NetParser.java,v 1.58 2005/11/18 00:48:08 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -114,6 +116,16 @@ public class NetParser extends GenericParser {
      */
     public NetParser(final Reader input) {
         this(new BufferedReader(input));
+    }
+    
+    /**
+     * Constructs an instance.
+     * 
+     * @param filename the name of a file read from.
+     * @throws FileNotFoundException if no file of that name exists.
+     */
+    public NetParser(final String filename) throws FileNotFoundException {
+        this(new BufferedReader(new FileReader(filename)));
     }
     
     /**
