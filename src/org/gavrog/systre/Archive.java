@@ -31,7 +31,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.5 2005/10/26 02:07:09 odf Exp $
+ * @version $Id: Archive.java,v 1.6 2005/11/18 00:48:33 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -330,6 +330,10 @@ public class Archive {
         }
     }
     
+    /**
+     * Retrieves the set of all Systre keys present in this archive. 
+     * @return the set of Systre keys.
+     */
     public Set keySet() {
         return this.byKey.keySet();
     }
