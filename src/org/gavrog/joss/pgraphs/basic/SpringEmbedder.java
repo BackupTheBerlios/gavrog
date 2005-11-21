@@ -34,7 +34,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.4 2005/11/17 01:41:26 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.5 2005/11/21 10:41:49 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -63,7 +63,7 @@ public class SpringEmbedder {
             final Point p = (Point) this.positions.get(e.source());
             final Point q = (Point) this.positions.get(e.target());
             final Vector s = this.graph.getShift(e);
-            final double length = length((Vector) q.plus(s).minus(p));
+            final double length = length((Vector) q.plus(s).minus(p), this.gramMatrix);
             if (length > 0) {
                 minLength = Math.min(minLength, length);
             }
@@ -74,8 +74,8 @@ public class SpringEmbedder {
         return new double[] { minLength, maxLength, avgLength };
     }
 
-    private double length(final Vector v) {
-        final Real squareLength = (Real) Vector.dot(v, v, this.gramMatrix);
+    private double length(final Vector v, final Matrix G) {
+        final Real squareLength = (Real) Vector.dot(v, v, G);
         return Math.sqrt(squareLength.doubleValue());
     }
 
@@ -93,11 +93,11 @@ public class SpringEmbedder {
         this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
     }
 
-    public void step() {
+    public double step() {
         // TODO keep symmetries intact
 
         // --- scale so shortest edge has unit length
-        normalizeUp();
+        normalize();
 
         // --- initialize displacements
         final Map deltas = new HashMap();
@@ -116,8 +116,8 @@ public class SpringEmbedder {
             final Point pw = (Point) this.positions.get(w);
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
-            final double length = length(d);
-            if (length > 1) {
+            final double length = length(d, this.gramMatrix);
+            if (length > 0) {
                 final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
                 move(deltas, v, movement);
                 move(deltas, w, (Vector) movement.negative());
@@ -125,13 +125,15 @@ public class SpringEmbedder {
         }
 
         // --- limit and apply displacements
+        double maxmove = 0;
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             final Vector delta = (Vector) deltas.get(v);
-            final double length = length(delta);
+            final double length = length(delta, this.gramMatrix);
+            maxmove = Math.max(maxmove, length);
             final double f;
-            if (length > 0.1) {
-                f = 0.1 / length;
+            if (length > 0.2) {
+                f = 0.2 / length;
             } else if (length < 0.0) {
                 f = 0.0;
             } else {
@@ -139,12 +141,15 @@ public class SpringEmbedder {
             }
             move(this.positions, v, (Vector) delta.times(f));
         }
+        
+        return maxmove;
     }
 
-    public void stepCell() {
+    public double stepCell() {
         normalizeUp();
 
         final int dim = this.graph.getDimension();
+        final Matrix I = Matrix.one((dim + 1) * dim / 2);
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
 
@@ -158,9 +163,11 @@ public class SpringEmbedder {
                 dG.set(j, i, x);
             }
         }
-        final Real vol = (Real) G.determinant();
-        final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
-        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
+        {
+            final Real vol = (Real) G.determinant();
+            final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
+            dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
+        }
 
         // --- evaluate the gradients of the edge energies
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
@@ -184,9 +191,21 @@ public class SpringEmbedder {
             dG = (Matrix) dG.plus(dE);
         }
 
-        //this.gramMatrix = (Matrix) G.minus(dG.times(0.01));
-        this.gramMatrix = (Matrix) G.minus(dG.times(0.001));
-        decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
+        final Vector d = encodeGramMatrix(dG);
+        final double length = length(d, I);
+        final double f;
+        if (length > 0.2) {
+            f = 0.2 / length;
+        } else if (length < 0.0) {
+            f= 0.0;
+        } else {
+            f = 1.0;
+        }
+        
+        final Vector v = (Vector) encodeGramMatrix(this.gramMatrix).plus(d.times(f));
+        this.gramMatrix = decodeGramMatrix((Vector) v.times(this.gramProjection));
+        
+        return length;
     }
 
     public void setPositions(final Map map) {
@@ -207,7 +226,7 @@ public class SpringEmbedder {
         return (Matrix) this.gramMatrix.clone();
     }
 
-    private Point encodeGramMatrix() {
+    private Vector encodeGramMatrix(final Matrix G) {
         final int d = this.graph.getDimension();
         final IArithmetic a[] = new IArithmetic[d * (d + 1) / 2];
         int k = 0;
@@ -216,20 +235,21 @@ public class SpringEmbedder {
                 a[k++] = this.gramMatrix.get(i, j);
             }
         }
-        return new Point(a);
+        return new Vector(a);
     }
     
-    private void decodeGramMatrix(final Point p) {
+    private Matrix decodeGramMatrix(final Vector p) {
         final int d = this.graph.getDimension();
-        this.gramMatrix = new Matrix(d, d);
+        final Matrix G = new Matrix(d, d);
         int k = 0;
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
                 final IArithmetic x = p.get(k++);
-                this.gramMatrix.set(i, j, x);
-                this.gramMatrix.set(j, i, x);
+                G.set(i, j, x);
+                G.set(j, i, x);
             }
         }
+        return G;
     }
     
     public static void main(final String args[]) {
@@ -270,8 +290,9 @@ public class SpringEmbedder {
                 final SpringEmbedder relaxer = new SpringEmbedder(G, G
                         .barycentricPlacement(), gram);
                 System.out.println(" --- relaxing ... ---");
-                for (int i = 0; i < 501; ++i) {
-                    if (i % 50 == 0) {
+                boolean last = false;
+                for (int i = 0; i < 1001; ++i) {
+                    if (i % 100 == 0 || last) {
                         relaxer.normalize();
                         final double stats[] = relaxer.edgeStatistics();
                         final double min = stats[0];
@@ -286,8 +307,14 @@ public class SpringEmbedder {
                                 + Math.rint(avg * 1000) / 1000 + ";  volume/vertex = "
                                 + Math.rint(vol * 1000) / 1000);
                     }
-                    //relaxer.step();
-                    relaxer.stepCell();
+                    if (last) {
+                        break;
+                    }
+                    final double a = relaxer.step();
+                    final double b = relaxer.stepCell();
+                    if (a < 1e-6) {
+                        last = true;
+                    }
                 }
                 System.out.println();
             }
