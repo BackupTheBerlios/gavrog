@@ -54,7 +54,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.vecmath.Color3f;
 import javax.vecmath.Matrix3d;
@@ -102,7 +101,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.4 2005/11/17 01:41:26 odf Exp $
+ * @version $Id: NetViewer.java,v 1.5 2005/11/21 10:56:18 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -144,13 +143,6 @@ public class NetViewer extends Applet {
      * @param standalone if true, indicates that the class is not run as an applet
      */
     public NetViewer(final boolean standalone) {
-        // --- set system specific look-and-feel
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
         // --- create global bounds for the scene
         final Bounds sceneBounds = new BoundingSphere(new Point3d(0,0,0), 100);
 
