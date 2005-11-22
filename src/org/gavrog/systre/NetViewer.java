@@ -51,6 +51,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -102,7 +103,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.6 2005/11/22 03:35:47 odf Exp $
+ * @version $Id: NetViewer.java,v 1.7 2005/11/22 10:56:53 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -151,8 +152,6 @@ public class NetViewer extends Applet {
         final Canvas3D canvas3D = new Canvas3D(SimpleUniverse.getPreferredConfiguration());
         final SimpleUniverse simpleUniverse = new SimpleUniverse(canvas3D);
         simpleUniverse.getViewingPlatform().setNominalViewingTransform();
-//        simpleUniverse.getViewer().getView()
-//                .setProjectionPolicy(View.PARALLEL_PROJECTION);
         simpleUniverse.getViewer().getView()
                 .setProjectionPolicy(View.PERSPECTIVE_PROJECTION);
         
@@ -193,11 +192,6 @@ public class NetViewer extends Applet {
         status.setEditable(false);
         add(BorderLayout.SOUTH, status);
 
-        // --- make a box for buttons
-        final Box buttonBox = Box.createVerticalBox();
-        
-        buttonBox.add(Box.createVerticalGlue());
-        
         // --- add a text area for graph input
         final Box inputBox = Box.createVerticalBox();
         inputArea = new JTextArea();
@@ -223,18 +217,26 @@ public class NetViewer extends Applet {
         inputBox.add(updateButton);
         add(BorderLayout.EAST, inputBox);
         
-        // --- if run as an application, add a quit button
-        if (standalone) {
-            final JButton quitButton = new JButton();
-            quitButton.setAlignmentX(0.5f);
-            quitButton.add(new JLabel("Quit"));
-            quitButton.setAction(new AbstractAction() {
-                public void actionPerformed(ActionEvent arg0) {
-                    System.exit(0);
+        // --- make a box for buttons
+        final Box buttonBox = Box.createVerticalBox();
+
+        // --- add some buttons
+        final JCheckBox orthographicChBox = new JCheckBox();
+        orthographicChBox.setBackground(Color.WHITE);
+        orthographicChBox.setAlignmentX(0);
+        orthographicChBox.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                if (orthographicChBox.isSelected()) {
+                    simpleUniverse.getViewer().getView().setProjectionPolicy(
+                            View.PARALLEL_PROJECTION);
+                } else {
+                    simpleUniverse.getViewer().getView().setProjectionPolicy(
+                            View.PERSPECTIVE_PROJECTION);
                 }
-            });
-            buttonBox.add(quitButton);
-        }
+            }
+        });
+        buttonBox.add(orthographicChBox);
+        buttonBox.add(new JLabel("orthographic"));
         
         // --- add the button panel to the main frame
         add(BorderLayout.WEST, buttonBox);
