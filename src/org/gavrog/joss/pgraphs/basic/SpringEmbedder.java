@@ -34,7 +34,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.5 2005/11/21 10:41:49 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.6 2005/11/22 02:07:47 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -63,7 +63,7 @@ public class SpringEmbedder {
             final Point p = (Point) this.positions.get(e.source());
             final Point q = (Point) this.positions.get(e.target());
             final Vector s = this.graph.getShift(e);
-            final double length = length((Vector) q.plus(s).minus(p), this.gramMatrix);
+            final double length = length((Vector) q.plus(s).minus(p));
             if (length > 0) {
                 minLength = Math.min(minLength, length);
             }
@@ -74,8 +74,8 @@ public class SpringEmbedder {
         return new double[] { minLength, maxLength, avgLength };
     }
 
-    private double length(final Vector v, final Matrix G) {
-        final Real squareLength = (Real) Vector.dot(v, v, G);
+    private double length(final Vector v) {
+        final Real squareLength = (Real) Vector.dot(v, v, this.gramMatrix);
         return Math.sqrt(squareLength.doubleValue());
     }
 
@@ -93,11 +93,11 @@ public class SpringEmbedder {
         this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
     }
 
-    public double step() {
+    public void step() {
         // TODO keep symmetries intact
 
         // --- scale so shortest edge has unit length
-        normalize();
+        normalizeUp();
 
         // --- initialize displacements
         final Map deltas = new HashMap();
@@ -116,8 +116,8 @@ public class SpringEmbedder {
             final Point pw = (Point) this.positions.get(w);
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
-            final double length = length(d, this.gramMatrix);
-            if (length > 0) {
+            final double length = length(d);
+            if (length > 1) {
                 final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
                 move(deltas, v, movement);
                 move(deltas, w, (Vector) movement.negative());
@@ -125,15 +125,13 @@ public class SpringEmbedder {
         }
 
         // --- limit and apply displacements
-        double maxmove = 0;
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             final Vector delta = (Vector) deltas.get(v);
-            final double length = length(delta, this.gramMatrix);
-            maxmove = Math.max(maxmove, length);
+            final double length = length(delta);
             final double f;
-            if (length > 0.2) {
-                f = 0.2 / length;
+            if (length > 0.1) {
+                f = 0.1 / length;
             } else if (length < 0.0) {
                 f = 0.0;
             } else {
@@ -141,15 +139,10 @@ public class SpringEmbedder {
             }
             move(this.positions, v, (Vector) delta.times(f));
         }
-        
-        return maxmove;
     }
 
     public double stepCell() {
-        normalizeUp();
-
         final int dim = this.graph.getDimension();
-        final Matrix I = Matrix.one((dim + 1) * dim / 2);
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
 
@@ -163,11 +156,9 @@ public class SpringEmbedder {
                 dG.set(j, i, x);
             }
         }
-        {
-            final Real vol = (Real) G.determinant();
-            final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
-            dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
-        }
+        final Real vol = (Real) G.determinant();
+        final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
+        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
 
         // --- evaluate the gradients of the edge energies
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
@@ -191,21 +182,14 @@ public class SpringEmbedder {
             dG = (Matrix) dG.plus(dE);
         }
 
-        final Vector d = encodeGramMatrix(dG);
-        final double length = length(d, I);
-        final double f;
-        if (length > 0.2) {
-            f = 0.2 / length;
-        } else if (length < 0.0) {
-            f= 0.0;
-        } else {
-            f = 1.0;
-        }
+        final Point before = encodeGramMatrix();
+        this.gramMatrix = (Matrix) G.minus(dG.times(0.1));
+        decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
+        normalize();
+        final Point after = encodeGramMatrix();
         
-        final Vector v = (Vector) encodeGramMatrix(this.gramMatrix).plus(d.times(f));
-        this.gramMatrix = decodeGramMatrix((Vector) v.times(this.gramProjection));
-        
-        return length;
+        final Vector d = (Vector) after.minus(before);
+        return Math.sqrt(((Real) Vector.dot(d, d)).doubleValue());
     }
 
     public void setPositions(final Map map) {
@@ -226,7 +210,7 @@ public class SpringEmbedder {
         return (Matrix) this.gramMatrix.clone();
     }
 
-    private Vector encodeGramMatrix(final Matrix G) {
+    private Point encodeGramMatrix() {
         final int d = this.graph.getDimension();
         final IArithmetic a[] = new IArithmetic[d * (d + 1) / 2];
         int k = 0;
@@ -235,21 +219,20 @@ public class SpringEmbedder {
                 a[k++] = this.gramMatrix.get(i, j);
             }
         }
-        return new Vector(a);
+        return new Point(a);
     }
     
-    private Matrix decodeGramMatrix(final Vector p) {
+    private void decodeGramMatrix(final Point p) {
         final int d = this.graph.getDimension();
-        final Matrix G = new Matrix(d, d);
+        this.gramMatrix = new Matrix(d, d);
         int k = 0;
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
                 final IArithmetic x = p.get(k++);
-                G.set(i, j, x);
-                G.set(j, i, x);
+                this.gramMatrix.set(i, j, x);
+                this.gramMatrix.set(j, i, x);
             }
         }
-        return G;
     }
     
     public static void main(final String args[]) {
@@ -289,10 +272,11 @@ public class SpringEmbedder {
                 final Matrix gram = (Matrix) M.times(M.transposed());
                 final SpringEmbedder relaxer = new SpringEmbedder(G, G
                         .barycentricPlacement(), gram);
+                double cellChange = 0;
+                boolean done = false;
                 System.out.println(" --- relaxing ... ---");
-                boolean last = false;
-                for (int i = 0; i < 1001; ++i) {
-                    if (i % 100 == 0 || last) {
+                for (int i = 0; i < 501; ++i) {
+                    if (i % 50 == 0 || done) {
                         relaxer.normalize();
                         final double stats[] = relaxer.edgeStatistics();
                         final double min = stats[0];
@@ -305,15 +289,16 @@ public class SpringEmbedder {
                                 + " edge lengths: min = " + Math.rint(min * 1000) / 1000
                                 + ", max = " + Math.rint(max * 1000) / 1000 + ", avg = "
                                 + Math.rint(avg * 1000) / 1000 + ";  volume/vertex = "
-                                + Math.rint(vol * 1000) / 1000);
+                                + Math.rint(vol * 1000) / 1000 + "; cell change = "
+                                + Math.rint(cellChange * 1000) / 1000);
                     }
-                    if (last) {
+                    if (done) {
                         break;
                     }
-                    final double a = relaxer.step();
-                    final double b = relaxer.stepCell();
-                    if (a < 1e-6) {
-                        last = true;
+                    //relaxer.step();
+                    cellChange = relaxer.stepCell();
+                    if (Math.abs(cellChange) < 1e-6) {
+                        done = true;
                     }
                 }
                 System.out.println();
