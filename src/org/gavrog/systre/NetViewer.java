@@ -27,6 +27,7 @@ import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -101,7 +102,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.5 2005/11/21 10:56:18 odf Exp $
+ * @version $Id: NetViewer.java,v 1.6 2005/11/22 03:35:47 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -353,6 +354,12 @@ public class NetViewer extends Applet {
         viewer.removeChild(0);
     }
     
+    private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
+    
+    private static String format(final double x) {
+        return formatter.format(x);
+    }
+    
     /**
      * Changes the net currently displayed.
      * 
@@ -385,14 +392,8 @@ public class NetViewer extends Applet {
         }
         
         // --- relax the atom configuration
-        final Matrix M = (Matrix) G.symmetricBasis().inverse();
-        final Matrix gram = ((Matrix) M.times(M.transposed())).symmetric();
-        final SpringEmbedder relaxer = new SpringEmbedder(G, G.barycentricPlacement(), gram);
-        relaxer.step();
-        for (int i = 0; i < 200; ++i) {
-            //relaxer.step();
-            relaxer.stepCell();
-        }
+        final SpringEmbedder relaxer = new SpringEmbedder(G);
+        relaxer.steps(200);
         relaxer.normalize();
         final double stats[] = relaxer.edgeStatistics();
         final double min = stats[0];
@@ -401,12 +402,11 @@ public class NetViewer extends Applet {
         final Matrix gr = relaxer.getGramMatrix();
         final double det = ((Real) gr.determinant()).doubleValue();
         final double vol = Math.sqrt(det) / G.numberOfNodes();
-        status.setText("Edge lengths: min = " + Math.rint(min * 1000) / 1000 + ", max = "
-                       + Math.rint(max * 1000) / 1000 + ", avg = "
-                       + Math.rint(avg * 1000) / 1000 + ";  volume/vertex = "
-                       + Math.rint(vol * 1000) / 1000);
+        status.setText("Edge lengths: min = " + format(min) + ", max = " + format(max)
+                       + ", avg = " + format(avg) + ";  volume/vertex = " + format(vol));
 
-        // --- construct an embedded portion of the net using the relaxed configuration
+        // --- construct an embedded portion of the net using the relaxed
+        // configuration
         final Map pos = relaxer.getPositions();
         final Matrix A = LinearAlgebra.orthonormalRowBasis(relaxer.getGramMatrix());
         final CoordinateChange B = new CoordinateChange(A);
