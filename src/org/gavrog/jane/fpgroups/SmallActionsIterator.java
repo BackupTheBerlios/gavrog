@@ -35,7 +35,7 @@ import org.gavrog.box.collections.Iterators;
  * actions, one obtains all conjugacy classes of subgroups of the group.
  * 
  * @author Olaf Delgado
- * @version $Id: SmallActionsIterator.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: SmallActionsIterator.java,v 1.3 2005/11/28 06:58:46 odf Exp $
  */
 public class SmallActionsIterator extends IteratorAdapter {
     // --- set to true to enable logging
@@ -612,5 +612,19 @@ public class SmallActionsIterator extends IteratorAdapter {
      */
     public long getTimeElapsed() {
         return System.currentTimeMillis() - this.startTime;
+    }
+    
+    public static void main(final String args[]) {
+        final int index = Integer.parseInt(args[0]);
+        final FiniteAlphabet A = new FiniteAlphabet(new String[] { "a", "b", "c" });
+        final FpGroup G = new FpGroup(A, new String[] { "[a,b]", "[a,c]", "[b,c]" });
+        final SmallActionsIterator iter = new SmallActionsIterator(G, index, false);
+        int count = 0;
+        while (iter.hasNext()) {
+            iter.next();
+            ++count;
+        }
+        System.out.println(count + " subgroup classes found in " + iter.getTimeElapsed()
+                           / 1000.0 + " second.");
     }
 }
