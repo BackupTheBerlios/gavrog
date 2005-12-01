@@ -116,7 +116,7 @@ while 1:
     for v in canonical.nodes():
         print "\t\t%s ->" % v.id(),
         p = pos[v]
-        for i in range(3):
+        for i in range(p.dimension):
             print " %9.5f" % float(p[i]),
         print
 
