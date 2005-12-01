@@ -34,7 +34,15 @@ public abstract class Real extends Complex implements Comparable {
         return (float) doubleValue();
     }
 
-    public int intValue() {
+    public double __float__() {
+        return doubleValue();
+    }
+    
+    public double __int__() {
+        return longValue();
+    }
+    
+   public int intValue() {
         return (int) longValue();
     }
 

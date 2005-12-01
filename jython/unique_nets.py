@@ -105,6 +105,21 @@ while 1:
     else:
         print "\tnot found"
 
+    # --- print out the minimal graph in canonical form
+    print "\tCode:",
+    print "\t%s" % G.invariant()
+
+    # --- print out the barycentric positions
+    print "\tPositions:"
+    canonical = G.canonical()
+    pos = canonical.barycentricPlacement()
+    for v in canonical.nodes():
+        print "\t\t%s ->" % v.id(),
+        p = pos[v]
+        for i in range(3):
+            print " %9.5f" % float(p[i]),
+        print
+
     # --- don't crowd
     print
 

@@ -26,7 +26,7 @@ import org.gavrog.jane.numbers.Whole;
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.10 2005/10/15 00:30:17 odf Exp $
+ * @version $Id: Point.java,v 1.11 2005/12/01 07:54:34 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -157,6 +157,15 @@ public class Point extends ArithmeticBase implements IArithmetic {
             throw new IllegalArgumentException("index out of range");
         }
         return this.coords.get(0, i);
+    }
+    
+    /**
+     * Syntactic sugar for jython. Makes vector[i] retrieve the i-th coordinate.
+     * @param i the index of a coordinate to retrieve.
+     * @return the coordinate value.
+     */
+    public IArithmetic __getitem__(final int i) {
+        return get(i);
     }
     
     /**
