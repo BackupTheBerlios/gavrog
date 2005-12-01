@@ -34,7 +34,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.23 2005/10/26 21:05:57 odf Exp $
+ * @version $Id: Vector.java,v 1.24 2005/12/01 11:13:47 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -308,6 +308,15 @@ public class Vector extends ArithmeticBase implements IArithmetic {
             throw new IllegalArgumentException("index out of range");
         }
         return this.coords.get(0, i);
+    }
+    
+    /**
+     * Syntactic sugar for jython. Makes vector[i] retrieve the i-th coordinate.
+     * @param i the index of a coordinate to retrieve.
+     * @return the coordinate value.
+     */
+    public IArithmetic __getitem__(final int i) {
+        return get(i);
     }
     
     /**
