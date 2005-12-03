@@ -53,7 +53,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.39 2005/12/03 08:51:52 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.40 2005/12/03 09:52:24 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -885,6 +885,16 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- return the result
         return P.classes();
+    }
+    
+    /**
+     * Checks if this graph is minimal. A periodic graph is minimal if its
+     * translation group can not be extended.
+     * 
+     * @return true if the graph if minimal.
+     */
+    public boolean isMinimal() {
+        return !translationalEquivalenceClasses().hasNext();
     }
     
     /**
@@ -1941,6 +1951,11 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the covering periodic graph.
      */
     public PeriodicGraph conventionalCellCover() {
+        // --- see if we can do this
+        if (!isMinimal()) {
+            throw new UnsupportedOperationException("must start with minimal graph");
+        }
+        
         // --- construct a SpaceGroupFinder object for this graph's symmetry group
         final SpaceGroupFinder finder = new SpaceGroupFinder(getSpaceGroup());
         
