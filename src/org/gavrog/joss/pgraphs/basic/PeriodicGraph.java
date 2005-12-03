@@ -53,7 +53,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.40 2005/12/03 09:52:24 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.41 2005/12/03 11:18:55 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1963,39 +1963,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final CoordinateChange C = finder.getToStd();
         
         // --- determine the centering vectors
-        final char centering = finder.getCentering();
-        final Vector centeringVectors[];
-        final IArithmetic zero = Whole.ZERO;
-        final IArithmetic third = new Fraction(1, 3);
-        final IArithmetic half = new Fraction(1, 2);
-        final IArithmetic twoThirds = new Fraction(2, 3);
-        switch (centering) {
-        case 'P':
-            centeringVectors = new Vector[] {};
-            break;
-        case 'F':
-            centeringVectors = new Vector[] { new Vector(half, half, zero),
-                    new Vector(half, zero, half), new Vector(zero, half, half) };
-            break;
-        case 'A':
-            centeringVectors = new Vector[] { new Vector(zero, half, half) };
-            break;
-        case 'B':
-            centeringVectors = new Vector[] { new Vector(half, zero, half) };
-            break;
-        case 'C':
-            centeringVectors = new Vector[] { new Vector(half, half, zero) };
-            break;
-        case 'I':
-            centeringVectors = new Vector[] { new Vector(half, half, half) };
-            break;
-        case 'R':
-            centeringVectors = new Vector[] { new Vector(third, twoThirds, third),
-                    new Vector(twoThirds, third, twoThirds) };
-            break;
-        default:
-            throw new RuntimeException("unknown centering " + centering);
-        }
+        final Vector centeringVectors[] = finder.getCenteringVectors();
 
         // --- find node and edge representatives in the new coordinate system
         final Map pos = barycentricPlacement();

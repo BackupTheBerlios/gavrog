@@ -28,6 +28,7 @@ import java.util.Set;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
@@ -40,7 +41,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.41 2005/10/30 02:22:51 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.42 2005/12/03 11:18:56 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -923,6 +924,46 @@ public class SpaceGroupFinder {
      */
     public char getCentering() {
         return this.centering;
+    }
+    
+    /**
+     * @return the centering vectors.
+     */
+    public Vector[] getCenteringVectors() {
+        final Vector centeringVectors[];
+        final IArithmetic zero = Whole.ZERO;
+        final IArithmetic third = new Fraction(1, 3);
+        final IArithmetic half = new Fraction(1, 2);
+        final IArithmetic twoThirds = new Fraction(2, 3);
+        switch (centering) {
+        case 'P':
+            centeringVectors = new Vector[] {};
+            break;
+        case 'F':
+            centeringVectors = new Vector[] { new Vector(half, half, zero),
+                    new Vector(half, zero, half), new Vector(zero, half, half) };
+            break;
+        case 'A':
+            centeringVectors = new Vector[] { new Vector(zero, half, half) };
+            break;
+        case 'B':
+            centeringVectors = new Vector[] { new Vector(half, zero, half) };
+            break;
+        case 'C':
+            centeringVectors = new Vector[] { new Vector(half, half, zero) };
+            break;
+        case 'I':
+            centeringVectors = new Vector[] { new Vector(half, half, half) };
+            break;
+        case 'R':
+            centeringVectors = new Vector[] { new Vector(third, twoThirds, third),
+                    new Vector(twoThirds, third, twoThirds) };
+            break;
+        default:
+            throw new RuntimeException("unknown centering " + centering);
+        }
+
+        return centeringVectors;
     }
     
     /**
