@@ -20,13 +20,15 @@ import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
 /**
  * A d-dimensional point in homogeneous coordinates represented by a row vector.
  * 
  * @author Olaf Delgado
- * @version $Id: Point.java,v 1.11 2005/12/01 07:54:34 odf Exp $
+ * @version $Id: Point.java,v 1.12 2005/12/03 12:00:19 odf Exp $
  */
 public class Point extends ArithmeticBase implements IArithmetic {
     //TODO handle points at infinity gracefully
@@ -177,6 +179,20 @@ public class Point extends ArithmeticBase implements IArithmetic {
         return this.coords.getSubMatrix(0, 0, 1, getDimension());
     }
 
+    /**
+     * Reduces the coordinate values of a point modulo one. All entries must be of type
+     * Real.
+     * 
+     * @return a copy of the input point with each entry reduced modulo one.
+     */
+    public Point modZ() {
+        final Real res[] = new Rational[getDimension()];
+        for (int i = 0; i < getDimension(); ++i) {
+            res[i] = (Real) ((Real) get(i)).mod(1);
+        }
+        return new Point(res);
+    }
+    
     /**
      * Compares two points lexicographically.
      * 
