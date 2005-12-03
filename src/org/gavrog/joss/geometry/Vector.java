@@ -34,7 +34,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.24 2005/12/01 11:13:47 odf Exp $
+ * @version $Id: Vector.java,v 1.25 2005/12/03 08:51:04 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -114,6 +114,27 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public Vector(final int a, final int b, final int c) {
         this(new int[] { a, b, c });
+    }
+    
+    /**
+     * Creates a new 2-dimensional vector.
+     * 
+     * @param a the first coordinate.
+     * @param b the second coordinate.
+     */
+    public Vector(final IArithmetic a, final IArithmetic b) {
+        this(new IArithmetic[] { a, b });
+    }
+    
+    /**
+     * Creates a new 3-dimensional vector.
+     * 
+     * @param a the first coordinate.
+     * @param b the second coordinate.
+     * @param c the third coordinate.
+     */
+    public Vector(final IArithmetic a, final IArithmetic b, final IArithmetic c) {
+        this(new IArithmetic[] { a, b, c });
     }
     
     /**
