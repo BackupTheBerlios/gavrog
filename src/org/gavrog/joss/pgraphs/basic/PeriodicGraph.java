@@ -38,7 +38,6 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
-import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.CoordinateChange;
@@ -53,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.41 2005/12/03 11:18:55 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.42 2005/12/03 12:01:18 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1982,11 +1981,60 @@ public class PeriodicGraph extends UndirectedGraph {
             edges.add(new Pair(src, dst));
         }
 
-        // TODO --- extend the system of representatives to the new unit cell
-
-        // TODO --- extract a representation of the new graph
+        // --- extend the system of representatives to the new unit cell
+        final List coverNodes = new ArrayList();
         
-        return null;
+        for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
+            final Point p = (Point) iter.next();
+            coverNodes.add(p.modZ());
+            for (int i = 0; i < centeringVectors.length; ++i) {
+                final Vector v = centeringVectors[i];
+                final Point pv = (Point) p.plus(v);
+                coverNodes.add(pv.modZ());
+            }
+        }
+        
+        final List coverEdges = new ArrayList();
+        for (final Iterator iter = edges.iterator(); iter.hasNext();) {
+            final Pair e = (Pair) iter.next();
+            final Point p = (Point) e.getFirst();
+            final Point q = (Point) e.getSecond();
+            final Point r = p.modZ();
+            coverEdges.add(new Pair(r, q.minus(p).plus(r)));
+            for (int i = 0; i < centeringVectors.length; ++i) {
+                final Vector v = centeringVectors[i];
+                final Point pv = (Point) p.plus(v);
+                final Point qv = (Point) q.plus(v);
+                final Point rv = pv.modZ();
+                coverEdges.add(new Pair(rv, qv.minus(pv).plus(rv)));
+            }
+        }
+
+        // --- extract a representation of the new graph
+        final PeriodicGraph result = new PeriodicGraph(getDimension());
+        final Map pos2node = new HashMap();
+        final Map node2pos = new HashMap();
+        for (final Iterator iter = coverNodes.iterator(); iter.hasNext();) {
+            final Point p = (Point) iter.next();
+            final INode v = result.newNode();
+            pos2node.put(p, v);
+            node2pos.put(v, p);
+        }
+        for (final Iterator iter = coverEdges.iterator(); iter.hasNext();) {
+            final Pair e = (Pair) iter.next();
+            final Point p = (Point) e.getFirst();
+            final Point q = (Point) e.getSecond();
+            final Point r = q.modZ();
+            final Vector s = (Vector) q.minus(r);
+            final INode v = (INode) pos2node.get(p);
+            final INode w = (INode) pos2node.get(r);
+            result.newEdge(v, w, s);
+        }
+        
+        // --- we do not need to recompute the cover's barycentric placement
+        result.cache.put(BARYCENTRIC_PLACEMENT, node2pos);
+        
+        return result;
     }
     
     /*
