@@ -38,12 +38,14 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
+import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
+import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
 
 
@@ -51,7 +53,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.38 2005/11/18 00:47:14 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.39 2005/12/03 08:51:52 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1930,6 +1932,78 @@ public class PeriodicGraph extends UndirectedGraph {
             G.newEdge((INode) nodes.get(s), (INode) nodes.get(t), shift);
         }
         return G;
+    }
+    
+    /**
+     * Computes a cover of this graph as it would sit in a conventional
+     * crystallographic unit cell for its symmetry group.
+     * 
+     * @return the covering periodic graph.
+     */
+    public PeriodicGraph conventionalCellCover() {
+        // --- construct a SpaceGroupFinder object for this graph's symmetry group
+        final SpaceGroupFinder finder = new SpaceGroupFinder(getSpaceGroup());
+        
+        // --- determine a coordinate mapping into a conventional cell
+        final CoordinateChange C = finder.getToStd();
+        
+        // --- determine the centering vectors
+        final char centering = finder.getCentering();
+        final Vector centeringVectors[];
+        final IArithmetic zero = Whole.ZERO;
+        final IArithmetic third = new Fraction(1, 3);
+        final IArithmetic half = new Fraction(1, 2);
+        final IArithmetic twoThirds = new Fraction(2, 3);
+        switch (centering) {
+        case 'P':
+            centeringVectors = new Vector[] {};
+            break;
+        case 'F':
+            centeringVectors = new Vector[] { new Vector(half, half, zero),
+                    new Vector(half, zero, half), new Vector(zero, half, half) };
+            break;
+        case 'A':
+            centeringVectors = new Vector[] { new Vector(zero, half, half) };
+            break;
+        case 'B':
+            centeringVectors = new Vector[] { new Vector(half, zero, half) };
+            break;
+        case 'C':
+            centeringVectors = new Vector[] { new Vector(half, half, zero) };
+            break;
+        case 'I':
+            centeringVectors = new Vector[] { new Vector(half, half, half) };
+            break;
+        case 'R':
+            centeringVectors = new Vector[] { new Vector(third, twoThirds, third),
+                    new Vector(twoThirds, third, twoThirds) };
+            break;
+        default:
+            throw new RuntimeException("unknown centering " + centering);
+        }
+
+        // --- find node and edge representatives in the new coordinate system
+        final Map pos = barycentricPlacement();
+        final List nodes = new ArrayList();
+        for (final Iterator iter = nodes(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            nodes.add(((Point) pos.get(v)).times(C));
+        }
+        final List edges = new ArrayList();
+        for (final Iterator iter = edges(); iter.hasNext();) {
+            final IEdge e = (IEdge) iter.next();
+            final Point p = (Point) pos.get(e.source());
+            final Point q = (Point) pos.get(e.target());
+            final Point src = (Point) p.times(C);
+            final Point dst = (Point) q.plus(getShift(e)).times(C);
+            edges.add(new Pair(src, dst));
+        }
+
+        // TODO --- extend the system of representatives to the new unit cell
+
+        // TODO --- extract a representation of the new graph
+        
+        return null;
     }
     
     /*
