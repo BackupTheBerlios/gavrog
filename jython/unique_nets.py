@@ -105,11 +105,11 @@ while 1:
     else:
         print "\tnot found"
 
-    # --- print out the minimal graph in canonical form
+    # --- print out the minimal graph in canonical form (the Systre key)
     print "\tCode:",
-    print "\t%s" % G.invariant()
+    print "\t%s" % key
 
-    # --- print out the barycentric positions
+    # --- print out the barycentric positions for the canonical form
     print "\tPositions:"
     canonical = G.canonical()
     pos = canonical.barycentricPlacement()
