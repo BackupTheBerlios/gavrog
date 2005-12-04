@@ -12,6 +12,7 @@ from java.lang import ClassLoader
 from java.io import InputStreamReader, BufferedReader
 
 # --- Gavrog stuff
+from org.gavrog.joss.geometry import SpaceGroupFinder
 from org.gavrog.joss.pgraphs.io import NetParser
 from org.gavrog.systre import Archive
 
@@ -95,7 +96,8 @@ while 1:
 
     # --- print the name of the space group
     print "\tGroup:",
-    print "\t%s" % G.spaceGroup.name
+    spacegroup = G.spaceGroup
+    print "\t%s" % spacegroup.name
 
     # --- look net up in RCSR and print symbol, if found
     print "\tRCSR:",
@@ -114,10 +116,40 @@ while 1:
     canonical = G.canonical()
     pos = canonical.barycentricPlacement()
     for v in canonical.nodes():
-        print "\t\t%s ->" % v.id(),
+        print "\t\t%s" % v.id(),
         p = pos[v]
         for i in range(p.dimension):
-            print " %9.5f" % float(p[i]),
+            print "%9.5f" % p[i],
+        print
+
+    # --- print out the graph expressed in terms of a conventional unit cell
+    cover = G.conventionalCellCover()
+    cover_pos = cover.barycentricPlacement()
+    finder = SpaceGroupFinder(spacegroup)
+    system = finder.crystalSystem
+    special_angle = ((system == SpaceGroupFinder.TRIGONAL_SYSTEM)
+                    or (system == SpaceGroupFinder.HEXAGONAL_SYSTEM))
+    print "\tUnit cell parameters:"
+    print "\t\t1 1 1 90 90",
+    if special_angle:
+        print "120"
+    else:
+        print "90"
+    print "\tUnit cell positions:"
+    for v in cover.nodes():
+        print "\t\t%d" % v.id(),
+        p = cover_pos[v]
+        for i in range(p.dimension):
+            print "%9.5f" % p[i],
+        print
+    print "\tUnit cell edges:"
+    for e in cover.edges():
+        v = e.source()
+        w = e.target()
+        s = cover.getShift(e)
+        print "\t\t%s %s " % (v.id(), w.id()),
+        for i in range(s.dimension):
+            print "%2s" % s[i],
         print
 
     # --- don't crowd
