@@ -103,7 +103,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.7 2005/11/22 10:56:53 odf Exp $
+ * @version $Id: NetViewer.java,v 1.8 2005/12/10 07:24:09 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -129,6 +129,15 @@ public class NetViewer extends Applet {
     
     // --- an archive of known structures
     private Archive rcsr = null;
+    
+    // --- the net to display
+    private PeriodicGraph net;
+    
+    // --- embedder used to find node positions and metric
+    private SpringEmbedder embedder;
+    
+    // --- the current displayed radius
+    private int radius;
     
     // --- the currently displayed portion of the net
     private PeriodicGraph.EmbeddedPortion graph;
@@ -221,6 +230,23 @@ public class NetViewer extends Applet {
         final Box buttonBox = Box.createVerticalBox();
 
         // --- add some buttons
+        final JButton moreButton = new JButton();
+        moreButton.add(new JLabel("More"));
+        moreButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                setRadius(radius + 1);
+            }
+        });
+        buttonBox.add(moreButton);
+        final JButton lessButton = new JButton();
+        lessButton.add(new JLabel("Less"));
+        lessButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                setRadius(radius - 1);
+            }
+        });
+        buttonBox.add(lessButton);
+        
         final JCheckBox orthographicChBox = new JCheckBox();
         orthographicChBox.setBackground(Color.WHITE);
         orthographicChBox.setAlignmentX(0);
@@ -393,6 +419,9 @@ public class NetViewer extends Applet {
             }
         }
         
+        // --- save the net for later reference
+        this.net = G;
+        
         // --- relax the atom configuration
         final SpringEmbedder relaxer = new SpringEmbedder(G);
         relaxer.steps(200);
@@ -406,15 +435,27 @@ public class NetViewer extends Applet {
         final double vol = Math.sqrt(det) / G.numberOfNodes();
         status.setText("Edge lengths: min = " + format(min) + ", max = " + format(max)
                        + ", avg = " + format(avg) + ";  volume/vertex = " + format(vol));
+        
+        // --- store embedder for later reference
+        this.embedder = relaxer;
+        
+        // --- show the graph specification
+        inputArea.setText(spec);
+        
+        // --- set the radius
+        setRadius(radius);
+    }
 
+    private void setRadius(final int radius) {
+        final SpringEmbedder relaxer = this.embedder;
         // --- construct an embedded portion of the net using the relaxed
         // configuration
         final Map pos = relaxer.getPositions();
         final Matrix A = LinearAlgebra.orthonormalRowBasis(relaxer.getGramMatrix());
         final CoordinateChange B = new CoordinateChange(A);
         
-        final INode v0 = (INode) G.nodes().next();
-        final Embedding E = G.embeddedNeighborhood(v0, radius, pos, B);
+        final INode v0 = (INode) this.net.nodes().next();
+        final Embedding E = this.net.embeddedNeighborhood(v0, radius, pos, B);
         
         // --- store it for later reference
         this.graph = (PeriodicGraph.EmbeddedPortion) E;
@@ -434,8 +475,8 @@ public class NetViewer extends Applet {
         // --- clear the current selection of nodes and edges
         selection.clear();
         
-        // --- show the graph specification
-        inputArea.setText(spec);
+        // --- save the current radius
+        this.radius = radius;
     }
     
     /**
