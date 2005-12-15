@@ -21,23 +21,33 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.11 2005/11/17 01:40:29 odf Exp $
+ * @version $Id: Demo.java,v 1.12 2005/12/15 17:05:39 odf Exp $
  */
 public class Demo {
+    private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
+    
+    private static String format(final double x) {
+        return formatter.format(x);
+    }
+    
     public static void run(final String arg) {
         final Package pkg = Archive.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
@@ -124,6 +134,20 @@ public class Demo {
                 }
                 System.out.println("  Gram matrix configuration space: "
                                    + group.configurationSpaceForGramMatrix());
+                
+                // --- relax the atom configuration
+                final SpringEmbedder relaxer = new SpringEmbedder(G);
+                relaxer.steps(200);
+                relaxer.normalize();
+                final double stats[] = relaxer.edgeStatistics();
+                final double min = stats[0];
+                final double max = stats[1];
+                final double avg = stats[2];
+                final Matrix gr = relaxer.getGramMatrix();
+                final double det = ((Real) gr.determinant()).doubleValue();
+                final double vol = Math.sqrt(det) / G.numberOfNodes();
+                System.out.println("    edge lengths min = " + format(min) + ", max = " + format(max)
+                               + ", avg = " + format(avg) + ";  volume/vertex = " + format(vol));
                 System.out.println("Done.");
                 System.out.println();
                 System.out.flush();
