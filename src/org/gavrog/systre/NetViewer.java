@@ -103,7 +103,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.8 2005/12/10 07:24:09 odf Exp $
+ * @version $Id: NetViewer.java,v 1.9 2006/01/03 22:41:17 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -137,7 +137,10 @@ public class NetViewer extends Applet {
     private SpringEmbedder embedder;
     
     // --- the current displayed radius
-    private int radius;
+    private int radius = 3;
+    
+    // --- determines if node positions are relaxed after barycentric placement
+    private boolean relax = false;
     
     // --- the currently displayed portion of the net
     private PeriodicGraph.EmbeddedPortion graph;
@@ -217,7 +220,7 @@ public class NetViewer extends Applet {
         updateButton.setAction(new AbstractAction() {
             public void actionPerformed(ActionEvent arg0) {
                 try {
-                    changeNet(inputArea.getText(), 5);
+                    changeNet(inputArea.getText(), radius);
                 } catch (Exception ex) {
                     status.setText(String.valueOf(ex));
                 }
@@ -264,11 +267,28 @@ public class NetViewer extends Applet {
         buttonBox.add(orthographicChBox);
         buttonBox.add(new JLabel("orthographic"));
         
+        final JCheckBox relaxChBox = new JCheckBox();
+        relaxChBox.setBackground(Color.WHITE);
+        relaxChBox.setAlignmentX(0);
+        relaxChBox.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                if (relaxChBox.isSelected()) {
+                    relax = true;
+                } else {
+                    relax = false;
+                }
+                setPositions();
+                setRadius(radius);
+            }
+        });
+        buttonBox.add(relaxChBox);
+        buttonBox.add(new JLabel("relax"));
+        
         // --- add the button panel to the main frame
         add(BorderLayout.WEST, buttonBox);
         
         // --- display the initial graph
-        changeNet("dia", 5);
+        changeNet("dia", radius);
 
         // --- create an object to use for picking
         final PickCanvas pickCanvas = new PickCanvas(canvas3D, objRoot);
@@ -419,12 +439,27 @@ public class NetViewer extends Applet {
             }
         }
         
+        // --- show the graph specification
+        inputArea.setText(spec);
+        
         // --- save the net for later reference
         this.net = G;
         
+        // --- determine graph positions
+        setPositions();
+        
+        // --- set the radius
+        setRadius(radius);
+    }
+     
+    private void setPositions() {
+        final PeriodicGraph G = this.net;
+        
         // --- relax the atom configuration
         final SpringEmbedder relaxer = new SpringEmbedder(G);
-        relaxer.steps(200);
+        if (relax) {
+            relaxer.steps(200);
+        }
         relaxer.normalize();
         final double stats[] = relaxer.edgeStatistics();
         final double min = stats[0];
@@ -438,12 +473,6 @@ public class NetViewer extends Applet {
         
         // --- store embedder for later reference
         this.embedder = relaxer;
-        
-        // --- show the graph specification
-        inputArea.setText(spec);
-        
-        // --- set the radius
-        setRadius(radius);
     }
 
     private void setRadius(final int radius) {
