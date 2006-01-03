@@ -21,6 +21,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +41,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.12 2005/12/15 17:05:39 odf Exp $
+ * @version $Id: Demo.java,v 1.13 2006/01/03 22:40:04 odf Exp $
  */
 public class Demo {
     private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
@@ -47,6 +49,23 @@ public class Demo {
     private static String format(final double x) {
         return formatter.format(x);
     }
+    
+    /**
+     * Returns the stack trace of a throwable as a string.
+     * 
+     * @param throwable the throwable.
+     * @return the string representation.
+     */
+    public static String stackTrace(final Throwable throwable) {
+        StringBuffer sb = new StringBuffer();
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        pw.close();
+        sb.append(sw.toString());
+        return sb.toString();
+    }
+    
     
     public static void run(final String arg) {
         final Package pkg = Archive.class.getPackage();
@@ -136,18 +155,31 @@ public class Demo {
                                    + group.configurationSpaceForGramMatrix());
                 
                 // --- relax the atom configuration
-                final SpringEmbedder relaxer = new SpringEmbedder(G);
-                relaxer.steps(200);
-                relaxer.normalize();
-                final double stats[] = relaxer.edgeStatistics();
-                final double min = stats[0];
-                final double max = stats[1];
-                final double avg = stats[2];
-                final Matrix gr = relaxer.getGramMatrix();
-                final double det = ((Real) gr.determinant()).doubleValue();
-                final double vol = Math.sqrt(det) / G.numberOfNodes();
-                System.out.println("    edge lengths min = " + format(min) + ", max = " + format(max)
-                               + ", avg = " + format(avg) + ";  volume/vertex = " + format(vol));
+                try {
+                    final SpringEmbedder relaxer = new SpringEmbedder(G);
+                    relaxer.steps(200);
+                    relaxer.normalize();
+                    final double stats[] = relaxer.edgeStatistics();
+                    final double min = stats[0];
+                    final double max = stats[1];
+                    final double avg = stats[2];
+                    final Matrix gr = relaxer.getGramMatrix();
+                    final double det = ((Real) gr.determinant()).doubleValue();
+                    final double vol = Math.sqrt(det) / G.numberOfNodes();
+                    System.out.println("    edge lengths min = " + format(min)
+                                       + ", max = " + format(max) + ", avg = "
+                                       + format(avg) + ";  volume/vertex = "
+                                       + format(vol));
+                } catch (Exception ex) {
+                    System.err.println(stackTrace(ex));
+                }
+
+                try {
+                    G.conventionalCellCover();
+                } catch (Exception ex) {
+                    System.err.println(stackTrace(ex));
+                }
+
                 System.out.println("Done.");
                 System.out.println();
                 System.out.flush();
