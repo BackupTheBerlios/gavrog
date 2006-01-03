@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.17 2005/10/12 23:16:20 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.18 2006/01/03 22:39:00 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     public void setUp() {
@@ -61,33 +61,6 @@ public class TestSpaceGroupFinder extends TestCase {
         assertEquals(432, new SpaceGroupFinder(new SpaceGroup(3, "F23")).getCrystalSystem());
         assertEquals(432, new SpaceGroupFinder(new SpaceGroup(3, "I23")).getCrystalSystem());
     }
-
-    public void testGetCentering() {
-        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "A121")).getCentering());
-        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "B112")).getCentering());
-        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "C121")).getCentering());
-        assertEquals('A', new SpaceGroupFinder(new SpaceGroup(3, "I121")).getCentering());
-        
-        assertEquals('C', new SpaceGroupFinder(new SpaceGroup(3, "A222")).getCentering());
-        assertEquals('C', new SpaceGroupFinder(new SpaceGroup(3, "B222")).getCentering());
-        assertEquals('C', new SpaceGroupFinder(new SpaceGroup(3, "C222")).getCentering());
-        assertEquals('F', new SpaceGroupFinder(new SpaceGroup(3, "F222")).getCentering());
-        assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I222")).getCentering());
-        
-        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P4")).getCentering());
-        assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I-4")).getCentering());
-        
-        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P-3")).getCentering());
-        assertEquals('R', new SpaceGroupFinder(new SpaceGroup(3, "R-3")).getCentering());
-        assertEquals('R', new SpaceGroupFinder(new SpaceGroup(3, "R3:R")).getCentering());
-        
-        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P6")).getCentering());
-        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P-62c")).getCentering());
-        
-        assertEquals('P', new SpaceGroupFinder(new SpaceGroup(3, "P23")).getCentering());
-        assertEquals('F', new SpaceGroupFinder(new SpaceGroup(3, "F23")).getCentering());
-        assertEquals('I', new SpaceGroupFinder(new SpaceGroup(3, "I23")).getCentering());
-   }
 
     public void testSettings() {
         final StringBuffer failed = new StringBuffer(100);
