@@ -28,7 +28,6 @@ import java.util.Set;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
@@ -41,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.42 2005/12/03 11:18:56 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.43 2006/01/03 22:35:05 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -56,7 +55,6 @@ public class SpaceGroupFinder {
     
     final private SpaceGroup G;
     final private int crystalSystem;
-    final private char centering;
     final private CoordinateChange toStd;
     final private String groupName;
     final private String extension;
@@ -93,7 +91,7 @@ public class SpaceGroupFinder {
             // --- compute the centering and a normalized basis
             res = normalizedBasis(primitiveCell);
             final Matrix normalizedBasis = (Matrix) res[0];
-            this.centering = ((Character) res[1]).charValue();
+            final char centering = ((Character) res[1]).charValue();
             
             // --- compute coordinate change to normalized basis
             final CoordinateChange pre2Normal = new CoordinateChange(normalizedBasis);
@@ -107,7 +105,7 @@ public class SpaceGroupFinder {
             final List ops = toNormalized.applyTo(G.primitiveOperators());
             
             // --- determine the coordinate variations the matching process needs to consider
-            this.variations = makeVariations(this.crystalSystem, this.centering);
+            this.variations = makeVariations(this.crystalSystem, centering);
             
             // --- convert primitive cell vectors to normalized basis
             for (int i = 0; i < primitiveCell.length; ++i) {
@@ -129,7 +127,7 @@ public class SpaceGroupFinder {
             }
             
             // --- compare with lookup setting for all the 3d space groups
-            final Pair match = matchOperators(ops, C);
+            final Pair match = matchOperators(ops, C, centering);
             
             // --- postprocess the output of the lookup
             if (match == null) {
@@ -799,14 +797,15 @@ public class SpaceGroupFinder {
      * Matches a list of group operators to the catalogued space groups.
      * @param ops a primitive set of normalized ops for the group.
      * @param toPrimitive changes coordinates to primitive basis.
-
+     * @param centering the preliminary centering.
      * @return a pair containing the name found and the required basis change.
      */
-    private Pair matchOperators(final List ops, final CoordinateChange toPrimitive) {
+    private Pair matchOperators(final List ops, final CoordinateChange toPrimitive,
+            final char centering) {
         if (DEBUG > 0) {
             System.err.println("\nStarting lookup process...");
-            System.err.println("  centering = " + this.centering + ", system = "
-                    + this.crystalSystem);
+            System.err.println("  centering = " + centering + ", system = "
+                               + this.crystalSystem);
         }
         final int d = this.G.getDimension();
         final Matrix I = Matrix.one(d);
@@ -816,12 +815,12 @@ public class SpaceGroupFinder {
         for (final Iterator iter = SpaceGroupCatalogue.lookupInfo(); iter.hasNext();) {
             // --- retrieve the lookup info for the next group
             final Lookup info = (Lookup) iter.next();
-            
+
             // --- skip if centering or system are different
-            if (info.centering != this.centering || info.system != this.crystalSystem) {
+            if (info.centering != centering || info.system != this.crystalSystem) {
                 continue;
             }
-            
+
             if (DEBUG > 0) {
                 System.err.println("  comparing with group " + info.name);
             }
@@ -919,53 +918,6 @@ public class SpaceGroupFinder {
         return this.crystalSystem;
     }
 
-    /**
-     * @return the centering code.
-     */
-    public char getCentering() {
-        return this.centering;
-    }
-    
-    /**
-     * @return the centering vectors.
-     */
-    public Vector[] getCenteringVectors() {
-        final Vector centeringVectors[];
-        final IArithmetic zero = Whole.ZERO;
-        final IArithmetic third = new Fraction(1, 3);
-        final IArithmetic half = new Fraction(1, 2);
-        final IArithmetic twoThirds = new Fraction(2, 3);
-        switch (centering) {
-        case 'P':
-            centeringVectors = new Vector[] {};
-            break;
-        case 'F':
-            centeringVectors = new Vector[] { new Vector(half, half, zero),
-                    new Vector(half, zero, half), new Vector(zero, half, half) };
-            break;
-        case 'A':
-            centeringVectors = new Vector[] { new Vector(zero, half, half) };
-            break;
-        case 'B':
-            centeringVectors = new Vector[] { new Vector(half, zero, half) };
-            break;
-        case 'C':
-            centeringVectors = new Vector[] { new Vector(half, half, zero) };
-            break;
-        case 'I':
-            centeringVectors = new Vector[] { new Vector(half, half, half) };
-            break;
-        case 'R':
-            centeringVectors = new Vector[] { new Vector(third, twoThirds, third),
-                    new Vector(twoThirds, third, twoThirds) };
-            break;
-        default:
-            throw new RuntimeException("unknown centering " + centering);
-        }
-
-        return centeringVectors;
-    }
-    
     /**
      * Returns the name of the group under inspection as according to the International
      * Tables.
