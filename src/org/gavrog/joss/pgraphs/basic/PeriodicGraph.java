@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.42 2005/12/03 12:01:18 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.43 2006/01/03 22:36:59 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1961,8 +1961,31 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- determine a coordinate mapping into a conventional cell
         final CoordinateChange C = finder.getToStd();
         
-        // --- determine the centering vectors
-        final Vector centeringVectors[] = finder.getCenteringVectors();
+        // --- find translation representatives modulo the unit lattice
+        final Set translations = new HashSet();
+        final int d = getDimension();
+            for (int i = 0; i < d; ++i) {
+            final Vector e = Vector.unit(d, i);
+            final Vector b = ((Vector) e.times(C)).modZ();
+            if (!translations.contains(b)) {
+                translations.add(b);
+            }
+        }
+        final LinkedList Q = new LinkedList();
+        Q.addAll(translations);
+        final Set gens = new HashSet();
+        gens.addAll(translations);
+        while (Q.size() > 0) {
+            final Vector s = (Vector) Q.removeFirst();
+            for (final Iterator iter = gens.iterator(); iter.hasNext();) {
+                final Vector t = (Vector) iter.next();
+                final Vector sum = ((Vector) s.plus(t)).modZ();
+                if (!translations.contains(sum)) {
+                    translations.add(sum);
+                    Q.addFirst(sum);
+                }
+            }
+        }
 
         // --- find node and edge representatives in the new coordinate system
         final Map pos = barycentricPlacement();
@@ -1986,9 +2009,8 @@ public class PeriodicGraph extends UndirectedGraph {
         
         for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
             final Point p = (Point) iter.next();
-            coverNodes.add(p.modZ());
-            for (int i = 0; i < centeringVectors.length; ++i) {
-                final Vector v = centeringVectors[i];
+            for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
+                final Vector v = (Vector) shifts.next();
                 final Point pv = (Point) p.plus(v);
                 coverNodes.add(pv.modZ());
             }
@@ -1999,10 +2021,8 @@ public class PeriodicGraph extends UndirectedGraph {
             final Pair e = (Pair) iter.next();
             final Point p = (Point) e.getFirst();
             final Point q = (Point) e.getSecond();
-            final Point r = p.modZ();
-            coverEdges.add(new Pair(r, q.minus(p).plus(r)));
-            for (int i = 0; i < centeringVectors.length; ++i) {
-                final Vector v = centeringVectors[i];
+            for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
+                final Vector v = (Vector) shifts.next();
                 final Point pv = (Point) p.plus(v);
                 final Point qv = (Point) q.plus(v);
                 final Point rv = pv.modZ();
