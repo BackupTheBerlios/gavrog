@@ -39,13 +39,14 @@ import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.systre.Archive;
 
 /**
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.27 2005/12/04 08:59:49 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.28 2006/01/03 22:38:05 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -678,6 +679,38 @@ public class TestPeriodicGraph extends TestCase {
     public void testConventionalCellCover() {
         testConventionalCellCover(dia);
         testConventionalCellCover(cds.minimalImage());
+        testConventionalCellCover(NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "  ID    sqc15\n"
+                + "  EDGES\n"
+                + "  1 1 1 0 1\n"
+                + "  1 1 0 1 0\n"
+                + "  1 1 1 1 0\n"
+                + "  1 1 1 0 0\n"
+                + "  1 1 0 0 1\n"
+                + "  1 1 0 1 1\n"
+                + "END\n"
+                ));
+        testConventionalCellCover(NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "   ID    sqc1135\n"
+                + "   EDGES\n"
+                + "     1   3 -1  -1  -1\n"
+                + "     1   1  0   0   1\n"
+                + "     1   2  0   0   0\n"
+                + "     1   3 -1   0   0\n"
+                + "     3   3  1   1   1\n"
+                + "     2   3  0   0   0\n"
+                + "     1   1  1   1   1\n"
+                + "     1   2  0   1   0\n"
+                + "     3   3  0   0   1\n"
+                + "     2   3  0  -1   0\n"
+                + "     1   4  0   0  -1\n"
+                + "     3   4  0   0   0\n"
+                + "     3   4  1   0   0\n"
+                + "     1   4 -1   0  -1\n"
+                + "END\n"
+        ));
     }
     
     public void testConventionalCellCover(final PeriodicGraph G) {
