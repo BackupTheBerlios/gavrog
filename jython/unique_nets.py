@@ -152,6 +152,10 @@ while 1:
             print "%2s" % s[i],
         print
 
+    # --- simple consistency tests for the conventional cell version
+    assert G == cover.minimalImage()
+    assert cover.isBarycentric(cover_pos)
+
     # --- don't crowd
     print
 
