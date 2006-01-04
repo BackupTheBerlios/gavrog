@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.43 2006/01/03 22:36:59 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.44 2006/01/04 13:10:01 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -773,6 +773,34 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- cache and return the result
         cache.put(BARYCENTRIC_PLACEMENT, result);
         return result;
+    }
+    
+    /**
+     * Checks whether a given node placement is barycentric.
+     * 
+     * @param pos a node placement.
+     * @return true if the placement is barycentric.
+     */
+    public boolean isBarycentric(final Map pos) {
+        for (final Iterator nodes = nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            final Point p = (Point) pos.get(v);
+            Vector t = Vector.zero(getDimension());
+            for (final Iterator iter = v.incidences(); iter.hasNext();) {
+                final IEdge e = (IEdge) iter.next();
+                final INode w = e.target();
+                if (w.equals(v)) {
+                    continue; // loops cancel out with their reverses
+                }
+                final Vector s = getShift(e);
+                final Point q = (Point) pos.get(w);
+                t = (Vector) t.plus(q).plus(s).minus(p);
+            }
+            if (!t.isZero()) {
+                return false;
+            }
+        }
+        return true;
     }
     
     /**

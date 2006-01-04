@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.28 2006/01/03 22:38:05 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.29 2006/01/04 13:10:05 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -187,11 +187,11 @@ public class TestPeriodicGraph extends TestCase {
     }
 
     public void testShiftNode() {
-        assertTrue(isBarycentric(G, G.barycentricPlacement()));
+        assertTrue(G.isBarycentric(G.barycentricPlacement()));
         G.shiftNode(v2, new Vector(1, 1, 0));
         final String s = "(1,1,[0,0,-1])(1,2,[-1,-1,0])(1,2,[-1,0,0])(2,2,[-1,0,0])";
         assertEquals(s, G.toString());
-        assertTrue(isBarycentric(G, G.barycentricPlacement()));
+        assertTrue(G.isBarycentric(G.barycentricPlacement()));
     }
     
     public void testGetShift() {
@@ -337,33 +337,10 @@ public class TestPeriodicGraph extends TestCase {
         assertTrue(H.isConnected());
     }
     
-    private boolean isBarycentric(final PeriodicGraph G, final Map pos) {
-        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            final Point p = (Point) pos.get(v);
-            Vector t = Vector.zero(G.getDimension());
-            for (final Iterator iter = v.incidences(); iter.hasNext();) {
-                final IEdge e = (IEdge) iter.next();
-                final INode w = e.target();
-                if (w.equals(v)) {
-                    continue; // loops cancel out with their reverses
-                }
-                final Vector s = G.getShift(e);
-                final Point q = (Point) pos.get(w);
-                t = (Vector) t.plus(q).plus(s).minus(p);
-            }
-            if (!t.isZero()) {
-                System.out.println(v + ": " + t + "!");
-                return false;
-            }
-        }
-        return true;
-    }
-    
     public void testBarycentricPositions() {
-        assertTrue(isBarycentric(G, G.barycentricPlacement()));
-        assertTrue(isBarycentric(dia, dia.barycentricPlacement()));
-        assertTrue(isBarycentric(cds, cds.barycentricPlacement()));
+        assertTrue(G.isBarycentric(G.barycentricPlacement()));
+        assertTrue(dia.isBarycentric(dia.barycentricPlacement()));
+        assertTrue(cds.isBarycentric(cds.barycentricPlacement()));
     }
     
     public void testIsStableAndIsLocallyStable() {
@@ -716,7 +693,7 @@ public class TestPeriodicGraph extends TestCase {
     public void testConventionalCellCover(final PeriodicGraph G) {
         final PeriodicGraph cov = G.conventionalCellCover();
         final Map pos = cov.barycentricPlacement();
-        assertTrue(isBarycentric(cov, pos));
+        assertTrue(cov.isBarycentric(pos));
         assertEquals(G, cov.minimalImage());
         for (final Iterator iter = cov.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
