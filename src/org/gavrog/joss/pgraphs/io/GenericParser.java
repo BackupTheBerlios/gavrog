@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.3 2005/11/17 07:36:58 odf Exp $
+ * @version $Id: GenericParser.java,v 1.4 2006/01/24 22:46:43 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
@@ -293,6 +293,35 @@ public class GenericParser {
             return null;
         } else {
             return Collections.unmodifiableList((List) entriesByKey.get(key));
+        }
+    }
+    
+    /**
+     * Retrieves entries for a specific key as a single string.
+     * 
+     * @param key the key to look up.
+     * @return the entries for the given key, concatenated into a single string.
+     */
+    public String getDataEntriesAsString(final String key) {
+        final List entries = getDataEntries(key);
+        if (entries == null) {
+            return null;
+        } else {
+            final StringBuffer buf = new StringBuffer(20);
+            for  (int i = 0; i < entries.size(); ++i) {
+                final Entry entry = (Entry) entries.get(i);
+                final List values = entry.values;
+                if (i > 0) {
+                    buf.append("; ");
+                }
+                for (int j = 0; j < values.size(); ++j) {
+                    if (j > 0) {
+                        buf.append(" ");
+                    }
+                    buf.append(String.valueOf(values.get(j)));
+                }
+            }
+            return buf.toString();
         }
     }
     
