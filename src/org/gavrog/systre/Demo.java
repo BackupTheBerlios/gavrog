@@ -21,34 +21,35 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.Real;
+import org.gavrog.box.collections.Iterators;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
+import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.13 2006/01/03 22:40:04 odf Exp $
+ * @version $Id: Demo.java,v 1.14 2006/01/24 22:48:03 odf Exp $
  */
 public class Demo {
-    private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
+//    private final static DecimalFormat fmtReal = new DecimalFormat("0.000000");
     
-    private static String format(final double x) {
-        return formatter.format(x);
-    }
+//    private static String formatReal(final double x) {
+//        return fmtReal.format(x);
+//    }
     
     /**
      * Returns the stack trace of a throwable as a string.
@@ -67,7 +68,9 @@ public class Demo {
     }
     
     
-    public static void run(final String arg) {
+    public static void run(final String filename) {
+        final PrintStream out = System.out;
+        
         final Package pkg = Archive.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
         final String archivePath = packagePath + "/rcsr.arc";
@@ -79,111 +82,114 @@ public class Demo {
         NetParser parser = null;
         int count = 0;
         try {
-            parser = new NetParser(new FileReader(arg));
+            parser = new NetParser(new FileReader(filename));
         } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
+            System.err.println("Could not find file \"" + filename + "\"");
+            return;
         }
+        
+        out.println("Data file \"" + filename + "\".");
+        
         while (true) {
-            final PeriodicGraph G = parser.parseNet();
+            PeriodicGraph G = parser.parseNet();
             if (G == null) {
                 break;
             }
             ++count;
-            System.out.println("Graph " + count + ":");
-            final int d = G.getDimension();
-            System.out.println("  dimension:\t\t" + d);
-            System.out.println("  number of nodes:\t" + G.numberOfNodes());
-            System.out.println("  number of edges:\t" + G.numberOfEdges());
-            System.out.flush();
-            System.out.println("  connected:\t\t" + (G.isConnected() ? "yes" : "no"));
-            System.out.flush();
-            System.out.println("  stable:\t\t" + (G.isStable() ? "yes" : "no"));
-            System.out.flush();
-            System.out.println("  locally stable:\t" + (G.isLocallyStable() ? "yes" : "no"));
-            System.out.flush();
-            
-            if (!G.isStable()) {
-                System.out.println("  --- further computations need stable graph ---");
-                System.out.println();
-                System.out.flush();
+            final String name = parser.getName();
+            if (name == null) {
+                out.println("Nameless structure.");
             } else {
-                final PeriodicGraph G1 = G.minimalImage();
-                final int r = G.numberOfNodes() / G1.numberOfNodes();
-                System.out.println("  extra translations:\t" + (r - 1));
-                if (r > 1) {
-                    System.out.println("  --- continuing with minimal repeat unit ---");
-                    System.out.println("  number of nodes:\t" + G1.numberOfNodes());
-                    System.out.println("  number of edges:\t" + G1.numberOfEdges());
-                    System.out.flush();
-                }
-                final List ops = G1.symmetryOperators();
-                System.out.println("  point symmetries:\t" + ops.size());
-                System.out.flush();
-                final SpaceGroup group = new SpaceGroup(d, ops);
-                final SpaceGroupFinder finder = new SpaceGroupFinder(group);
-                final String groupName = finder.getGroupName();
-                System.out.println("  spacegroup:\t\t"
-                                   + (groupName == null ? "not found" : groupName));
-                System.out.flush();
-                System.out.print("  coordination sequences:");
-                for (final Iterator orbits = G1.nodeOrbits(); orbits.hasNext();) {
-                    final Set orbit = (Set) orbits.next();
-                    final INode v = (INode) orbit.iterator().next();
-                    final Iterator cs = G1.coordinationSequence(v);
-                    for (int i = 0; i <= 10; ++i) {
-                        System.out.print(" " + ((Integer) cs.next()).intValue());
-                    }
-                    if (orbits.hasNext()) {
-                        System.out.print("\n\t\t\t ");
-                    }
-                }
-                System.out.println();
-                final String invariant = G1.invariant().toString();
-                if (invariant.length() <= 60) {
-                    System.out.println("  Systre key:\t\t" + invariant);
-                } else {
-                    System.out.println("  --- Systre key of length " + invariant.length() + " not displayed ---");
-                }
-                System.out.flush();
-                final Archive.Entry found  = rcsr.getByKey(invariant);
-                if (found == null) {
-                    System.out.println("  --- no recognized RCSR structure ---");
-                } else {
-                    System.out.println("  RCSR symbol:\t\t" + found.getName());
-                }
-                System.out.println("  Gram matrix configuration space: "
-                                   + group.configurationSpaceForGramMatrix());
-                
-                // --- relax the atom configuration
-                try {
-                    final SpringEmbedder relaxer = new SpringEmbedder(G);
-                    relaxer.steps(200);
-                    relaxer.normalize();
-                    final double stats[] = relaxer.edgeStatistics();
-                    final double min = stats[0];
-                    final double max = stats[1];
-                    final double avg = stats[2];
-                    final Matrix gr = relaxer.getGramMatrix();
-                    final double det = ((Real) gr.determinant()).doubleValue();
-                    final double vol = Math.sqrt(det) / G.numberOfNodes();
-                    System.out.println("    edge lengths min = " + format(min)
-                                       + ", max = " + format(max) + ", avg = "
-                                       + format(avg) + ";  volume/vertex = "
-                                       + format(vol));
-                } catch (Exception ex) {
-                    System.err.println(stackTrace(ex));
-                }
-
-                try {
-                    G.conventionalCellCover();
-                } catch (Exception ex) {
-                    System.err.println(stackTrace(ex));
-                }
-
-                System.out.println("Done.");
-                System.out.println();
-                System.out.flush();
+                out.println("Structure \"" + name + "\".");
             }
+            out.println();
+            out.println("   Given space group is " + parser.getSpaceGroup() + ".");
+            out.flush();
+
+            final int n = G.numberOfNodes();
+            final int m = G.numberOfEdges();
+            out.println("   " + n + " vert" + (n > 1 ? "ices" : "ex") + " and "
+                    + m + " edge" + (m > 1 ? "s" : "") + " in primitive cell as given.");
+            out.println();
+            out.flush();
+
+            if (!G.isConnected()) {
+                out.println("   Sorry, graph is not connected! Giving up.");
+                out.println();
+                out.flush();
+                continue;
+            }
+            if (!G.isStable()) {
+                out.println("   Sorry, graph has collisions! Giving up.");
+                out.println();
+                out.flush();
+                continue;
+            }
+            
+            G = G.minimalImage();
+            final int r = n / G.numberOfNodes();
+            if (r > 1) {
+                out.println("   WARNING: ideal repeat unit smaller than given ("
+                        + G.numberOfEdges() + " vs " + m + " edges).");
+            } else {
+                out.println("   Given primitive cell is accurate.");
+            }                
+            out.flush();
+            
+            final List ops = G.symmetryOperators();
+            out.println("   point group has " + ops.size() + " elements.");
+            out.flush();
+            final int k = Iterators.size(G.nodeOrbits());
+            out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of vertex.");
+            out.flush();
+            
+            final Map pos = G.barycentricPlacement();
+            out.println("   Coordination sequences:");
+            for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+                final Set orbit = (Set) orbits.next();
+                final INode v = (INode) orbit.iterator().next();
+                out.print("     (for vertex at [");
+                final Point p = (Point) pos.get(v);
+                for (int i = 0; i < p.getDimension(); ++i) {
+                    if (i > 0) {
+                        out.print(" ");
+                    }
+                    out.print(p.get(i));
+                }
+                out.print("])");
+                final Iterator cs = G.coordinationSequence(v);
+                cs.next();
+                for (int i = 0; i < 10; ++i) {
+                    out.print(" " + ((Integer) cs.next()).intValue());
+                }
+                out.println();
+            }
+            out.println();
+            out.flush();
+
+            final int d = G.getDimension();
+            final SpaceGroup group = new SpaceGroup(d, ops);
+            final SpaceGroupFinder finder = new SpaceGroupFinder(group);
+            final String groupName = finder.getGroupName();
+            out.println("   Ideal space group is " + groupName + ".");
+            final String givenName = SpaceGroupCatalogue.normalizedName(parser
+                    .getSpaceGroup());
+            if (givenName != groupName) {
+                out.println("   WARNING: Ideal group differs from given (" + groupName
+                        + " vs " + givenName + ").");
+            }
+            out.println();
+            out.flush();
+
+            final String invariant = G.invariant().toString();
+            final Archive.Entry found = rcsr.getByKey(invariant);
+            if (found == null) {
+                out.println("   Structure not in archive.");
+            } else {
+                out.println("   Structure was found in archive.");
+                out.println("   Name: " + found.getName());
+            }
+            out.flush();
         }
     }
     
