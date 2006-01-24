@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.59 2006/01/23 23:36:54 odf Exp $
+ * @version $Id: NetParser.java,v 1.60 2006/01/24 22:47:16 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -189,25 +189,21 @@ public class NetParser extends GenericParser {
      * @return everything present under the "name" of "id" key.
      */
     public String getName() {
-        final List entries = getDataEntries("name");
-        if (entries == null) {
-            return null;
+        return getDataEntriesAsString("name");
+    }
+    
+    /**
+     * Retrieves the specgroup given for the net last read, if any.
+     * 
+     * @return everything present under the "name" of "id" key.
+     */
+    public String getSpaceGroup() {
+        final String group = getDataEntriesAsString("group");
+        if (group == null) {
+            return "P1";
+        } else {
+            return group;
         }
-        final StringBuffer buf = new StringBuffer(20);
-        for  (int i = 0; i < entries.size(); ++i) {
-            final Entry entry = (Entry) entries.get(i);
-            final List values = entry.values;
-            if (i > 0) {
-                buf.append("; ");
-            }
-            for (int j = 0; j < values.size(); ++j) {
-                if (j > 0) {
-                    buf.append(" ");
-                }
-                buf.append(String.valueOf(values.get(j)));
-            }
-        }
-        return buf.toString();
     }
     
     /**
