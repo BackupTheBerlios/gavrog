@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.11 2005/10/24 05:17:44 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.12 2006/01/24 22:46:18 odf Exp $
  */
 public class SpaceGroupCatalogue {
     /**
@@ -199,6 +199,21 @@ public class SpaceGroupCatalogue {
     }
 
     /**
+     * Strips any extensions from the given space group name and translates it into the
+     * standard form found in the catalogue (as, e.g. "C2/c" becomes "C12/c1").
+     * @param name a space group name.
+     * @return the normalized name.
+     */
+    public static String normalizedName(final String name) {
+        final String base = name.split(":")[0];
+        if (aliases.containsKey(base)) {
+            return (String) aliases.get(base);
+        } else {
+            return base;
+        }
+    }
+    
+    /**
      * Retrieves information about a given space group setting. The setting is identified
      * by its name. Depending on the value of the <code>getOps</code> parameter, either
      * the operator list for that setting or the transformation used to obtain it from the
@@ -216,11 +231,7 @@ public class SpaceGroupCatalogue {
         final Table table = groupTables[dim];
     
         final String parts[] = name.split(":");
-        //String base = capitalized(parts[0]);
-        String base = parts[0];
-        if (aliases.containsKey(base)) {
-            base = (String) aliases.get(base);
-        }
+        final String base = normalizedName(name);
         final String ext = parts.length > 1 ? Strings.capitalized(parts[1]) : "";
         
         final String candidates[];
