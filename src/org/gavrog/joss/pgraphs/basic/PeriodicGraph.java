@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.44 2006/01/04 13:10:01 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.45 2006/01/25 00:34:23 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1565,6 +1565,25 @@ public class PeriodicGraph extends UndirectedGraph {
             for (final Iterator nodes = nodes(); nodes.hasNext();) {
                 final INode v = (INode) nodes.next();
                 P.unite(v, a.get(v));
+            }
+        }
+        return P.classes();
+    }
+    
+    /**
+     * Returns the orbits of the set of edges under the full combinatorial
+     * symmetry group.
+     * 
+     * @return an iterator over the set of orbits.
+     */
+    public Iterator edgeOrbits() {
+        final Partition P = new Partition();
+        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
+            final Morphism a = (Morphism) syms.next();
+            for (final Iterator edges = edges(); edges.hasNext();) {
+                final IEdge e = (IEdge) edges.next();
+                final IEdge ae = ((IEdge) a.get(e.oriented())).unoriented();
+                P.unite(e, ae);
             }
         }
         return P.classes();
