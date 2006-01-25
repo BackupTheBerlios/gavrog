@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.7 2005/11/22 03:35:48 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.8 2006/01/25 06:41:18 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -62,7 +62,7 @@ public class SpringEmbedder {
     }
     
     private static Matrix gram(final PeriodicGraph G) {
-        final Matrix M = (Matrix) G.symmetricBasis().inverse();
+        final Matrix M = G.symmetricBasis();
         return (Matrix) M.times(M.transposed());
     }
     
