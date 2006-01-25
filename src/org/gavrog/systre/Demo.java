@@ -24,33 +24,35 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.numbers.FloatingPoint;
+import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.14 2006/01/24 22:48:03 odf Exp $
+ * @version $Id: Demo.java,v 1.15 2006/01/25 06:41:42 odf Exp $
  */
 public class Demo {
-//    private final static DecimalFormat fmtReal = new DecimalFormat("0.000000");
-    
-//    private static String formatReal(final double x) {
-//        return fmtReal.format(x);
-//    }
-    
+    private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
+    private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
+
     /**
      * Returns the stack trace of a throwable as a string.
      * 
@@ -189,6 +191,35 @@ public class Demo {
                 out.println("   Structure was found in archive.");
                 out.println("   Name: " + found.getName());
             }
+            out.flush();
+            
+            final SpringEmbedder embedder = new SpringEmbedder(G);
+            //embedder.steps(200);
+            embedder.normalize();
+
+            final Matrix A = (Matrix) finder.getToStd().getBasis().inverse();
+            Matrix gram = embedder.getGramMatrix();
+            out.println(gram);
+            gram = (Matrix) A.times(gram).times(A.transposed());
+            out.println(gram);
+            final Real a = ((Real) gram.get(0, 0)).sqrt();
+            final Real b = ((Real) gram.get(1, 1)).sqrt();
+            final Real c = ((Real) gram.get(2, 2)).sqrt();
+            final Real f = new FloatingPoint(180.0 / Math.PI); 
+            final Real alpha = (Real) ((Real) gram.get(1, 2).dividedBy(b.times(c)))
+                    .acos().times(f);
+            final Real beta = (Real) ((Real) gram.get(0, 2).dividedBy(a.times(c))).acos()
+                    .times(f);
+            final Real gamma = (Real) ((Real) gram.get(0, 1).dividedBy(a.times(b)))
+                    .acos().times(f);
+            
+            out.println("   Cell parameters:");
+            out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
+                        + fmtReal5.format(b.doubleValue()) + ", c = "
+                        + fmtReal5.format(c.doubleValue()));
+            out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
+                        + ", beta = " + fmtReal4.format(beta.doubleValue())
+                        + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
             out.flush();
         }
     }
