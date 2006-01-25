@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.29 2006/01/04 13:10:05 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.30 2006/01/25 00:34:46 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -503,9 +503,13 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testOrbits() {
-        final List orbits = Iterators.asList(G.nodeOrbits());
-        assertEquals(1, orbits.size());
-        assertEquals(2, ((Set) orbits.get(0)).size());
+        final List nodeOrbits = Iterators.asList(G.nodeOrbits());
+        assertEquals(1, nodeOrbits.size());
+        assertEquals(2, ((Set) nodeOrbits.get(0)).size());
+        final List edgeOrbits = Iterators.asList(G.edgeOrbits());
+        assertEquals(2, edgeOrbits.size());
+        assertEquals(2, ((Set) edgeOrbits.get(0)).size());
+        assertEquals(2, ((Set) edgeOrbits.get(1)).size());
     }
     
     public void testCanonical() {
