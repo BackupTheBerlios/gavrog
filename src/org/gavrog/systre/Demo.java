@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
-import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
@@ -50,7 +49,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.16 2006/01/26 05:55:06 odf Exp $
+ * @version $Id: Demo.java,v 1.17 2006/01/26 06:33:55 odf Exp $
  */
 public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -148,20 +147,11 @@ public class Demo {
             out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of vertex.");
             out.flush();
             
-            final Map pos = G.barycentricPlacement();
             out.println("   Coordination sequences:");
             for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
                 final Set orbit = (Set) orbits.next();
                 final INode v = (INode) orbit.iterator().next();
-                out.print("     (for vertex at [");
-                final Point p = (Point) pos.get(v);
-                for (int i = 0; i < p.getDimension(); ++i) {
-                    if (i > 0) {
-                        out.print(" ");
-                    }
-                    out.print(p.get(i));
-                }
-                out.print("])");
+                out.print("      ");
                 final Iterator cs = G.coordinationSequence(v);
                 cs.next();
                 for (int i = 0; i < 10; ++i) {
@@ -196,8 +186,13 @@ public class Demo {
             }
             out.flush();
             
+            if (d != 3) {
+                out.println("Sorry, currently no refined output for dimension != 3.");
+                out.println();
+                out.flush();
+                continue;
+            }
             final SpringEmbedder embedder = new SpringEmbedder(G);
-            //embedder.setOptimizeCell(false);
             embedder.steps(200);
             embedder.normalize();
             final CoordinateChange A = (CoordinateChange) finder.getToStd().inverse();
@@ -217,13 +212,28 @@ public class Demo {
             final Real gamma = (Real) ((Real) Vector.dot(x, y, gram)
                     .dividedBy(a.times(b))).acos().times(f);
             
-            out.println("   Cell parameters:");
+            out.println("   Refined cell parameters:");
             out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
                         + fmtReal5.format(b.doubleValue()) + ", c = "
                         + fmtReal5.format(c.doubleValue()));
             out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
                         + ", beta = " + fmtReal4.format(beta.doubleValue())
                         + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
+            final Map pos = embedder.getPositions();
+            out.println("   Refined atom positions:");
+            for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+                final Set orbit = (Set) orbits.next();
+                final INode v = (INode) orbit.iterator().next();
+                final Point p = ((Point) ((Point) pos.get(v)).times(A)).modZ();
+                out.print("     ");
+                for (int i = 0; i < d; ++i) {
+                    out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
+                }
+                out.println();
+            }
+            
+            out.println();
+            out.println();
             out.println();
             out.flush();
         }
