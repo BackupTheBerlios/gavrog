@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.8 2006/01/25 06:41:18 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.9 2006/01/26 05:54:40 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -44,6 +44,8 @@ public class SpringEmbedder {
     private Operator gramProjection;
     private double lastPositionChangeAmount = 0;
     private double lastCellChangeAmount = 0;
+    private boolean optimizeCell = true;
+    private boolean optimizePositions = true;
 
     public SpringEmbedder(final PeriodicGraph graph, final Map positions,
             final Matrix gramMatrix) {
@@ -213,10 +215,21 @@ public class SpringEmbedder {
 
     public int steps(final int n) {
         for (int i = 1; i <= n; ++i) {
-            step();
-            stepCell();
-            final double cellChange = getLastCellChangeAmount();
-            final double posChange = getLastPositionChangeAmount();
+            final double posChange;
+            final double cellChange;
+            
+            if (getOptimizePositions()) {
+                step();
+                posChange = getLastPositionChangeAmount();
+            } else {
+                posChange = 0.0;
+            }
+            if (getOptimizeCell()) {
+                stepCell();
+                cellChange = getLastCellChangeAmount();
+            } else {
+                cellChange = 0.0;
+            }
             if (Math.abs(cellChange) < 1e-4 && Math.abs(posChange) < 1e-4) {
                 return i;
             }
@@ -353,5 +366,30 @@ public class SpringEmbedder {
                 System.out.println();
             }
         }
+    }
+    
+    /**
+     * @return Returns the optimizeCell.
+     */
+    public boolean getOptimizeCell() {
+        return optimizeCell;
+    }
+    /**
+     * @param optimizeCell The optimizeCell to set.
+     */
+    public void setOptimizeCell(boolean optimizeCell) {
+        this.optimizeCell = optimizeCell;
+    }
+    /**
+     * @return Returns the optimizePositions.
+     */
+    public boolean getOptimizePositions() {
+        return optimizePositions;
+    }
+    /**
+     * @param optimizePositions The optimizePositions to set.
+     */
+    public void setOptimizePositions(boolean optimizePositions) {
+        this.optimizePositions = optimizePositions;
     }
 }
