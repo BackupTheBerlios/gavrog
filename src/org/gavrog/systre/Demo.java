@@ -31,13 +31,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
+import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
@@ -47,7 +50,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.15 2006/01/25 06:41:42 odf Exp $
+ * @version $Id: Demo.java,v 1.16 2006/01/26 05:55:06 odf Exp $
  */
 public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -176,7 +179,7 @@ public class Demo {
             out.println("   Ideal space group is " + groupName + ".");
             final String givenName = SpaceGroupCatalogue.normalizedName(parser
                     .getSpaceGroup());
-            if (givenName != groupName) {
+            if (!givenName.equals(groupName)) {
                 out.println("   WARNING: Ideal group differs from given (" + groupName
                         + " vs " + givenName + ").");
             }
@@ -194,24 +197,25 @@ public class Demo {
             out.flush();
             
             final SpringEmbedder embedder = new SpringEmbedder(G);
-            //embedder.steps(200);
+            //embedder.setOptimizeCell(false);
+            embedder.steps(200);
             embedder.normalize();
-
-            final Matrix A = (Matrix) finder.getToStd().getBasis().inverse();
-            Matrix gram = embedder.getGramMatrix();
-            out.println(gram);
-            gram = (Matrix) A.times(gram).times(A.transposed());
-            out.println(gram);
-            final Real a = ((Real) gram.get(0, 0)).sqrt();
-            final Real b = ((Real) gram.get(1, 1)).sqrt();
-            final Real c = ((Real) gram.get(2, 2)).sqrt();
-            final Real f = new FloatingPoint(180.0 / Math.PI); 
-            final Real alpha = (Real) ((Real) gram.get(1, 2).dividedBy(b.times(c)))
+            final CoordinateChange A = (CoordinateChange) finder.getToStd().inverse();
+            final Matrix gram = embedder.getGramMatrix();
+            final Vector x = (Vector) Vector.unit(3, 0).times(A);
+            final Vector y = (Vector) Vector.unit(3, 1).times(A);
+            final Vector z = (Vector) Vector.unit(3, 2).times(A);
+            
+            final Real a = ((Real) Vector.dot(x, x, gram)).sqrt();
+            final Real b = ((Real) Vector.dot(y, y, gram)).sqrt();
+            final Real c = ((Real) Vector.dot(z, z, gram)).sqrt();
+            final Real f = new FloatingPoint(180.0 / Math.PI);
+            final Real alpha = (Real) ((Real) Vector.dot(y, z, gram)
+                    .dividedBy(b.times(c))).acos().times(f);
+            final Real beta = (Real) ((Real) Vector.dot(x, z, gram).dividedBy(a.times(c)))
                     .acos().times(f);
-            final Real beta = (Real) ((Real) gram.get(0, 2).dividedBy(a.times(c))).acos()
-                    .times(f);
-            final Real gamma = (Real) ((Real) gram.get(0, 1).dividedBy(a.times(b)))
-                    .acos().times(f);
+            final Real gamma = (Real) ((Real) Vector.dot(x, y, gram)
+                    .dividedBy(a.times(b))).acos().times(f);
             
             out.println("   Cell parameters:");
             out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
@@ -220,6 +224,7 @@ public class Demo {
             out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
                         + ", beta = " + fmtReal4.format(beta.doubleValue())
                         + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
+            out.println();
             out.flush();
         }
     }
