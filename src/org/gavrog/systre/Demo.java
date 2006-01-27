@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.18 2006/01/27 03:50:56 odf Exp $
+ * @version $Id: Demo.java,v 1.19 2006/01/27 04:55:54 odf Exp $
  */
 public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -193,8 +193,13 @@ public class Demo {
                 out.flush();
                 continue;
             }
-            final SpringEmbedder embedder = new SpringEmbedder(G);
-            embedder.steps(200);
+            SpringEmbedder embedder = new SpringEmbedder(G);
+            try {
+                embedder.steps(200);
+            } catch (Exception ex) {
+                System.err.println(stackTrace(ex));
+                embedder = new SpringEmbedder(G);
+            }
             embedder.normalize();
             final CoordinateChange toStd = finder.getToStd();
             final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
@@ -248,7 +253,7 @@ public class Demo {
                 for (int i = 0; i < d; ++i) {
                     out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
                 }
-                out.print(" -> ");
+                out.print("  <-> ");
                 for (int i = 0; i < d; ++i) {
                     out.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
                 }
