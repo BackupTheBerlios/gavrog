@@ -103,7 +103,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.9 2006/01/03 22:41:17 odf Exp $
+ * @version $Id: NetViewer.java,v 1.10 2006/01/27 05:05:36 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -456,9 +456,15 @@ public class NetViewer extends Applet {
         final PeriodicGraph G = this.net;
         
         // --- relax the atom configuration
-        final SpringEmbedder relaxer = new SpringEmbedder(G);
+        SpringEmbedder relaxer = new SpringEmbedder(G);
         if (relax) {
-            relaxer.steps(200);
+            try {
+                relaxer.steps(200);
+            } catch (Exception ex) {
+                relaxer = new SpringEmbedder(G);
+                relaxer.setOptimizeCell(false);
+                relaxer.steps(200);
+            }
         }
         relaxer.normalize();
         final double stats[] = relaxer.edgeStatistics();
