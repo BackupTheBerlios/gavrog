@@ -40,6 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
@@ -49,7 +50,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.17 2006/01/26 06:33:55 odf Exp $
+ * @version $Id: Demo.java,v 1.18 2006/01/27 03:50:56 odf Exp $
  */
 public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -195,12 +196,13 @@ public class Demo {
             final SpringEmbedder embedder = new SpringEmbedder(G);
             embedder.steps(200);
             embedder.normalize();
-            final CoordinateChange A = (CoordinateChange) finder.getToStd().inverse();
+            final CoordinateChange toStd = finder.getToStd();
+            final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
             final Matrix gram = embedder.getGramMatrix();
-            final Vector x = (Vector) Vector.unit(3, 0).times(A);
-            final Vector y = (Vector) Vector.unit(3, 1).times(A);
-            final Vector z = (Vector) Vector.unit(3, 2).times(A);
-            
+            final Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
+            final Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
+            final Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
+
             final Real a = ((Real) Vector.dot(x, x, gram)).sqrt();
             final Real b = ((Real) Vector.dot(y, y, gram)).sqrt();
             final Real c = ((Real) Vector.dot(z, z, gram)).sqrt();
@@ -211,7 +213,7 @@ public class Demo {
                     .acos().times(f);
             final Real gamma = (Real) ((Real) Vector.dot(x, y, gram)
                     .dividedBy(a.times(b))).acos().times(f);
-            
+
             out.println("   Refined cell parameters:");
             out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
                         + fmtReal5.format(b.doubleValue()) + ", c = "
@@ -224,14 +226,35 @@ public class Demo {
             for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
                 final Set orbit = (Set) orbits.next();
                 final INode v = (INode) orbit.iterator().next();
-                final Point p = ((Point) ((Point) pos.get(v)).times(A)).modZ();
+                final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
                 out.print("     ");
                 for (int i = 0; i < d; ++i) {
                     out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
                 }
                 out.println();
             }
-            
+            out.println("   Edges:");
+            for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
+                final Set orbit = (Set) orbits.next();
+                final IEdge e = (IEdge) orbit.iterator().next();
+                final INode v = e.source();
+                final INode w = e.target();
+                final Point p = ((Point) ((Point) pos.get(v)).times(toStd));
+                final Point q = (Point) ((Point) pos.get(w)).plus(G.getShift(e)).times(
+                        toStd);
+                final Point p0 = p.modZ();
+                final Point q0 = (Point) q.minus(p.minus(p0));
+                out.print("     ");
+                for (int i = 0; i < d; ++i) {
+                    out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
+                }
+                out.print(" -> ");
+                for (int i = 0; i < d; ++i) {
+                    out.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
+                }
+                out.println();
+            }
+
             out.println();
             out.println();
             out.println();
