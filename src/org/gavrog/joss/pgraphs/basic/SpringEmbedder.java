@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.9 2006/01/26 05:54:40 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.10 2006/01/27 05:54:17 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -202,9 +202,16 @@ public class SpringEmbedder {
             dE = (Matrix) dE.times(Vector.dot(d, d, G).minus(1)).times(4);
             dG = (Matrix) dG.plus(dE);
         }
-
+        final IArithmetic norm = dG.norm();
+        final IArithmetic scale;
+        if (norm.isGreaterThan(new FloatingPoint(0.1))) {
+            scale = new FloatingPoint(0.1).dividedBy(norm);
+        } else {
+            scale = new FloatingPoint(1);
+        }
+        
         final Point before = encodeGramMatrix();
-        this.gramMatrix = (Matrix) G.minus(dG.times(0.1));
+        this.gramMatrix = (Matrix) G.minus(dG.times(scale));
         decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
         normalize();
         final Point after = encodeGramMatrix();
