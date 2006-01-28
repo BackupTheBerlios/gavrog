@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.10 2006/01/27 05:54:17 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.11 2006/01/28 03:19:45 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -164,6 +164,10 @@ public class SpringEmbedder {
 
     public void stepCell() {
         final int dim = this.graph.getDimension();
+        
+        // --- scale so shortest edge has unit length
+        normalizeUp();
+
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
 
@@ -213,7 +217,6 @@ public class SpringEmbedder {
         final Point before = encodeGramMatrix();
         this.gramMatrix = (Matrix) G.minus(dG.times(scale));
         decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
-        normalize();
         final Point after = encodeGramMatrix();
         
         final Vector d = (Vector) after.minus(before);
