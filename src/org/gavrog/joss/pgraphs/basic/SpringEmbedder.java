@@ -20,8 +20,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -35,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.11 2006/01/28 03:19:45 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.12 2006/01/28 06:18:44 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -46,7 +49,40 @@ public class SpringEmbedder {
     private double lastCellChangeAmount = 0;
     private boolean optimizeCell = true;
     private boolean optimizePositions = true;
+    private final Set angles;
 
+    private class Angle {
+        final public INode v;
+        final public INode w;
+        final public Vector s;
+        
+        public Angle(final INode v, final INode w, final Vector s) {
+            this.v = v;
+            this.w = w;
+            this.s = s;
+        }
+        
+        public boolean equals(final Object other) {
+            if (!(other instanceof Angle)) {
+                return false;
+            }
+            final Angle a = (Angle) other;
+            return (this.v.equals(a.v) && this.w.equals(a.w) && this.s.equals(a.s))
+                   || (this.v.equals(a.w) && this.w.equals(a.v) && this.s.equals(a.s
+                           .negative()));
+        }
+        
+        public int hashCode() {
+            final int hv = this.v.hashCode();
+            final int hw = this.w.hashCode();
+            if (hv <= hw) {
+                return (hv * 37 + hw) * 37 + this.s.hashCode();
+            } else {
+                return (hw * 37 + hv) * 37 + this.s.negative().hashCode();
+            }
+        }
+    }
+    
     public SpringEmbedder(final PeriodicGraph graph, final Map positions,
             final Matrix gramMatrix) {
         this.graph = graph;
@@ -56,9 +92,32 @@ public class SpringEmbedder {
         final int d = graph.getDimension();
         final SpaceGroup G = new SpaceGroup(d, graph.symmetryOperators());
         final Matrix M = G.configurationSpaceForGramMatrix();
-        this.gramProjection = Operator.orthogonalProjection(M, Matrix.one(d * (d+1) / 2));
+        this.gramProjection = Operator.orthogonalProjection(M, Matrix
+                .one(d * (d + 1) / 2));
+        this.angles = angles();
     }
 
+    private Set angles() {
+        final HashSet result = new HashSet();
+        for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            final List incidences = this.graph.allIncidences(v);
+            final int n = incidences.size();
+            for (int i = 0; i < n-1; ++i) {
+                final IEdge e1 = (IEdge) incidences.get(i);
+                final INode w1 = e1.target();
+                for (int j = i+1; j < n; ++j) {
+                    final IEdge e2 = (IEdge) incidences.get(j);
+                    final INode w2 = e2.target();
+                    final Vector s = (Vector) this.graph.getShift(e2).minus(
+                            this.graph.getShift(e1));
+                    result.add(new Angle(w1, w2, s));
+                }
+            }
+        }
+        return result;
+    }
+    
     public SpringEmbedder(final PeriodicGraph G) {
         this(G, G.barycentricPlacement(), gram(G));
     }
@@ -165,8 +224,8 @@ public class SpringEmbedder {
     public void stepCell() {
         final int dim = this.graph.getDimension();
         
-        // --- scale so shortest edge has unit length
-        normalizeUp();
+        // --- scale so average edge has unit length
+        normalize();
 
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
@@ -206,6 +265,8 @@ public class SpringEmbedder {
             dE = (Matrix) dE.times(Vector.dot(d, d, G).minus(1)).times(4);
             dG = (Matrix) dG.plus(dE);
         }
+        
+       // --- determine the step size
         final IArithmetic norm = dG.norm();
         final IArithmetic scale;
         if (norm.isGreaterThan(new FloatingPoint(0.1))) {
@@ -214,6 +275,7 @@ public class SpringEmbedder {
             scale = new FloatingPoint(1);
         }
         
+        // --- apply the step
         final Point before = encodeGramMatrix();
         this.gramMatrix = (Matrix) G.minus(dG.times(scale));
         decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
