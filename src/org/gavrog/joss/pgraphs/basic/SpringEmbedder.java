@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.13 2006/01/29 00:21:25 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.14 2006/01/29 00:25:52 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -95,6 +95,9 @@ public class SpringEmbedder {
         this.gramProjection = Operator.orthogonalProjection(M, Matrix
                 .one(d * (d + 1) / 2));
         this.angles = angles();
+        if (this.angles == null) {
+            throw new RuntimeException("something wrong here");
+        }
     }
 
     private Set angles() {
@@ -158,11 +161,6 @@ public class SpringEmbedder {
 
     public void normalize() {
         final double avg = edgeStatistics()[2];
-        this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
-    }
-
-    private void normalizeUp() {
-        final double avg = edgeStatistics()[0];
         this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
     }
 
