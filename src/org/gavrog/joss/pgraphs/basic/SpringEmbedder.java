@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.12 2006/01/28 06:18:44 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.13 2006/01/29 00:21:25 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -170,7 +170,7 @@ public class SpringEmbedder {
         // TODO keep symmetries intact
 
         // --- scale so shortest edge has unit length
-        normalizeUp();
+        normalize();
 
         // --- initialize displacements
         final Map deltas = new HashMap();
@@ -190,11 +190,11 @@ public class SpringEmbedder {
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
             final double length = length(d);
-            if (length > 1) {
+            //if (length > 1) {
                 final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
                 move(deltas, v, movement);
                 move(deltas, w, (Vector) movement.negative());
-            }
+            //}
         }
 
         // --- limit and apply displacements
