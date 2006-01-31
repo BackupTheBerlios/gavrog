@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.21 2006/01/30 23:35:41 odf Exp $
+ * @version $Id: Demo.java,v 1.22 2006/01/31 03:13:18 odf Exp $
  */
 public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -240,6 +240,12 @@ public class Demo {
             }
             embedder.normalize();
 
+            // --- set up a buffer to write a Systre readable output description to
+            final StringWriter cgdStringWriter = new StringWriter();
+            final PrintWriter cgd = new PrintWriter(cgdStringWriter);
+            cgd.println("CRYSTAL");
+            cgd.println("  GROUP " + groupName);
+            
             // --- print the results of the relaxation in the conventional setting
             final Matrix gram = embedder.getGramMatrix();
             final Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
@@ -265,19 +271,28 @@ public class Demo {
             out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
                         + ", beta = " + fmtReal4.format(beta.doubleValue())
                         + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
-            final Map pos = embedder.getPositions();
+            cgd.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
+                        + fmtReal5.format(b.doubleValue()) + " "
+                        + fmtReal5.format(c.doubleValue()) + " "
+                        + fmtReal4.format(alpha.doubleValue()) + " "
+                        + fmtReal4.format(beta.doubleValue()) + " "
+                        + fmtReal4.format(gamma.doubleValue()));
             
             //    ... print the atom positions
             out.println("   Refined atom positions:");
+            final Map pos = embedder.getPositions();
             for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
                 final Set orbit = (Set) orbits.next();
                 final INode v = (INode) orbit.iterator().next();
                 final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
                 out.print("     ");
+                cgd.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
                 for (int i = 0; i < d; ++i) {
                     out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
+                    cgd.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
                 }
                 out.println();
+                cgd.println();
             }
             
             //    ... print the edges
@@ -293,16 +308,30 @@ public class Demo {
                 final Point p0 = p.modZ();
                 final Point q0 = (Point) q.minus(p.minus(p0));
                 out.print("     ");
+                cgd.print("  EDGE ");
                 for (int i = 0; i < d; ++i) {
                     out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
+                    cgd.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
                 }
                 out.print("  <-> ");
+                cgd.print("  ");
                 for (int i = 0; i < d; ++i) {
                     out.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
+                    cgd.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
                 }
                 out.println();
+                cgd.println();
             }
             out.println();
+            cgd.println("END");
+            cgd.println();
+            cgd.flush();
+            final String cgdString = cgdStringWriter.toString();
+            final PeriodicGraph test = NetParser.stringToNet(cgdString);
+            if (!test.equals(G)) {
+                final String msg = "Internal error: output does not match original graph";
+                throw new RuntimeException(msg);
+            }
 
             // --- some blank lines as separators
             out.println();
