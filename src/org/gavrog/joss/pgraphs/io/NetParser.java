@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.60 2006/01/24 22:47:16 odf Exp $
+ * @version $Id: NetParser.java,v 1.61 2006/01/31 03:11:55 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -783,16 +783,33 @@ public class NetParser extends GenericParser {
         
         // --- construct a Dirichlet domain for the translation group
         final Vector basis[] = Vector.rowVectors(Matrix.one(group.getDimension()));
+        if (DEBUG) {
+            System.err.println("Computing Dirichlet vectors...");
+        }
         final Vector dirichletVectors[] = Vector.dirichletVectors(basis, cellGram);
+        if (DEBUG) {
+            for (int i = 0; i < dirichletVectors.length; ++i) {
+                System.err.println("  " + dirichletVectors[i]);
+            }
+        }
         
         // --- shift generated nodes into the Dirichlet domain
         for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Point p = (Point) nodeToPosition.get(v);
             // --- shift into Dirichlet domain
+            if (DEBUG) {
+                System.err.println("Shifting " + p + " into Dirichlet domain...");
+            }
             final Vector shift = dirichletShifts(p, dirichletVectors, cellGram, 1)[0];
+            if (DEBUG) {
+                System.err.println("  shift is " + shift);
+            }
             nodeToPosition.put(v, p.plus(shift));
             G.shiftNode(v, shift);
+            if (DEBUG) {
+                System.err.println("  shifting done");
+            }
         }
         
         // --- compute nodes in two times extended Dirichlet domain
@@ -1084,13 +1101,16 @@ public class NetParser extends GenericParser {
     private static Vector[] dirichletShifts(final Point pos,
             final Vector dirichletVectors[], final Matrix metric, final int factor) {
 
-        final Whole one = Whole.ONE;
         final int dim = pos.getDimension();
         final Real half = new Fraction(1, 2);
         final Real minusHalf = new Fraction(-1, 2);
         final double eps = 1e-8;
         final Vector posAsVector = (Vector) pos.minus(Point.origin(dim));
         Vector shift = Vector.zero(dim);
+        if (DEBUG) {
+            System.err.print("    " + shift);
+            System.err.flush();
+        }
         
         // --- compute the first shift
         while (true) {
@@ -1101,16 +1121,23 @@ public class NetParser extends GenericParser {
                 final Vector p = (Vector) posAsVector.plus(shift);
                 final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
                 if (q.isGreaterThan(half.plus(eps))) {
-                    shift = (Vector) shift.minus(v.times(q.floor().plus(one)));
+                    shift = (Vector) shift.minus(v.times(q.plus(half).floor()));
                     changed = true;
                 } else if (q.isLessOrEqual(minusHalf)) {
-                    shift = (Vector) shift.minus(v.times(q.floor()));
+                    shift = (Vector) shift.minus(v.times(q.plus(half).minus(eps).floor()));
                     changed = true;
+                }
+                if (DEBUG && changed) {
+                    System.err.print(" -> " + shift);
+                    System.err.flush();
                 }
             }
             if (!changed) {
                 break;
             }
+        }
+        if (DEBUG) {
+            System.err.println();
         }
         
         // --- compute further shifts
