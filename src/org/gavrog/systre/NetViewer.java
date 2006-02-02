@@ -103,7 +103,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.13 2006/01/31 07:18:21 odf Exp $
+ * @version $Id: NetViewer.java,v 1.14 2006/02/02 03:00:02 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -459,26 +459,25 @@ public class NetViewer extends Applet {
         SpringEmbedder relaxer = new SpringEmbedder(G);
         boolean error = false;
         if (relax) {
-            try {
-                relaxer.setOptimizePositions(false);
-                relaxer.steps(1000);
-            } catch (Exception ex) {
-                status.setText("Internal error during unit cell refinement!");
-                error = true;
-                relaxer = new SpringEmbedder(G);
-            }
-            embedder.normalize();
 //            try {
 //                relaxer.setOptimizePositions(false);
-//                relaxer.steps(200);
-//                relaxer.setOptimizePositions(true);
-//                relaxer.steps(200);
+//                relaxer.steps(1000);
 //            } catch (Exception ex) {
-//                status.setText("Could not relax unit cell parameters");
+//                status.setText("Internal error during unit cell refinement!");
+//                error = true;
 //                relaxer = new SpringEmbedder(G);
-//                relaxer.setOptimizeCell(false);
-//                relaxer.steps(200);
 //            }
+            try {
+                relaxer.setOptimizePositions(false);
+                relaxer.steps(200);
+                relaxer.setOptimizePositions(true);
+                relaxer.steps(200);
+            } catch (Exception ex) {
+                status.setText("Could not relax unit cell parameters");
+                relaxer = new SpringEmbedder(G);
+                relaxer.setOptimizeCell(false);
+                relaxer.steps(200);
+            }
         }
         relaxer.normalize();
         final double stats[] = relaxer.edgeStatistics();

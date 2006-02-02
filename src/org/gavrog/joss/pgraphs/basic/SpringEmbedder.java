@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.15 2006/01/29 04:54:58 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.16 2006/02/02 03:00:07 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -179,6 +179,7 @@ public class SpringEmbedder {
         }
 
         // --- compute displacements
+        //    ... using edge forces
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
             final INode v = e.source();
@@ -188,11 +189,26 @@ public class SpringEmbedder {
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
             final double length = length(d);
-            //if (length > 1) {
-                final Vector movement = (Vector) d.times(0.5 * (length - 1) / length);
-                move(deltas, v, movement);
-                move(deltas, w, (Vector) movement.negative());
-            //}
+            final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
+            move(deltas, v, (Vector) movement.times(0.5));
+            move(deltas, w, (Vector) movement.times(-0.5));
+        }
+        //    ... using angle forces
+        for (final Iterator angles = this.angles.iterator(); angles.hasNext();) {
+            final Angle a = (Angle) angles.next();
+            final INode v = a.v;
+            final INode w = a.w;
+            final Point pv = (Point) this.positions.get(v);
+            final Point pw = (Point) this.positions.get(w);
+            final Vector s = a.s;
+            final Vector d = (Vector) pw.plus(s).minus(pv);
+            final double length = length(d);
+            if (length < 1.0) {
+                final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
+                // --- make these forces smaller
+                move(deltas, v, (Vector) movement.times(0.25));
+                move(deltas, w, (Vector) movement.times(-0.25));
+            }
         }
 
         // --- limit and apply displacements
@@ -260,8 +276,32 @@ public class SpringEmbedder {
                     dE.set(j, i, x);
                 }
             }
-            dE = (Matrix) dE.times(Vector.dot(d, d, G).minus(1)).times(4);
-            dG = (Matrix) dG.plus(dE);
+            dE = (Matrix) dE.times(1.0 - 1.0 / length(d));
+            dG = (Matrix) dG.plus(dE.times(2));
+        }
+        // --- do the same with the angle energies
+        for (final Iterator angles = this.angles.iterator(); angles.hasNext();) {
+            final Angle a = (Angle) angles.next();
+            final INode v = a.v;
+            final INode w = a.w;
+            final Point pv = (Point) this.positions.get(v);
+            final Point pw = (Point) this.positions.get(w);
+            final Vector s = a.s;
+            final Vector d = (Vector) pw.plus(s).minus(pv);
+            final double length = length(d);
+            if (length < 1.0) {
+                Matrix dE = new Matrix(dim, dim);
+                for (int i = 0; i < dim; ++i) {
+                    dE.set(i, i, d.get(i).raisedTo(2));
+                    for (int j = 0; j < i; ++j) {
+                        final Real x = (Real) d.get(i).times(d.get(j)).times(2);
+                        dE.set(i, j, x);
+                        dE.set(j, i, x);
+                    }
+                }
+                dE = (Matrix) dE.times(1.0 - 1.0 / length(d));
+                dG = (Matrix) dG.plus(dE.times(1));
+            }
         }
         
        // --- determine the step size
