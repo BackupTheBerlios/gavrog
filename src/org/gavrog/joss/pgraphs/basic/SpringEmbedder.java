@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.16 2006/02/02 03:00:07 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.17 2006/02/02 05:02:38 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -189,9 +189,11 @@ public class SpringEmbedder {
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
             final double length = length(d);
-            final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
-            move(deltas, v, (Vector) movement.times(0.5));
-            move(deltas, w, (Vector) movement.times(-0.5));
+            if (length > 1.0) {
+                final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
+                move(deltas, v, (Vector) movement.times(0.5));
+                move(deltas, w, (Vector) movement.times(-0.5));
+            }
         }
         //    ... using angle forces
         for (final Iterator angles = this.angles.iterator(); angles.hasNext();) {
@@ -205,9 +207,9 @@ public class SpringEmbedder {
             final double length = length(d);
             if (length < 1.0) {
                 final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
-                // --- make these forces smaller
-                move(deltas, v, (Vector) movement.times(0.25));
-                move(deltas, w, (Vector) movement.times(-0.25));
+                // --- smaller than edge forces
+                move(deltas, v, (Vector) movement.times(0.125));
+                move(deltas, w, (Vector) movement.times(-0.125));
             }
         }
 
@@ -267,17 +269,20 @@ public class SpringEmbedder {
             final Point pw = (Point) this.positions.get(w);
             final Vector s = this.graph.getShift(e);
             final Vector d = (Vector) pw.plus(s).minus(pv);
-            Matrix dE = new Matrix(dim, dim);
-            for (int i = 0; i < dim; ++i) {
-                dE.set(i, i, d.get(i).raisedTo(2));
-                for (int j = 0; j < i; ++j) {
-                    final Real x = (Real) d.get(i).times(d.get(j)).times(2);
-                    dE.set(i, j, x);
-                    dE.set(j, i, x);
+            final double length = length(d);
+            if (length > 1.0) {
+                Matrix dE = new Matrix(dim, dim);
+                for (int i = 0; i < dim; ++i) {
+                    dE.set(i, i, d.get(i).raisedTo(2));
+                    for (int j = 0; j < i; ++j) {
+                        final Real x = (Real) d.get(i).times(d.get(j)).times(2);
+                        dE.set(i, j, x);
+                        dE.set(j, i, x);
+                    }
                 }
+                dE = (Matrix) dE.times(1.0 - 1.0 / length);
+                dG = (Matrix) dG.plus(dE.times(2));
             }
-            dE = (Matrix) dE.times(1.0 - 1.0 / length(d));
-            dG = (Matrix) dG.plus(dE.times(2));
         }
         // --- do the same with the angle energies
         for (final Iterator angles = this.angles.iterator(); angles.hasNext();) {
@@ -299,8 +304,8 @@ public class SpringEmbedder {
                         dE.set(j, i, x);
                     }
                 }
-                dE = (Matrix) dE.times(1.0 - 1.0 / length(d));
-                dG = (Matrix) dG.plus(dE.times(1));
+                dE = (Matrix) dE.times(1.0 - 1.0 / length);
+                dG = (Matrix) dG.plus(dE.times(0.5));
             }
         }
         
