@@ -50,7 +50,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.23 2006/01/31 07:18:21 odf Exp $
+ * @version $Id: Demo.java,v 1.24 2006/02/02 05:16:51 odf Exp $
  */
 public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -228,25 +228,17 @@ public class Demo {
 
             // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
             SpringEmbedder embedder = new SpringEmbedder(G);
-//            try {
-//                embedder.setOptimizePositions(false);
-//                embedder.steps(200);
-//                embedder.setOptimizePositions(true);
-//                embedder.steps(200);
-//            } catch (Exception ex) {
-//                System.err.println(stackTrace(ex));
-//                System.err
-//                        .println("Could not refine cell parameters due to internal error!");
-//                embedder = new SpringEmbedder(G);
-//                embedder.setOptimizeCell(false);
-//                embedder.steps(200);
-//            }
             try {
                 embedder.setOptimizePositions(false);
                 embedder.steps(200);
+                embedder.setOptimizePositions(true);
+                embedder.steps(500);
             } catch (Exception ex) {
-                System.err.println("Internal error during unit cell refinement!");
+                System.err.println(stackTrace(ex));
+                System.err.println("Internal error while relaxing!");
                 embedder = new SpringEmbedder(G);
+                embedder.setOptimizeCell(false);
+                embedder.steps(200);
             }
             embedder.normalize();
 
