@@ -27,6 +27,7 @@ import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,12 +51,18 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.24 2006/02/02 05:16:51 odf Exp $
+ * @version $Id: Demo.java,v 1.25 2006/02/06 01:13:07 odf Exp $
  */
 public class Demo {
+    static {
+        Locale.setDefault(Locale.US);
+    }
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
     private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
 
+    private final Archive mainArchive;
+    private boolean relax = true;
+    
     /**
      * Returns the stack trace of a throwable as a string.
      * 
@@ -73,23 +80,25 @@ public class Demo {
     }
     
     
+    public Demo() {
+        // --- read the default archive
+        final Package pkg = Archive.class.getPackage();
+        final String packagePath = pkg.getName().replaceAll("\\.", "/");
+        final String archivePath = packagePath + "/rcsr.arc";
+        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
+        mainArchive = new Archive("1.0");
+        mainArchive.addAll(reader);
+    }
+    
     /**
      * Analyzes all nets specified in a file and prints the results.
      * 
      * @param filename the name of the input file.
      */
-    public static void run(final String filename) {
+    public void run(final String filename) {
         // --- set the output stream
         final PrintStream out = System.out;
-        
-        // --- read the default archive
-        final Package pkg = Archive.class.getPackage();
-        final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        final String archivePath = packagePath + "/rcsr.arc";
-        final Archive rcsr = new Archive("1.0");
-        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-        rcsr.addAll(reader);
         
         // --- set up a parser for reading input from the given file
         NetParser parser = null;
@@ -209,7 +218,7 @@ public class Demo {
             
             // --- determine the Systre key and look it up in the archive
             final String invariant = G.invariant().toString();
-            final Archive.Entry found = rcsr.getByKey(invariant);
+            final Archive.Entry found = mainArchive.getByKey(invariant);
             if (found == null) {
                 out.println("   Structure not in archive.");
             } else {
@@ -228,19 +237,31 @@ public class Demo {
 
             // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
             SpringEmbedder embedder = new SpringEmbedder(G);
-            try {
-                embedder.setOptimizePositions(false);
-                embedder.steps(200);
-                embedder.setOptimizePositions(true);
-                embedder.steps(500);
-            } catch (Exception ex) {
-                System.err.println(stackTrace(ex));
-                System.err.println("Internal error while relaxing!");
-                embedder = new SpringEmbedder(G);
-                embedder.setOptimizeCell(false);
-                embedder.steps(200);
+            if (this.relax) {
+                try {
+                    embedder.setOptimizePositions(false);
+                    embedder.steps(200);
+                    embedder.setOptimizePositions(true);
+                    embedder.steps(500);
+                } catch (Exception ex) {
+                    System.err.println(stackTrace(ex));
+                    System.err.println("Internal error while relaxing!");
+                    embedder = new SpringEmbedder(G);
+                    embedder.setOptimizeCell(false);
+                    embedder.steps(200);
+                }
+            } else {
+                try {
+                    embedder.setOptimizePositions(false);
+                    embedder.steps(200);
+                } catch (Exception ex) {
+                    System.err.println(stackTrace(ex));
+                    System.err.println("Internal error while relaxing!");
+                    embedder = new SpringEmbedder(G);
+                }
             }
             embedder.normalize();
+            
 
             // --- set up a buffer to write a Systre readable output description to
             final StringWriter cgdStringWriter = new StringWriter();
@@ -281,7 +302,11 @@ public class Demo {
                         + fmtReal4.format(gamma.doubleValue()));
             
             //    ... print the atom positions
-            out.println("   Refined atom positions:");
+            if (this.relax) {
+                out.println("   Refined atom positions:");
+            } else {
+                out.println("   Barycentric atom positions:");
+            }
             final Map pos = embedder.getPositions();
             for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
                 final Set orbit = (Set) orbits.next();
@@ -348,6 +373,24 @@ public class Demo {
      * @param args the command line arguments.
      */
     public static void main(final String args[]) {
-        run(args[0]);
+        final Demo demo = new Demo();
+        String filename = null;
+        
+        for (int i = 0; i < args.length; ++i) {
+            final String s = args[i];
+            if (s.equals("-b")) {
+                demo.relax = false;
+            } else if (filename == null) {
+                filename = args[i];
+            } else {
+                System.err.println("WARNING: only one input file allowed.");
+            }
+        }
+        
+        if (filename == null) {
+            System.err.println("WARNING: no file name given.");
+        } else {
+            demo.run(filename);
+        }
     }
 }
