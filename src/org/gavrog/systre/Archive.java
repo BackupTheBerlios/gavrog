@@ -18,6 +18,7 @@ package org.gavrog.systre;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.6 2005/11/18 00:48:33 odf Exp $
+ * @version $Id: Archive.java,v 1.7 2006/02/06 21:55:44 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -328,6 +329,14 @@ public class Archive {
                 add(entry);
             }
         }
+    }
+    
+    /**
+     * Adds all archive entries read from a stream.
+     * @param input represents the input stream.
+     */
+    public void addAll(final Reader input) {
+        addAll(new BufferedReader(input));
     }
     
     /**
