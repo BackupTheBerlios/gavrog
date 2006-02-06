@@ -16,7 +16,6 @@ limitations under the License.
 
 package org.gavrog.systre;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
@@ -25,7 +24,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -51,7 +52,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.25 2006/02/06 01:13:07 odf Exp $
+ * @version $Id: Demo.java,v 1.26 2006/02/06 21:56:27 odf Exp $
  */
 public class Demo {
     static {
@@ -61,6 +62,7 @@ public class Demo {
     private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
 
     private final Archive mainArchive;
+    private final Map name2archive = new HashMap();
     private boolean relax = true;
     
     /**
@@ -86,9 +88,33 @@ public class Demo {
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
         final String archivePath = packagePath + "/rcsr.arc";
         final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
         mainArchive = new Archive("1.0");
-        mainArchive.addAll(reader);
+        mainArchive.addAll(new InputStreamReader(inStream));
+    }
+    
+    /**
+     * Reads an archive file and stores it internally.
+     * 
+     * @param filename the name of the archive file.
+     */
+    public void processArchive(final String filename) {
+        final String name = filename;
+        if (this.name2archive.containsKey(name)) {
+            System.err.println("WARNING: archive \"" + name + "\" was given twice.");
+        } else {
+            final Archive arc = new Archive("1.0");
+            this.name2archive.put(name, arc);
+            try {
+                arc.addAll(new FileReader(filename));
+            } catch (FileNotFoundException ex) {
+                System.err.println("Could not find file \"" + filename + "\"");
+                return;
+            } catch (Exception ex) {
+                System.err.println("Problem reading \"" + filename
+                                   + "\" - ignoring this archive.");
+                this.name2archive.remove(name);
+            }
+        }
     }
     
     /**
@@ -96,7 +122,7 @@ public class Demo {
      * 
      * @param filename the name of the input file.
      */
-    public void run(final String filename) {
+    public void processData(final String filename) {
         // --- set the output stream
         final PrintStream out = System.out;
         
@@ -216,15 +242,29 @@ public class Demo {
                 throw new RuntimeException(msg);
             }
             
-            // --- determine the Systre key and look it up in the archive
+            // --- determine the Systre key and look it up in the archives
             final String invariant = G.invariant().toString();
-            final Archive.Entry found = mainArchive.getByKey(invariant);
-            if (found == null) {
-                out.println("   Structure not in archive.");
-            } else {
-                out.println("   Structure was found in archive.");
-                out.println("   Name: " + found.getName());
+            int countMatches = 0;
+            Archive.Entry found = mainArchive.getByKey(invariant);
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure was found in builtin archive.");
+                out.println("       Name: " + found.getName());
             }
+            for (Iterator iter = this.name2archive.keySet().iterator(); iter.hasNext();) {
+                final String arcName = (String) iter.next();
+                final Archive arc = (Archive) this.name2archive.get(arcName);
+                found = arc.getByKey(invariant);
+                if (found != null) {
+                    ++countMatches;
+                    out.println("   Structure was found in archive \"" + arcName + "\"");
+                    out.println("       Name: " + found.getName());
+                }
+            }
+            if (countMatches == 0) {
+                out.println("   Structure not in any archive.");
+            }
+            out.println();
             out.flush();
 
             // --- bail out - for now - if not a 3d structure
@@ -368,29 +408,35 @@ public class Demo {
     }
     
     /**
-     * The main method takes the first command line argument and passes it to {@link #run}.
+     * The main method takes command line arguments one by one and passes them to
+     * {@link #processData} or {@link #processArchive}.
      * 
      * @param args the command line arguments.
      */
     public static void main(final String args[]) {
         final Demo demo = new Demo();
-        String filename = null;
+        final List files = new LinkedList();
         
         for (int i = 0; i < args.length; ++i) {
             final String s = args[i];
             if (s.equals("-b")) {
                 demo.relax = false;
-            } else if (filename == null) {
-                filename = args[i];
             } else {
-                System.err.println("WARNING: only one input file allowed.");
+                files.add(args[i]);
             }
         }
         
-        if (filename == null) {
-            System.err.println("WARNING: no file name given.");
-        } else {
-            demo.run(filename);
+        if (files.size() == 0) {
+            System.err.println("WARNING: no filenames given.");
+        }
+        
+        for (final Iterator iter = files.iterator(); iter.hasNext();) {
+            final String filename = (String) iter.next();
+            if (filename.endsWith(".arc")) {
+                demo.processArchive(filename);
+            } else {
+                demo.processData(filename);
+            }
         }
     }
 }
