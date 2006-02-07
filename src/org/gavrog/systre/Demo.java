@@ -16,8 +16,11 @@ limitations under the License.
 
 package org.gavrog.systre;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -52,7 +55,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.26 2006/02/06 21:56:27 odf Exp $
+ * @version $Id: Demo.java,v 1.27 2006/02/07 04:41:55 odf Exp $
  */
 public class Demo {
     static {
@@ -61,8 +64,15 @@ public class Demo {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
     private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
 
+    // --- the output stream
+    private PrintStream out = System.out;
+    
+    // --- the various archives
     private final Archive mainArchive;
     private final Map name2archive = new HashMap();
+    private final Archive internalArchive = new Archive("1.0");
+    
+    // --- options
     private boolean relax = true;
     
     /**
@@ -114,6 +124,10 @@ public class Demo {
                                    + "\" - ignoring this archive.");
                 this.name2archive.remove(name);
             }
+            final int n = arc.size();
+            out.println("Read " + n + " entr" + (n == 1 ? "y" : "ies")
+                        + " from archive \"" + name + "\"");
+            out.println();
         }
     }
     
@@ -123,9 +137,6 @@ public class Demo {
      * @param filename the name of the input file.
      */
     public void processData(final String filename) {
-        // --- set the output stream
-        final PrintStream out = System.out;
-        
         // --- set up a parser for reading input from the given file
         NetParser parser = null;
         int count = 0;
@@ -261,8 +272,15 @@ public class Demo {
                     out.println("       Name: " + found.getName());
                 }
             }
+            found = this.internalArchive.getByKey(invariant);
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure already seen in this run.");
+                out.println("       Name: " + found.getName());
+            }
             if (countMatches == 0) {
-                out.println("   Structure not in any archive.");
+                out.println("   Structure is new.");
+                this.internalArchive.add(G, name == null ? "nameless" : name);
             }
             out.println();
             out.flush();
@@ -408,6 +426,24 @@ public class Demo {
     }
     
     /**
+     * Writes all the entries read from data files onto a stream.
+     * 
+     * @param writer represents the output stream.
+     * @throws IOException if writing to the stream did not work.
+     */
+    public void writeInternalArchive(final BufferedWriter writer) throws IOException {
+        for (Iterator iter = this.internalArchive.keySet().iterator(); iter.hasNext();) {
+            final String key = (String) iter.next();
+            final Archive.Entry entry = this.internalArchive.getByKey(key);
+            writer.write(entry.toString());
+        }
+        final int n = this.internalArchive.size();
+        out.println("Wrote " + n + " entr" + (n == 1 ? "y" : "ies")
+                    + " to output archive.");
+    }
+    
+    
+    /**
      * The main method takes command line arguments one by one and passes them to
      * {@link #processData} or {@link #processArchive}.
      * 
@@ -416,11 +452,18 @@ public class Demo {
     public static void main(final String args[]) {
         final Demo demo = new Demo();
         final List files = new LinkedList();
+        String outputArchiveFileName = null;
         
         for (int i = 0; i < args.length; ++i) {
             final String s = args[i];
             if (s.equals("-b")) {
                 demo.relax = false;
+            } else if (s.equals("-a")) {
+                if (i == args.length - 1) {
+                    System.err.println("WARNING: -a option without an argument.");
+                } else {
+                    outputArchiveFileName = args[++i];
+                }
             } else {
                 files.add(args[i]);
             }
@@ -436,6 +479,18 @@ public class Demo {
                 demo.processArchive(filename);
             } else {
                 demo.processData(filename);
+            }
+        }
+        
+        if (outputArchiveFileName != null) {
+            try {
+                final BufferedWriter writer = new BufferedWriter(new FileWriter(outputArchiveFileName));
+                demo.writeInternalArchive(writer);
+                writer.flush();
+                writer.close();
+            } catch (IOException ex) {
+                System.err.println("Could not write output archive:");
+                System.err.println(ex);
             }
         }
     }
