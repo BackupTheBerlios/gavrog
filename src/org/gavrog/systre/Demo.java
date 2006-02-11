@@ -55,10 +55,10 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.28 2006/02/11 05:47:40 odf Exp $
+ * @version $Id: Demo.java,v 1.29 2006/02/11 06:47:59 odf Exp $
  */
 public class Demo {
-    final static boolean DEBUG = true;
+    final static boolean DEBUG = false;
     
     static {
         Locale.setDefault(Locale.US);
