@@ -55,9 +55,11 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.27 2006/02/07 04:41:55 odf Exp $
+ * @version $Id: Demo.java,v 1.28 2006/02/11 05:47:40 odf Exp $
  */
 public class Demo {
+    final static boolean DEBUG = true;
+    
     static {
         Locale.setDefault(Locale.US);
     }
@@ -359,6 +361,14 @@ public class Demo {
                         + fmtReal4.format(beta.doubleValue()) + " "
                         + fmtReal4.format(gamma.doubleValue()));
             
+            if (DEBUG) {
+                for (int i = 0; i < d; ++i) {
+                    final Vector v = Vector.unit(d, i);
+                    out.println("\t\t@@@ " + v + " -> " + v.times(toStd));
+                }
+                out.flush();
+            }
+            
             //    ... print the atom positions
             if (this.relax) {
                 out.println("   Refined atom positions:");
@@ -380,6 +390,14 @@ public class Demo {
                 cgd.println();
             }
             
+            if (DEBUG) {
+                for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+                    final Point p = (Point) pos.get(nodes.next());
+                    out.println("\t\t@@@ " + p + " -> " + p.times(toStd));
+                }
+                out.flush();
+            }
+            
             //    ... print the edges
             out.println("   Edges:");
             for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
@@ -387,6 +405,12 @@ public class Demo {
                 final IEdge e = (IEdge) orbit.iterator().next();
                 final INode v = e.source();
                 final INode w = e.target();
+                if (DEBUG) {
+                    final Point p1 = (Point) pos.get(v);
+                    final Point q1 = (Point) ((Point) pos.get(w)).plus(G.getShift(e));
+                    out.println("\t\t@@@ " + p1 + ", " + q1 + "  -> " + p1.times(toStd) + ", " + q1.times(toStd));
+                    out.flush();
+                }
                 final Point p = ((Point) ((Point) pos.get(v)).times(toStd));
                 final Point q = (Point) ((Point) pos.get(w)).plus(G.getShift(e)).times(
                         toStd);
