@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.18 2006/02/12 04:30:46 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.19 2006/02/12 04:31:40 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
@@ -189,8 +189,6 @@ public class SpringEmbedder {
     }
 
     public void step() {
-        // TODO keep symmetries intact
-
         // --- scale to make unit average edge length
         normalize();
 
