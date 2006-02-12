@@ -38,12 +38,13 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.19 2006/02/12 04:31:40 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.20 2006/02/12 06:40:36 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
     private final Map positions;
     private final Map node2sym;
+    private final Map node2images;
     private Matrix gramMatrix;
     private Operator gramProjection;
     private double lastPositionChangeAmount = 0;
@@ -107,8 +108,26 @@ public class SpringEmbedder {
             final INode v = (INode) nodes.next();
             this.node2sym.put(v, nodeSymmetrization(v));
         }
+        
+        this.node2images = new HashMap();
+        for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            if (!this.node2images.containsKey(v)) {
+                final Map img2sym = new HashMap();
+                img2sym.put(v, new Operator(Matrix.one(d+1)));
+                for (final Iterator syms = this.graph.symmetries().iterator(); syms
+                        .hasNext();) {
+                    final Morphism a = (Morphism) syms.next();
+                    final INode va = (INode) a.get(v);
+                    if (!img2sym.containsKey(va)) {
+                        img2sym.put(va, a.getAffineOperator());
+                    }
+                }
+                this.node2images.put(v, img2sym);
+            }
+        }
     }
-
+    
     private Operator nodeSymmetrization(final INode v) {
         final List stab = this.graph.nodeStabilizer(v);
         final Point p = (Point) this.graph.barycentricPlacement().get(v);
@@ -265,6 +284,21 @@ public class SpringEmbedder {
         }
         
         this.lastPositionChangeAmount = Math.sqrt(movements);
+        
+        // --- restore overall symmetry
+        for (final Iterator reps = this.node2images.keySet().iterator(); reps.hasNext();) {
+            final INode v = (INode) reps.next();
+            final Map img2sym = (Map) this.node2images.get(v);
+            for (final Iterator imgs = img2sym.keySet().iterator(); imgs.hasNext();) {
+                final INode w = (INode) imgs.next();
+                final Operator a = (Operator) img2sym.get(w);
+                final Point pv = (Point) this.positions.get(v);
+                final Point bv = (Point) this.graph.barycentricPlacement().get(v);
+                final Point bw = (Point) this.graph.barycentricPlacement().get(w);
+                final Vector d = (Vector) bw.minus(bv.times(a));
+                this.positions.put(w, pv.times(a).plus(d));
+            }
+        }
     }
 
     public void stepCell() {
