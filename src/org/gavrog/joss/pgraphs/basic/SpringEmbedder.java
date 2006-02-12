@@ -38,11 +38,12 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.17 2006/02/02 05:02:38 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.18 2006/02/12 04:30:46 odf Exp $
  */
 public class SpringEmbedder {
     private final PeriodicGraph graph;
     private final Map positions;
+    private final Map node2sym;
     private Matrix gramMatrix;
     private Operator gramProjection;
     private double lastPositionChangeAmount = 0;
@@ -89,17 +90,40 @@ public class SpringEmbedder {
         this.positions = new HashMap();
         this.positions.putAll(positions);
         this.gramMatrix = gramMatrix;
+
         final int d = graph.getDimension();
         final SpaceGroup G = new SpaceGroup(d, graph.symmetryOperators());
         final Matrix M = G.configurationSpaceForGramMatrix();
         this.gramProjection = Operator.orthogonalProjection(M, Matrix
                 .one(d * (d + 1) / 2));
+        
         this.angles = angles();
         if (this.angles == null) {
             throw new RuntimeException("something wrong here");
         }
+        
+        this.node2sym = new HashMap();
+        for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            this.node2sym.put(v, nodeSymmetrization(v));
+        }
     }
 
+    private Operator nodeSymmetrization(final INode v) {
+        final List stab = this.graph.nodeStabilizer(v);
+        final Point p = (Point) this.graph.barycentricPlacement().get(v);
+        final int dim = p.getDimension();
+        Matrix s = Matrix.zero(dim+1, dim+1);
+        for (final Iterator syms = stab.iterator(); syms.hasNext();) {
+            final Operator a = ((Morphism) syms.next()).getAffineOperator();
+            final Vector d = (Vector) p.minus(p.times(a));
+            final Operator ad = (Operator) a.times(d);
+            s = (Matrix) s.plus(ad.getCoordinates());
+        }
+
+        return new Operator((Matrix) s.dividedBy(stab.size()));
+    }
+    
     private Set angles() {
         final HashSet result = new HashSet();
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
@@ -228,8 +252,16 @@ public class SpringEmbedder {
             } else {
                 f = 1.0;
             }
-            final Vector d = (Vector) delta.times(f);
-            move(this.positions, v, d);
+            
+//          final Vector d = (Vector) delta.times(f);
+//          move(this.positions, v, d);
+          
+            final Point po = (Point) this.positions.get(v);
+            final Point pt = (Point) po.plus(delta.times(f));
+            final Point pn = (Point) pt.times(this.node2sym.get(v));
+            this.positions.put(v, pn);
+            final Vector d = (Vector) pn.minus(po); 
+            
             final double l = length(d);
             movements += l * l;
         }

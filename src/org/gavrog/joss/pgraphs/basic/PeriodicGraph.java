@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.45 2006/01/25 00:34:23 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.46 2006/02/12 04:30:46 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1568,6 +1568,23 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
         return P.classes();
+    }
+    
+    /**
+     * Computes the stabilizer of a node in the symmetry group.
+     * 
+     * @param v a node of the representation graph.
+     * @return the list of symmetries stabilizing the node up to translations.
+     */
+    public List nodeStabilizer(final INode v) {
+        final List res = new ArrayList();
+        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
+            final Morphism a = (Morphism) syms.next();
+            if (a.get(v).equals(v)) {
+                res.add(a);
+            }
+        }
+        return res;
     }
     
     /**
