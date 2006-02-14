@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
@@ -55,7 +57,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.30 2006/02/14 06:23:21 odf Exp $
+ * @version $Id: Demo.java,v 1.31 2006/02/14 19:29:48 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -206,12 +208,16 @@ public class Demo {
             } else {
                 out.println("   Given primitive cell is accurate.");
             }
+            final Map barycentric = G.barycentricPlacement();
+            if (!G.isBarycentric(barycentric)) {
+                final String msg = "Internal error: incorrect barycentric placement.";
+                throw new RuntimeException(msg);
+            }
             if (DEBUG) {
                 out.println("\t\t@@@ barycentric placement:");
-                final Map pos = G.barycentricPlacement();
                 for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
                     final INode v = (INode) nodes.next();
-                    out.println("\t\t@@@    " + v.id() + " -> " + pos.get(v));
+                    out.println("\t\t@@@    " + v.id() + " -> " + barycentric.get(v));
                 }
             }
             out.flush();
@@ -270,7 +276,12 @@ public class Demo {
                 throw new RuntimeException(msg);
             }
             final Set conventionalOps = new SpaceGroup(d, groupName).primitiveOperators();
-            final Set probes = new SpaceGroup(d, toStd.applyTo(ops)).primitiveOperators();
+            final Set opsFound = new HashSet();
+            opsFound.addAll(ops);
+            for (int i = 0; i < d; ++i) {
+                opsFound.add(new Operator(Vector.unit(d, i)));
+            }
+            final Set probes = new SpaceGroup(d, toStd.applyTo(opsFound)).primitiveOperators();
             if (!probes.equals(conventionalOps)) {
                 out.println("Problem with space group operators - should be:");
                 for (final Iterator iter = conventionalOps.iterator(); iter.hasNext();) {
@@ -278,7 +289,7 @@ public class Demo {
                 }
                 out.println("but was:");
                 //for (final Iterator iter = probes.iterator(); iter.hasNext();) {
-                for (final Iterator iter = toStd.applyTo(ops).iterator(); iter.hasNext();) {
+                for (final Iterator iter = toStd.applyTo(opsFound).iterator(); iter.hasNext();) {
                     out.println(iter.next());
                 }
                 final String msg = "Internal error: spacegroup finder messed up operators";
