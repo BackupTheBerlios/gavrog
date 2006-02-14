@@ -55,7 +55,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.29 2006/02/11 06:47:59 odf Exp $
+ * @version $Id: Demo.java,v 1.30 2006/02/14 06:23:21 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -159,6 +159,10 @@ public class Demo {
             }
             ++count;
             
+            if (DEBUG) {
+                out.println("\t\t@@@ Graph is " + G);
+            }
+            
             // --- print some information on net as given
             final String name = parser.getName();
             if (name == null) {
@@ -196,13 +200,30 @@ public class Demo {
             if (r > 1) {
                 out.println("   WARNING: ideal repeat unit smaller than given ("
                         + G.numberOfEdges() + " vs " + m + " edges).");
+                if (DEBUG) {
+                    out.println("\t\t@@@ minimal graph is " + G);
+                }
             } else {
                 out.println("   Given primitive cell is accurate.");
-            }                
+            }
+            if (DEBUG) {
+                out.println("\t\t@@@ barycentric placement:");
+                final Map pos = G.barycentricPlacement();
+                for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+                    final INode v = (INode) nodes.next();
+                    out.println("\t\t@@@    " + v.id() + " -> " + pos.get(v));
+                }
+            }
             out.flush();
 
             // --- determine the ideal symmetries
             final List ops = G.symmetryOperators();
+            if (DEBUG) {
+                out.println("\t\t@@@ symmetry operators:");
+                for (final Iterator iter = ops.iterator(); iter.hasNext();) {
+                    out.println("\t\t@@@    " + iter.next());
+                }
+            }
             out.println("   point group has " + ops.size() + " elements.");
             out.flush();
             final int k = Iterators.size(G.nodeOrbits());
@@ -251,6 +272,15 @@ public class Demo {
             final Set conventionalOps = new SpaceGroup(d, groupName).primitiveOperators();
             final Set probes = new SpaceGroup(d, toStd.applyTo(ops)).primitiveOperators();
             if (!probes.equals(conventionalOps)) {
+                out.println("Problem with space group operators - should be:");
+                for (final Iterator iter = conventionalOps.iterator(); iter.hasNext();) {
+                    out.println(iter.next());
+                }
+                out.println("but was:");
+                //for (final Iterator iter = probes.iterator(); iter.hasNext();) {
+                for (final Iterator iter = toStd.applyTo(ops).iterator(); iter.hasNext();) {
+                    out.println(iter.next());
+                }
                 final String msg = "Internal error: spacegroup finder messed up operators";
                 throw new RuntimeException(msg);
             }
