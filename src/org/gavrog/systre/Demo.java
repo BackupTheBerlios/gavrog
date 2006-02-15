@@ -57,7 +57,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.32 2006/02/15 07:35:45 odf Exp $
+ * @version $Id: Demo.java,v 1.33 2006/02/15 22:46:34 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -114,20 +114,20 @@ public class Demo {
     public void processArchive(final String filename) {
         final String name = filename;
         if (this.name2archive.containsKey(name)) {
-            System.err.println("WARNING: archive \"" + name + "\" was given twice.");
+            out.println("!!! WARNING (USAGE) - Archive \"" + name + "\" was given twice.");
         } else {
             final Archive arc = new Archive("1.0");
-            this.name2archive.put(name, arc);
             try {
                 arc.addAll(new FileReader(filename));
             } catch (FileNotFoundException ex) {
-                System.err.println("Could not find file \"" + filename + "\"");
+                out.println("!!! ERROR (FILE) - Could not find file \"" + filename + "\".");
                 return;
             } catch (Exception ex) {
-                System.err.println("Problem reading \"" + filename
+                out.println("!!! ERROR (FILE) - Problem reading \"" + filename
                                    + "\" - ignoring this archive.");
-                this.name2archive.remove(name);
+                return;
             }
+            this.name2archive.put(name, arc);
             final int n = arc.size();
             out.println("Read " + n + " entr" + (n == 1 ? "y" : "ies")
                         + " from archive \"" + name + "\"");
@@ -137,6 +137,7 @@ public class Demo {
     
     public void processGraph(final PeriodicGraph graph, final String name, final String givenGroup) {
         PeriodicGraph G = graph;
+        final int d = G.getDimension();
         
         if (DEBUG) {
             out.println("\t\t@@@ Graph is " + G);
@@ -150,19 +151,18 @@ public class Demo {
         final int n = G.numberOfNodes();
         final int m = G.numberOfEdges();
         out.println("   " + n + " vert" + (n > 1 ? "ices" : "ex") + " and "
-                + m + " edge" + (m > 1 ? "s" : "") + " in primitive cell as given.");
-        out.println();
+                + m + " edge" + (m > 1 ? "s" : "") + " in repeat unit as given.");
         out.flush();
 
         // --- test if it is Systre-compatible
         if (!G.isConnected()) {
-            out.println("   Sorry, graph is not connected! Giving up.");
+            out.println("!!! ERROR (STRUCTURE) - Graph must be connected.");
             out.println();
             out.flush();
             return;
         }
         if (!G.isStable()) {
-            out.println("   Sorry, graph has collisions! Giving up.");
+            out.println("!!! ERROR (STRUCTURE) - Graph may not have collisions.");
             out.println();
             out.flush();
             return;
@@ -172,17 +172,17 @@ public class Demo {
         G = G.minimalImage();
         final int r = n / G.numberOfNodes();
         if (r > 1) {
-            out.println("   WARNING: ideal repeat unit smaller than given ("
+            out.println("   Ideal repeat unit smaller than given ("
                     + G.numberOfEdges() + " vs " + m + " edges).");
             if (DEBUG) {
                 out.println("\t\t@@@ minimal graph is " + G);
             }
         } else {
-            out.println("   Given primitive cell is accurate.");
+            out.println("   Given repeat unit is accurate.");
         }
         final Map barycentric = G.barycentricPlacement();
         if (!G.isBarycentric(barycentric)) {
-            final String msg = "Internal error: incorrect barycentric placement.";
+            final String msg = "Incorrect barycentric placement.";
             throw new RuntimeException(msg);
         }
         if (DEBUG) {
@@ -192,6 +192,7 @@ public class Demo {
                 out.println("\t\t@@@    " + v.id() + " -> " + barycentric.get(v));
             }
         }
+        out.println();
         out.flush();
 
         // --- determine the ideal symmetries
@@ -202,10 +203,11 @@ public class Demo {
                 out.println("\t\t@@@    " + iter.next());
             }
         }
-        out.println("   point group has " + ops.size() + " elements.");
+        out.println("   Point group has " + ops.size() + " elements.");
         out.flush();
         final int k = Iterators.size(G.nodeOrbits());
         out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of vertex.");
+        out.println();
         out.flush();
         
         // --- determine the coordination sequences
@@ -224,8 +226,16 @@ public class Demo {
         out.println();
         out.flush();
 
+        // --- bail out - for now - if not a 3d structure
+        if (d != 3) {
+            out.println("!!! ERROR (STRUCTURE) - No further support yet for dimension "
+                    + d + ".");
+            out.println();
+            out.flush();
+            return;
+        }
+
         // --- find the space group name and conventional settings
-        final int d = G.getDimension();
         final SpaceGroup group = new SpaceGroup(d, ops);
         final SpaceGroupFinder finder = new SpaceGroupFinder(group);
         final String groupName = finder.getGroupName();
@@ -234,7 +244,7 @@ public class Demo {
         out.println("   Ideal space group is " + groupName + ".");
         final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
         if (!givenName.equals(groupName)) {
-            out.println("   WARNING: Ideal group differs from given (" + groupName
+            out.println("   Ideal group differs from given (" + groupName
                     + " vs " + givenName + ").");
         }
         out.println();
@@ -243,7 +253,7 @@ public class Demo {
         // --- verify the output of the spacegroup finder
         final CoordinateChange trans = SpaceGroupCatalogue.transform(d, groupName);
         if (!trans.isOne()) {
-            final String msg = "Internal error: converted to non-conventional setting";
+            final String msg = "Produced non-conventional space group setting.";
             throw new RuntimeException(msg);
         }
         final Set conventionalOps = new SpaceGroup(d, groupName).primitiveOperators();
@@ -259,11 +269,10 @@ public class Demo {
                 out.println(iter.next());
             }
             out.println("but was:");
-            //for (final Iterator iter = probes.iterator(); iter.hasNext();) {
             for (final Iterator iter = toStd.applyTo(opsFound).iterator(); iter.hasNext();) {
                 out.println(iter.next());
             }
-            final String msg = "Internal error: spacegroup finder messed up operators";
+            final String msg = "Spacegroup finder messed up operators.";
             throw new RuntimeException(msg);
         }
         
@@ -299,14 +308,6 @@ public class Demo {
         out.println();
         out.flush();
 
-        // --- bail out - for now - if not a 3d structure
-        if (d != 3) {
-            out.println("Sorry, currently no refined output for dimension != 3.");
-            out.println();
-            out.flush();
-            return;
-        }
-
         // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
         SpringEmbedder embedder = new SpringEmbedder(G);
         if (this.relax) {
@@ -316,8 +317,7 @@ public class Demo {
                 embedder.setOptimizePositions(true);
                 embedder.steps(500);
             } catch (Exception ex) {
-                System.err.println(stackTrace(ex));
-                System.err.println("Internal error while relaxing!");
+                out.println("!!! WARNING (INTERNAL) - Could not relax unit cell shape: " + ex);
                 embedder = new SpringEmbedder(G);
                 embedder.setOptimizeCell(false);
                 embedder.steps(200);
@@ -327,8 +327,8 @@ public class Demo {
                 embedder.setOptimizePositions(false);
                 embedder.steps(200);
             } catch (Exception ex) {
-                System.err.println(stackTrace(ex));
-                System.err.println("Internal error while relaxing!");
+                out.println(stackTrace(ex));
+                out.println("!!! WARNING (INTERNAL) - Could not relax unit cell shape:" + ex);
                 embedder = new SpringEmbedder(G);
             }
         }
@@ -451,7 +451,7 @@ public class Demo {
         final String cgdString = cgdStringWriter.toString();
         final PeriodicGraph test = NetParser.stringToNet(cgdString);
         if (!test.equals(G)) {
-            final String msg = "Internal error: output does not match original graph";
+            final String msg = "Output does not match original graph.";
             throw new RuntimeException(msg);
         }
     }
@@ -468,15 +468,22 @@ public class Demo {
         try {
             parser = new NetParser(new FileReader(filename));
         } catch (FileNotFoundException ex) {
-            System.err.println("Could not find file \"" + filename + "\"");
+            out.println("!!! ERROR (FILE) - Could not find file \"" + filename + "\".");
             return;
         }
         out.println("Data file \"" + filename + "\".");
         
         // --- loop through the structures specied in the input file
         while (true) {
+            PeriodicGraph G = null;
+            
             // --- read the next net
-            PeriodicGraph G = parser.parseNet();
+            try {
+                G = parser.parseNet();
+            } catch (Exception ex) {
+                out.println("!!! ERROR (INPUT) - " + ex);
+                continue;
+            }
             if (G == null) {
                 break;
             }
@@ -494,7 +501,11 @@ public class Demo {
             if (name == null) {
                 name = "#" + count;
             }
-            processGraph(G, name, parser.getSpaceGroup());
+            try {
+                processGraph(G, name, parser.getSpaceGroup());
+            } catch (Exception ex) {
+                out.println("!!! ERROR (INTERNAL) - " + ex);
+            }
         }
 
         out.println();
@@ -536,7 +547,7 @@ public class Demo {
                 demo.relax = false;
             } else if (s.equals("-a")) {
                 if (i == args.length - 1) {
-                    System.err.println("WARNING: -a option without an argument.");
+                    out.println("!!! WARNING (USAGE) - Argument missing for \"-a\".");
                 } else {
                     outputArchiveFileName = args[++i];
                 }
@@ -546,7 +557,7 @@ public class Demo {
         }
         
         if (files.size() == 0) {
-            System.err.println("WARNING: no filenames given.");
+            out.println("!!! WARNING (USAGE) - No file names given.");
         }
         
         int count = 0;
@@ -573,8 +584,7 @@ public class Demo {
                 writer.flush();
                 writer.close();
             } catch (IOException ex) {
-                System.err.println("Could not write output archive:");
-                System.err.println(ex);
+                out.println("!!! ERROR (FILE) - Could not write output archive:" + ex);
             }
         }
     }
