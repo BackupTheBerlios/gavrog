@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
@@ -57,7 +58,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.33 2006/02/15 22:46:34 odf Exp $
+ * @version $Id: Demo.java,v 1.34 2006/02/16 06:58:56 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -78,23 +79,6 @@ public class Demo {
     
     // --- options
     private boolean relax = true;
-    
-    /**
-     * Returns the stack trace of a throwable as a string.
-     * 
-     * @param throwable the throwable.
-     * @return the string representation.
-     */
-    public static String stackTrace(final Throwable throwable) {
-        StringBuffer sb = new StringBuffer();
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        throwable.printStackTrace(pw);
-        pw.close();
-        sb.append(sw.toString());
-        return sb.toString();
-    }
-    
     
     public Demo() {
         // --- read the default archive
@@ -317,6 +301,7 @@ public class Demo {
                 embedder.setOptimizePositions(true);
                 embedder.steps(500);
             } catch (Exception ex) {
+                out.println(Misc.stackTrace(ex));
                 out.println("!!! WARNING (INTERNAL) - Could not relax unit cell shape: " + ex);
                 embedder = new SpringEmbedder(G);
                 embedder.setOptimizeCell(false);
@@ -327,7 +312,7 @@ public class Demo {
                 embedder.setOptimizePositions(false);
                 embedder.steps(200);
             } catch (Exception ex) {
-                out.println(stackTrace(ex));
+                out.println(Misc.stackTrace(ex));
                 out.println("!!! WARNING (INTERNAL) - Could not relax unit cell shape:" + ex);
                 embedder = new SpringEmbedder(G);
             }
