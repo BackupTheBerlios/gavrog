@@ -108,7 +108,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.16 2006/02/16 06:59:35 odf Exp $
+ * @version $Id: NetViewer.java,v 1.17 2006/02/16 22:53:19 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -145,11 +145,11 @@ public class NetViewer extends Applet {
     // --- embedder used to find node positions and metric
     private SpringEmbedder embedder;
     
+    // --- the default radius for a new net
+    private int defaultRadius = 2;
+    
     // --- the current displayed radius
     private int radius = 3;
-    
-    // --- determines if node positions are relaxed after barycentric placement
-    private boolean relax = false;
     
     // --- the currently displayed portion of the net
     private PeriodicGraph.EmbeddedPortion graph;
@@ -229,7 +229,7 @@ public class NetViewer extends Applet {
         updateButton.setAction(new AbstractAction() {
             public void actionPerformed(ActionEvent arg0) {
                 try {
-                    changeNet(inputArea.getText(), radius);
+                    changeNet(inputArea.getText(), defaultRadius);
                 } catch (Exception ex) {
                     status.setText(String.valueOf(ex));
                 }
@@ -259,8 +259,18 @@ public class NetViewer extends Applet {
         });
         buttonBox.add(lessButton);
         
+        final JButton relaxButton = new JButton();
+        relaxButton.add(new JLabel("Relax"));
+        relaxButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                setPositions(true);
+                setRadius(radius);
+            }
+        });
+        buttonBox.add(relaxButton);
+        
         final JCheckBox orthographicChBox = new JCheckBox();
-        orthographicChBox.setBackground(Color.WHITE);
+        orthographicChBox.setBackground(buttonBox.getBackground());
         orthographicChBox.setAlignmentX(0);
         orthographicChBox.setAction(new AbstractAction() {
             public void actionPerformed(ActionEvent arg0) {
@@ -276,23 +286,6 @@ public class NetViewer extends Applet {
         buttonBox.add(orthographicChBox);
         buttonBox.add(new JLabel("orthographic"));
         
-        final JCheckBox relaxChBox = new JCheckBox();
-        relaxChBox.setBackground(Color.WHITE);
-        relaxChBox.setAlignmentX(0);
-        relaxChBox.setAction(new AbstractAction() {
-            public void actionPerformed(ActionEvent arg0) {
-                if (relaxChBox.isSelected()) {
-                    relax = true;
-                } else {
-                    relax = false;
-                }
-                setPositions();
-                setRadius(radius);
-            }
-        });
-        buttonBox.add(relaxChBox);
-        buttonBox.add(new JLabel("relax"));
-        
         final JButton loadButton = new JButton();
         loadButton.add(new JLabel("Load..."));
         loadButton.setAction(new AbstractAction() {
@@ -302,11 +295,20 @@ public class NetViewer extends Applet {
         });
         buttonBox.add(loadButton);
         
+        final JButton advanceButton = new JButton();
+        advanceButton.add(new JLabel(">>"));
+        advanceButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                nextInFile();
+            }
+        });
+        buttonBox.add(advanceButton);
+        
         // --- add the button panel to the main frame
         add(BorderLayout.WEST, buttonBox);
         
         // --- display the initial graph
-        changeNet("dia", radius);
+        changeNet("dia", defaultRadius);
 
         // --- create an object to use for picking
         final PickCanvas pickCanvas = new PickCanvas(canvas3D, objRoot);
@@ -430,6 +432,7 @@ public class NetViewer extends Applet {
     
     private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
     private final JFileChooser chooser = new JFileChooser();
+    private NetParser parser = null;
     
     private static String format(final double x) {
         return formatter.format(x);
@@ -443,7 +446,6 @@ public class NetViewer extends Applet {
             final String dirname = chooser.getCurrentDirectory().getPath();
             final String path = new File(dirname, filename).getAbsolutePath();
             status.setText("Loading " + filename + "...");
-            final NetParser parser;
             try {
                 parser = new NetParser(new FileReader(path));
             } catch (FileNotFoundException ex) {
@@ -451,23 +453,33 @@ public class NetViewer extends Applet {
                 done();
                 return;
             }
-            final PeriodicGraph G;
-            try {
-                G = parser.parseNet();
-            } catch (Exception ex) {
-                status.setText("Error - " + ex);
-                done();
-                return;
-            }
-            if (G == null) {
-                status.setText("File \"" + path + "\"" + " contained no net data.");
-                done();
-                return;
-            }
-            inputArea.setText(parser.getName());
-            changeNet(G, this.radius);
+            nextInFile();
             done();
         }
+    }
+    
+    private void nextInFile() {
+        if (parser == null) {
+            status.setText("No file open.");
+            return;
+        }
+        busy();
+        final PeriodicGraph G;
+        try {
+            G = parser.parseNet();
+        } catch (Exception ex) {
+            status.setText("Error - " + ex);
+            done();
+            return;
+        }
+        if (G == null) {
+            status.setText("Reached end of file.");
+            parser = null;
+        } else {
+            inputArea.setText(parser.getName());
+            changeNet(G, this.defaultRadius);
+        }
+        done();
     }
     
     /**
@@ -513,29 +525,31 @@ public class NetViewer extends Applet {
         this.net = G;
         
         // --- determine graph positions
-        setPositions();
+        setPositions(false);
         
         // --- set the radius
         setRadius(radius);
         done();
     }
      
-    private void setPositions() {
+    private void setPositions(final boolean relax) {
         busy();
         final PeriodicGraph G = this.net;
         
         // --- relax the atom configuration
         SpringEmbedder relaxer = new SpringEmbedder(G);
         boolean error = false;
-        if (relax) {
-            try {
-                relaxer.setOptimizePositions(false);
-                relaxer.steps(200);
+        try {
+            relaxer.setOptimizePositions(false);
+            relaxer.steps(200);
+            if (relax) {
                 relaxer.setOptimizePositions(true);
                 relaxer.steps(500);
-            } catch (Exception ex) {
-                status.setText("Could not relax unit cell parameters");
-                relaxer = new SpringEmbedder(G);
+            }
+        } catch (Exception ex) {
+            status.setText("Could not relax unit cell parameters");
+            relaxer = new SpringEmbedder(G);
+            if (relax) {
                 relaxer.setOptimizeCell(false);
                 relaxer.steps(200);
             }
