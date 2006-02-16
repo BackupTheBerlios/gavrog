@@ -19,12 +19,16 @@ package org.gavrog.systre;
 import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
@@ -52,6 +56,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -103,7 +108,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.15 2006/02/02 05:16:51 odf Exp $
+ * @version $Id: NetViewer.java,v 1.16 2006/02/16 06:59:35 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -112,6 +117,10 @@ public class NetViewer extends Applet {
     final static Color3f yellow = new Color3f(1, 1, 0);
     final static Color3f black = new Color3f(0, 0, 0);
     final static Color3f white = new Color3f(1, 1, 1);
+    
+    // --- cursors
+    final static Cursor defaultCursor = Cursor.getDefaultCursor();
+    final static Cursor waitCursor = new Cursor(Cursor.WAIT_CURSOR);
 
     // --- appearances for various elements in various modes
     final Appearance selectedAppearance = makeAppearance(yellow);
@@ -284,6 +293,15 @@ public class NetViewer extends Applet {
         buttonBox.add(relaxChBox);
         buttonBox.add(new JLabel("relax"));
         
+        final JButton loadButton = new JButton();
+        loadButton.add(new JLabel("Load..."));
+        loadButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                loadFile();
+            }
+        });
+        buttonBox.add(loadButton);
+        
         // --- add the button panel to the main frame
         add(BorderLayout.WEST, buttonBox);
         
@@ -393,6 +411,14 @@ public class NetViewer extends Applet {
         this(false);
     }
     
+    private void busy() {
+        setCursor(waitCursor);
+    }
+    
+    private void done() {
+        setCursor(defaultCursor);
+    }
+    
     /**
      * Our applet destroy method removes the model from the scene. This is necessary
      * because some Java3D implementations refuse to change capatibilities in cached
@@ -403,44 +429,85 @@ public class NetViewer extends Applet {
     }
     
     private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
+    private final JFileChooser chooser = new JFileChooser();
     
     private static String format(final double x) {
         return formatter.format(x);
     }
     
+    private void loadFile() {
+        final int returnVal =chooser.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            busy();
+            final String filename = chooser.getSelectedFile().getName();
+            final String dirname = chooser.getCurrentDirectory().getPath();
+            final String path = new File(dirname, filename).getAbsolutePath();
+            status.setText("Loading " + filename + "...");
+            final NetParser parser;
+            try {
+                parser = new NetParser(new FileReader(path));
+            } catch (FileNotFoundException ex) {
+                status.setText("Error - Could not find file \"" + path + "\".");
+                done();
+                return;
+            }
+            final PeriodicGraph G;
+            try {
+                G = parser.parseNet();
+            } catch (Exception ex) {
+                status.setText("Error - " + ex);
+                done();
+                return;
+            }
+            if (G == null) {
+                status.setText("File \"" + path + "\"" + " contained no net data.");
+                done();
+                return;
+            }
+            inputArea.setText(parser.getName());
+            changeNet(G, this.radius);
+            done();
+        }
+    }
+    
     /**
      * Changes the net currently displayed.
      * 
-     * @param spec string specification for the new net.
+     * @param spec new net or its string specification.
      * @param radius the radius of the portion to be displayed.
      */
-    private void changeNet(final String spec, final int radius) {
+    private void changeNet(final Object spec, final int radius) {
+        busy();
         // --- parse the specification
         PeriodicGraph G;
-        try {
-            G = NetParser.stringToNet(spec);
-        } catch (Exception ex) {
-            if (this.rcsr == null) {
-                final Package pkg = Archive.class.getPackage();
-                final String packagePath = pkg.getName().replaceAll("\\.", "/");
-                final String archivePath = packagePath + "/rcsr.arc";
-                this.rcsr = new Archive("1.0");
-                final InputStream inStream = ClassLoader
-                        .getSystemResourceAsStream(archivePath);
-                final BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        inStream));
-                this.rcsr.addAll(reader);
+        if (spec instanceof String) {
+            try {
+                G = NetParser.stringToNet((String) spec);
+            } catch (Exception ex) {
+                if (this.rcsr == null) {
+                    final Package pkg = Archive.class.getPackage();
+                    final String packagePath = pkg.getName().replaceAll("\\.", "/");
+                    final String archivePath = packagePath + "/rcsr.arc";
+                    this.rcsr = new Archive("1.0");
+                    final InputStream inStream = ClassLoader
+                            .getSystemResourceAsStream(archivePath);
+                    final BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(inStream));
+                    this.rcsr.addAll(reader);
+                }
+                final Archive.Entry entry = this.rcsr.getByName(((String) spec).trim());
+                if (entry == null) {
+                    done();
+                    throw new IllegalArgumentException("don't understand structure spec");
+                } else {
+                    G = PeriodicGraph.reconstructFromInvariantString(entry.getKey());
+                }
             }
-            final Archive.Entry entry = this.rcsr.getByName(spec.trim());
-            if (entry == null) {
-                throw new IllegalArgumentException("don't understand structure spec");
-            } else {
-                G = PeriodicGraph.reconstructFromInvariantString(entry.getKey());
-            }
+            // --- show the graph specification
+            inputArea.setText((String) spec);
+        } else {
+            G = (PeriodicGraph) spec;
         }
-        
-        // --- show the graph specification
-        inputArea.setText(spec);
         
         // --- save the net for later reference
         this.net = G;
@@ -450,9 +517,11 @@ public class NetViewer extends Applet {
         
         // --- set the radius
         setRadius(radius);
+        done();
     }
      
     private void setPositions() {
+        busy();
         final PeriodicGraph G = this.net;
         
         // --- relax the atom configuration
@@ -487,9 +556,11 @@ public class NetViewer extends Applet {
         
         // --- store embedder for later reference
         this.embedder = relaxer;
+        done();
     }
 
     private void setRadius(final int radius) {
+        busy();
         final SpringEmbedder relaxer = this.embedder;
         // --- construct an embedded portion of the net using the relaxed
         // configuration
@@ -520,6 +591,7 @@ public class NetViewer extends Applet {
         
         // --- save the current radius
         this.radius = radius;
+        done();
     }
     
     /**
