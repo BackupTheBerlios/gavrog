@@ -26,27 +26,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
+import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
-import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.20 2006/02/12 06:40:36 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.21 2006/02/16 06:58:26 odf Exp $
  */
 public class SpringEmbedder {
+    private static final boolean DEBUG = false;
+    
     private final PeriodicGraph graph;
     private final Map positions;
     private final Map node2sym;
     private final Map node2images;
     private Matrix gramMatrix;
-    private Operator gramProjection;
+    //private Operator gramProjection;
     private double lastPositionChangeAmount = 0;
     private double lastCellChangeAmount = 0;
     private boolean optimizeCell = true;
@@ -93,10 +96,10 @@ public class SpringEmbedder {
         this.gramMatrix = gramMatrix;
 
         final int d = graph.getDimension();
-        final SpaceGroup G = new SpaceGroup(d, graph.symmetryOperators());
-        final Matrix M = G.configurationSpaceForGramMatrix();
-        this.gramProjection = Operator.orthogonalProjection(M, Matrix
-                .one(d * (d + 1) / 2));
+//        final SpaceGroup G = new SpaceGroup(d, graph.symmetryOperators());
+//        final Matrix M = G.configurationSpaceForGramMatrix();
+//        this.gramProjection = Operator.orthogonalProjection(M, Matrix
+//                .one(d * (d + 1) / 2));
         
         this.angles = angles();
         if (this.angles == null) {
@@ -193,6 +196,26 @@ public class SpringEmbedder {
         return new double[] { minLength, maxLength, avgLength };
     }
 
+    private String gramAsString() {
+        final Real a = ((Real) this.gramMatrix.get(0,0)).sqrt();
+        final Real b = ((Real) this.gramMatrix.get(1,1)).sqrt();
+        final Real c = ((Real) this.gramMatrix.get(2,2)).sqrt();
+        final Real f = new FloatingPoint(180.0 / Math.PI);
+        final Real alpha = (Real) ((Real) this.gramMatrix.get(1,2)
+                .dividedBy(b.times(c))).acos().times(f);
+        final Real beta = (Real) ((Real) this.gramMatrix.get(0,2).dividedBy(a.times(c)))
+                .acos().times(f);
+        final Real gamma = (Real) ((Real) this.gramMatrix.get(0,1)
+                .dividedBy(a.times(b))).acos().times(f);
+        return
+        "a=" + format(a.doubleValue()) +
+        ", b=" + format(b.doubleValue()) +
+        ", c=" + format(c.doubleValue()) +
+        ", alpha=" + format(alpha.doubleValue()) +
+        ", beta=" + format(beta.doubleValue()) +
+        ", gamma=" + format(gamma.doubleValue());
+    }
+    
     private double length(final Vector v) {
         final Real squareLength = (Real) Vector.dot(v, v, this.gramMatrix);
         return Math.sqrt(squareLength.doubleValue());
@@ -301,11 +324,41 @@ public class SpringEmbedder {
         }
     }
 
+    
+    private void symmetrizeCell() {
+        // -- preparations
+        final int d = this.graph.getDimension();
+        final Set syms = this.graph.symmetries();
+        
+        // --- compute a symmetry-invariant quadratic form
+        Matrix M = Matrix.zero(d, d);
+        for (final Iterator iter = syms.iterator(); iter.hasNext();) {
+            final Matrix A = ((Morphism) iter.next()).getLinearOperator().getCoordinates()
+                    .getSubMatrix(0, 0, d, d);
+            M = (Matrix) M.plus(A.times(this.gramMatrix).times(A.transposed()));
+        }
+        M = ((Matrix) M.times(new Fraction(1, syms.size()))).mutableClone();
+        for (int i = 0; i < d; ++i) {
+            for (int j = i+1; j < d; ++j) {
+                M.set(j, i, M.get(i, j));
+            }
+        }
+        this.gramMatrix = M;
+    }
+    
+    
     public void stepCell() {
         final int dim = this.graph.getDimension();
+        if (DEBUG) {
+            System.err.println("@@@ Entering stepCell");
+            System.err.println("@@@   Gram matrix before: " + gramAsString());
+        }
         
         // --- scale to make unit average edge length
         normalize();
+        if (DEBUG) {
+            System.err.println("@@@   Gram matrix normalized: " + gramAsString());
+        }
 
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
@@ -372,6 +425,10 @@ public class SpringEmbedder {
                 dG = (Matrix) dG.plus(dE.times(0.5));
             }
         }
+
+        if (DEBUG) {
+            System.err.println("@@@   Gradient: " + gramAsString());
+        }
         
        // --- determine the step size
         final IArithmetic norm = dG.norm();
@@ -382,14 +439,35 @@ public class SpringEmbedder {
             scale = new FloatingPoint(1);
         }
         
+        if (DEBUG) {
+            System.err.println("@@@   Scale: " + scale);
+        }
+
         // --- apply the step
         final Point before = encodeGramMatrix();
         this.gramMatrix = (Matrix) G.minus(dG.times(scale));
-        decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
+        if (DEBUG) {
+            System.err.println("@@@   Gram matrix plus gradient: " + gramAsString());
+        }
+        //decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
+        try {
+            symmetrizeCell();
+        } catch (Exception ex) {
+            System.err.println(Misc.stackTrace(ex));
+        }
+        if (DEBUG) {
+            System.err.println("@@@   Resymmetrized gram matrix: " + gramAsString());
+        }
         final Point after = encodeGramMatrix();
         
         final Vector d = (Vector) after.minus(before);
         this.lastCellChangeAmount = Math.sqrt(((Real) Vector.dot(d, d)).doubleValue());
+        
+        if (DEBUG) {
+            System.err.println("@@@ Leaving stepCell()");
+            System.err.println();
+            System.err.flush();
+        }
     }
 
     public int steps(final int n) {
@@ -460,18 +538,18 @@ public class SpringEmbedder {
         return new Point(a);
     }
     
-    private void decodeGramMatrix(final Point p) {
-        final int d = this.graph.getDimension();
-        this.gramMatrix = new Matrix(d, d);
-        int k = 0;
-        for (int i = 0; i < d; ++i) {
-            for (int j = i; j < d; ++j) {
-                final IArithmetic x = p.get(k++);
-                this.gramMatrix.set(i, j, x);
-                this.gramMatrix.set(j, i, x);
-            }
-        }
-    }
+//    private void decodeGramMatrix(final Point p) {
+//        final int d = this.graph.getDimension();
+//        this.gramMatrix = new Matrix(d, d);
+//        int k = 0;
+//        for (int i = 0; i < d; ++i) {
+//            for (int j = i; j < d; ++j) {
+//                final IArithmetic x = p.get(k++);
+//                this.gramMatrix.set(i, j, x);
+//                this.gramMatrix.set(j, i, x);
+//            }
+//        }
+//    }
     
     private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
     
