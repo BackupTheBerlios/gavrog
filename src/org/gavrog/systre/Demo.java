@@ -58,7 +58,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.34 2006/02/16 06:58:56 odf Exp $
+ * @version $Id: Demo.java,v 1.35 2006/02/17 22:30:43 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -294,26 +294,31 @@ public class Demo {
 
         // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
         SpringEmbedder embedder = new SpringEmbedder(G);
+        try {
+            embedder.setOptimizePositions(false);
+            embedder.setOptimizeCell(true);
+            embedder.steps(200);
+        } catch (Exception ex) {
+            out.println("==================================================");
+            final String msg = "!!! WARNING (INTERNAL) - Could not relax unit cell shape: "
+                    + ex;
+            out.println(msg);
+            out.println(Misc.stackTrace(ex));
+            out.println("==================================================");
+            embedder = new SpringEmbedder(G);
+            embedder.setOptimizeCell(false);
+        }
         if (this.relax) {
             try {
-                embedder.setOptimizePositions(false);
-                embedder.steps(200);
                 embedder.setOptimizePositions(true);
-                embedder.steps(500);
-            } catch (Exception ex) {
-                out.println(Misc.stackTrace(ex));
-                out.println("!!! WARNING (INTERNAL) - Could not relax unit cell shape: " + ex);
-                embedder = new SpringEmbedder(G);
-                embedder.setOptimizeCell(false);
-                embedder.steps(200);
-            }
-        } else {
-            try {
-                embedder.setOptimizePositions(false);
                 embedder.steps(200);
             } catch (Exception ex) {
+                out.println("==================================================");
+                final String msg = "!!! WARNING (INTERNAL) - Could not relax positions: "
+                        + ex;
+                out.println(msg);
                 out.println(Misc.stackTrace(ex));
-                out.println("!!! WARNING (INTERNAL) - Could not relax unit cell shape:" + ex);
+                out.println("==================================================");
                 embedder = new SpringEmbedder(G);
             }
         }
@@ -428,17 +433,24 @@ public class Demo {
             out.println();
             cgd.println();
         }
-        out.println();
-        out.println("Finished structure \"" + name + "\".");
         cgd.println("END");
         cgd.println();
         cgd.flush();
         final String cgdString = cgdStringWriter.toString();
-        final PeriodicGraph test = NetParser.stringToNet(cgdString);
-        if (!test.equals(G)) {
-            final String msg = "Output does not match original graph.";
-            throw new RuntimeException(msg);
+        try {
+            final PeriodicGraph test = NetParser.stringToNet(cgdString);
+            if (!test.equals(G)) {
+                final String msg = "Output does not match original graph.";
+                throw new RuntimeException(msg);
+            }
+        } catch (Exception ex) {
+            out.println("==================================================");
+            out.println("!!! ERROR (INTERNAL) - could not verify output data: " + ex);
+            out.println(Misc.stackTrace(ex));
+            out.println("==================================================");
         }
+        out.println();
+        out.println("Finished structure \"" + name + "\".");
     }
     
     /**
