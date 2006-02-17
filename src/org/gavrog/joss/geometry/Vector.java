@@ -34,7 +34,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.25 2005/12/03 08:51:04 odf Exp $
+ * @version $Id: Vector.java,v 1.26 2006/02/17 23:14:21 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -685,8 +685,12 @@ public class Vector extends ArithmeticBase implements IArithmetic {
             final String msg = "illegal first argument";
             throw new IllegalArgumentException(msg);
         }
-        if (M.numberOfRows() != dim || !M.equals(M.transposed())) {
-            final String msg = "illegal second argument";
+        if (M.numberOfRows() != dim) {
+            final String msg = "wrong dimension for second argument";
+            throw new IllegalArgumentException(msg);
+        }
+        if (!M.equals(M.transposed())) {
+            final String msg = "second argument must be symmetric, but was " + M;
             throw new IllegalArgumentException(msg);
         }
 
