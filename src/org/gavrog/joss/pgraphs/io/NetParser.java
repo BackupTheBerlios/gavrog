@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.62 2006/02/11 02:34:14 odf Exp $
+ * @version $Id: NetParser.java,v 1.63 2006/02/18 02:06:49 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -681,8 +681,8 @@ public class NetParser extends GenericParser {
         
         // --- convert gram matrix
         if (cellGram != null) {
-            cellGram = (Matrix) primitiveCell.times(cellGram).times(
-                    primitiveCell.transposed());
+            cellGram = ((Matrix) primitiveCell.times(cellGram).times(
+                    primitiveCell.transposed())).symmetric();
         }
         
         // --- apply group operators to generate all nodes
