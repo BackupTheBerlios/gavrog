@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.22 2006/02/18 02:06:15 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.23 2006/02/18 08:19:02 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -49,7 +49,6 @@ public class SpringEmbedder {
     private final Map node2sym;
     private final Map node2images;
     private Matrix gramMatrix;
-    //private Operator gramProjection;
     private double lastPositionChangeAmount = 0;
     private double lastCellChangeAmount = 0;
     private boolean optimizeCell = true;
@@ -93,14 +92,15 @@ public class SpringEmbedder {
         this.graph = graph;
         this.positions = new HashMap();
         this.positions.putAll(positions);
-        this.gramMatrix = gramMatrix;
 
         final int d = graph.getDimension();
-//        final SpaceGroup G = new SpaceGroup(d, graph.symmetryOperators());
-//        final Matrix M = G.configurationSpaceForGramMatrix();
-//        this.gramProjection = Operator.orthogonalProjection(M, Matrix
-//                .one(d * (d + 1) / 2));
-        
+        if (gramMatrix == null) {
+            this.gramMatrix = Matrix.one(d);
+            symmetrizeCell();
+        } else {
+            this.gramMatrix = gramMatrix;
+        }
+
         this.angles = angles();
         if (this.angles == null) {
             throw new RuntimeException("something wrong here");
@@ -168,12 +168,7 @@ public class SpringEmbedder {
     }
     
     public SpringEmbedder(final PeriodicGraph G) {
-        this(G, G.barycentricPlacement(), gram(G));
-    }
-    
-    private static Matrix gram(final PeriodicGraph G) {
-        final Matrix M = G.symmetricBasis();
-        return (Matrix) M.times(M.transposed());
+        this(G, G.barycentricPlacement(), null);
     }
     
     public double[] edgeStatistics() {
@@ -452,7 +447,6 @@ public class SpringEmbedder {
         if (DEBUG) {
             System.err.println("@@@   Gram matrix plus gradient: " + gramAsString());
         }
-        //decodeGramMatrix((Point) encodeGramMatrix().times(this.gramProjection));
         try {
             symmetrizeCell();
         } catch (Exception ex) {
