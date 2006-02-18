@@ -108,7 +108,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.17 2006/02/16 22:53:19 odf Exp $
+ * @version $Id: NetViewer.java,v 1.18 2006/02/18 08:20:15 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -536,30 +536,37 @@ public class NetViewer extends Applet {
         busy();
         final PeriodicGraph G = this.net;
         
-        // --- relax the atom configuration
-        SpringEmbedder relaxer = new SpringEmbedder(G);
+        // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
         boolean error = false;
+        SpringEmbedder embedder = new SpringEmbedder(G);
         try {
-            relaxer.setOptimizePositions(false);
-            relaxer.steps(200);
-            if (relax) {
-                relaxer.setOptimizePositions(true);
-                relaxer.steps(500);
-            }
+            embedder.setOptimizePositions(false);
+            embedder.setOptimizeCell(true);
+            embedder.steps(200);
         } catch (Exception ex) {
-            status.setText("Could not relax unit cell parameters");
-            relaxer = new SpringEmbedder(G);
-            if (relax) {
-                relaxer.setOptimizeCell(false);
-                relaxer.steps(200);
+            status.setText("WARNING - Could not relax unit cell shape: " + ex);
+            error = true;
+            embedder = new SpringEmbedder(G);
+            embedder.setOptimizeCell(false);
+        }
+        if (relax) {
+            try {
+                embedder.setOptimizePositions(true);
+                embedder.steps(200);
+            } catch (Exception ex) {
+                status.setText("WARNING - Could not relax positions: " + ex);
+                error = true;
+                embedder = new SpringEmbedder(G);
             }
         }
-        relaxer.normalize();
-        final double stats[] = relaxer.edgeStatistics();
+        embedder.normalize();
+        
+
+        final double stats[] = embedder.edgeStatistics();
         final double min = stats[0];
         final double max = stats[1];
         final double avg = stats[2];
-        final Matrix gr = relaxer.getGramMatrix();
+        final Matrix gr = embedder.getGramMatrix();
         final double det = ((Real) gr.determinant()).doubleValue();
         final double vol = Math.sqrt(det) / G.numberOfNodes();
         if (!error) {
@@ -569,7 +576,7 @@ public class NetViewer extends Applet {
         }
         
         // --- store embedder for later reference
-        this.embedder = relaxer;
+        this.embedder = embedder;
         done();
     }
 
