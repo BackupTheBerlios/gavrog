@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.21 2006/02/16 06:58:26 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.22 2006/02/18 02:06:15 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -227,6 +227,9 @@ public class SpringEmbedder {
 
     public void normalize() {
         final double avg = edgeStatistics()[2];
+        if (avg < 1e-3) {
+            throw new RuntimeException("degenerate unit cell while relaxing");
+        }
         this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
     }
 
@@ -505,7 +508,8 @@ public class SpringEmbedder {
     }
 
     public void setGramMatrix(final Matrix gramMatrix) {
-        this.gramMatrix.setSubMatrix(0, 0, gramMatrix);
+        this.gramMatrix = (Matrix) gramMatrix.clone();
+        this.gramMatrix.makeImmutable();
     }
 
     public Matrix getGramMatrix() {
