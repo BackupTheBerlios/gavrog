@@ -58,7 +58,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.35 2006/02/17 22:30:43 odf Exp $
+ * @version $Id: Demo.java,v 1.36 2006/02/18 02:07:12 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -119,7 +119,8 @@ public class Demo {
         }
     }
     
-    public void processGraph(final PeriodicGraph graph, final String name, final String givenGroup) {
+    public void processGraph(final PeriodicGraph graph, final String name,
+            final String givenGroup) {
         PeriodicGraph G = graph;
         final int d = G.getDimension();
         
