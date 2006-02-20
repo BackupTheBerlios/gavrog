@@ -58,7 +58,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.37 2006/02/20 22:54:18 odf Exp $
+ * @version $Id: Demo.java,v 1.38 2006/02/20 23:14:01 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -80,6 +80,7 @@ public class Demo {
     // --- options
     private boolean relax = true;
     private boolean useBuiltin = true;
+    private BufferedWriter outputArchive = null;
     
     public Demo() {
         // --- read the default archive
@@ -292,7 +293,17 @@ public class Demo {
         }
         if (countMatches == 0) {
             out.println("   Structure is new.");
-            this.internalArchive.add(G, name == null ? "nameless" : name);
+            final Archive.Entry entry = this.internalArchive.add(G,
+                    name == null ? "nameless" : name);
+            if (this.outputArchive != null) {
+                try {
+                    this.outputArchive.write(entry.toString());
+                    this.outputArchive.write("\n");
+                    this.outputArchive.flush();
+                } catch (IOException ex) {
+                    out.println("!!! ERROR (FILE) Could not write structure to file.");
+                }
+            }
         }
         out.println();
         out.flush();
@@ -567,6 +578,15 @@ public class Demo {
         
         int count = 0;
         
+        
+        if (outputArchiveFileName != null) {
+            try {
+                demo.outputArchive = new BufferedWriter(new FileWriter(outputArchiveFileName));
+            } catch (IOException ex) {
+                out.println("!!! ERROR (FILE) - Could not open output archive:" + ex);
+            }
+        }
+        
         for (final Iterator iter = files.iterator(); iter.hasNext();) {
             final String filename = (String) iter.next();
             if (filename.endsWith(".arc")) {
@@ -582,14 +602,12 @@ public class Demo {
             }
         }
         
-        if (outputArchiveFileName != null) {
+        if (demo.outputArchive != null) {
             try {
-                final BufferedWriter writer = new BufferedWriter(new FileWriter(outputArchiveFileName));
-                demo.writeInternalArchive(writer);
-                writer.flush();
-                writer.close();
+                demo.outputArchive.flush();
+                demo.outputArchive.close();
             } catch (IOException ex) {
-                out.println("!!! ERROR (FILE) - Could not write output archive:" + ex);
+                out.println("!!! ERROR (FILE) - Output archive not completely written.");
             }
         }
     }
