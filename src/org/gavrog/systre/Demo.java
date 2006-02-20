@@ -58,7 +58,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.36 2006/02/18 02:07:12 odf Exp $
+ * @version $Id: Demo.java,v 1.37 2006/02/20 22:54:18 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -79,6 +79,7 @@ public class Demo {
     
     // --- options
     private boolean relax = true;
+    private boolean useBuiltin = true;
     
     public Demo() {
         // --- read the default archive
@@ -264,7 +265,10 @@ public class Demo {
         // --- determine the Systre key and look it up in the archives
         final String invariant = G.invariant().toString();
         int countMatches = 0;
-        Archive.Entry found = mainArchive.getByKey(invariant);
+        Archive.Entry found = null;
+        if (this.useBuiltin) {
+            found = mainArchive.getByKey(invariant);
+        }
         if (found != null) {
             ++countMatches;
             out.println("   Structure was found in builtin archive.");
@@ -549,6 +553,9 @@ public class Demo {
                 } else {
                     outputArchiveFileName = args[++i];
                 }
+            } else if (s.equalsIgnoreCase("--nobuiltin")
+                    || s.equalsIgnoreCase("-nobuiltin")) {
+                demo.useBuiltin = false;
             } else {
                 files.add(args[i]);
             }
