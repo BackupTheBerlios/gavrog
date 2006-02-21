@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestNetParser.java,v 1.20 2005/10/23 05:07:32 odf Exp $
+ * @version $Id: TestNetParser.java,v 1.21 2006/02/21 22:35:47 odf Exp $
  */
 public class TestNetParser extends TestCase {
     PeriodicGraph pcu, dia, srs, ths, tfa;
@@ -261,5 +261,33 @@ public class TestNetParser extends TestCase {
                 + "2 4 1 0 0\n"
                 + "END\n");
         assertEquals(cds2.canonical().toString(), cds1.canonical().toString());
+        
+        final PeriodicGraph lon1 = NetParser.stringToNet(""
+                + "PERIODIC_GRAPH\n"
+                + "1 2 0 0 0\n"
+                + "1 2 0 1 0\n"
+                + "1 2 1 0 0\n"
+                + "1 3 0 0 0\n"
+                + "2 4 0 0 0\n"
+                + "3 4 0 0 1\n"
+                + "3 4 0 1 1\n"
+                + "3 4 1 0 1\n"
+                + "END\n");
+        final PeriodicGraph lon2 = NetParser.stringToNet(""
+                + "CRYSTAL\n"
+                + "NAME lon\n"
+                + "GROUP P63/mmc\n"
+                + "CELL 1.6331 1.6331 2.6667 90.0 90.0 120.0\n"
+                + "VERTICES\n"
+                + "  \"V1\" 4 0.3333 0.6667 0.0625\n"
+                + "COORDINATION_SEQUENCES\n"
+                + "  4 12 25 44 67 96 130 170 214 264\n"
+                + "VERTEX_SYMBOLS\n"
+                + "  6(2).6(2).6(2).6(2).6(2).6(2)\n"
+                + "EDGE_CENTERS\n"
+                + "  \"E1\" 2 0.3333 0.6667 0.25\n"
+                + "  \"E2\" 2 0.5 0.0 0.0\n"
+                + "END\n");
+        assertEquals(lon1, lon2);
     }
 }

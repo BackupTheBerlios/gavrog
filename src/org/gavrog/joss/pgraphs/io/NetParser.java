@@ -45,6 +45,7 @@ import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
@@ -53,7 +54,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.63 2006/02/18 02:06:49 odf Exp $
+ * @version $Id: NetParser.java,v 1.64 2006/02/21 22:35:47 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -66,16 +67,22 @@ public class NetParser extends GenericParser {
         public final Object name;     // the node's name
         public final int connectivity; // the node's connectivity
         public final IArithmetic site;     // the position or site of the node
+        public boolean isEdgeCenter; // is this really an edge center?
         
         public NodeDescriptor(final Object name, final int connectivity,
-                final IArithmetic site) {
+                final IArithmetic site, final boolean isEdgeCenter) {
             this.name = name;
             this.connectivity = connectivity;
             this.site = site;
+            this.isEdgeCenter = isEdgeCenter;
         }
         
         public String toString() {
-            return "Node(" + name + ", " + connectivity + ", " + site + ")";
+            if (isEdgeCenter) {
+                return "EdgeCenter(" + name + ", " + connectivity + ", " + site + ")";
+            } else {
+                return "Node(" + name + ", " + connectivity + ", " + site + ")";
+            }
         }
     }
     
@@ -145,7 +152,15 @@ public class NetParser extends GenericParser {
         result.put("bonds", "edge");
         result.put("edges", "edge");
         result.put("spacegroup", "group");
+        result.put("space_group", "group");
         result.put("id", "name");
+        result.put("edge_centers", "edge_center");
+        result.put("edge_centre", "edge_center");
+        result.put("edge_centres", "edge_center");
+        result.put("edgecenter", "edge_center");
+        result.put("edgecenters", "edge_center");
+        result.put("edgecentre", "edge_center");
+        result.put("edgecentres", "edge_center");
         return Collections.unmodifiableMap(result);
     }
     
@@ -334,7 +349,7 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
                 final Operator position = parseSiteOrOperator(row, 1);
-                final NodeDescriptor node = new NodeDescriptor(name, -1, position);
+                final NodeDescriptor node = new NodeDescriptor(name, -1, position, false);
                 nodeDescriptors.add(node);
                 nodeNameToDesc.put(name, node);
             } else if (block[i].key.equals("edge")) {
@@ -370,7 +385,8 @@ public class NetParser extends GenericParser {
         for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) iter.next();
             final Operator site = (Operator) ((Operator) desc.site).times(to);
-            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site));
+            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site,
+                    desc.isEdgeCenter));
         }
         nodeDescriptors.clear();
         nodeDescriptors.addAll(nodeDescsTmp);
@@ -495,7 +511,7 @@ public class NetParser extends GenericParser {
         Matrix cellGram = null;
         
         double precision = 0.001;
-        double minEdgeLength = 0.95;
+        double minEdgeLength = 0.1;
         double maxEdgeLength = Double.MAX_VALUE;
         
         final List nodeDescriptors = new LinkedList();
@@ -506,14 +522,15 @@ public class NetParser extends GenericParser {
         for (int i = 0; i < block.length; ++i) {
             final List row = block[i].values;
             final String key = block[i].key;
+            final int lineNr = block[i].lineNumber;
             if (key.equals("group")) {
                 if (seen.contains(key)) {
                     final String msg = "Group specified twice at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 if (row.size() < 1) {
                     final String msg = "Missing argument at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 groupName = (String) row.get(0);
                 if (Character.isLowerCase(groupName.charAt(0))) {
@@ -525,49 +542,60 @@ public class NetParser extends GenericParser {
                 ops.addAll(group.getOperators());
                 if (ops == null) {
                     final String msg = "Space group not recognized at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
             } else if (key.equals("cell")) {
                 if (seen.contains(key)) {
                     final String msg = "Cell specified twice at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 final int m = dim + dim * (dim-1) / 2;
                 if (row.size() != m) {
                     final String msg = "Expected " + m + " arguments at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 for (int j = 0; j < m; ++j) {
                     if (!(row.get(i) instanceof Real)) {
                         final String msg = "Arguments must be real numbers at line ";
-                        throw new DataFormatException(msg + block[i].lineNumber);
+                        throw new DataFormatException(msg + lineNr);
                     }
                 }
                 cellGram = gramMatrix(dim, row);
-            } else if (block[i].key.equals("node")) {
+            } else if (key.equals("node") || key.equals("edge_center")) {
                 if (row.size() != dim + 2) {
                     final String msg = "Expected " + (dim + 2) + " arguments at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 final Object name = row.get(0);
                 if (nameToDesc.containsKey(name)) {
                     final String msg = "Node specified twice at line ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 final Object conn = row.get(1);
                 if (!(conn instanceof Whole && ((Whole) conn).isPositive())) {
                     final String msg = "Connectivity must be a positive integer ";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 final IArithmetic pos[] = new IArithmetic[dim];
                 for (int j = 0; j < dim; ++j) {
                     pos[j] = (IArithmetic) row.get(j + 2);
                 }
                 final int c = ((Whole) conn).intValue();
-                final NodeDescriptor node = new NodeDescriptor(name, c, new Point(pos));
+                final boolean isCenter;
+                if (key.equals("node")) {
+                    isCenter = false;
+                } else {
+                    if (c != 2) {
+                        final String msg = "Edge center connectivity must be 2";
+                        throw new DataFormatException(msg + lineNr);
+                    }
+                    isCenter = true;
+                }
+                final NodeDescriptor node = new NodeDescriptor(name, c, new Point(pos),
+                        isCenter);
                 nodeDescriptors.add(node);
                 nameToDesc.put(name, node);
-            } else if (block[i].key.equals("edge")) {
+            } else if (key.equals("edge")) {
                 final Object source;
                 final Object target;
                 if (row.size() == 2) {
@@ -597,10 +625,12 @@ public class NetParser extends GenericParser {
                 } else {
                     final String msg = "Expected 2, " + (dim + 1) + " or " + 2 * dim
                             + " arguments at line";
-                    throw new DataFormatException(msg + block[i].lineNumber);
+                    throw new DataFormatException(msg + lineNr);
                 }
                 final EdgeDescriptor edge = new EdgeDescriptor(source, target, null);
                 edgeDescriptors.add(edge);
+            } else {
+                // TODO store additional entrys
             }
             seen.add(key);
         }
@@ -651,7 +681,7 @@ public class NetParser extends GenericParser {
             final NodeDescriptor desc = (NodeDescriptor) iter.next();
             final Point site = (Point) desc.site.times(to);
             final NodeDescriptor newDesc = new NodeDescriptor(desc.name,
-                    desc.connectivity, site);
+                    desc.connectivity, site, desc.isEdgeCenter);
             nodeDescsTmp.add(newDesc);
             nameToDesc.put(desc.name, newDesc);
         }
@@ -688,7 +718,7 @@ public class NetParser extends GenericParser {
         // --- apply group operators to generate all nodes
         final PeriodicGraph G = new PeriodicGraph(dim);
         final Map nodeToPosition = new HashMap();
-        final Map nodeToAddress = new HashMap();
+        final Map nodeToDescriptorAddress = new HashMap();
         
         for (final Iterator itNodes = nodeDescriptors.iterator(); itNodes.hasNext();) {
             final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
@@ -716,7 +746,7 @@ public class NetParser extends GenericParser {
                     final INode v = G.newNode();
                     // --- store some data for it
                     nodeToPosition.put(v, p);
-                    nodeToAddress.put(v, new Pair(desc, op));
+                    nodeToDescriptorAddress.put(v, new Pair(desc, op));
                     for (final Iterator iter = stabilizer.iterator(); iter.hasNext();) {
                         final Operator a = (Operator) ((Operator) iter.next()).times(op);
                         final Operator aModZ = a.modZ();
@@ -892,7 +922,7 @@ public class NetParser extends GenericParser {
                 }
             }
 
-            final Pair address = (Pair) nodeToAddress.get(v);
+            final Pair address = (Pair) nodeToDescriptorAddress.get(v);
             final NodeDescriptor desc = (NodeDescriptor) address.getFirst();
             final int connectivity = desc.connectivity;
             int neighbors = 0;
@@ -900,7 +930,7 @@ public class NetParser extends GenericParser {
             for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
                 if (v.degree() >= connectivity) {
                     if (v.degree() > connectivity) {
-                        final String msg = "too many neighbors found for node ";
+                        final String msg = "Too many neighbors found for node ";
                         throw new DataFormatException(msg + v);
                     }
                     break;
@@ -912,10 +942,10 @@ public class NetParser extends GenericParser {
                 final INode w = (INode) adr.getFirst();
                 final Vector s = (Vector) adr.getSecond();
                 if (dist < minEdgeLength) {
-                    final String msg = "found points closer than minimal edge length of ";
+                    final String msg = "Found points closer than minimal edge length of ";
                     throw new DataFormatException(msg + minEdgeLength);
                 } else if (dist > maxEdgeLength) {
-                    final String msg = "not enough neighbors found for node ";
+                    final String msg = "Not enough neighbors found for node ";
                     throw new DataFormatException(msg + v);
                 }
                 if (G.getEdge(v, w, s) == null) {
@@ -926,6 +956,34 @@ public class NetParser extends GenericParser {
                     ++neighbors;
                 }
             }
+        }
+        
+        // --- cleanup phase: remove nodes that are really meant to be edge centers
+        final Set bogus = new HashSet();
+        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            final Pair adr = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor desc = (NodeDescriptor) adr.getFirst();
+            if (desc.isEdgeCenter) {
+                bogus.add(v);
+            }
+        }
+        for (final Iterator nodes = bogus.iterator(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            final List inc = G.allIncidences(v);
+            if (inc.size() != 2) {
+                throw new RuntimeException("Edge center has connectivity != 2");
+            }
+            final IEdge e1 = (IEdge) inc.get(0);
+            final Vector s1 = G.getShift(e1);
+            final INode w1 = e1.opposite(v);
+            final IEdge e2 = (IEdge) inc.get(1);
+            final Vector s2 = G.getShift(e2);
+            final INode w2 = e2.opposite(v);
+            G.newEdge(w1, w2, (Vector) s2.minus(s1));
+            G.delete(e1);
+            G.delete(e2);
+            G.delete(v);
         }
         
         if (DEBUG) {
@@ -1162,7 +1220,7 @@ public class NetParser extends GenericParser {
             }
         }
 
-        // --- conver results
+        // --- convert results
         final Vector results[] = new Vector[shifts.size()];
         shifts.toArray(results);
         return results;
