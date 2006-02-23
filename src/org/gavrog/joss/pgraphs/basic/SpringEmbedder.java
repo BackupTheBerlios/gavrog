@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.23 2006/02/18 08:19:02 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.24 2006/02/23 23:00:29 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -191,24 +191,33 @@ public class SpringEmbedder {
         return new double[] { minLength, maxLength, avgLength };
     }
 
-    private String gramAsString() {
-        final Real a = ((Real) this.gramMatrix.get(0,0)).sqrt();
-        final Real b = ((Real) this.gramMatrix.get(1,1)).sqrt();
-        final Real c = ((Real) this.gramMatrix.get(2,2)).sqrt();
+    private String gramAsString(final Matrix G) {
+        final Real G00 = (Real) G.get(0,0);
+        final Real G01 = (Real) G.get(0,1);
+        final Real G02 = (Real) G.get(0,2);
+        final Real G11 = (Real) G.get(1,1);
+        final Real G12 = (Real) G.get(1,2);
+        final Real G22 = (Real) G.get(2,2);
+        final Real a = G00.sqrt();
+        final Real b = G11.sqrt();
+        final Real c = G22.sqrt();
         final Real f = new FloatingPoint(180.0 / Math.PI);
-        final Real alpha = (Real) ((Real) this.gramMatrix.get(1,2)
-                .dividedBy(b.times(c))).acos().times(f);
-        final Real beta = (Real) ((Real) this.gramMatrix.get(0,2).dividedBy(a.times(c)))
-                .acos().times(f);
-        final Real gamma = (Real) ((Real) this.gramMatrix.get(0,1)
-                .dividedBy(a.times(b))).acos().times(f);
+        final Real alpha = (Real) ((Real) G12.dividedBy(b.times(c))).acos().times(f);
+        final Real beta = (Real) ((Real) G02.dividedBy(a.times(c))).acos().times(f);
+        final Real gamma = (Real) ((Real) G01.dividedBy(a.times(b))).acos().times(f);
         return
         "a=" + format(a.doubleValue()) +
         ", b=" + format(b.doubleValue()) +
         ", c=" + format(c.doubleValue()) +
         ", alpha=" + format(alpha.doubleValue()) +
         ", beta=" + format(beta.doubleValue()) +
-        ", gamma=" + format(gamma.doubleValue());
+        ", gamma=" + format(gamma.doubleValue()) +
+        ", G00=" + format(G00.doubleValue()) +
+        ", G11=" + format(G11.doubleValue()) +
+        ", G22=" + format(G22.doubleValue()) +
+        ", G12=" + format(G12.doubleValue()) +
+        ", G02=" + format(G02.doubleValue()) +
+        ", G01=" + format(G01.doubleValue());
     }
     
     private double length(final Vector v) {
@@ -228,9 +237,17 @@ public class SpringEmbedder {
         this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
     }
 
+    public void normalizeUp() {
+        final double min = edgeStatistics()[0];
+        if (min < 1e-3) {
+            throw new RuntimeException("edge got too small while relaxing");
+        }
+        this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(min * min);
+    }
+
     public void step() {
         // --- scale to make unit average edge length
-        normalize();
+        normalizeUp();
 
         // --- initialize displacements
         final Map deltas = new HashMap();
@@ -349,13 +366,13 @@ public class SpringEmbedder {
         final int dim = this.graph.getDimension();
         if (DEBUG) {
             System.err.println("@@@ Entering stepCell");
-            System.err.println("@@@   Gram matrix before: " + gramAsString());
+            System.err.println("@@@   Gram matrix before: " + gramAsString(this.gramMatrix));
         }
         
         // --- scale to make unit average edge length
-        normalize();
+        normalizeUp();
         if (DEBUG) {
-            System.err.println("@@@   Gram matrix normalized: " + gramAsString());
+            System.err.println("@@@   Gram matrix normalized: " + gramAsString(this.gramMatrix));
         }
 
         final Matrix G = this.gramMatrix;
@@ -372,8 +389,12 @@ public class SpringEmbedder {
             }
         }
         final Real vol = (Real) G.determinant();
-        final Real f = new FloatingPoint(0.01 / this.graph.numberOfNodes());
+        final Real f = new FloatingPoint(1.0 / this.graph.numberOfNodes());
         dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
+        //    ... make it the gradient of the cubed volume
+        dG = (Matrix) dG.times(G.determinant()).times(3).times(f).times(f);
+        //    ... boost the weight
+        dG = (Matrix) dG.times(1000);
 
         // --- evaluate the gradients of the edge energies
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
@@ -425,7 +446,7 @@ public class SpringEmbedder {
         }
 
         if (DEBUG) {
-            System.err.println("@@@   Gradient: " + gramAsString());
+            System.err.println("@@@   Gradient: " + gramAsString(dG));
         }
         
        // --- determine the step size
@@ -445,7 +466,7 @@ public class SpringEmbedder {
         final Point before = encodeGramMatrix();
         this.gramMatrix = (Matrix) G.minus(dG.times(scale));
         if (DEBUG) {
-            System.err.println("@@@   Gram matrix plus gradient: " + gramAsString());
+            System.err.println("@@@   Gram matrix plus gradient: " + gramAsString(this.gramMatrix));
         }
         try {
             symmetrizeCell();
@@ -453,7 +474,7 @@ public class SpringEmbedder {
             System.err.println(Misc.stackTrace(ex));
         }
         if (DEBUG) {
-            System.err.println("@@@   Resymmetrized gram matrix: " + gramAsString());
+            System.err.println("@@@   Resymmetrized gram matrix: " + gramAsString(this.gramMatrix));
         }
         final Point after = encodeGramMatrix();
         
