@@ -17,6 +17,7 @@ limitations under the License.
 package org.gavrog.systre;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -58,7 +59,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.38 2006/02/20 23:14:01 odf Exp $
+ * @version $Id: Demo.java,v 1.39 2006/02/23 20:11:48 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -131,8 +132,6 @@ public class Demo {
         }
         
         // --- print some information on net as given
-        out.println("Structure \"" + name + "\".");
-        out.println();
         out.println("   Given space group is " + givenGroup + ".");
         out.flush();
         final int n = G.numberOfNodes();
@@ -149,7 +148,7 @@ public class Demo {
             return;
         }
         if (!G.isStable()) {
-            out.println("!!! ERROR (STRUCTURE) - Graph may not have collisions.");
+            out.println("!!! ERROR (STRUCTURE) - Graph must not have collisions.");
             out.println();
             out.flush();
             return;
@@ -465,39 +464,38 @@ public class Demo {
             out.println(Misc.stackTrace(ex));
             out.println("==================================================");
         }
-        out.println();
-        out.println("Finished structure \"" + name + "\".");
     }
     
     /**
      * Analyzes all nets specified in a file and prints the results.
      * 
-     * @param filename the name of the input file.
+     * @param filePath the name of the input file.
      */
-    public void processDataFile(final String filename) {
+    public void processDataFile(final String filePath) {
         // --- set up a parser for reading input from the given file
         NetParser parser = null;
         int count = 0;
         try {
-            parser = new NetParser(new FileReader(filename));
+            parser = new NetParser(new FileReader(filePath));
         } catch (FileNotFoundException ex) {
-            out.println("!!! ERROR (FILE) - Could not find file \"" + filename + "\".");
+            out.println("!!! ERROR (FILE) - Could not find file \"" + filePath + "\".");
             return;
         }
-        out.println("Data file \"" + filename + "\".");
+        final String fileName = new File(filePath).getName().replaceFirst("\\..*$", "");
+        out.println("Data file \"" + filePath + "\".");
         
         // --- loop through the structures specied in the input file
         while (true) {
             PeriodicGraph G = null;
+            Exception problem = null;
             
             // --- read the next net
             try {
                 G = parser.parseNet();
             } catch (Exception ex) {
-                out.println("!!! ERROR (INPUT) - " + ex);
-                continue;
+                problem = ex;
             }
-            if (G == null) {
+            if (problem == null && G == null) {
                 break;
             }
             ++count;
@@ -510,19 +508,34 @@ public class Demo {
             }
             
             // --- process the graph
-            String name = parser.getName();
+            final String name = parser.getName();
+            final String archiveName;
+            final String displayName;
             if (name == null) {
-                name = "#" + count;
+                archiveName = fileName + "-#" + count;
+                displayName = "";
+            } else {
+                archiveName = name;
+                displayName = " - \"" + name + "\"";
             }
-            try {
-                processGraph(G, name, parser.getSpaceGroup());
-            } catch (Exception ex) {
-                out.println("!!! ERROR (INTERNAL) - " + ex);
+            
+            out.println("Structure #" + count + displayName + ".");
+            out.println();
+            if (problem != null) {
+                out.println("!!! ERROR (INPUT) - " + problem);
+            } else {
+                try {
+                    processGraph(G, archiveName, parser.getSpaceGroup());
+                } catch (Exception ex) {
+                    out.println("!!! ERROR (INTERNAL) - " + ex);
+                }
             }
+            out.println();
+            out.println("Finished structure #" + count + displayName + ".");
         }
 
         out.println();
-        out.println("Finished data file \"" + filename + "\".");
+        out.println("Finished data file \"" + filePath + "\".");
     }
     
     /**
