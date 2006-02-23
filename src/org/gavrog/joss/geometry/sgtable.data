@@ -8286,7 +8286,7 @@ lookup F4132 cubic F x,y-1/4,z
 lookup Fdd2 orthorhombic F x,y,z
 lookup Pm-3 cubic P x,y,z
 lookup Fd-3c:2 cubic F x-1/8,y-3/8,z-1/8
-lookup R-3c:H trigonal R y,-x+y,z-1/4
+lookup R-3c:H trigonal R x,y,z
 lookup P63mc hexagonal P x-y,x,z
 lookup I4/m tetragonal I y,-x,z
 lookup Fmmm orthorhombic F x,y,z

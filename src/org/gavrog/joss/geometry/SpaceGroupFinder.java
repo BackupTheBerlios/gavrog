@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.44 2006/02/11 06:47:29 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.45 2006/02/23 04:05:24 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -199,7 +199,11 @@ public class SpaceGroupFinder {
             }
             break;
         case TRIGONAL_SYSTEM:
-            codes = new String[] { "x,y,z", "x-y,x,z" };
+            if (centering == 'P') {
+                codes = new String[] { "x,y,z", "x-y,x,z" };
+            } else {
+                codes = new String[] { "x,y,z" };
+            }
             break;
         case CUBIC_SYSTEM:
             codes = new String[] { "x,y,z", "-y,x,z" };
@@ -488,22 +492,29 @@ public class SpaceGroupFinder {
         char centering = 'P';
         for (int i = 0; i < 3; ++i) {
             if (!v[i].get(2).isZero()) {
-                final Vector r;
-                if (v[i].get(2).isNegative()) {
-                    r = (Vector) v[i].negative();
-                } else {
-                    r = v[i];
-                }
+                final Vector r = v[i];
                 if (!z.isCollinearTo(r)) {
                     centering = 'R';
+                    if (DEBUG > 0) {
+                        System.err.println("In normalizedBasisTrigonal(): input = " + v[0]
+                                           + ", " + v[1] + ", " + v[2] + "; r = " + r);
+                    }
+                    if (r.get(2).isNegative()) {
+                        v[0] = (Vector) r.times(new Operator("2x-y,x+y, 0"));
+                        v[2] = (Vector) r.times(new Operator("0, 0, -3z"));
+                    } else {
                         v[0] = (Vector) r.times(new Operator("x+y, 2y-x, 0"));
                         v[2] = (Vector) r.times(new Operator("0, 0, 3z"));
+                    }
+                    break;
                 }
-                break;
             }
         }
         v[1] = (Vector) v[0].times(new Operator("-y, x-y, z"));
 
+        if (DEBUG > 0) {
+            System.err.println("    output = " + v[0] + ", " + v[1] + ", " + v[2]);
+        }
         return new Object[] { v, new Character(centering) };
     }
 
