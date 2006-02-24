@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.24 2006/02/23 23:00:29 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.25 2006/02/24 21:41:30 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -389,12 +389,14 @@ public class SpringEmbedder {
             }
         }
         final Real vol = (Real) G.determinant();
-        final Real f = new FloatingPoint(1.0 / this.graph.numberOfNodes());
-        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
-        //    ... make it the gradient of the cubed volume
-        dG = (Matrix) dG.times(G.determinant()).times(3).times(f).times(f);
-        //    ... boost the weight
-        dG = (Matrix) dG.times(1000);
+        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative();
+        //    ... make it the gradient of the squared inverse volume
+        dG = (Matrix) dG.times(vol.sqrt().times(2));
+        //    ... normalize to volume per vertex
+        final Real n = new FloatingPoint(this.graph.numberOfNodes());
+        dG = (Matrix) dG.times(n.raisedTo(2));
+        //    ... adjust the weight
+        dG = (Matrix) dG.times(1);
 
         // --- evaluate the gradients of the edge energies
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
