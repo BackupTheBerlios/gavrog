@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.25 2006/02/24 21:41:30 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.26 2006/02/24 23:26:15 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -286,9 +286,8 @@ public class SpringEmbedder {
             final double length = length(d);
             if (length < 1.0) {
                 final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
-                // --- smaller than edge forces
-                move(deltas, v, (Vector) movement.times(0.125));
-                move(deltas, w, (Vector) movement.times(-0.125));
+                move(deltas, v, (Vector) movement.times(0.5));
+                move(deltas, w, (Vector) movement.times(-0.5));
             }
         }
 
@@ -378,7 +377,7 @@ public class SpringEmbedder {
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
 
-        // --- evaluate the gradient of the inverse cell volume
+        // --- evaluate the gradient of the squared inverse cell volume
         for (int i = 0; i < dim; ++i) {
             dG.set(i, i, G.getMinor(i, i).determinant());
             for (int j = 0; j < i; ++j) {
@@ -390,8 +389,6 @@ public class SpringEmbedder {
         }
         final Real vol = (Real) G.determinant();
         dG = (Matrix) dG.times(vol.raisedTo(-2)).negative();
-        //    ... make it the gradient of the squared inverse volume
-        dG = (Matrix) dG.times(vol.sqrt().times(2));
         //    ... normalize to volume per vertex
         final Real n = new FloatingPoint(this.graph.numberOfNodes());
         dG = (Matrix) dG.times(n.raisedTo(2));
@@ -419,7 +416,7 @@ public class SpringEmbedder {
                     }
                 }
                 dE = (Matrix) dE.times(1.0 - 1.0 / length);
-                dG = (Matrix) dG.plus(dE.times(2));
+                dG = (Matrix) dG.plus(dE.times(1));
             }
         }
         // --- do the same with the angle energies
@@ -443,7 +440,7 @@ public class SpringEmbedder {
                     }
                 }
                 dE = (Matrix) dE.times(1.0 - 1.0 / length);
-                dG = (Matrix) dG.plus(dE.times(0.5));
+                dG = (Matrix) dG.plus(dE.times(1));
             }
         }
 
