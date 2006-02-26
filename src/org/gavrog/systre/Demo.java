@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.40 2006/02/26 03:18:30 odf Exp $
+ * @version $Id: Demo.java,v 1.41 2006/02/26 03:22:58 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -310,7 +310,7 @@ public class Demo {
 
         // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
         SpringEmbedder embedder = new SpringEmbedder(G);
-        boolean posRelaxed = true;
+        boolean posRelaxed = this.relax;
         boolean cellRelaxed = true;
         try {
             embedder.setOptimizePositions(false);
