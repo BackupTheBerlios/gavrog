@@ -41,6 +41,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
+import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
@@ -59,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.39 2006/02/23 20:11:48 odf Exp $
+ * @version $Id: Demo.java,v 1.40 2006/02/26 03:18:30 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -309,6 +310,8 @@ public class Demo {
 
         // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
         SpringEmbedder embedder = new SpringEmbedder(G);
+        boolean posRelaxed = true;
+        boolean cellRelaxed = true;
         try {
             embedder.setOptimizePositions(false);
             embedder.setOptimizeCell(true);
@@ -322,6 +325,7 @@ public class Demo {
             out.println("==================================================");
             embedder = new SpringEmbedder(G);
             embedder.setOptimizeCell(false);
+            cellRelaxed = false;
         }
         if (this.relax) {
             try {
@@ -335,9 +339,22 @@ public class Demo {
                 out.println(Misc.stackTrace(ex));
                 out.println("==================================================");
                 embedder = new SpringEmbedder(G);
+                cellRelaxed = false;
+                posRelaxed = false;
             }
         }
         embedder.normalize();
+        final IArithmetic det = embedder.getGramMatrix().determinant();
+        if (det.abs().isLessThan(new FloatingPoint(0.001))) {
+            out.println("==================================================");
+            final String msg = "!!! WARNING (INTERNAL) - Unit cell degenerated in relaxation.";
+            out.println(msg);
+            out.println("==================================================");
+            embedder = new SpringEmbedder(G);
+            embedder.normalize();
+            cellRelaxed = false;
+            posRelaxed = false;
+        }
         
 
         // --- set up a buffer to write a Systre readable output description to
@@ -364,7 +381,7 @@ public class Demo {
                 .dividedBy(a.times(b))).acos().times(f);
 
         //    ... print the cell parameters
-        out.println("   Refined cell parameters:");
+        out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
         out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
                     + fmtReal5.format(b.doubleValue()) + ", c = "
                     + fmtReal5.format(c.doubleValue()));
@@ -387,11 +404,7 @@ public class Demo {
         }
         
         //    ... print the atom positions
-        if (this.relax) {
-            out.println("   Refined atom positions:");
-        } else {
-            out.println("   Barycentric atom positions:");
-        }
+        out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         final Map pos = embedder.getPositions();
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
@@ -453,11 +466,18 @@ public class Demo {
         cgd.flush();
         final String cgdString = cgdStringWriter.toString();
         try {
+            out.println("   Consistency test:");
+            out.print("       reading...");
+            out.flush();
             final PeriodicGraph test = NetParser.stringToNet(cgdString);
+            out.println(" OK!");
+            out.print("       comparing...");
+            out.flush();
             if (!test.equals(G)) {
                 final String msg = "Output does not match original graph.";
                 throw new RuntimeException(msg);
             }
+            out.println(" OK!");
         } catch (Exception ex) {
             out.println("==================================================");
             out.println("!!! ERROR (INTERNAL) - could not verify output data: " + ex);
