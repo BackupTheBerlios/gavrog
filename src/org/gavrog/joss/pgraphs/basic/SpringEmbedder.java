@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.27 2006/02/25 03:11:31 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.28 2006/02/27 18:39:52 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -389,10 +389,10 @@ public class SpringEmbedder {
         }
         final Real vol = (Real) G.determinant();
         dG = (Matrix) dG.times(vol.raisedTo(-2)).negative();
-        //    ... normalize to volume per vertex and weigh by number of vertices
+        //    ... normalize to volume per vertex
         final Real n = new FloatingPoint(this.graph.numberOfNodes());
-        dG = (Matrix) dG.times(n.raisedTo(3));
-        //    ... room for additional weight
+        dG = (Matrix) dG.times(n.raisedTo(2));
+        //    ... adjust the weight
         dG = (Matrix) dG.times(1);
 
         // --- evaluate the gradients of the edge energies
