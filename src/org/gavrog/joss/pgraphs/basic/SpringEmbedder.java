@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.28 2006/02/27 18:39:52 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.29 2006/02/27 23:04:20 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -286,8 +286,9 @@ public class SpringEmbedder {
             final double length = length(d);
             if (length < 1.0) {
                 final Vector movement = (Vector) d.times(1.0 - 1.0 / length);
-                move(deltas, v, (Vector) movement.times(0.5));
-                move(deltas, w, (Vector) movement.times(-0.5));
+                // --- smaller than edge forces
+                move(deltas, v, (Vector) movement.times(0.125));
+                move(deltas, w, (Vector) movement.times(-0.125));
             }
         }
 
@@ -377,7 +378,7 @@ public class SpringEmbedder {
         final Matrix G = this.gramMatrix;
         Matrix dG = new Matrix(dim, dim);
 
-        // --- evaluate the gradient of the squared inverse cell volume
+        // --- evaluate the gradient of the inverse cell volume
         for (int i = 0; i < dim; ++i) {
             dG.set(i, i, G.getMinor(i, i).determinant());
             for (int j = 0; j < i; ++j) {
@@ -388,12 +389,12 @@ public class SpringEmbedder {
             }
         }
         final Real vol = (Real) G.determinant();
-        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative();
-        //    ... normalize to volume per vertex
-        final Real n = new FloatingPoint(this.graph.numberOfNodes());
-        dG = (Matrix) dG.times(n.raisedTo(2));
-        //    ... adjust the weight
-        dG = (Matrix) dG.times(1);
+        final Real f = new FloatingPoint(1.0 / this.graph.numberOfNodes());
+        dG = (Matrix) dG.times(vol.raisedTo(-2)).negative().times(f);
+        //    ... make it the gradient of the cubed volume
+        dG = (Matrix) dG.times(G.determinant()).times(3).times(f).times(f);
+        //    ... boost the weight
+        dG = (Matrix) dG.times(1000);
 
         // --- evaluate the gradients of the edge energies
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
@@ -416,7 +417,7 @@ public class SpringEmbedder {
                     }
                 }
                 dE = (Matrix) dE.times(1.0 - 1.0 / length);
-                dG = (Matrix) dG.plus(dE.times(1));
+                dG = (Matrix) dG.plus(dE.times(2));
             }
         }
         // --- do the same with the angle energies
@@ -440,7 +441,7 @@ public class SpringEmbedder {
                     }
                 }
                 dE = (Matrix) dE.times(1.0 - 1.0 / length);
-                dG = (Matrix) dG.plus(dE.times(1));
+                dG = (Matrix) dG.plus(dE.times(0.5));
             }
         }
 
