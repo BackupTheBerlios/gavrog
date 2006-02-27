@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.29 2006/02/27 23:04:20 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.30 2006/02/27 23:08:40 odf Exp $
  */
 public class SpringEmbedder {
     private static final boolean DEBUG = false;
@@ -308,9 +308,6 @@ public class SpringEmbedder {
                 f = 1.0;
             }
             
-//          final Vector d = (Vector) delta.times(f);
-//          move(this.positions, v, d);
-          
             final Point po = (Point) this.positions.get(v);
             final Point pt = (Point) po.plus(delta.times(f));
             final Point pn = (Point) pt.times(this.node2sym.get(v));
@@ -556,19 +553,6 @@ public class SpringEmbedder {
         }
         return new Point(a);
     }
-    
-//    private void decodeGramMatrix(final Point p) {
-//        final int d = this.graph.getDimension();
-//        this.gramMatrix = new Matrix(d, d);
-//        int k = 0;
-//        for (int i = 0; i < d; ++i) {
-//            for (int j = i; j < d; ++j) {
-//                final IArithmetic x = p.get(k++);
-//                this.gramMatrix.set(i, j, x);
-//                this.gramMatrix.set(j, i, x);
-//            }
-//        }
-//    }
     
     private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
     
