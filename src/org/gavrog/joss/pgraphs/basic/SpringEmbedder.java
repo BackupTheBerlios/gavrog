@@ -39,9 +39,9 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.30 2006/02/27 23:08:40 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.31 2006/02/28 04:51:15 odf Exp $
  */
-public class SpringEmbedder {
+public class SpringEmbedder implements IEmbedder {
     private static final boolean DEBUG = false;
     
     private final PeriodicGraph graph;

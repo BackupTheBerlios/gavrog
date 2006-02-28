@@ -76,6 +76,7 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.Embedding;
 import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.IEmbedder;
 import org.gavrog.joss.pgraphs.basic.IGraph;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -108,7 +109,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.18 2006/02/18 08:20:15 odf Exp $
+ * @version $Id: NetViewer.java,v 1.19 2006/02/28 04:51:16 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -143,7 +144,7 @@ public class NetViewer extends Applet {
     private PeriodicGraph net;
     
     // --- embedder used to find node positions and metric
-    private SpringEmbedder embedder;
+    private IEmbedder embedder;
     
     // --- the default radius for a new net
     private int defaultRadius = 2;
@@ -538,7 +539,7 @@ public class NetViewer extends Applet {
         
         // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
         boolean error = false;
-        SpringEmbedder embedder = new SpringEmbedder(G);
+        IEmbedder embedder = new SpringEmbedder(G);
         try {
             embedder.setOptimizePositions(false);
             embedder.setOptimizeCell(true);
@@ -582,7 +583,7 @@ public class NetViewer extends Applet {
 
     private void setRadius(final int radius) {
         busy();
-        final SpringEmbedder relaxer = this.embedder;
+        final IEmbedder relaxer = this.embedder;
         // --- construct an embedded portion of the net using the relaxed
         // configuration
         final Map pos = relaxer.getPositions();
