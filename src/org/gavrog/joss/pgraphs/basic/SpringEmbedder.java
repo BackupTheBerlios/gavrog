@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.32 2006/02/28 06:45:28 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.33 2006/02/28 07:14:37 odf Exp $
  */
 public class SpringEmbedder implements IEmbedder {
     private static final boolean DEBUG = false;
@@ -358,11 +358,8 @@ public class SpringEmbedder implements IEmbedder {
         this.gramMatrix = M;
     }
     
+    
     public void stepCell() {
-        stepCellOld();
-    }
-     
-    public void stepCellOld() {
         final int dim = this.graph.getDimension();
         if (DEBUG) {
             System.err.println("@@@ Entering stepCell");
@@ -445,125 +442,6 @@ public class SpringEmbedder implements IEmbedder {
             }
         }
 
-        if (DEBUG) {
-            System.err.println("@@@   Gradient: " + gramAsString(dG));
-        }
-        
-       // --- determine the step size
-        final IArithmetic norm = dG.norm();
-        final IArithmetic scale;
-        if (norm.isGreaterThan(new FloatingPoint(0.1))) {
-            scale = new FloatingPoint(0.1).dividedBy(norm);
-        } else {
-            scale = new FloatingPoint(1);
-        }
-        
-        if (DEBUG) {
-            System.err.println("@@@   Scale: " + scale);
-        }
-
-        // --- apply the step
-        final Point before = encodeGramMatrix();
-        this.gramMatrix = (Matrix) G.minus(dG.times(scale));
-        if (DEBUG) {
-            System.err.println("@@@   Gram matrix plus gradient: " + gramAsString(this.gramMatrix));
-        }
-        try {
-            symmetrizeCell();
-        } catch (Exception ex) {
-            System.err.println(Misc.stackTrace(ex));
-        }
-        if (DEBUG) {
-            System.err.println("@@@   Resymmetrized gram matrix: " + gramAsString(this.gramMatrix));
-        }
-        final Point after = encodeGramMatrix();
-        
-        final Vector d = (Vector) after.minus(before);
-        this.lastCellChangeAmount = Math.sqrt(((Real) Vector.dot(d, d)).doubleValue());
-        
-        if (DEBUG) {
-            System.err.println("@@@ Leaving stepCell()");
-            System.err.println();
-            System.err.flush();
-        }
-    }
-
-    public void stepCellNew() {
-        final int dim = this.graph.getDimension();
-        if (DEBUG) {
-            System.err.println("@@@ Entering stepCell");
-            System.err.println("@@@   Gram matrix before: " + gramAsString(this.gramMatrix));
-        }
-        
-        // --- scale to make unit average edge length
-        normalizeUp();
-        if (DEBUG) {
-            System.err.println("@@@   Gram matrix normalized: " + gramAsString(this.gramMatrix));
-        }
-
-        final Matrix G = this.gramMatrix;
-
-        // --- compute the cell volume and its gradient
-        final Real vol = (Real) G.determinant();
-        Matrix dVol = new Matrix(dim, dim);
-        for (int i = 0; i < dim; ++i) {
-            dVol.set(i, i, G.getMinor(i, i).determinant());
-            for (int j = 0; j < i; ++j) {
-                final Matrix M = G.getMinor(i, i).getMinor(j, j);
-                final Real x = (Real) G.get(i, j).times(-2).times(M.determinant());
-                dVol.set(i, j, x);
-                dVol.set(j, i, x);
-            }
-        }
-
-        // --- compute the sum of edge lengths, its derivative and that of the squares sum
-        Real len = new FloatingPoint(0.0);
-        Real sqrLen = new FloatingPoint(0.0);
-        Matrix dLen = Matrix.zero(dim, dim);
-        Matrix dSqrLen = Matrix.zero(dim, dim);
-        for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final INode v = e.source();
-            final INode w = e.target();
-            final Point pv = (Point) this.positions.get(v);
-            final Point pw = (Point) this.positions.get(w);
-            final Vector s = this.graph.getShift(e);
-            final Vector d = (Vector) pw.plus(s).minus(pv);
-            final double ld = length(d);
-            len = (Real) len.plus(ld);
-            sqrLen = (Real) sqrLen.plus(ld*ld);
-            final Matrix dE = new Matrix(dim, dim);
-            for (int i = 0; i < dim; ++i) {
-                dE.set(i, i, d.get(i).raisedTo(2));
-                for (int j = 0; j < i; ++j) {
-                    final Real x = (Real) d.get(i).times(d.get(j)).times(2);
-                    dE.set(i, j, x);
-                    dE.set(j, i, x);
-                }
-            }
-            dSqrLen = (Matrix) dSqrLen.plus(dE);
-            dLen = (Matrix) dLen.plus(dE.dividedBy(2 * length(d)));
-        }
-        
-        // --- compute the gradient of the edge length variance
-        final int n = this.graph.numberOfNodes();
-        final Matrix dVar = new Matrix(dim, dim);
-        final Real f = (Real) len.raisedTo(-3).times(-2 * n * n);
-        for (int i = 0; i < dim; ++i) {
-            for (int j = 0; j < dim; ++j) {
-                dVar.set(i, j, dLen.get(i, j).times(dSqrLen.get(i, j)).times(f));
-            }
-        }
-        
-        // --- compute the total energy gradient
-        final double w1 = 1.0;
-        final double w2 = 1.0;
-        final Matrix dLenCubed = (Matrix) dLen.times(len).times(len).times(3);
-        final Real lenCubed = (Real) len.raisedTo(3);
-        final Matrix T = (Matrix) dLenCubed.times(vol).minus(lenCubed.times(dVol))
-                .dividedBy(vol.raisedTo(2).times(n * n * n));
-        final Matrix dG = (Matrix) T.times(w1).plus(dVar.times(w2));
-        
         if (DEBUG) {
             System.err.println("@@@   Gradient: " + gramAsString(dG));
         }
