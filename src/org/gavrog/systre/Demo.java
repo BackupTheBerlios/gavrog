@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.42 2006/02/28 04:51:16 odf Exp $
+ * @version $Id: Demo.java,v 1.43 2006/02/28 22:41:43 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -309,40 +309,24 @@ public class Demo {
         out.println();
         out.flush();
 
-        // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
+        // --- relax the structure from the barycentric embedding
         IEmbedder embedder = new SpringEmbedder(G);
         boolean posRelaxed = this.relax;
         boolean cellRelaxed = true;
         try {
-            embedder.setOptimizePositions(false);
+            embedder.setOptimizePositions(relax);
             embedder.setOptimizeCell(true);
-            embedder.steps(200);
+            embedder.go(300);
         } catch (Exception ex) {
             out.println("==================================================");
-            final String msg = "!!! WARNING (INTERNAL) - Could not relax unit cell shape: "
+            final String msg = "!!! WARNING (INTERNAL) - Could not relax: "
                     + ex;
             out.println(msg);
             out.println(Misc.stackTrace(ex));
             out.println("==================================================");
             embedder = new SpringEmbedder(G);
-            embedder.setOptimizeCell(false);
             cellRelaxed = false;
-        }
-        if (this.relax) {
-            try {
-                embedder.setOptimizePositions(true);
-                embedder.steps(200);
-            } catch (Exception ex) {
-                out.println("==================================================");
-                final String msg = "!!! WARNING (INTERNAL) - Could not relax positions: "
-                        + ex;
-                out.println(msg);
-                out.println(Misc.stackTrace(ex));
-                out.println("==================================================");
-                embedder = new SpringEmbedder(G);
-                cellRelaxed = false;
-                posRelaxed = false;
-            }
+            posRelaxed = false;
         }
         embedder.normalize();
         final IArithmetic det = embedder.getGramMatrix().determinant();

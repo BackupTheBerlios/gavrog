@@ -22,14 +22,14 @@ import org.gavrog.jane.compounds.Matrix;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.1 2006/02/28 04:51:15 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.2 2006/02/28 22:41:43 odf Exp $
  */
 public interface IEmbedder {
     public double[] edgeStatistics();
 
     public void normalize();
 
-    public int steps(final int n);
+    public int go(final int n);
 
     public void setPositions(final Map map);
 

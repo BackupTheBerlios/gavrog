@@ -109,7 +109,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.19 2006/02/28 04:51:16 odf Exp $
+ * @version $Id: NetViewer.java,v 1.20 2006/02/28 22:41:43 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -537,31 +537,20 @@ public class NetViewer extends Applet {
         busy();
         final PeriodicGraph G = this.net;
         
-        // --- relax the structure from the barycentric embedding (EXPERIMENTAL CODE)
+        // --- relax the structure from the barycentric embedding
         boolean error = false;
         IEmbedder embedder = new SpringEmbedder(G);
         try {
-            embedder.setOptimizePositions(false);
+            embedder.setOptimizePositions(relax);
             embedder.setOptimizeCell(true);
-            embedder.steps(200);
+            embedder.go(300);
         } catch (Exception ex) {
-            status.setText("WARNING - Could not relax unit cell shape: " + ex);
+            status.setText("WARNING - Could not relax: " + ex);
             error = true;
             embedder = new SpringEmbedder(G);
             embedder.setOptimizeCell(false);
         }
-        if (relax) {
-            try {
-                embedder.setOptimizePositions(true);
-                embedder.steps(200);
-            } catch (Exception ex) {
-                status.setText("WARNING - Could not relax positions: " + ex);
-                error = true;
-                embedder = new SpringEmbedder(G);
-            }
-        }
         embedder.normalize();
-        
 
         final double stats[] = embedder.edgeStatistics();
         final double min = stats[0];
