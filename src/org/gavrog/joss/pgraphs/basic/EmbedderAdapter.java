@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.2 2006/03/01 01:09:56 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.3 2006/03/01 05:21:34 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -43,8 +43,6 @@ public abstract class EmbedderAdapter implements IEmbedder{
     private boolean optimizeCell = true;
     private boolean optimizePositions = true;
 
-    private Matrix gramMatrix;
-    private Map positions;
 
     protected class Angle {
         final public INode v;
@@ -78,19 +76,9 @@ public abstract class EmbedderAdapter implements IEmbedder{
         }
     }
     
-    public EmbedderAdapter(final PeriodicGraph graph, final Map positions,
-            final Matrix gramMatrix) {
+    public EmbedderAdapter(final PeriodicGraph graph) {
         this.graph = graph;
-        this.positions = new HashMap();
-        this.positions.putAll(positions);
-
         final int d = graph.getDimension();
-        if (gramMatrix == null) {
-            this.gramMatrix = Matrix.one(d);
-            resymmetrizeCell();
-        } else {
-            this.gramMatrix = gramMatrix;
-        }
 
         this.angles = makeAngles();
         if (this.angles == null) {
@@ -122,10 +110,34 @@ public abstract class EmbedderAdapter implements IEmbedder{
         }
     }
     
+    protected static Matrix defaultGramMatrix(final PeriodicGraph graph) {
+        return resymmetrized(Matrix.one(graph.getDimension()), graph);
+    }
+    
+    protected static Matrix resymmetrized(final Matrix G, final PeriodicGraph graph) {
+        // -- preparations
+        final int d = graph.getDimension();
+        final Set syms = graph.symmetries();
+        
+        // --- compute a symmetry-invariant quadratic form
+        Matrix M = Matrix.zero(d, d);
+        for (final Iterator iter = syms.iterator(); iter.hasNext();) {
+            final Matrix A = ((Morphism) iter.next()).getLinearOperator().getCoordinates()
+                    .getSubMatrix(0, 0, d, d);
+            M = (Matrix) M.plus(A.times(G).times(A.transposed()));
+        }
+        M = ((Matrix) M.times(new Fraction(1, syms.size()))).mutableClone();
+        for (int i = 0; i < d; ++i) {
+            for (int j = i+1; j < d; ++j) {
+                M.set(j, i, M.get(i, j));
+            }
+        }
+        return M;
+    }
+    
     public void reset() {
         setPositions(getGraph().barycentricPlacement());
-        setGramMatrix(Matrix.one(getGraph().getDimension()));
-        resymmetrizeCell();
+        setGramMatrix(defaultGramMatrix(getGraph()));
     }
     
     private Set makeAngles() {
@@ -150,24 +162,7 @@ public abstract class EmbedderAdapter implements IEmbedder{
     }
     
     protected void resymmetrizeCell() {
-        // -- preparations
-        final int d = this.graph.getDimension();
-        final Set syms = this.graph.symmetries();
-        
-        // --- compute a symmetry-invariant quadratic form
-        Matrix M = Matrix.zero(d, d);
-        for (final Iterator iter = syms.iterator(); iter.hasNext();) {
-            final Matrix A = ((Morphism) iter.next()).getLinearOperator().getCoordinates()
-                    .getSubMatrix(0, 0, d, d);
-            M = (Matrix) M.plus(A.times(this.gramMatrix).times(A.transposed()));
-        }
-        M = ((Matrix) M.times(new Fraction(1, syms.size()))).mutableClone();
-        for (int i = 0; i < d; ++i) {
-            for (int j = i+1; j < d; ++j) {
-                M.set(j, i, M.get(i, j));
-            }
-        }
-        this.gramMatrix = M;
+        setGramMatrix(resymmetrized(getGramMatrix(), getGraph()));
     }
     
     private Operator nodeSymmetrization(final INode v) {
@@ -211,8 +206,8 @@ public abstract class EmbedderAdapter implements IEmbedder{
         double sumLength = 0.0;
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
-            final Point p = (Point) this.positions.get(e.source());
-            final Point q = (Point) this.positions.get(e.target());
+            final Point p = getPosition(e.source());
+            final Point q = getPosition(e.target());
             final Vector s = this.graph.getShift(e);
             final double length = length((Vector) q.plus(s).minus(p));
             if (length > 0) {
@@ -226,7 +221,7 @@ public abstract class EmbedderAdapter implements IEmbedder{
     }
 
     protected double length(final Vector v) {
-        final Real squareLength = (Real) Vector.dot(v, v, this.gramMatrix);
+        final Real squareLength = (Real) Vector.dot(v, v, getGramMatrix());
         return Math.sqrt(squareLength.doubleValue());
     }
 
@@ -254,7 +249,7 @@ public abstract class EmbedderAdapter implements IEmbedder{
         if (avg < 1e-3) {
             throw new RuntimeException("degenerate unit cell while relaxing");
         }
-        this.gramMatrix = (Matrix) this.gramMatrix.dividedBy(avg * avg);
+        setGramMatrix((Matrix) getGramMatrix().dividedBy(avg * avg));
     }
 
     /**
@@ -264,33 +259,6 @@ public abstract class EmbedderAdapter implements IEmbedder{
         return this.graph;
     }
     
-    public void setPositions(final Map map) {
-        this.positions.putAll(map);
-    }
-
-    public Map getPositions() {
-        final Map copy = new HashMap();
-        copy.putAll(this.positions);
-        return copy;
-    }
-    
-    public Point getPosition(final INode v) {
-        return (Point) this.positions.get(v);
-    }
-
-    public void setPosition(final INode v, final Point p) {
-        this.positions.put(v, p);
-    }
-
-    public void setGramMatrix(final Matrix gramMatrix) {
-        this.gramMatrix = (Matrix) gramMatrix.clone();
-        this.gramMatrix.makeImmutable();
-    }
-
-    public Matrix getGramMatrix() {
-        return (Matrix) this.gramMatrix.clone();
-    }
-
     public boolean getRelaxCell() {
         return optimizeCell;
     }

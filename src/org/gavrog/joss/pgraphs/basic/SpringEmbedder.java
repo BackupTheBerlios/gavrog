@@ -34,22 +34,57 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.35 2006/03/01 01:09:56 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.36 2006/03/01 05:21:34 odf Exp $
  */
 public class SpringEmbedder extends EmbedderAdapter {
     private static final boolean DEBUG = false;
     
     private double lastPositionChangeAmount = 0;
     private double lastCellChangeAmount = 0;
+    
+    private final Map positions = new HashMap();
+    private Matrix gramMatrix;
 
-    public SpringEmbedder(final PeriodicGraph graph, final Map positions, final Matrix gram) {
-        super(graph, positions, gram);
+    public SpringEmbedder(final PeriodicGraph graph, final Map positions,
+            final Matrix gram) {
+        super(graph);
+        
+        // --- set initial positions and cell parameters
+        setPositions(positions);
+        setGramMatrix(gram);
     }
     
     public SpringEmbedder(final PeriodicGraph G) {
-        this(G, G.barycentricPlacement(), null);
+        this(G, G.barycentricPlacement(), defaultGramMatrix(G));
     }
     
+    public void setPositions(final Map map) {
+        this.positions.putAll(map);
+    }
+
+    public Map getPositions() {
+        final Map copy = new HashMap();
+        copy.putAll(this.positions);
+        return copy;
+    }
+    
+    public Point getPosition(final INode v) {
+        return (Point) this.positions.get(v);
+    }
+
+    public void setPosition(final INode v, final Point p) {
+        this.positions.put(v, p);
+    }
+
+    public void setGramMatrix(final Matrix gramMatrix) {
+        this.gramMatrix = (Matrix) gramMatrix.clone();
+        this.gramMatrix.makeImmutable();
+    }
+
+    public Matrix getGramMatrix() {
+        return (Matrix) this.gramMatrix.clone();
+    }
+
     private String gramAsString(final Matrix G) {
         final Real G00 = (Real) G.get(0,0);
         final Real G01 = (Real) G.get(0,1);

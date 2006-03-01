@@ -28,7 +28,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.4 2006/03/01 04:31:19 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.5 2006/03/01 05:21:34 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     private class Edge {
@@ -63,13 +63,13 @@ public class AmoebaEmbedder extends EmbedderAdapter {
      * 
      * @param graph
      * @param positions
-     * @param gramMatrix
+     * @param gram
      */
     public AmoebaEmbedder(final PeriodicGraph graph, final Map positions,
-            final Matrix gramMatrix) {
+            final Matrix gram) {
         
         // --- generic initialization
-        super(graph, positions, gramMatrix);
+        super(graph);
         
         // --- dimensions of the problem and parameter spaces
         final int d = this.dimGraph = graph.getDimension();
@@ -81,7 +81,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         int k = 0;
         for (int i = 0; i < dimGraph; ++i) {
             this.gramIndex[i][i] = k++;
-            for (int j = i; j < dimGraph; ++j) {
+            for (int j = i+1; j < dimGraph; ++j) {
                 this.gramIndex[i][j] = this.gramIndex[j][i] = k++;
             }
         }
@@ -109,11 +109,11 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         // --- set initial positions and cell parameters
         setPositions(positions);
-        setGramMatrix(gramMatrix);
+        setGramMatrix(gram);
     }
 
     public AmoebaEmbedder(final PeriodicGraph G) {
-        this(G, G.barycentricPlacement(), null);
+        this(G, G.barycentricPlacement(), defaultGramMatrix(G));
     }
     
     // --- we need to override some default implementations

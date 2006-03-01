@@ -19,10 +19,11 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.Map;
 
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.joss.geometry.Point;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.3 2006/03/01 01:09:56 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.4 2006/03/01 05:21:34 odf Exp $
  */
 public interface IEmbedder {
     public double[] edgeStatistics();
@@ -34,8 +35,12 @@ public interface IEmbedder {
     public int go(final int n);
 
     public void setPositions(final Map map);
+    
+    public void setPosition(final INode v, final Point p);
 
     public Map getPositions();
+    
+    public Point getPosition(final INode v);
 
     public void setGramMatrix(final Matrix gramMatrix);
 
