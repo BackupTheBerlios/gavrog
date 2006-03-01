@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.43 2006/02/28 22:41:43 odf Exp $
+ * @version $Id: Demo.java,v 1.44 2006/03/01 01:09:57 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -314,8 +314,8 @@ public class Demo {
         boolean posRelaxed = this.relax;
         boolean cellRelaxed = true;
         try {
-            embedder.setOptimizePositions(relax);
-            embedder.setOptimizeCell(true);
+            embedder.setRelaxPositions(relax);
+            embedder.setRelaxCell(true);
             embedder.go(300);
         } catch (Exception ex) {
             out.println("==================================================");
@@ -324,7 +324,7 @@ public class Demo {
             out.println(msg);
             out.println(Misc.stackTrace(ex));
             out.println("==================================================");
-            embedder = new SpringEmbedder(G);
+            embedder.reset();
             cellRelaxed = false;
             posRelaxed = false;
         }
@@ -335,7 +335,7 @@ public class Demo {
             final String msg = "!!! WARNING (INTERNAL) - Unit cell degenerated in relaxation.";
             out.println(msg);
             out.println("==================================================");
-            embedder = new SpringEmbedder(G);
+            embedder.reset();
             embedder.normalize();
             cellRelaxed = false;
             posRelaxed = false;

@@ -34,7 +34,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.34 2006/02/28 22:41:43 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.35 2006/03/01 01:09:56 odf Exp $
  */
 public class SpringEmbedder extends EmbedderAdapter {
     private static final boolean DEBUG = false;
@@ -301,13 +301,13 @@ public class SpringEmbedder extends EmbedderAdapter {
             final double posChange;
             final double cellChange;
             
-            if (getOptimizePositions()) {
+            if (getRelaxPositions()) {
                 step();
                 posChange = getLastPositionChangeAmount();
             } else {
                 posChange = 0.0;
             }
-            if (getOptimizeCell()) {
+            if (getRelaxCell()) {
                 stepCell();
                 cellChange = getLastCellChangeAmount();
             } else {

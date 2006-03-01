@@ -22,12 +22,14 @@ import org.gavrog.jane.compounds.Matrix;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.2 2006/02/28 22:41:43 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.3 2006/03/01 01:09:56 odf Exp $
  */
 public interface IEmbedder {
     public double[] edgeStatistics();
 
     public void normalize();
+    
+    public void reset();
 
     public int go(final int n);
 
@@ -39,11 +41,11 @@ public interface IEmbedder {
 
     public Matrix getGramMatrix();
 
-    public boolean getOptimizeCell();
+    public boolean getRelaxCell();
 
-    public void setOptimizeCell(boolean optimizeCell);
+    public void setRelaxCell(boolean value);
 
-    public boolean getOptimizePositions();
+    public boolean getRelaxPositions();
 
-    public void setOptimizePositions(boolean optimizePositions);
+    public void setRelaxPositions(boolean value);
 }
