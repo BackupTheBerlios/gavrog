@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.gavrog.jane.algorithms.Amoeba;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
@@ -28,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.5 2006/03/01 05:21:34 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.6 2006/03/01 21:33:46 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     private class Edge {
@@ -118,15 +119,19 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     
     // --- we need to override some default implementations
     
-    public Point getPosition(final INode v) {
+    public Point getPosition(final INode v, final double p[]) {
         final int d = this.dimGraph;
         final int offset = ((Integer) this.node2index.get(v)).intValue();
         
         final double coords[] = new double[d];
         for (int i = 0; i < d; ++i) {
-            coords[i] = this.p[offset + i];
+            coords[i] = p[offset + i];
         }
         return new Point(coords);
+    }
+
+    public Point getPosition(final INode v) {
+        return getPosition(v, this.p);
     }
 
     public Map getPositions() {
@@ -164,13 +169,13 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
     }
 
-    public Matrix getGramMatrix() {
+    public Matrix getGramMatrix(final double p[]) {
         final int d = this.dimGraph;
         final Matrix gram = new Matrix(d, d);
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
                 final int k = this.gramIndex[i][j];
-                final Real x = new FloatingPoint(this.p[k]);
+                final Real x = new FloatingPoint(p[k]);
                 gram.set(i, j, x);
                 gram.set(j, i, x);
             }
@@ -178,11 +183,57 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         return gram;
     }
 
+    public Matrix getGramMatrix() {
+        return getGramMatrix(this.p);
+    }
+
     /* (non-Javadoc)
      * @see org.gavrog.joss.pgraphs.basic.IEmbedder#go(int)
      */
-    public int go(int n) {
-        // TODO Auto-generated method stub
-        return 0;
+    public int go(final int n) {
+        final Amoeba.Function energy = new Amoeba.Function() {
+            public double evaluate(final double[] p) {
+                // --- get some general data
+                final int dim = dimGraph;
+                final int n = getGraph().numberOfNodes();
+
+                // --- compute squared unit cell volume
+                final Matrix gram = getGramMatrix(p);
+                final double volume = ((Real) gram.determinant()).doubleValue();
+                
+                // --- compute variance of squared edge lengths
+                double sum = 0.0;
+                double sqrSum = 0.0;
+                
+                for (int k = 0; k < edges.length; ++k) {
+                    final Edge e = edges[k];
+                    final int vOff = e.v;
+                    final int wOff = e.w;
+                    final double s[] = e.shift;
+                    final double diff[] = new double[dim];
+                    for (int i = 0; i < dim; ++i) {
+                        diff[i] = p[wOff + i] - p[vOff + i] - s[i];
+                    }
+                    double len = 0.0;
+                    for (int i = 0; i < dim; ++i) {
+                        len += diff[i] * diff[i] * p[gramIndex[i][i]];
+                        for (int j = i+1; j < dim; ++j) {
+                            len += 2 * diff[i] * diff[j] * p[gramIndex[i][j]];
+                        }
+                    }
+                    sum += len;
+                    sqrSum += len * len;
+                }
+                final double variance = (sqrSum - sum * sum / n) / n;
+                
+                return 0.0;
+            }
+
+            public int dim() {
+                return dimParSpace;
+            }
+        };
+        
+        return n;
     }
 }
