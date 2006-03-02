@@ -29,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.9 2006/03/02 06:28:10 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.10 2006/03/02 06:51:20 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     private class Edge {
@@ -270,14 +270,11 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         final Matrix gramScaled = (Matrix) gram.dividedBy(avg * avg);
         final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
                 .doubleValue());
-        final double volumePerNode = Math.max(cellVolume / n, 1e-12);
+        final double vol = Math.max(cellVolume / n, 1e-12);
         
-        // --- compute the total energy
-        final double sqrVol = volumePerNode * volumePerNode;
-        final double energy = this.volumeWeight / sqrVol + variance;
-
-        // --- return the result
-        return energy;
+        // --- compute and return the total energy
+//        return this.volumeWeight / (vol * vol) + variance;
+        return this.volumeWeight / vol + variance;
     }
 
     /* (non-Javadoc)
@@ -303,7 +300,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         System.out.println("energy before optimization: " + energy.evaluate(p));
         for (int pass = 0; pass < 10; ++pass) {
-            this.volumeWeight = Math.pow(10, -pass);
+            this.volumeWeight = Math.pow(10, 5 - pass);
             p = new Amoeba(energy, 1e-6, 5 * steps, 10, 1.0).go(p);
             System.out.println("energy after optimization: " + energy.evaluate(p));
             for (int i = 0; i < p.length; ++i) {
