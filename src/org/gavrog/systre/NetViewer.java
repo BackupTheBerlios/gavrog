@@ -74,6 +74,7 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.basic.Embedding;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IEmbedder;
@@ -81,7 +82,6 @@ import org.gavrog.joss.pgraphs.basic.IGraph;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 import com.sun.j3d.utils.applet.MainFrame;
@@ -109,7 +109,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.23 2006/03/01 05:22:15 odf Exp $
+ * @version $Id: NetViewer.java,v 1.24 2006/03/02 00:17:16 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -539,8 +539,8 @@ public class NetViewer extends Applet {
         
         // --- relax the structure from the barycentric embedding
         boolean error = false;
-        IEmbedder embedder = new SpringEmbedder(G);
-        //IEmbedder embedder = new AmoebaEmbedder(G);
+//        IEmbedder embedder = new SpringEmbedder(G);
+        IEmbedder embedder = new AmoebaEmbedder(G);
         try {
             embedder.setRelaxPositions(relax);
             embedder.setRelaxCell(true);

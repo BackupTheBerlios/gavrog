@@ -23,10 +23,11 @@ import java.util.Arrays;
  * function minimization as described in Numerical Recipes.
  * 
  * @author Olaf Delgado
- * @version $Id: Amoeba.java,v 1.1 2006/02/27 07:21:31 odf Exp $
+ * @version $Id: Amoeba.java,v 1.2 2006/03/02 00:17:17 odf Exp $
  */
 public class Amoeba {
     final static double TINY = 1e-10;
+    final static boolean DEBUG = false;
     
     public static interface Function {
         public double evaluate(final double p[]);
@@ -34,12 +35,17 @@ public class Amoeba {
     }
     
     private class Point implements Comparable {
-        public double arg[];
-        public double value;
+        public final double arg[];
+        public final double value;
         
         public Point(final double arg[]) {
             this.arg = (double[]) arg.clone();
-            this.value = Amoeba.this.f.evaluate(arg);
+            double val = Amoeba.this.f.evaluate(arg);
+            if (Double.isNaN(val)) {
+                this.value = Double.MAX_VALUE;
+            } else {
+                this.value = val;
+            }
             ++Amoeba.this.steps;
         }
 
@@ -76,7 +82,7 @@ public class Amoeba {
         this.scale = scale;
         
         this.dim = f.dim();
-        this.simplex = new Point[this.dim];
+        this.simplex = new Point[this.dim + 1];
     }
     
     /**
@@ -94,7 +100,7 @@ public class Amoeba {
      * @param p the starting point to evaluate function at.
      * @return the point at which a minimum was found.
      */
-    public double[] run(final double p[]) {
+    public double[] go(final double p[]) {
         Point bestSoFar = new Point(p);
         Point bestOfLastPass = bestSoFar;
         this.steps = 0;
@@ -148,6 +154,10 @@ public class Amoeba {
                             this.simplex[k] = new Point(a);
                         }
                         Arrays.sort(this.simplex);
+                        if (DEBUG) {
+                            System.out.println("After scaling: E = "
+                                    + this.simplex[0].value);
+                        }
                     }
                 }
             }
@@ -178,6 +188,12 @@ public class Amoeba {
      * @return the new point generated.
      */
     private Point amotry(final double factor) {
+        if (DEBUG) {
+            System.out.println("Calling amotry(" + factor);
+            System.out.println("    before: E = " + this.simplex[0].value + " .. "
+                    + this.simplex[this.dim].value);
+        }
+        
         // --- compute the simplex centroid
         final double c[] = new double[this.dim];
         for (int k = 0; k <= dim; ++k) {
@@ -196,13 +212,22 @@ public class Amoeba {
             a[i] = f1 * c[i] + f2 * hi[i];
         }
         final Point p = new Point(a);
+        if (DEBUG) {
+            System.out.println("    new point with E = " + p.value);
+        }
         
         // --- keep the simplex sorted
         final double val = p.value;
         if (val < this.simplex[this.dim].value) {
-            for (int k = this.dim-1; k >= 0; --k) {
-                if (val >= this.simplex[k].value) {
+            if (DEBUG) {
+                System.out.println("    inserting new point");
+            }
+            for (int k = this.dim-1; k >= -1; --k) {
+                if (k < 0 || val >= this.simplex[k].value) {
                     this.simplex[k+1] = p;
+                    if (DEBUG) {
+                        System.out.println("    inserted at position " + k+1);
+                    }
                     break;
                 } else {
                     this.simplex[k+1] = this.simplex[k];
@@ -210,6 +235,11 @@ public class Amoeba {
             }
         }
         
+        if (DEBUG) {
+            System.out.println("    after: E = " + this.simplex[0].value + " .. "
+                    + this.simplex[this.dim].value);
+            System.out.println("Leaving amotry(" + factor);
+        }
         return p;
     }
 

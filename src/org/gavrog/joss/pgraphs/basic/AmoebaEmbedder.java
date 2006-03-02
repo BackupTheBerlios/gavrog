@@ -29,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.6 2006/03/01 21:33:46 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.7 2006/03/02 00:17:15 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     private class Edge {
@@ -37,6 +37,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         public final int w;
         public final double shift[];
         public final double weight;
+        public double length;
         
         public Edge(final INode v, final INode w, final Vector s, final double weight) {
             this.v = ((Integer) node2index.get(v)).intValue();
@@ -57,7 +58,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private INode index2node[];
     final private Edge edges[];
     
-    final double p[];
+    double volumeWeight;
+    double p[];
     
     /**
      * Constructs an instance.
@@ -159,14 +161,18 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
     }
 
-    public void setGramMatrix(final Matrix gramMatrix) {
+    public void setGramMatrix(final Matrix gramMatrix, final double p[]) {
         final int d = this.dimGraph;
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
                 final int k = this.gramIndex[i][j];
-                this.p[k] = ((Real) gramMatrix.get(i, j)).doubleValue();
+                p[k] = ((Real) gramMatrix.get(i, j)).doubleValue();
             }
         }
+    }
+
+    public void setGramMatrix(final Matrix gramMatrix) {
+        setGramMatrix(gramMatrix, this.p);
     }
 
     public Matrix getGramMatrix(final double p[]) {
@@ -180,6 +186,22 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 gram.set(j, i, x);
             }
         }
+        
+        // --- adjust the gram matrix
+        for (int i = 0; i < d; ++i) {
+            if (gram.get(i, i).isNegative()) {
+                gram.set(i, i, FloatingPoint.ZERO);
+            }
+        }
+        for (int i = 0; i < d; ++i) {
+            for (int j = i+1; j < d; ++j) {
+                final Real t = ((Real) gram.get(i, i).times(gram.get(j, j))).sqrt();
+                if (gram.get(i, j).isGreaterThan(t)) {
+                    gram.set(i, j, t);
+                    gram.set(j, i, t);
+                }
+            }
+        }
         return gram;
     }
 
@@ -190,20 +212,23 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     /* (non-Javadoc)
      * @see org.gavrog.joss.pgraphs.basic.IEmbedder#go(int)
      */
-    public int go(final int n) {
+    public int go(final int steps) {
         final Amoeba.Function energy = new Amoeba.Function() {
+            int count = 0;
+            
             public double evaluate(final double[] p) {
                 // --- get some general data
                 final int dim = dimGraph;
                 final int n = getGraph().numberOfNodes();
+                final int m = edges.length;
 
-                // --- compute squared unit cell volume
-                final Matrix gram = getGramMatrix(p);
-                final double volume = ((Real) gram.determinant()).doubleValue();
+                // --- extract and adjust the Gram matrix
+                final Matrix T = getGramMatrix(p);
+                final double g[] = new double[dim * (dim+1) / 2];
+                setGramMatrix(T, g);
                 
                 // --- compute variance of squared edge lengths
                 double sum = 0.0;
-                double sqrSum = 0.0;
                 
                 for (int k = 0; k < edges.length; ++k) {
                     final Edge e = edges[k];
@@ -212,21 +237,44 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                     final double s[] = e.shift;
                     final double diff[] = new double[dim];
                     for (int i = 0; i < dim; ++i) {
-                        diff[i] = p[wOff + i] - p[vOff + i] - s[i];
+                        diff[i] = p[wOff + i] + s[i] - p[vOff + i];
                     }
                     double len = 0.0;
                     for (int i = 0; i < dim; ++i) {
-                        len += diff[i] * diff[i] * p[gramIndex[i][i]];
+                        len += diff[i] * diff[i] * g[gramIndex[i][i]];
                         for (int j = i+1; j < dim; ++j) {
-                            len += 2 * diff[i] * diff[j] * p[gramIndex[i][j]];
+                            len += 2 * diff[i] * diff[j] * g[gramIndex[i][j]];
                         }
                     }
+                    len = Math.sqrt(len);
+                    e.length = len;
                     sum += len;
-                    sqrSum += len * len;
                 }
-                final double variance = (sqrSum - sum * sum / n) / n;
+                final double avg = sum / m;
                 
-                return 0.0;
+                double variance = 0.0;
+                for (int k = 0; k < edges.length; ++k) {
+                    final double len = edges[k].length / avg;
+                    final double t = (1 - len * len);
+                    variance += t * t;
+                }
+                variance /= m;
+                if (variance < 0) {
+                    throw new RuntimeException("variance got negative: " + variance);
+                }
+                
+                // --- compute volume per node
+                final Matrix gram = (Matrix) getGramMatrix(p).dividedBy(avg * avg);
+                final double cellVolume = Math.sqrt(((Real) gram.determinant())
+                        .doubleValue());
+                final double volumePerNode = Math.max(cellVolume / n, 1e-12);
+                final double sqrVol = volumePerNode * volumePerNode;
+                
+                // --- compute the total energy
+                final double energy = volumeWeight / sqrVol + variance;
+                ++count;
+                
+                return energy;
             }
 
             public int dim() {
@@ -234,6 +282,16 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
         };
         
-        return n;
+        System.out.println("energy before optimization: " + energy.evaluate(this.p));
+        for (int i = 0; i < 10; ++i) {
+            this.volumeWeight = Math.pow(10, 5-i);
+            this.p = new Amoeba(energy, 1e-6, 1000, 10, 1.0).go(this.p);
+            System.out.println("energy after optimization: " + energy.evaluate(this.p));
+            resymmetrizeCell();
+            resymmetrizePositions();
+            System.out.println("energy after resymmetrizing: " + energy.evaluate(this.p));
+        }
+        System.out.println();
+        return steps;
     }
 }

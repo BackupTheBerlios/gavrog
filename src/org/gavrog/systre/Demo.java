@@ -50,18 +50,18 @@ import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IEmbedder;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.basic.SpringEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.44 2006/03/01 01:09:57 odf Exp $
+ * @version $Id: Demo.java,v 1.45 2006/03/02 00:17:16 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -310,7 +310,8 @@ public class Demo {
         out.flush();
 
         // --- relax the structure from the barycentric embedding
-        IEmbedder embedder = new SpringEmbedder(G);
+//        IEmbedder embedder = new SpringEmbedder(G);
+        IEmbedder embedder = new AmoebaEmbedder(G);
         boolean posRelaxed = this.relax;
         boolean cellRelaxed = true;
         try {
