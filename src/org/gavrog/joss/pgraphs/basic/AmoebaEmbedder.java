@@ -29,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.8 2006/03/02 04:03:12 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.9 2006/03/02 06:28:10 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     private class Edge {
@@ -209,87 +209,82 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         return getGramMatrix(this.p);
     }
 
+    private double energy(final double point[]) {
+        // --- get some general data
+        final int dim = this.dimGraph;
+        final int n = getGraph().numberOfNodes();
+        final int m = this.edges.length;
+
+        // --- extract and adjust the Gram matrix
+        final Matrix gram = getGramMatrix(point);
+        
+        // --- make it an easy to read array
+        final double g[] = new double[dim * (dim+1) / 2];
+        setGramMatrix(gram, g);
+        
+        // --- use our original coordinates if only cell is relaxed
+        final double p[];
+        if (getRelaxPositions() == false) {
+            p = this.p;
+        } else {
+            p = point;
+        }
+        
+        // --- compute variance of squared edge lengths
+        double sum = 0.0;
+        
+        for (int k = 0; k < this.edges.length; ++k) {
+            final Edge e = this.edges[k];
+            final int vOff = e.v;
+            final int wOff = e.w;
+            final double s[] = e.shift;
+            final double diff[] = new double[dim];
+            for (int i = 0; i < dim; ++i) {
+                diff[i] = p[wOff + i] + s[i] - p[vOff + i];
+            }
+            double len = 0.0;
+            for (int i = 0; i < dim; ++i) {
+                len += diff[i] * diff[i] * g[this.gramIndex[i][i]];
+                for (int j = i+1; j < dim; ++j) {
+                    len += 2 * diff[i] * diff[j] * g[this.gramIndex[i][j]];
+                }
+            }
+            len = Math.sqrt(len);
+            e.length = len;
+            sum += len;
+        }
+        final double avg = sum / m;
+        
+        double variance = 0.0;
+        for (int k = 0; k < this.edges.length; ++k) {
+            final double len = this.edges[k].length / avg;
+            final double t = (1 - len * len);
+            variance += t * t;
+        }
+        variance /= m;
+        if (variance < 0) {
+            throw new RuntimeException("variance got negative: " + variance);
+        }
+        
+        // --- compute volume per node
+        final Matrix gramScaled = (Matrix) gram.dividedBy(avg * avg);
+        final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
+                .doubleValue());
+        final double volumePerNode = Math.max(cellVolume / n, 1e-12);
+        
+        // --- compute the total energy
+        final double sqrVol = volumePerNode * volumePerNode;
+        final double energy = this.volumeWeight / sqrVol + variance;
+
+        // --- return the result
+        return energy;
+    }
+
     /* (non-Javadoc)
      * @see org.gavrog.joss.pgraphs.basic.IEmbedder#go(int)
      */
     public int go(final int steps) {
         final Amoeba.Function energy = new Amoeba.Function() {
-            int count = 0;
-            
-            public double evaluate(final double point[]) {
-                // --- get some general data
-                final int dim = dimGraph;
-                final int n = getGraph().numberOfNodes();
-                final int m = edges.length;
-
-                // --- extract and adjust the Gram matrix
-                final Matrix gram = getGramMatrix(point);
-                
-                // --- make it an easy to read array
-                final double g[] = new double[dim * (dim+1) / 2];
-                setGramMatrix(gram, g);
-                
-                // --- use our original coordinates if only cell is relaxed
-                final double p[];
-                if (getRelaxPositions() == false) {
-                    p = AmoebaEmbedder.this.p;
-                } else {
-                    p = point;
-                }
-                
-                // --- compute variance of squared edge lengths
-                double sum = 0.0;
-                
-                for (int k = 0; k < edges.length; ++k) {
-                    final Edge e = edges[k];
-                    final int vOff = e.v;
-                    final int wOff = e.w;
-                    final double s[] = e.shift;
-                    final double diff[] = new double[dim];
-                    for (int i = 0; i < dim; ++i) {
-                        diff[i] = p[wOff + i] + s[i] - p[vOff + i];
-                    }
-                    double len = 0.0;
-                    for (int i = 0; i < dim; ++i) {
-                        len += diff[i] * diff[i] * g[gramIndex[i][i]];
-                        for (int j = i+1; j < dim; ++j) {
-                            len += 2 * diff[i] * diff[j] * g[gramIndex[i][j]];
-                        }
-                    }
-                    len = Math.sqrt(len);
-                    e.length = len;
-                    sum += len;
-                }
-                final double avg = sum / m;
-                
-                double variance = 0.0;
-                for (int k = 0; k < edges.length; ++k) {
-                    final double len = edges[k].length / avg;
-                    final double t = (1 - len * len);
-                    variance += t * t;
-                }
-                variance /= m;
-                if (variance < 0) {
-                    throw new RuntimeException("variance got negative: " + variance);
-                }
-                
-                // --- compute volume per node
-                final Matrix gramScaled = (Matrix) gram.dividedBy(avg * avg);
-                final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
-                        .doubleValue());
-                final double volumePerNode = Math.max(cellVolume / n, 1e-12);
-                
-                // --- compute the total energy
-                final double sqrVol = volumePerNode * volumePerNode;
-                final double energy = volumeWeight / sqrVol + variance;
-
-                // --- future debugging code might use this
-                ++count;
-                
-                // --- return the result
-                return energy;
-            }
-
             public int dim() {
                 if (getRelaxPositions()) {
                     return dimParSpace;
@@ -297,15 +292,18 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                     return dimGraph * (dimGraph+1) / 2;
                 }
             }
+
+            public double evaluate(final double[] p) {
+                return energy(p);
+            }
         };
         
         // --- here's the relaxation procedure
         double p[] = this.p;
         
         System.out.println("energy before optimization: " + energy.evaluate(p));
-        final int passes = getRelaxPositions() ? 10 : 5;
-        for (int pass = 0; pass < passes; ++pass) {
-            this.volumeWeight = Math.pow(10, passes - (3 + pass));
+        for (int pass = 0; pass < 10; ++pass) {
+            this.volumeWeight = Math.pow(10, -pass);
             p = new Amoeba(energy, 1e-6, 5 * steps, 10, 1.0).go(p);
             System.out.println("energy after optimization: " + energy.evaluate(p));
             for (int i = 0; i < p.length; ++i) {
