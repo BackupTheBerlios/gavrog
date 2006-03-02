@@ -29,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.7 2006/03/02 00:17:15 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.8 2006/03/02 04:03:12 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     private class Edge {
@@ -216,16 +216,26 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         final Amoeba.Function energy = new Amoeba.Function() {
             int count = 0;
             
-            public double evaluate(final double[] p) {
+            public double evaluate(final double point[]) {
                 // --- get some general data
                 final int dim = dimGraph;
                 final int n = getGraph().numberOfNodes();
                 final int m = edges.length;
 
                 // --- extract and adjust the Gram matrix
-                final Matrix T = getGramMatrix(p);
+                final Matrix gram = getGramMatrix(point);
+                
+                // --- make it an easy to read array
                 final double g[] = new double[dim * (dim+1) / 2];
-                setGramMatrix(T, g);
+                setGramMatrix(gram, g);
+                
+                // --- use our original coordinates if only cell is relaxed
+                final double p[];
+                if (getRelaxPositions() == false) {
+                    p = AmoebaEmbedder.this.p;
+                } else {
+                    p = point;
+                }
                 
                 // --- compute variance of squared edge lengths
                 double sum = 0.0;
@@ -264,32 +274,47 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 }
                 
                 // --- compute volume per node
-                final Matrix gram = (Matrix) getGramMatrix(p).dividedBy(avg * avg);
-                final double cellVolume = Math.sqrt(((Real) gram.determinant())
+                final Matrix gramScaled = (Matrix) gram.dividedBy(avg * avg);
+                final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
                         .doubleValue());
                 final double volumePerNode = Math.max(cellVolume / n, 1e-12);
-                final double sqrVol = volumePerNode * volumePerNode;
                 
                 // --- compute the total energy
+                final double sqrVol = volumePerNode * volumePerNode;
                 final double energy = volumeWeight / sqrVol + variance;
+
+                // --- future debugging code might use this
                 ++count;
                 
+                // --- return the result
                 return energy;
             }
 
             public int dim() {
-                return dimParSpace;
+                if (getRelaxPositions()) {
+                    return dimParSpace;
+                } else {
+                    return dimGraph * (dimGraph+1) / 2;
+                }
             }
         };
         
-        System.out.println("energy before optimization: " + energy.evaluate(this.p));
-        for (int i = 0; i < 10; ++i) {
-            this.volumeWeight = Math.pow(10, 5-i);
-            this.p = new Amoeba(energy, 1e-6, 1000, 10, 1.0).go(this.p);
-            System.out.println("energy after optimization: " + energy.evaluate(this.p));
+        // --- here's the relaxation procedure
+        double p[] = this.p;
+        
+        System.out.println("energy before optimization: " + energy.evaluate(p));
+        final int passes = getRelaxPositions() ? 10 : 5;
+        for (int pass = 0; pass < passes; ++pass) {
+            this.volumeWeight = Math.pow(10, passes - (3 + pass));
+            p = new Amoeba(energy, 1e-6, 5 * steps, 10, 1.0).go(p);
+            System.out.println("energy after optimization: " + energy.evaluate(p));
+            for (int i = 0; i < p.length; ++i) {
+                this.p[i] = p[i];
+            }
             resymmetrizeCell();
             resymmetrizePositions();
-            System.out.println("energy after resymmetrizing: " + energy.evaluate(this.p));
+            p = this.p;
+            System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
         }
         System.out.println();
         return steps;

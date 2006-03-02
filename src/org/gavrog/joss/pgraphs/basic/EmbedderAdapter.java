@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.3 2006/03/01 05:21:34 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.4 2006/03/02 04:03:12 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -40,7 +40,6 @@ public abstract class EmbedderAdapter implements IEmbedder{
     private final Map node2images;
     private final Set angles;
 
-    private boolean optimizeCell = true;
     private boolean optimizePositions = true;
 
 
@@ -257,14 +256,6 @@ public abstract class EmbedderAdapter implements IEmbedder{
      */
     public PeriodicGraph getGraph() {
         return this.graph;
-    }
-    
-    public boolean getRelaxCell() {
-        return optimizeCell;
-    }
-    
-    public void setRelaxCell(boolean optimizeCell) {
-        this.optimizeCell = optimizeCell;
     }
     
     public boolean getRelaxPositions() {

@@ -23,7 +23,7 @@ import org.gavrog.joss.geometry.Point;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.4 2006/03/01 05:21:34 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.5 2006/03/02 04:03:12 odf Exp $
  */
 public interface IEmbedder {
     public double[] edgeStatistics();
@@ -45,10 +45,6 @@ public interface IEmbedder {
     public void setGramMatrix(final Matrix gramMatrix);
 
     public Matrix getGramMatrix();
-
-    public boolean getRelaxCell();
-
-    public void setRelaxCell(boolean value);
 
     public boolean getRelaxPositions();
 

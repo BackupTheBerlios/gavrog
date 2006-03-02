@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.45 2006/03/02 00:17:16 odf Exp $
+ * @version $Id: Demo.java,v 1.46 2006/03/02 04:03:12 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -316,7 +316,6 @@ public class Demo {
         boolean cellRelaxed = true;
         try {
             embedder.setRelaxPositions(relax);
-            embedder.setRelaxCell(true);
             embedder.go(300);
         } catch (Exception ex) {
             out.println("==================================================");

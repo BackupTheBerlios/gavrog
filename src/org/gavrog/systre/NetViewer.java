@@ -109,7 +109,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.24 2006/03/02 00:17:16 odf Exp $
+ * @version $Id: NetViewer.java,v 1.25 2006/03/02 04:03:12 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -543,7 +543,6 @@ public class NetViewer extends Applet {
         IEmbedder embedder = new AmoebaEmbedder(G);
         try {
             embedder.setRelaxPositions(relax);
-            embedder.setRelaxCell(true);
             embedder.go(300);
         } catch (Exception ex) {
             status.setText("WARNING - Could not relax: " + ex);
