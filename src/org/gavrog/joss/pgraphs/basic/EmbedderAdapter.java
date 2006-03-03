@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.4 2006/03/02 04:03:12 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.5 2006/03/03 22:47:31 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -228,15 +228,15 @@ public abstract class EmbedderAdapter implements IEmbedder{
         return this.angles.iterator();
     }
     
-    private Iterator nodeOrbitReps() {
+    protected Iterator nodeOrbitReps() {
         return this.node2images.keySet().iterator();
     }
     
-    private Map getImages(final INode v) {
+    protected Map getImages(final INode v) {
         return (Map) this.node2images.get(v);
     }
     
-    private Operator getSymmetrizer(final INode v) {
+    protected Operator getSymmetrizer(final INode v) {
         return (Operator) this.node2sym.get(v);
     }
     
