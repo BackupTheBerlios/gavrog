@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.algorithms.Amoeba;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -29,17 +30,23 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.10 2006/03/02 06:51:20 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.11 2006/03/03 06:19:20 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
+    // TODO IMPORTANT: keep net symmetric during optimization
+    
+    final static int EDGE = 1;
+    final static int ANGLE = 2;
+    
     private class Edge {
         public final int v;
         public final int w;
         public final double shift[];
+        public final int type;
         public final double weight;
         public double length;
         
-        public Edge(final INode v, final INode w, final Vector s, final double weight) {
+        public Edge(final INode v, final INode w, final Vector s, int type, final double weight) {
             this.v = ((Integer) node2index.get(v)).intValue();
             this.w = ((Integer) node2index.get(w)).intValue();
             final int d = s.getDimension();
@@ -47,6 +54,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             for (int i = 0; i < d; ++i) {
                 this.shift[i] = ((Real) s.get(i)).doubleValue();
             }
+            this.type = type;
             this.weight = weight;
         }
     }
@@ -56,6 +64,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private int gramIndex[][];
     final private Map node2index;
     final private INode index2node[];
+    final private int nrEdges;
+    final private int nrAngles;
     final private Edge edges[];
     
     double volumeWeight;
@@ -100,11 +110,20 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
         
         // --- the encoded list of graph edges
-        this.edges = new Edge[graph.numberOfEdges()];
+        this.nrEdges = graph.numberOfEdges();
+        this.nrAngles = Iterators.size(this.angles());
+        this.edges = new Edge[this.nrEdges + this.nrAngles];
         k = 0;
         for (final Iterator iter = graph.edges(); iter.hasNext();) {
             final IEdge e = (IEdge) iter.next();
-            this.edges[k++] = new Edge(e.source(), e.target(), graph.getShift(e), 1.0);
+            this.edges[k++] = new Edge(e.source(), e.target(), graph.getShift(e), EDGE,
+                    1.0);
+        }
+        
+        // --- the encoded list of next nearest neighbors (angles)
+        for (final Iterator iter = this.angles(); iter.hasNext();) {
+            final Angle a = (Angle) iter.next();
+            this.edges[k++] = new Edge(a.v, a.w, a.s, ANGLE, 1.0);
         }
         
         // --- initialize the parameter vector
@@ -231,7 +250,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
         
         // --- compute variance of squared edge lengths
-        double sum = 0.0;
+        double edgeSum = 0.0;
+        double angleSum = 0.0;
         
         for (int k = 0; k < this.edges.length; ++k) {
             final Edge e = this.edges[k];
@@ -251,19 +271,32 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
             len = Math.sqrt(len);
             e.length = len;
-            sum += len;
+            if (e.type == EDGE) {
+                edgeSum += len;
+            } else {
+                angleSum += len;
+            }
         }
-        final double avg = sum / m;
+        final double avg = edgeSum / m;
         
-        double variance = 0.0;
+        double edgeVariance = 0.0;
+        double anglePenalty = 0.0;
         for (int k = 0; k < this.edges.length; ++k) {
-            final double len = this.edges[k].length / avg;
-            final double t = (1 - len * len);
-            variance += t * t;
+            final Edge e = this.edges[k];
+            final double len = e.length / avg;
+            if (e.type == EDGE) {
+                final double t = (1 - len * len);
+                edgeVariance += t * t;
+            } else {
+                if (len < 1.0) {
+                    anglePenalty += Math.pow(len, -4) - 1.0;
+                }
+            }
         }
-        variance /= m;
-        if (variance < 0) {
-            throw new RuntimeException("variance got negative: " + variance);
+        edgeVariance /= m;
+        if (edgeVariance < 0) {
+            throw new RuntimeException("edge lengths variance got negative: "
+                                       + edgeVariance);
         }
         
         // --- compute volume per node
@@ -273,8 +306,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         final double vol = Math.max(cellVolume / n, 1e-12);
         
         // --- compute and return the total energy
-//        return this.volumeWeight / (vol * vol) + variance;
-        return this.volumeWeight / vol + variance;
+        return this.volumeWeight / vol + edgeVariance + 1000 * anglePenalty;
     }
 
     /* (non-Javadoc)
@@ -307,7 +339,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 this.p[i] = p[i];
             }
             resymmetrizeCell();
-            resymmetrizePositions();
+//            resymmetrizePositions();
             p = this.p;
             System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
         }
