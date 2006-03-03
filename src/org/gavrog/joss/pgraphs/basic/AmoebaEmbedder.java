@@ -16,21 +16,25 @@ limitations under the License.
 
 package org.gavrog.joss.pgraphs.basic;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.algorithms.Amoeba;
+import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.11 2006/03/03 06:19:20 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.12 2006/03/03 22:58:31 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -39,16 +43,16 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final static int ANGLE = 2;
     
     private class Edge {
-        public final int v;
-        public final int w;
+        public final INode v;
+        public final INode w;
         public final double shift[];
         public final int type;
         public final double weight;
         public double length;
         
         public Edge(final INode v, final INode w, final Vector s, int type, final double weight) {
-            this.v = ((Integer) node2index.get(v)).intValue();
-            this.w = ((Integer) node2index.get(w)).intValue();
+            this.v = v;
+            this.w = w;
             final int d = s.getDimension();
             this.shift = new double[d];
             for (int i = 0; i < d; ++i) {
@@ -64,6 +68,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private int gramIndex[][];
     final private Map node2index;
     final private INode index2node[];
+    final private double nodeSpace[][];
     final private int nrEdges;
     final private int nrAngles;
     final private Edge edges[];
@@ -98,6 +103,27 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 this.gramIndex[i][j] = this.gramIndex[j][i] = k++;
             }
         }
+
+        // TODO finish this stuff
+        // --- compute the node configuration space
+        final List nodeConf = new ArrayList();
+        final Map nodeToIdx = new HashMap();
+        for (final Iterator nodeReps = this.nodeOrbitReps(); nodeReps.hasNext();) {
+            final INode v = (INode) nodeReps.next();
+            final Operator s = this.getSymmetrizer(v);
+            final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
+            final Matrix N = LinearAlgebra.rowNullSpace(A, false);
+            nodeToIdx.put(v, new Integer(nodeConf.size()));
+            for (int i = 0; i < N.numberOfRows(); ++i) {
+                final double row[] = new double[d+1];
+                for (int j = 0; j < d; ++j) {
+                    row[j] = ((Real) N.get(i, j)).doubleValue();
+                }
+                nodeConf.add(row);
+            }
+        }
+        this.nodeSpace = null;
+        // END TO DO        
         
         // --- translations between nodes and parameter indices
         this.node2index = new HashMap();
@@ -138,6 +164,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         this(G, G.barycentricPlacement(), defaultGramMatrix(G));
     }
     
+   
     // --- we need to override some default implementations
     
     public Point getPosition(final INode v, final double p[]) {
@@ -228,6 +255,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         return getGramMatrix(this.p);
     }
 
+    // --- the following methods do the actual optimization
+    
     private double energy(final double point[]) {
         // --- get some general data
         final int dim = this.dimGraph;
@@ -255,8 +284,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         for (int k = 0; k < this.edges.length; ++k) {
             final Edge e = this.edges[k];
-            final int vOff = e.v;
-            final int wOff = e.w;
+            final int vOff = ((Integer) this.node2index.get(e.v)).intValue();
+            final int wOff = ((Integer) this.node2index.get(e.w)).intValue();
             final double s[] = e.shift;
             final double diff[] = new double[dim];
             for (int i = 0; i < dim; ++i) {
@@ -339,7 +368,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 this.p[i] = p[i];
             }
             resymmetrizeCell();
-//            resymmetrizePositions();
+            resymmetrizePositions();
             p = this.p;
             System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
         }
