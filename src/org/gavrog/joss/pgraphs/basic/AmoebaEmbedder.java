@@ -16,10 +16,8 @@ limitations under the License.
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.Iterators;
@@ -34,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.12 2006/03/03 22:58:31 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.13 2006/03/04 21:26:39 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -68,7 +66,6 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private int gramIndex[][];
     final private Map node2index;
     final private INode index2node[];
-    final private double nodeSpace[][];
     final private int nrEdges;
     final private int nrAngles;
     final private Edge edges[];
@@ -106,23 +103,24 @@ public class AmoebaEmbedder extends EmbedderAdapter {
 
         // TODO finish this stuff
         // --- compute the node configuration space
-        final List nodeConf = new ArrayList();
-        final Map nodeToIdx = new HashMap();
-        for (final Iterator nodeReps = this.nodeOrbitReps(); nodeReps.hasNext();) {
+        final Map node2ParameterIndex = new HashMap();
+        final Map node2Mapping = new HashMap();
+        k = 0;
+        for (final Iterator nodeReps = nodeOrbitReps(); nodeReps.hasNext();) {
             final INode v = (INode) nodeReps.next();
             final Operator s = this.getSymmetrizer(v);
             final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
             final Matrix N = LinearAlgebra.rowNullSpace(A, false);
-            nodeToIdx.put(v, new Integer(nodeConf.size()));
-            for (int i = 0; i < N.numberOfRows(); ++i) {
-                final double row[] = new double[d+1];
-                for (int j = 0; j < d; ++j) {
-                    row[j] = ((Real) N.get(i, j)).doubleValue();
-                }
-                nodeConf.add(row);
+            node2ParameterIndex.put(v, new Integer(k));
+            node2Mapping.put(v, N.asDoubleArray());
+            final Map images = getImages(v);
+            for (final Iterator iter = images.keySet().iterator(); iter.hasNext();) {
+                final INode w = (INode) iter.next();
+                final Matrix M = ((Operator) images.get(v)).getCoordinates();
+                node2ParameterIndex.put(w, new Integer(k));
+                node2Mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
             }
         }
-        this.nodeSpace = null;
         // END TO DO        
         
         // --- translations between nodes and parameter indices
