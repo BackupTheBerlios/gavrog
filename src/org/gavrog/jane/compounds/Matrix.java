@@ -122,6 +122,16 @@ public class Matrix extends ArithmeticBase {
         return this.ncols;
     }
     
+    public double[][] asDoubleArray() {
+        final double[][] result = new double[numberOfRows()][numberOfColumns()];
+        for (int i  = 0; i < numberOfRows(); ++i) {
+            for (int j = 0; j < numberOfColumns(); ++j) {
+                result[i][j] = ((Real) get(i, j)).doubleValue();
+            }
+        }
+        return result;
+    }
+    
     public boolean equals(Object obj) {
         if (obj instanceof Matrix) {
             Matrix other = (Matrix) obj;

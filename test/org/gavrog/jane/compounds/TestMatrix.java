@@ -16,17 +16,16 @@
 
 package org.gavrog.jane.compounds;
 
-import org.gavrog.jane.compounds.Matrix;
+import junit.framework.TestCase;
+
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
-import junit.framework.TestCase;
-
 /**
  * @author Olaf Delgado
- * @version $Id: TestMatrix.java,v 1.5 2005/11/13 04:32:01 odf Exp $
+ * @version $Id: TestMatrix.java,v 1.6 2006/03/04 20:45:36 odf Exp $
  */
 public class TestMatrix extends TestCase {
     private Matrix A;
@@ -59,6 +58,22 @@ public class TestMatrix extends TestCase {
         super.tearDown();
     }
 
+    public void testAsDoubleArray() {
+        final double a[][] = new double[][] { 
+                {  1,  2,  3,  4 },
+                {  5,  6,  7,  8 },
+                {  9, 10, 11, 12 },
+                { 13, 14, 15, 16 } };
+        final double b[][] = A.asDoubleArray();
+        assertEquals(a.length, b.length);
+        assertEquals(a[0].length, b[0].length);
+        for (int i = 0; i < a.length; ++i) {
+            for (int j = 0; j < a[i].length; ++j) {
+                assertTrue(a[i][j] == b[i][j]);
+            }
+        }
+    }
+    
     public void testInverse() {
         final Matrix A = new Matrix(3, 3);
         A.set(0, 0, new FloatingPoint(0.8164965809277261));
