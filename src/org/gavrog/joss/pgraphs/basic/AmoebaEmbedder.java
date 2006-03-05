@@ -22,17 +22,15 @@ import java.util.Map;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.algorithms.Amoeba;
-import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
-import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.15 2006/03/05 01:48:50 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.16 2006/03/05 04:49:21 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -65,8 +63,6 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private int dimParSpace;
     final private int gramIndex[][];
     final private Map node2index;
-    final private INode index2node[];
-    final private Map node2mapping;
     final private int nrEdges;
     final private int nrAngles;
     final private Edge edges[];
@@ -104,33 +100,11 @@ public class AmoebaEmbedder extends EmbedderAdapter {
 
         // --- set up translating parameter space values into point coordinates
         this.node2index = new HashMap();
-        this.index2node = new INode[this.dimParSpace];
-        this.node2mapping = new HashMap();
 
-        if (true) {
         for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             this.node2index.put(v, new Integer(k));
-            this.index2node[k] = v;
             k += d;
-        }
-        } else {
-        k = 0;
-        for (final Iterator nodeReps = nodeOrbitReps(); nodeReps.hasNext();) {
-            final INode v = (INode) nodeReps.next();
-            final Operator s = this.getSymmetrizer(v);
-            final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
-            final Matrix N = LinearAlgebra.rowNullSpace(A, false);
-            this.node2index.put(v, new Integer(k));
-            this.node2mapping.put(v, N.asDoubleArray());
-            final Map images = getImages(v);
-            for (final Iterator iter = images.keySet().iterator(); iter.hasNext();) {
-                final INode w = (INode) iter.next();
-                final Matrix M = ((Operator) images.get(v)).getCoordinates();
-                this.node2index.put(w, new Integer(k));
-                this.node2mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
-            }
-        }
         }
         
         // --- the encoded list of graph edges
