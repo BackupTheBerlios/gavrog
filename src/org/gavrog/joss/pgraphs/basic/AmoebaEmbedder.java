@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.14 2006/03/05 00:41:06 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.15 2006/03/05 01:48:50 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -66,6 +66,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private int gramIndex[][];
     final private Map node2index;
     final private INode index2node[];
+    final private Map node2mapping;
     final private int nrEdges;
     final private int nrAngles;
     final private Edge edges[];
@@ -101,37 +102,36 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
         }
 
-        // --- translations between nodes and parameter indices
+        // --- set up translating parameter space values into point coordinates
         this.node2index = new HashMap();
         this.index2node = new INode[this.dimParSpace];
+        this.node2mapping = new HashMap();
+
+        if (true) {
         for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             this.node2index.put(v, new Integer(k));
             this.index2node[k] = v;
             k += d;
         }
-        
-        // TODO finish this stuff
-        // --- compute the node configuration space
-        final Map node2ParameterIndex = new HashMap();
-        final Map node2Mapping = new HashMap();
+        } else {
         k = 0;
         for (final Iterator nodeReps = nodeOrbitReps(); nodeReps.hasNext();) {
             final INode v = (INode) nodeReps.next();
             final Operator s = this.getSymmetrizer(v);
             final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
             final Matrix N = LinearAlgebra.rowNullSpace(A, false);
-            node2ParameterIndex.put(v, new Integer(k));
-            node2Mapping.put(v, N.asDoubleArray());
+            this.node2index.put(v, new Integer(k));
+            this.node2mapping.put(v, N.asDoubleArray());
             final Map images = getImages(v);
             for (final Iterator iter = images.keySet().iterator(); iter.hasNext();) {
                 final INode w = (INode) iter.next();
                 final Matrix M = ((Operator) images.get(v)).getCoordinates();
-                node2ParameterIndex.put(w, new Integer(k));
-                node2Mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
+                this.node2index.put(w, new Integer(k));
+                this.node2mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
             }
         }
-        // END TO DO        
+        }
         
         // --- the encoded list of graph edges
         this.nrEdges = graph.numberOfEdges();
@@ -165,7 +165,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
    
     // --- we need to override some default implementations
     
-    public Point getPosition(final INode v, final double p[]) {
+    private double[] getPosition(final INode v, final double p[]) {
         final int d = this.dimGraph;
         final int offset = ((Integer) this.node2index.get(v)).intValue();
         
@@ -173,11 +173,11 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         for (int i = 0; i < d; ++i) {
             coords[i] = p[offset + i];
         }
-        return new Point(coords);
+        return coords;
     }
 
     public Point getPosition(final INode v) {
-        return getPosition(v, this.p);
+        return new Point(getPosition(v, this.p));
     }
 
     public Map getPositions() {
@@ -205,7 +205,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
     }
 
-    public void setGramMatrix(final Matrix gramMatrix, final double p[]) {
+    private void setGramMatrix(final Matrix gramMatrix, final double p[]) {
         final int d = this.dimGraph;
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
@@ -219,7 +219,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         setGramMatrix(gramMatrix, this.p);
     }
 
-    public Matrix getGramMatrix(final double p[]) {
+    private Matrix getGramMatrix(final double p[]) {
         final int d = this.dimGraph;
         final Matrix gram = new Matrix(d, d);
         for (int i = 0; i < d; ++i) {
@@ -282,12 +282,12 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         for (int k = 0; k < this.edges.length; ++k) {
             final Edge e = this.edges[k];
-            final int vOff = ((Integer) this.node2index.get(e.v)).intValue();
-            final int wOff = ((Integer) this.node2index.get(e.w)).intValue();
+            final double pv[] = getPosition(e.v, p);
+            final double pw[] = getPosition(e.w, p);
             final double s[] = e.shift;
             final double diff[] = new double[dim];
             for (int i = 0; i < dim; ++i) {
-                diff[i] = p[wOff + i] + s[i] - p[vOff + i];
+                diff[i] = pw[i] + s[i] - pv[i];
             }
             double len = 0.0;
             for (int i = 0; i < dim; ++i) {
