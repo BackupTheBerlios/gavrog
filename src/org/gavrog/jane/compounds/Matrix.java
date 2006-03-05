@@ -20,7 +20,6 @@ import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
-import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
@@ -539,7 +538,7 @@ public class Matrix extends ArithmeticBase {
                     cleared = false;
                     final IArithmetic f;
                     if (useTruncatedDivision) {
-                        f = ((Rational) A.get(i, col)).div(A.get(row, col));
+                        f = ((Real) A.get(i, col)).div(A.get(row, col));
                     } else {
                         f = A.get(i, col).dividedBy(A.get(row, col));
                     }
@@ -584,7 +583,7 @@ public class Matrix extends ArithmeticBase {
                     }
                     final IArithmetic f;
                     if (useTruncatedDivision) {
-                        f = ((Rational) A.get(i, col)).div(A.get(row, col));
+                        f = ((Real) A.get(i, col)).div(A.get(row, col));
                     } else {
                         f = A.get(i, col).dividedBy(A.get(row, col));
                     }
