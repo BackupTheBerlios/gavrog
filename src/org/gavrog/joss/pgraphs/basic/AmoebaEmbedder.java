@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.13 2006/03/04 21:26:39 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.14 2006/03/05 00:41:06 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -101,6 +101,16 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
         }
 
+        // --- translations between nodes and parameter indices
+        this.node2index = new HashMap();
+        this.index2node = new INode[this.dimParSpace];
+        for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            this.node2index.put(v, new Integer(k));
+            this.index2node[k] = v;
+            k += d;
+        }
+        
         // TODO finish this stuff
         // --- compute the node configuration space
         final Map node2ParameterIndex = new HashMap();
@@ -122,16 +132,6 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
         }
         // END TO DO        
-        
-        // --- translations between nodes and parameter indices
-        this.node2index = new HashMap();
-        this.index2node = new INode[this.dimParSpace];
-        for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            this.node2index.put(v, new Integer(k));
-            this.index2node[k] = v;
-            k += d;
-        }
         
         // --- the encoded list of graph edges
         this.nrEdges = graph.numberOfEdges();
