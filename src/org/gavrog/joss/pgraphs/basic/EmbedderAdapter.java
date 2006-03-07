@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.6 2006/03/07 22:45:09 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.7 2006/03/07 23:03:20 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -103,7 +103,7 @@ public abstract class EmbedderAdapter implements IEmbedder{
                         .hasNext();) {
                     final Morphism a = (Morphism) syms.next();
                     final INode va = (INode) a.get(v);
-                    if (!img2sym.containsKey(va)) {
+                    if (!seen.contains(va)) {
                         final Point bva = (Point) getGraph().barycentricPlacement().get(va);
                         final Operator opa = a.getAffineOperator();
                         final Vector shift = (Vector) bva.minus(bv.times(opa));
