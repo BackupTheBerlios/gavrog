@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.5 2006/03/03 22:47:31 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.6 2006/03/07 22:45:09 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -91,17 +91,24 @@ public abstract class EmbedderAdapter implements IEmbedder{
         }
         
         this.node2images = new HashMap();
+        final Set seen = new HashSet();
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
-            if (!this.node2images.containsKey(v)) {
+            if (!seen.contains(v)) {
+                final Point bv = (Point) getGraph().barycentricPlacement().get(v);
                 final Map img2sym = new HashMap();
                 img2sym.put(v, new Operator(Matrix.one(d+1)));
+                seen.add(v);
                 for (final Iterator syms = this.graph.symmetries().iterator(); syms
                         .hasNext();) {
                     final Morphism a = (Morphism) syms.next();
                     final INode va = (INode) a.get(v);
                     if (!img2sym.containsKey(va)) {
-                        img2sym.put(va, a.getAffineOperator());
+                        final Point bva = (Point) getGraph().barycentricPlacement().get(va);
+                        final Operator opa = a.getAffineOperator();
+                        final Vector shift = (Vector) bva.minus(bv.times(opa));
+                        img2sym.put(va, opa.times(shift));
+                        seen.add(va);
                     }
                 }
                 this.node2images.put(v, img2sym);
@@ -184,14 +191,11 @@ public abstract class EmbedderAdapter implements IEmbedder{
             final INode v = (INode) reps.next();
             final Point pv = (Point) getPosition(v).times(getSymmetrizer(v));
             setPosition(v, pv);
-            final Point bv = (Point) getGraph().barycentricPlacement().get(v);
             final Map img2sym = getImages(v);
             for (final Iterator imgs = img2sym.keySet().iterator(); imgs.hasNext();) {
                 final INode w = (INode) imgs.next();
                 final Operator a = (Operator) img2sym.get(w);
-                final Point bw = (Point) getGraph().barycentricPlacement().get(w);
-                final Vector d = (Vector) bw.minus(bv.times(a));
-                setPosition(w, (Point) pv.times(a).plus(d));
+                setPosition(w, (Point) pv.times(a));
             }
         }
     }
