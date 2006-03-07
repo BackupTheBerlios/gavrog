@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedderTest.java,v 1.1 2006/03/05 04:50:11 odf Exp $
+ * @version $Id: AmoebaEmbedderTest.java,v 1.2 2006/03/07 23:03:58 odf Exp $
  */
 public class AmoebaEmbedderTest extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -109,17 +109,23 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
             final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
             final Matrix N = LinearAlgebra.rowNullSpace(A, false);
             this.node2index.put(v, new Integer(k));
-            this.node2mapping.put(v, N.asDoubleArray());
+            this.node2mapping.put(v, N);
+            System.out.println("Mapped " + v + " to " + N);
             final Map images = getImages(v);
             for (final Iterator iter = images.keySet().iterator(); iter.hasNext();) {
                 final INode w = (INode) iter.next();
+                if (w == v) {
+                    continue;
+                }
                 final Matrix M = ((Operator) images.get(w)).getCoordinates();
                 this.node2index.put(w, new Integer(k));
-                this.node2mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
+                this.node2mapping.put(w, N.times(M));
+                System.out.println("    Mapped " + w + " to " + N.times(M));
             }
             k += N.numberOfRows();
         }
         this.dimParSpace = k;
+        System.out.println("dimParSpace = " + this.dimParSpace);
         
         // --- the encoded list of graph edges
         this.nrEdges = graph.numberOfEdges();
@@ -156,22 +162,18 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
     private double[] getPosition(final INode v, final double p[]) {
         final int d = this.dimGraph;
         final int offset = ((Integer) this.node2index.get(v)).intValue();
-        final double mapping[][] = (double[][]) this.node2mapping.get(v);
-        final int n = mapping.length;
+        final Matrix mapping = (Matrix) this.node2mapping.get(v);
+        final int n = mapping.numberOfRows();
         
-        double f = 0.0;
-        for (int j = 0; j < n; ++j) {
-            f += p[offset + j] * mapping[j][d];
+        Matrix loc = Matrix.zero(1, d+1);
+        for (int i = 0; i < n; ++i) {
+            loc = (Matrix) loc.plus(mapping.getRow(i).times(p[offset + i]));
         }
-        final double coords[] = new double[d];
-        for (int i = 0; i < d; ++i) {
-            coords[i] = 0;
-            for (int j = 0; j < n; ++j) {
-                coords[i] += p[offset + j] * mapping[j][i];
-            }
-            coords[i] /= f;
+        final double c[] = new double[d];
+        for (int i = 0; i < n; ++i) {
+            c[i] = ((Real) loc.get(0, i)).doubleValue();
         }
-        return coords;
+        return c;
     }
 
     public Point getPosition(final INode v) {
@@ -188,18 +190,7 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
     }
     
     public void setPosition(final INode v, final Point p) {
-        final int d = this.dimGraph;
-        final Matrix A = new Matrix((double[][]) this.node2mapping.get(v));
-        final Matrix b = new Matrix(1, d+1);
-        b.set(0, d, FloatingPoint.ONE);
-        b.setSubMatrix(0, 0, ((Point) p.times(getSymmetrizer(v))).getCoordinates());
-        final Matrix x = LinearAlgebra.solutionInRows(A, b, true);
-        System.out.println("A = " + A + ", b = " + b + ", x = " + x);
-        
-        final int offset = ((Integer) this.node2index.get(v)).intValue();
-        for (int i = 0; i < d; ++i) {
-            this.p[offset + i] = ((Real) x.get(0, i)).doubleValue();
-        }
+        // TODO implement this
     }
 
     public void setPositions(final Map map) {
@@ -369,7 +360,7 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
             for (int i = 0; i < p.length; ++i) {
                 this.p[i] = p[i];
             }
-            //resymmetrizeCell();
+            resymmetrizeCell();
             //resymmetrizePositions();
             p = this.p;
             System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
