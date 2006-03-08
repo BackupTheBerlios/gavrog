@@ -50,18 +50,18 @@ import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
-import org.gavrog.joss.pgraphs.basic.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.basic.IEdge;
-import org.gavrog.joss.pgraphs.basic.IEmbedder;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
+import org.gavrog.joss.pgraphs.embed.IEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.46 2006/03/02 04:03:12 odf Exp $
+ * @version $Id: Demo.java,v 1.47 2006/03/08 20:16:42 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;

@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.joss.pgraphs.embed;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -30,11 +30,14 @@ import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.37 2006/03/02 04:03:12 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.1 2006/03/08 20:16:42 odf Exp $
  */
 public class SpringEmbedder extends EmbedderAdapter {
     private static final boolean DEBUG = false;

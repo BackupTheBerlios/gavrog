@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.joss.pgraphs.embed;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,10 +30,13 @@ import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.17 2006/03/08 05:54:06 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.1 2006/03/08 20:16:42 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static int EDGE = 1;
@@ -386,7 +389,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
         };
         
-            // --- here's the relaxation procedure
+        // --- here's the relaxation procedure
         double p[] = this.p;
 
         System.out.println("energy before optimization: " + energy.evaluate(p));

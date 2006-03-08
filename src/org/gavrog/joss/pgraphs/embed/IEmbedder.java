@@ -14,16 +14,17 @@
  limitations under the License.
  */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.joss.pgraphs.embed;
 
 import java.util.Map;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.pgraphs.basic.INode;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.5 2006/03/02 04:03:12 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.1 2006/03/08 20:16:42 odf Exp $
  */
 public interface IEmbedder {
     public double[] edgeStatistics();

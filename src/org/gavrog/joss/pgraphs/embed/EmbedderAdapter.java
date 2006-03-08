@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.joss.pgraphs.basic;
+package org.gavrog.joss.pgraphs.embed;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,10 +29,14 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.Morphism;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.7 2006/03/07 23:03:20 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.1 2006/03/08 20:16:42 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
