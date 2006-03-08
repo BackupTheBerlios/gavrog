@@ -74,7 +74,7 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
-import org.gavrog.joss.pgraphs.basic.AmoebaEmbedder;
+import org.gavrog.joss.pgraphs.basic.AmoebaEmbedderTest;
 import org.gavrog.joss.pgraphs.basic.Embedding;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IEmbedder;
@@ -109,7 +109,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.25 2006/03/02 04:03:12 odf Exp $
+ * @version $Id: NetViewer.java,v 1.26 2006/03/08 00:57:43 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -540,7 +540,7 @@ public class NetViewer extends Applet {
         // --- relax the structure from the barycentric embedding
         boolean error = false;
 //        IEmbedder embedder = new SpringEmbedder(G);
-        IEmbedder embedder = new AmoebaEmbedder(G);
+        IEmbedder embedder = new AmoebaEmbedderTest(G);
         try {
             embedder.setRelaxPositions(relax);
             embedder.go(300);
