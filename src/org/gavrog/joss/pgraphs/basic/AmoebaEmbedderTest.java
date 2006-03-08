@@ -32,7 +32,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedderTest.java,v 1.2 2006/03/07 23:03:58 odf Exp $
+ * @version $Id: AmoebaEmbedderTest.java,v 1.3 2006/03/08 00:57:08 odf Exp $
  */
 public class AmoebaEmbedderTest extends EmbedderAdapter {
     // TODO IMPORTANT: keep net symmetric during optimization
@@ -105,11 +105,10 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
 
         for (final Iterator nodeReps = nodeOrbitReps(); nodeReps.hasNext();) {
             final INode v = (INode) nodeReps.next();
-            final Operator s = this.getSymmetrizer(v);
-            final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
-            final Matrix N = LinearAlgebra.rowNullSpace(A, false);
+            final Matrix N = normalizedPositionSpace(v);
+            
             this.node2index.put(v, new Integer(k));
-            this.node2mapping.put(v, N);
+            this.node2mapping.put(v, N.asDoubleArray());
             System.out.println("Mapped " + v + " to " + N);
             final Map images = getImages(v);
             for (final Iterator iter = images.keySet().iterator(); iter.hasNext();) {
@@ -119,10 +118,10 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
                 }
                 final Matrix M = ((Operator) images.get(w)).getCoordinates();
                 this.node2index.put(w, new Integer(k));
-                this.node2mapping.put(w, N.times(M));
+                this.node2mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
                 System.out.println("    Mapped " + w + " to " + N.times(M));
             }
-            k += N.numberOfRows();
+            k += N.numberOfRows() - 1;
         }
         this.dimParSpace = k;
         System.out.println("dimParSpace = " + this.dimParSpace);
@@ -156,24 +155,46 @@ public class AmoebaEmbedderTest extends EmbedderAdapter {
         this(G, G.barycentricPlacement(), defaultGramMatrix(G));
     }
     
+   private Matrix normalizedPositionSpace(final INode v) {
+       final int d = this.dimGraph;
+       
+       // --- get the affine subspace that is stabilized by the nodes stabilizer
+       final Operator s = this.getSymmetrizer(v);
+       final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
+       final Matrix N = LinearAlgebra.rowNullSpace(A, false).mutableClone();
+       
+       // --- make last row encode to a point, all others vectors
+       Matrix.triangulate(N, null, false, true);
+       final int n = N.numberOfRows();
+       for (int i = 0; i < n-1; ++i) {
+           if (N.get(i, d).isZero() == false) {
+               final Matrix tmp = N.getRow(n-1);
+               N.setRow(n-1, N.getRow(i));
+               N.setRow(i, tmp);
+               break;
+           }
+       }
+       N.setRow(n-1, (Matrix) N.getRow(n-1).dividedBy(N.get(n-1,d)));
+       
+       return N;
+   }
    
     // --- we need to override some default implementations
     
     private double[] getPosition(final INode v, final double p[]) {
         final int d = this.dimGraph;
         final int offset = ((Integer) this.node2index.get(v)).intValue();
-        final Matrix mapping = (Matrix) this.node2mapping.get(v);
-        final int n = mapping.numberOfRows();
+        final double mapping[][] = (double[][]) this.node2mapping.get(v);
+        final int n = mapping.length;
         
-        Matrix loc = Matrix.zero(1, d+1);
-        for (int i = 0; i < n; ++i) {
-            loc = (Matrix) loc.plus(mapping.getRow(i).times(p[offset + i]));
+        double loc[] = new double[d];
+        for (int i = 0; i < d; ++i) {
+            loc[i] = mapping[n-1][i];
+            for (int j = 0; j < n-1; ++j) {
+                loc[i] += p[offset + j] * mapping[j][i];
+            }
         }
-        final double c[] = new double[d];
-        for (int i = 0; i < n; ++i) {
-            c[i] = ((Real) loc.get(0, i)).doubleValue();
-        }
-        return c;
+        return loc;
     }
 
     public Point getPosition(final INode v) {
