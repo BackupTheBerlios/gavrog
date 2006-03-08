@@ -16,6 +16,7 @@
 
 package org.gavrog.jane.compounds;
 
+import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
@@ -25,9 +26,11 @@ import org.gavrog.jane.numbers.Whole;
  * linear algebra.
  * 
  * @author Olaf Delgado
- * @version $Id: LinearAlgebra.java,v 1.7 2005/11/13 04:32:01 odf Exp $
+ * @version $Id: LinearAlgebra.java,v 1.8 2006/03/08 05:53:06 odf Exp $
  */
 public class LinearAlgebra {
+    final static Real EPS = new FloatingPoint(1e-12);
+    
     /**
      * Orthonormalizes the rows of a matrix B with respect to a given quadratic
      * form. In other words, computes a Matrix A such that A*M*A^t = I, for
@@ -225,7 +228,8 @@ public class LinearAlgebra {
                 final IArithmetic r = v.get(i, j);
                 final IArithmetic s;
                 if (d.isZero()) {
-                    if ((modZ && (r instanceof Whole)) || r.isZero()) {
+                    if ((modZ && (r instanceof Whole)) || r.isZero()
+                        || (r.isExact() == false && r.isLessOrEqual(EPS))) {
                         s = Whole.ZERO;
                     } else {
                         return null;
