@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.47 2006/03/08 20:16:42 odf Exp $
+ * @version $Id: Demo.java,v 1.48 2006/03/08 22:51:10 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -310,13 +310,14 @@ public class Demo {
         out.flush();
 
         // --- relax the structure from the barycentric embedding
-//        IEmbedder embedder = new SpringEmbedder(G);
         IEmbedder embedder = new AmoebaEmbedder(G);
         boolean posRelaxed = this.relax;
         boolean cellRelaxed = true;
         try {
+            embedder.setRelaxPositions(false);
+            embedder.go(500);
             embedder.setRelaxPositions(relax);
-            embedder.go(300);
+            embedder.go(1000);
         } catch (Exception ex) {
             out.println("==================================================");
             final String msg = "!!! WARNING (INTERNAL) - Could not relax: "

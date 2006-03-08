@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.1 2006/03/08 20:16:42 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.2 2006/03/08 22:51:10 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static int EDGE = 1;
@@ -350,8 +350,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 final double t = (1 - len * len);
                 edgeVariance += t * t;
             } else {
-                if (len < 1.0) {
-                    anglePenalty += Math.pow(len, -4) - 1.0;
+                if (len < 1) {
+                    anglePenalty += Math.exp(1/Math.max(len, 1e-12)) - 1;
                 }
             }
         }
@@ -365,10 +365,10 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         final Matrix gramScaled = (Matrix) gram.dividedBy(avg * avg);
         final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
                 .doubleValue());
-        final double vol = Math.max(cellVolume / n, 1e-12);
+        final double volumePenalty = Math.exp(1/Math.max(cellVolume / n, 1e-12)) - 1;
         
         // --- compute and return the total energy
-        return this.volumeWeight / vol + edgeVariance + 1000 * anglePenalty;
+        return this.volumeWeight * volumePenalty + edgeVariance + anglePenalty;
     }
 
     /* (non-Javadoc)
@@ -391,11 +391,12 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         // --- here's the relaxation procedure
         double p[] = this.p;
-
+        final int nPasses = 3;
+        
         System.out.println("energy before optimization: " + energy.evaluate(p));
-        for (int pass = 0; pass < 10; ++pass) {
-            this.volumeWeight = Math.pow(10, 5 - pass);
-            p = new Amoeba(energy, 1e-6, 5 * steps, 10, 1.0).go(p);
+        for (int pass = 0; pass < nPasses; ++pass) {
+            this.volumeWeight = Math.pow(10, nPasses - pass);
+            p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
             System.out.println("energy after optimization: " + energy.evaluate(p));
             for (int i = 0; i < p.length; ++i) {
                 this.p[i] = p[i];

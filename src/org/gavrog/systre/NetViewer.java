@@ -110,7 +110,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.28 2006/03/08 20:16:42 odf Exp $
+ * @version $Id: NetViewer.java,v 1.29 2006/03/08 22:51:10 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -528,6 +528,7 @@ public class NetViewer extends Applet {
         this.net = G;
         
         // --- determine graph positions
+        this.embedder = null;
         setPositions(false);
         
         // --- set the radius
@@ -541,11 +542,15 @@ public class NetViewer extends Applet {
         
         // --- relax the structure from the barycentric embedding
         boolean error = false;
-//        IEmbedder embedder = new SpringEmbedder(G);
-        IEmbedder embedder = new AmoebaEmbedder(G);
+        final IEmbedder embedder;
+        if (relax && this.embedder != null) {
+            embedder = this.embedder;
+        } else {
+            embedder = new AmoebaEmbedder(G);
+        }
         try {
             embedder.setRelaxPositions(relax);
-            embedder.go(300);
+            embedder.go(1000);
         } catch (Exception ex) {
             status.setText("WARNING - Could not relax: " + ex);
             error = true;
