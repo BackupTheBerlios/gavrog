@@ -19,6 +19,7 @@ package org.gavrog.joss.pgraphs.embed;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.algorithms.Amoeba;
@@ -37,7 +38,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.6 2006/03/09 06:42:22 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.7 2006/03/09 07:06:07 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = true;
@@ -142,28 +143,16 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             System.out.println("dimParSpace = " + this.dimParSpace);
         }
         
-        // TODO this code can be used once the Gram matrix preserves the symmetry
-//        // --- the encoded list of graph edge orbits
-//        final int nrEdges = Iterators.size(graph.edgeOrbits());
-//        final int nrAngles = Iterators.size(this.angles());
-//        this.edges = new Edge[nrEdges + nrAngles];
-//        k = 0;
-//        for (final Iterator iter = graph.edgeOrbits(); iter.hasNext();) {
-//            final Set orbit = (Set) iter.next();
-//            final IEdge e = (IEdge) orbit.iterator().next();
-//            this.edges[k++] = new Edge(e.source(), e.target(), graph.getShift(e), EDGE,
-//                    orbit.size());
-//        }
-        
-        // --- the encoded list of graph edges
-        final int nrEdges = getGraph().numberOfEdges();
+        // --- the encoded list of graph edge orbits
+        final int nrEdges = Iterators.size(graph.edgeOrbits());
         final int nrAngles = Iterators.size(this.angles());
         this.edges = new Edge[nrEdges + nrAngles];
         k = 0;
-        for (final Iterator iter = graph.edges(); iter.hasNext();) {
-            final IEdge e = (IEdge) iter.next();
+        for (final Iterator iter = graph.edgeOrbits(); iter.hasNext();) {
+            final Set orbit = (Set) iter.next();
+            final IEdge e = (IEdge) orbit.iterator().next();
             this.edges[k++] = new Edge(e.source(), e.target(), graph.getShift(e), EDGE,
-                    1.0);
+                    orbit.size());
         }
         
         // --- the encoded list of next nearest neighbors (angles)
