@@ -29,6 +29,7 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -36,7 +37,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.5 2006/03/09 05:19:38 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.6 2006/03/09 06:42:22 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = true;
@@ -66,6 +67,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
 
     final private int dimGraph;
     final private int dimParSpace;
+    final private int dimGramSpace;
+    final private Matrix gramSpace;
     final private int gramIndex[][];
     final private Map node2index;
     final private Map node2mapping;
@@ -100,6 +103,12 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             }
         }
 
+        // --- set up translation between parameter space and gram matrix entries
+        final SpaceGroup group = new SpaceGroup(graph.getDimension(), graph
+                .symmetryOperators());
+        this.gramSpace = group.configurationSpaceForGramMatrix();
+        k = this.dimGramSpace = this.gramSpace.numberOfRows();
+        
         // --- set up translating parameter space values into point coordinates
         this.node2index = new HashMap();
         this.node2mapping = new HashMap();
@@ -258,13 +267,41 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
     }
 
-    private void setGramMatrix(final Matrix gramMatrix, final double p[]) {
+    private double[] gramToArray(final Matrix gramMatrix) {
         final int d = this.dimGraph;
+        final double p[] = new double[d * (d+1) / 2];
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
                 final int k = this.gramIndex[i][j];
                 p[k] = ((Real) gramMatrix.get(i, j)).doubleValue();
             }
+        }
+        return p;
+    }
+
+    private Matrix gramFromArray(final double p[]) {
+        final int d = this.dimGraph;
+        final Matrix gram = new Matrix(d, d);
+        
+        for (int i = 0; i < d; ++i) {
+            for (int j = i; j < d; ++j) {
+                final int k = this.gramIndex[i][j];
+                final Real x = new FloatingPoint(p[k]);
+                gram.set(i, j, x);
+                gram.set(j, i, x);
+            }
+        }
+        return gram;
+    }
+        
+    private void setGramMatrix(final Matrix gramMatrix, final double p[]) {
+        final double g[] = gramToArray(gramMatrix);
+        final Matrix S = this.gramSpace;
+        final int n = S.numberOfRows();
+        final Matrix M = LinearAlgebra.solutionInRows(S,
+                new Matrix(new double[][] { g }), false);
+        for (int i = 0; i < n; ++i) {
+            p[i] = ((Real) M.get(0, i)).doubleValue();
         }
     }
 
@@ -274,15 +311,19 @@ public class AmoebaEmbedder extends EmbedderAdapter {
 
     private Matrix getGramMatrix(final double p[]) {
         final int d = this.dimGraph;
-        final Matrix gram = new Matrix(d, d);
-        for (int i = 0; i < d; ++i) {
-            for (int j = i; j < d; ++j) {
-                final int k = this.gramIndex[i][j];
-                final Real x = new FloatingPoint(p[k]);
-                gram.set(i, j, x);
-                gram.set(j, i, x);
+        final int m = d * (d+1) / 2;
+        
+        // --- extract the data for the Gram matrix
+        final double g[] = new double[m];
+        final Matrix S = this.gramSpace;
+        final int n = S.numberOfRows();
+        for (int i = 0; i < m; ++i) {
+            g[i] = 0.0;
+            for (int j = 0; j < n; ++j) {
+                g[i] += p[j] * ((Real) S.get(j, i)).doubleValue();
             }
         }
+        final Matrix gram = gramFromArray(g);
         
         // --- adjust the gram matrix
         for (int i = 0; i < d; ++i) {
@@ -317,8 +358,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         final Matrix gram = getGramMatrix(point);
         
         // --- make it an easy to read array
-        final double g[] = new double[dim * (dim+1) / 2];
-        setGramMatrix(gram, g);
+        final double g[] = gramToArray(gram);
         
         // --- use our original coordinates if only cell is relaxed
         final double p[];
@@ -395,12 +435,16 @@ public class AmoebaEmbedder extends EmbedderAdapter {
      * @see org.gavrog.joss.pgraphs.basic.IEmbedder#go(int)
      */
     public int go(final int steps) {
+        if (dimParSpace == 0) {
+            return 0;
+        }
+        
         final Amoeba.Function energy = new Amoeba.Function() {
             public int dim() {
                 if (getRelaxPositions()) {
                     return dimParSpace;
                 } else {
-                    return dimGraph * (dimGraph+1) / 2;
+                    return dimGramSpace;
                 }
             }
 
