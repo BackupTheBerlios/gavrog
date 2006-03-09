@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.1 2006/03/08 20:16:42 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.2 2006/03/09 23:58:08 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -111,8 +111,14 @@ public abstract class EmbedderAdapter implements IEmbedder{
                         final Point bva = (Point) getGraph().barycentricPlacement().get(va);
                         final Operator opa = a.getAffineOperator();
                         final Vector shift = (Vector) bva.minus(bv.times(opa));
-                        img2sym.put(va, opa.times(shift));
+                        final Operator op = (Operator) opa.times(shift);
+                        img2sym.put(va, op);
                         seen.add(va);
+                        if (bv.times(op).equals(bva) == false) {
+                            throw new RuntimeException("Bad operator for " + v + " --> "
+                                    + va + ": image is " + bv.times(op)
+                                    + ", but should be " + bva);
+                        }
                     }
                 }
                 this.node2images.put(v, img2sym);
@@ -175,7 +181,7 @@ public abstract class EmbedderAdapter implements IEmbedder{
         setGramMatrix(resymmetrized(getGramMatrix(), getGraph()));
     }
     
-    private Operator nodeSymmetrization(final INode v) {
+    protected Operator nodeSymmetrization(final INode v) {
         final List stab = this.graph.nodeStabilizer(v);
         final Point p = (Point) this.graph.barycentricPlacement().get(v);
         final int dim = p.getDimension();
@@ -187,7 +193,13 @@ public abstract class EmbedderAdapter implements IEmbedder{
             s = (Matrix) s.plus(ad.getCoordinates());
         }
 
-        return new Operator((Matrix) s.dividedBy(stab.size()));
+        final Operator op = new Operator(s);
+        if (p.times(op).equals(p) == false) {
+            throw new RuntimeException("Bad symmetrizer for " + v + ": moves from " + p
+                    + " to " + p.times(op));
+        }
+        
+        return op;
     }
         
     protected void resymmetrizePositions() {
