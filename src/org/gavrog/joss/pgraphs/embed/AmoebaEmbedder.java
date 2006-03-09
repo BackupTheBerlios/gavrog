@@ -36,9 +36,10 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.2 2006/03/08 22:51:10 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.3 2006/03/09 00:44:15 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
+    final static boolean DEBUG = true;
     final static int EDGE = 1;
     final static int ANGLE = 2;
     
@@ -111,7 +112,9 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             
             this.node2index.put(v, new Integer(k));
             this.node2mapping.put(v, N.asDoubleArray());
-            System.out.println("Mapped " + v + " to " + N);
+            if (DEBUG) {
+                System.out.println("Mapped " + v + " to " + N);
+            }
             final Map images = getImages(v);
             for (final Iterator iter = images.keySet().iterator(); iter.hasNext();) {
                 final INode w = (INode) iter.next();
@@ -121,12 +124,28 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 final Matrix M = ((Operator) images.get(w)).getCoordinates();
                 this.node2index.put(w, new Integer(k));
                 this.node2mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
-                System.out.println("    Mapped " + w + " to " + N.times(M));
+                if (DEBUG) {
+                    System.out.println("    Mapped " + w + " to " + N.times(M));
+                }
             }
             k += N.numberOfRows() - 1;
         }
         this.dimParSpace = k;
-        System.out.println("dimParSpace = " + this.dimParSpace);
+        if (DEBUG) {
+            System.out.println("dimParSpace = " + this.dimParSpace);
+        }
+        
+//        // --- the encoded list of graph edge orbits
+//        final int nrEdges = Iterators.size(graph.edgeOrbits());
+//        final int nrAngles = Iterators.size(this.angles());
+//        this.edges = new Edge[nrEdges + nrAngles];
+//        k = 0;
+//        for (final Iterator iter = graph.edgeOrbits(); iter.hasNext();) {
+//            final Set orbit = (Set) iter.next();
+//            final IEdge e = (IEdge) orbit.iterator().next();
+//            this.edges[k++] = new Edge(e.source(), e.target(), graph.getShift(e), EDGE,
+//                    orbit.size());
+//        }
         
         // --- the encoded list of graph edges
         this.nrEdges = graph.numberOfEdges();
@@ -294,7 +313,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         // --- get some general data
         final int dim = this.dimGraph;
         final int n = getGraph().numberOfNodes();
-        final int m = this.edges.length;
+        final int m = getGraph().numberOfEdges();
 
         // --- extract and adjust the Gram matrix
         final Matrix gram = getGramMatrix(point);
@@ -393,19 +412,27 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         double p[] = this.p;
         final int nPasses = 3;
         
-        System.out.println("energy before optimization: " + energy.evaluate(p));
+        if (DEBUG) {
+            System.out.println("energy before optimization: " + energy.evaluate(p));
+        }
         for (int pass = 0; pass < nPasses; ++pass) {
-            this.volumeWeight = Math.pow(10, nPasses - pass);
+            this.volumeWeight = Math.pow(10, -pass);
             p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
-            System.out.println("energy after optimization: " + energy.evaluate(p));
+            if (DEBUG) {
+                System.out.println("energy after optimization: " + energy.evaluate(p));
+            }
             for (int i = 0; i < p.length; ++i) {
                 this.p[i] = p[i];
             }
             resymmetrizeCell();
             p = this.p;
-            System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
+            if (DEBUG) {
+                System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
+            }
         }
-        System.out.println();
+        if (DEBUG) {
+            System.out.println();
+        }
         return steps;
     }
 }
