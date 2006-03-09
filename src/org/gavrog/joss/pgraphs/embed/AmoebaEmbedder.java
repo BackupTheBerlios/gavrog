@@ -38,10 +38,10 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.7 2006/03/09 07:06:07 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.8 2006/03/09 20:00:35 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
-    final static boolean DEBUG = true;
+    final static boolean DEBUG = false;
     final static int EDGE = 1;
     final static int ANGLE = 2;
     
@@ -453,15 +453,10 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             this.volumeWeight = Math.pow(10, -pass);
             p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
             if (DEBUG) {
-                System.out.println("energy after optimization: " + energy.evaluate(p));
+                System.out.println("energy after pass " + pass + ": " + energy.evaluate(p));
             }
             for (int i = 0; i < p.length; ++i) {
                 this.p[i] = p[i];
-            }
-            resymmetrizeCell();
-            p = this.p;
-            if (DEBUG) {
-                System.out.println("energy after resymmetrizing: " + energy.evaluate(p));
             }
         }
         if (DEBUG) {
