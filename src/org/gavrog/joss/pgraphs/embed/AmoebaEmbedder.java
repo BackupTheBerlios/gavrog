@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.8 2006/03/09 20:00:35 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.9 2006/03/09 23:59:36 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -131,9 +131,15 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 }
                 final Matrix M = ((Operator) images.get(w)).getCoordinates();
                 this.node2index.put(w, new Integer(k));
-                this.node2mapping.put(w, ((Matrix) N.times(M)).asDoubleArray());
+                final Matrix NM = (Matrix) N.times(M);
+                this.node2mapping.put(w, NM.asDoubleArray());
                 if (DEBUG) {
-                    System.out.println("    Mapped " + w + " to " + N.times(M));
+                    System.out.println("    Mapped " + w + " to " + NM);
+                }
+                if (NM.times(nodeSymmetrization(w).getCoordinates()).equals(NM) == false) {
+                    throw new RuntimeException("bad parameter space for " + w + ": " + NM
+                            + " (gets 'symmetrized' to "
+                            + NM.times(nodeSymmetrization(w)));
                 }
             }
             k += N.numberOfRows() - 1;
@@ -179,21 +185,50 @@ public class AmoebaEmbedder extends EmbedderAdapter {
        // --- get the affine subspace that is stabilized by the nodes stabilizer
        final Operator s = this.getSymmetrizer(v);
        final Matrix A = (Matrix) s.getCoordinates().minus(Matrix.one(d+1));
-       final Matrix N = LinearAlgebra.rowNullSpace(A, false).mutableClone();
+       final Matrix M = LinearAlgebra.rowNullSpace(A, false);
        
-       // --- make last row encode to a point, all others vectors
-       Matrix.triangulate(N, null, false, true);
-       final int n = N.numberOfRows();
-       for (int i = 0; i < n-1; ++i) {
-           if (N.get(i, d).isZero() == false) {
-               final Matrix tmp = N.getRow(n-1);
-               N.setRow(n-1, N.getRow(i));
-               N.setRow(i, tmp);
-               break;
-           }
+       final Matrix N = normalizedPositionSpace(M, true);
+       
+       if (N.times(s.getCoordinates()).equals(N) == false) {
+           throw new RuntimeException("bad parameter space for " + v + ": " + N
+                    + " (gets 'symmetrized' to " + N.times(s.getCoordinates()));
        }
-       N.setRow(n-1, (Matrix) N.getRow(n-1).dividedBy(N.get(n-1,d)));
        
+       return N;
+   }
+   
+   private Matrix normalizedPositionSpace(final Matrix M, final boolean movePivot) {
+       // --- get the dimensions of the matrix
+       final int n = M.numberOfRows();
+       final int d = M.numberOfColumns();
+
+       // --- make a local copy to work with
+       final Matrix N = M.mutableClone();
+       
+       // --- not sure if this is of any use, but do it anyway
+       Matrix.triangulate(N, null, false, true);
+       
+       if (movePivot) {
+            // --- move pivot for last column into last row
+            for (int i = 0; i < n - 1; ++i) {
+                if (N.get(i, d - 1).isZero() == false) {
+                    final Matrix tmp = N.getRow(n - 1);
+                    N.setRow(n - 1, N.getRow(i));
+                    N.setRow(i, tmp);
+                    break;
+                }
+            }
+        }
+       
+       // --- normalize the pivot
+       N.setRow(n-1, (Matrix) N.getRow(n-1).dividedBy(N.get(n-1,d-1)));
+       
+       // --- make last column 0 in all other rows
+       for (int i = 0; i < n-1; ++i) {
+           N.setRow(i, (Matrix) N.getRow(i).minus(N.getRow(n-1).times(N.get(i, d-1))));
+       }
+       
+       // --- that's it
        return N;
    }
    
@@ -229,7 +264,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     }
     
     public void setPosition(final INode v, final Point p) {
-        final Matrix mapping = new Matrix((double[][]) this.node2mapping.get(v));
+        final Matrix mapping = new Matrix((double[][]) this.node2mapping.get(v))
+                .mutableClone();
         final int n = mapping.numberOfRows();
         
         if (n > 1) {
@@ -237,15 +273,23 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             final Matrix q = new Matrix(1, d + 1);
             q.setSubMatrix(0, 0, ((Point) p.times(getSymmetrizer(v))).getCoordinates());
             q.set(0, d, Whole.ONE);
-            final Matrix s = LinearAlgebra.solutionInRows(mapping, q, false);
+            final Matrix r = mapping.getRow(n-1);
+            mapping.setRow(n-1, (Matrix) r.minus(r));
+            final Matrix s = LinearAlgebra.solutionInRows(mapping, (Matrix) q.minus(r),
+                    false);
             if (s == null) {
-                System.out.println("Could not solve x * " + mapping + " = " + q);
+                throw new RuntimeException("Could not solve x * " + mapping + " = " + q);
             }
 
             final int offset = ((Integer) this.node2index.get(v)).intValue();
             for (int i = 0; i < n-1; ++i) {
                 this.p[offset+i] = ((Real) s.get(0, i)).doubleValue();
             }
+        }
+        final Vector diff = (Vector) getPosition(v).minus(p);
+        if (((Real) Vector.dot(diff, diff)).sqrt().doubleValue() > 1e-12) {
+            throw new RuntimeException("Position mismatch:" + v + " set to " + p
+                    + ", but turned up as " + getPosition(v));
         }
     }
 
@@ -453,7 +497,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             this.volumeWeight = Math.pow(10, -pass);
             p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
             if (DEBUG) {
-                System.out.println("energy after pass " + pass + ": " + energy.evaluate(p));
+                System.out.println("energy after optimization: " + energy.evaluate(p));
             }
             for (int i = 0; i < p.length; ++i) {
                 this.p[i] = p[i];
