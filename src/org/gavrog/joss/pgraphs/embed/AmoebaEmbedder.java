@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.3 2006/03/09 00:44:15 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.4 2006/03/09 04:19:49 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = true;
@@ -369,8 +369,9 @@ public class AmoebaEmbedder extends EmbedderAdapter {
                 final double t = (1 - len * len);
                 edgeVariance += t * t;
             } else {
-                if (len < 1) {
-                    anglePenalty += Math.exp(1/Math.max(len, 1e-12)) - 1;
+                if (len < 0.5) {
+                    final double x = Math.max(len, 1e-12);
+                    anglePenalty += Math.exp(Math.tan((0.25 - x) * Math.PI));
                 }
             }
         }
