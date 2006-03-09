@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.48 2006/03/08 22:51:10 odf Exp $
+ * @version $Id: Demo.java,v 1.49 2006/03/09 23:57:28 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -302,7 +302,7 @@ public class Demo {
                     this.outputArchive.write("\n");
                     this.outputArchive.flush();
                 } catch (IOException ex) {
-                    out.println("!!! ERROR (FILE) Could not write structure to file.");
+                    out.println("!!! ERROR (FILE) - Could not write structure to file.");
                 }
             }
         }
@@ -392,6 +392,25 @@ public class Demo {
         //    ... print the atom positions
         out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         final Map pos = embedder.getPositions();
+        if (!posRelaxed) {
+            final Map bari = G.barycentricPlacement();
+            int problems = 0;
+            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+                final INode v = (INode) nodes.next();
+                final Point p = (Point) pos.get(v);
+                final Point q = (Point) bari.get(v);
+                final Vector diff = (Vector) p.minus(q);
+                final double err = ((Real) Vector.dot(diff, diff)).sqrt().doubleValue();
+                if (err > 1e-12) {
+                    out.println("\t\t@@@ " + v + " is at " + p + ", but should be " + q);
+                    ++problems;
+                }
+            }
+            if (problems > 0) {
+                out.println("!!! ERROR (INTERNAL) - Embedder misplaced " + problems
+                        + " points.");
+            }
+        }
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
@@ -533,7 +552,10 @@ public class Demo {
                 try {
                     processGraph(G, archiveName, parser.getSpaceGroup());
                 } catch (Exception ex) {
+                    out.println("==================================================");
                     out.println("!!! ERROR (INTERNAL) - " + ex);
+                    out.println(Misc.stackTrace(ex));
+                    out.println("==================================================");
                 }
             }
             out.println();
