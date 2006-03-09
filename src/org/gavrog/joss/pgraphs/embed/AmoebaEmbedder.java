@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.4 2006/03/09 04:19:49 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.5 2006/03/09 05:19:38 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = true;
@@ -69,8 +69,6 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     final private int gramIndex[][];
     final private Map node2index;
     final private Map node2mapping;
-    final private int nrEdges;
-    final private int nrAngles;
     final private Edge edges[];
     
     double volumeWeight;
@@ -135,6 +133,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             System.out.println("dimParSpace = " + this.dimParSpace);
         }
         
+        // TODO this code can be used once the Gram matrix preserves the symmetry
 //        // --- the encoded list of graph edge orbits
 //        final int nrEdges = Iterators.size(graph.edgeOrbits());
 //        final int nrAngles = Iterators.size(this.angles());
@@ -148,9 +147,9 @@ public class AmoebaEmbedder extends EmbedderAdapter {
 //        }
         
         // --- the encoded list of graph edges
-        this.nrEdges = graph.numberOfEdges();
-        this.nrAngles = Iterators.size(this.angles());
-        this.edges = new Edge[this.nrEdges + this.nrAngles];
+        final int nrEdges = getGraph().numberOfEdges();
+        final int nrAngles = Iterators.size(this.angles());
+        this.edges = new Edge[nrEdges + nrAngles];
         k = 0;
         for (final Iterator iter = graph.edges(); iter.hasNext();) {
             final IEdge e = (IEdge) iter.next();
@@ -313,7 +312,6 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         // --- get some general data
         final int dim = this.dimGraph;
         final int n = getGraph().numberOfNodes();
-        final int m = getGraph().numberOfEdges();
 
         // --- extract and adjust the Gram matrix
         final Matrix gram = getGramMatrix(point);
@@ -332,7 +330,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         // --- compute variance of squared edge lengths
         double edgeSum = 0.0;
-        double angleSum = 0.0;
+        double edgeWeightSum = 0.0;
         
         for (int k = 0; k < this.edges.length; ++k) {
             final Edge e = this.edges[k];
@@ -353,12 +351,14 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             len = Math.sqrt(len);
             e.length = len;
             if (e.type == EDGE) {
-                edgeSum += len;
-            } else {
-                angleSum += len;
+                edgeSum += len * e.weight;;
+                edgeWeightSum += e.weight;
             }
         }
-        final double avg = edgeSum / m;
+        final double avg = edgeSum / edgeWeightSum;
+        if (edgeWeightSum != getGraph().numberOfEdges()) {
+            System.out.println("edgeWeightSum is " + edgeWeightSum +", but should be " + getGraph().numberOfEdges());
+        }
         
         double edgeVariance = 0.0;
         double anglePenalty = 0.0;
@@ -367,15 +367,15 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             final double len = e.length / avg;
             if (e.type == EDGE) {
                 final double t = (1 - len * len);
-                edgeVariance += t * t;
+                edgeVariance += t * t * e.weight;
             } else {
                 if (len < 0.5) {
                     final double x = Math.max(len, 1e-12);
-                    anglePenalty += Math.exp(Math.tan((0.25 - x) * Math.PI));
+                    anglePenalty += Math.exp(Math.tan((0.25 - x) * Math.PI)) * e.weight;
                 }
             }
         }
-        edgeVariance /= m;
+        edgeVariance /= edgeWeightSum;
         if (edgeVariance < 0) {
             throw new RuntimeException("edge lengths variance got negative: "
                                        + edgeVariance);
