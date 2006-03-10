@@ -110,7 +110,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.30 2006/03/09 00:16:36 odf Exp $
+ * @version $Id: NetViewer.java,v 1.31 2006/03/10 06:02:33 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -492,6 +492,7 @@ public class NetViewer extends Applet {
      * @param radius the radius of the portion to be displayed.
      */
     private void changeNet(final Object spec, final int radius) {
+        status.setText("Reading...");
         busy();
         // --- parse the specification
         PeriodicGraph G;
@@ -537,6 +538,7 @@ public class NetViewer extends Applet {
     }
      
     private void setPositions(final boolean relax) {
+        status.setText("Embedding...");
         busy();
         final PeriodicGraph G = this.net;
         
@@ -567,8 +569,9 @@ public class NetViewer extends Applet {
         final double det = ((Real) gr.determinant()).doubleValue();
         final double vol = Math.sqrt(det) / G.numberOfNodes();
         if (!error) {
-            status.setText("Edge lengths: min = " + format(min) + ", max = "
-                           + format(max) + ", avg = " + format(avg)
+            status.setText((relax ? "Relaxed" : "Barycentric")
+                           + " embedding - Edge lengths: min = " + format(min)
+                           + ", max = " + format(max) + ", avg = " + format(avg)
                            + ";  volume/vertex = " + format(vol));
         }
         
