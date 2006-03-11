@@ -16,12 +16,14 @@ limitations under the License.
 
 package org.gavrog.joss.pgraphs.embed;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.algorithms.Amoeba;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -34,11 +36,12 @@ import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.9 2006/03/09 23:59:36 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.10 2006/03/11 01:15:27 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -150,22 +153,23 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
         
         // --- the encoded list of graph edge orbits
-        final int nrEdges = Iterators.size(graph.edgeOrbits());
-        final int nrAngles = Iterators.size(this.angles());
-        this.edges = new Edge[nrEdges + nrAngles];
-        k = 0;
+        final List edgeList = new ArrayList();
         for (final Iterator iter = graph.edgeOrbits(); iter.hasNext();) {
             final Set orbit = (Set) iter.next();
             final IEdge e = (IEdge) orbit.iterator().next();
-            this.edges[k++] = new Edge(e.source(), e.target(), graph.getShift(e), EDGE,
-                    orbit.size());
+            edgeList.add(new Edge(e.source(), e.target(), graph.getShift(e), EDGE, orbit
+                    .size()));
         }
         
-        // --- the encoded list of next nearest neighbors (angles)
-        for (final Iterator iter = this.angles(); iter.hasNext();) {
-            final Angle a = (Angle) iter.next();
-            this.edges[k++] = new Edge(a.v, a.w, a.s, ANGLE, 1.0);
+        // --- the encoded list of next nearest neighbor (angle) orbits
+        for (final Iterator iter = angleOrbits(); iter.hasNext();) {
+            final Set orbit = (Set) iter.next();
+            final Angle a = (Angle) orbit.iterator().next();
+            edgeList.add(new Edge(a.v, a.w, a.s, ANGLE, orbit.size()));
         }
+        
+        this.edges = new Edge[edgeList.size()];
+        edgeList.toArray(this.edges);
         
         // --- initialize the parameter vector
         this.p = new double[this.dimParSpace];
@@ -230,6 +234,37 @@ public class AmoebaEmbedder extends EmbedderAdapter {
        
        // --- that's it
        return N;
+   }
+   
+   /**
+    * Returns the orbits of the set of angles under the full combinatorial
+    * symmetry group.
+    * 
+    * @return an iterator over the set of orbits.
+    */
+   private Iterator angleOrbits() {
+       final Partition P = new Partition();
+       final Map pos = getGraph().barycentricPlacement();
+       for (final Iterator syms = getGraph().symmetries().iterator(); syms.hasNext();) {
+           final Morphism phi = (Morphism) syms.next();
+           final Operator A = phi.getAffineOperator();
+           for (final Iterator angles = angles(); angles.hasNext();) {
+               final Angle a = (Angle) angles.next();
+               
+               final INode vphi = (INode) phi.get(a.v);
+               final Point pv = (Point) pos.get(a.v);
+               final Vector dv = (Vector) pv.times(A).minus(pos.get(vphi));
+               
+               final INode wphi = (INode) phi.get(a.w);
+               final Point pw = (Point) pos.get(a.w);
+               final Vector dw = (Vector) pw.times(A).minus(pos.get(wphi));
+               
+               final Vector s = (Vector) a.s.times(A).plus(dw).minus(dv);
+               
+               P.unite(a, new Angle(vphi, wphi, s));
+           }
+       }
+       return P.classes();
    }
    
     // --- we need to override some default implementations
