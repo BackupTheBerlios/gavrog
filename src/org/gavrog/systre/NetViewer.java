@@ -113,7 +113,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.32 2006/03/12 01:30:35 odf Exp $
+ * @version $Id: NetViewer.java,v 1.33 2006/03/12 02:21:50 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -155,6 +155,8 @@ public class NetViewer extends Applet {
     
     // --- the current displayed radius
     private int radius = 3;
+    
+    private boolean relax = false;
     
     // --- the currently displayed portion of the net
     private PeriodicGraph.EmbeddedPortion graph;
@@ -265,15 +267,28 @@ public class NetViewer extends Applet {
         });
         buttonBox.add(lessButton);
         
-        final JButton relaxButton = new JButton();
-        relaxButton.add(new JLabel("Relax"));
-        relaxButton.setAction(new AbstractAction() {
+//        final JButton relaxButton = new JButton();
+//        relaxButton.add(new JLabel("Relax"));
+//        relaxButton.setAction(new AbstractAction() {
+//            public void actionPerformed(ActionEvent arg0) {
+//                setPositions(true);
+//                setRadius(radius);
+//            }
+//        });
+//        buttonBox.add(relaxButton);
+        
+        final JCheckBox relaxChBox = new JCheckBox();
+        relaxChBox.setBackground(buttonBox.getBackground());
+        relaxChBox.setAlignmentX(0);
+        relaxChBox.setAction(new AbstractAction() {
             public void actionPerformed(ActionEvent arg0) {
-                setPositions(true);
+                relax = relaxChBox.isSelected();
+                setPositions(relax);
                 setRadius(radius);
             }
         });
-        buttonBox.add(relaxButton);
+        buttonBox.add(relaxChBox);
+        buttonBox.add(new JLabel("relaxed"));
         
         final JCheckBox orthographicChBox = new JCheckBox();
         orthographicChBox.setBackground(buttonBox.getBackground());
@@ -604,7 +619,7 @@ public class NetViewer extends Applet {
         
         // --- determine graph positions
         this.embedder = null;
-        setPositions(false);
+        setPositions(this.relax);
         
         // --- set the radius
         setRadius(radius);
