@@ -37,6 +37,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.Background;
@@ -58,6 +60,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -110,7 +113,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.31 2006/03/10 06:02:33 odf Exp $
+ * @version $Id: NetViewer.java,v 1.32 2006/03/12 01:30:35 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -307,6 +310,15 @@ public class NetViewer extends Applet {
         });
         buttonBox.add(advanceButton);
         
+        final JButton searchButton = new JButton();
+        searchButton.add(new JLabel("Search..."));
+        searchButton.setAction(new AbstractAction() {
+            public void actionPerformed(ActionEvent arg0) {
+                searchInFile();
+            }
+        });
+        buttonBox.add(searchButton);
+        
         // --- add the button panel to the main frame
         add(BorderLayout.WEST, buttonBox);
         
@@ -436,6 +448,7 @@ public class NetViewer extends Applet {
     private final  static DecimalFormat formatter = new DecimalFormat("0.000000");
     private final JFileChooser chooser = new JFileChooser();
     private NetParser parser = null;
+    private String currentInputPath;
     
     private static String format(final double x) {
         return formatter.format(x);
@@ -456,6 +469,7 @@ public class NetViewer extends Applet {
                 done();
                 return;
             }
+            this.currentInputPath = path;
             nextInFile();
             done();
         }
@@ -482,6 +496,66 @@ public class NetViewer extends Applet {
             inputArea.setText(parser.getName());
             changeNet(G, this.defaultRadius);
         }
+        done();
+    }
+    
+    private void searchInFile() {
+        if (parser == null) {
+            status.setText("No file open.");
+            return;
+        }
+        final String input = JOptionPane.showInputDialog("Name to search for:");
+        final Pattern pattern;
+        try {
+            pattern = Pattern.compile(input);
+        } catch (PatternSyntaxException ex) {
+            status.setText("Malformed pattern \"" + input + "\": " + ex.getDescription());
+            return;
+        }
+
+        busy();
+        PeriodicGraph G;
+        while (true) {
+            try {
+                G = parser.parseNet();
+            } catch (Exception ex) {
+                status.setText("Error - " + ex);
+                done();
+                return;
+            }
+            if (G == null) {
+                parser = null;
+                final int option = JOptionPane.showConfirmDialog(this,
+                        "End of file reached. - Search from start?", "NewViewer at EOF",
+                        JOptionPane.YES_NO_OPTION);
+                if (option == 0) {
+                    try {
+                        parser = new NetParser(new FileReader(this.currentInputPath));
+                    } catch (FileNotFoundException ex) {
+                        status.setText("Error - Could not find file \""
+                                       + this.currentInputPath + "\".");
+                        done();
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            } else {
+                boolean match = false;
+                try {
+                    match = pattern.matcher(parser.getName()).find();
+                } catch (Exception ex) {
+                    status.setText("Malformed pattern string: " + ex);
+                    break;
+                }
+                if (match) {
+                    inputArea.setText(parser.getName());
+                    changeNet(G, this.defaultRadius);
+                    break;
+                }
+            }
+        }
+
         done();
     }
     
