@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.49 2006/03/09 23:57:28 odf Exp $
+ * @version $Id: Demo.java,v 1.50 2006/03/14 05:41:53 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -234,6 +234,12 @@ public class Demo {
         if (!givenName.equals(groupName)) {
             out.println("   Ideal group differs from given (" + groupName
                     + " vs " + givenName + ").");
+        }
+        if (DEBUG) {
+            out.println("\t\t@@@ transformed operators:");
+            for (final Iterator iter = toStd.applyTo(ops).iterator(); iter.hasNext();) {
+                out.println("\t\t@@@    " + iter.next());
+            }
         }
         out.println();
         out.flush();
