@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.45 2006/02/23 04:05:24 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.46 2006/03/14 05:42:37 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -734,70 +734,63 @@ public class SpaceGroupFinder {
      * @return the normalized basis and centering.
      */
     private Object[] normalizedBasisMonoclinic(final Vector[] b) {
-        char centering = 'P';
-        final Vector v[];
-        final Vector z = new Vector(0, 0, 1);
+        if (DEBUG > 1) {
+            System.out.println("\t\t@@@ Monoclinic system");
+            System.out.print("\t\t@@@    input basis =");
+            for (int i = 0; i < 3; ++i) {
+                System.out.print(" " + b[i]);
+            }
+            System.out.println();
+        }
 
+        final char centering;
+        Vector v[];
+        Vector z = new Vector(0, 0, 1);
+        
         if (b[0].isCollinearTo(z)) {
             v = new Vector[] { b[1], b[2], b[0] };
         } else if (b[1].isCollinearTo(z)) {
-            v = new Vector[] { b[0], b[2], b[1] };
+            v = new Vector[] { b[0], (Vector) b[2].negative(), b[1] };
         } else {
             v = new Vector[] { b[0], b[1], b[2] };
         }
-
-        final IArithmetic two = new Whole(2);
-        IArithmetic h = null;
-
-        if (!v[0].isOrthogonalTo(z)) {
-            h = v[0].get(2).times(two);
-            if (!v[1].isOrthogonalTo(z)) {
-                final Vector t = new Vector(v[0]);
-                v[0] = (Vector) t.plus(v[1]).times(new Operator("x, y, 0"));
-                v[1] = (Vector) t.minus(v[1]).times(new Operator("x, y, 0"));
-                centering = 'I';
-            } else {
-                v[0] = (Vector) v[0].times(new Operator("2x, 2y, 0"));
-                centering = 'B';
-            }
-        } else if (!v[1].isOrthogonalTo(z)) {
-            h = v[1].get(2).times(two);
-            v[1] = (Vector) v[1].times(new Operator("2x, 2y, 0"));
-            centering = 'A';
+        
+        if (v[1].isOrthogonalTo(z)) {
+            v = new Vector[] { (Vector) v[1].negative(), v[0], v[2] };
+        } else if (v[2].isOrthogonalTo(z)) {
+            v = new Vector[] { v[2], v[0], v[1] };
         }
-
-        if (!v[2].isCollinearTo(z)) {
-            if (h == null) {
-                h = v[2].get(2).times(two);
-                if (!v[0].isOrthogonalTo(v[2])) {
-                    if (!v[1].isOrthogonalTo(v[2])) {
-                        centering = 'I';
-                    } else {
-                        centering = 'B';
-                    }
-                } else {
-                    centering = 'A';
+        
+        if (v[0].isOrthogonalTo(z) == false) {
+            v[0] = (Vector) v[0].plus(v[1]).times(new Operator("x,y,0"));
+        }
+        if (v[2].isCollinearTo(z) == false) {
+            if (v[1].isOrthogonalTo(z)) {
+                if (((Vector) v[2].times(new Operator("2x,2y,0"))).isCollinearTo(v[0])) {
+                    v[0] = v[1];
                 }
+                v[1] = v[2];
             }
-            final IArithmetic o = Whole.ZERO;
-            v[2] = new Vector(new IArithmetic[] { o, o, h });
+            v[2] = (Vector) v[2].times(new Operator("0,0,2z"));
+        }
+        if (v[1].isOrthogonalTo(z) == false) {
+            v[1] = (Vector) v[1].times(new Operator("2x,2y,0"));
+            centering = 'A';
+        } else {
+            centering = 'P';
         }
 
-        if (centering == 'B') {
-            centering = 'A';
-            final Vector t = v[0];
-            v[0] = v[1];
-            v[1] = (Vector) t.negative();
-        } else if (centering == 'I') {
-            centering = 'A';
-            final Vector t = v[0];
-            v[0] = v[1];
-            v[1] = (Vector) t.plus(v[1]).negative();
+        if (DEBUG > 0) {
+            System.out.println("\t\t@@@    " + centering + "-centered");
+            System.out.print("\t\t@@@    output basis =");
+            for (int i = 0; i < 3; ++i) {
+                System.out.print(" " + v[i]);
+            }
+            System.out.println();
         }
-
         return new Object[] { v, new Character(centering) };
     }
-
+    
     /**
      * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the triclinic crystal system.
