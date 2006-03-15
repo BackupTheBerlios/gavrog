@@ -41,7 +41,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.10 2006/03/11 01:15:27 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.11 2006/03/15 23:52:34 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -439,6 +439,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         // --- compute variance of squared edge lengths
         double edgeSum = 0.0;
         double edgeWeightSum = 0.0;
+        double minEdge = Double.MAX_VALUE;
         
         for (int k = 0; k < this.edges.length; ++k) {
             final Edge e = this.edges[k];
@@ -461,26 +462,34 @@ public class AmoebaEmbedder extends EmbedderAdapter {
             if (e.type == EDGE) {
                 edgeSum += len * e.weight;;
                 edgeWeightSum += e.weight;
+                minEdge = Math.min(len, minEdge);
             }
         }
         final double avg = edgeSum / edgeWeightSum;
         if (edgeWeightSum != getGraph().numberOfEdges()) {
             System.out.println("edgeWeightSum is " + edgeWeightSum +", but should be " + getGraph().numberOfEdges());
         }
+        final double scaling = 1 / avg;
         
         double edgeVariance = 0.0;
+        double edgePenalty = 0.0;
         double anglePenalty = 0.0;
         for (int k = 0; k < this.edges.length; ++k) {
             final Edge e = this.edges[k];
-            final double len = e.length / avg;
+            final double len = e.length * scaling;
+            final double penalty;
+            if (len < 0.5) {
+                final double x = Math.max(len, 1e-12);
+                penalty = Math.exp(Math.tan((0.25 - x) * 2.0 * Math.PI)) * e.weight;
+            } else {
+                penalty = 0.0;
+            }
             if (e.type == EDGE) {
                 final double t = (1 - len * len);
                 edgeVariance += t * t * e.weight;
+                edgePenalty += penalty;
             } else {
-                if (len < 0.5) {
-                    final double x = Math.max(len, 1e-12);
-                    anglePenalty += Math.exp(Math.tan((0.25 - x) * Math.PI)) * e.weight;
-                }
+                anglePenalty += penalty;
             }
         }
         edgeVariance /= edgeWeightSum;
@@ -490,13 +499,14 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         }
         
         // --- compute volume per node
-        final Matrix gramScaled = (Matrix) gram.dividedBy(avg * avg);
+        final Matrix gramScaled = (Matrix) gram.times(scaling * scaling);
         final double cellVolume = Math.sqrt(((Real) gramScaled.determinant())
                 .doubleValue());
         final double volumePenalty = Math.exp(1/Math.max(cellVolume / n, 1e-12)) - 1;
         
         // --- compute and return the total energy
-        return this.volumeWeight * volumePenalty + edgeVariance + anglePenalty;
+        return this.volumeWeight * volumePenalty + edgeVariance + edgePenalty
+                + anglePenalty;
     }
 
     /* (non-Javadoc)
