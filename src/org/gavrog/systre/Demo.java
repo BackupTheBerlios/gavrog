@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.50 2006/03/14 05:41:53 odf Exp $
+ * @version $Id: Demo.java,v 1.51 2006/03/17 23:51:32 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -228,7 +228,6 @@ public class Demo {
         final SpaceGroupFinder finder = new SpaceGroupFinder(group);
         final String groupName = finder.getGroupName();
         final CoordinateChange toStd = finder.getToStd();
-        final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
         out.println("   Ideal space group is " + groupName + ".");
         final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
         if (!givenName.equals(groupName)) {
@@ -348,7 +347,18 @@ public class Demo {
             posRelaxed = false;
         }
         
-
+        writeEmbedding(G, finder, embedder, cellRelaxed, posRelaxed);
+    }
+        
+    private void writeEmbedding(final PeriodicGraph G, final SpaceGroupFinder finder,
+            final IEmbedder embedder, final boolean cellRelaxed, final boolean posRelaxed) {
+        
+        // --- extract some data from the arguments
+        final int d = G.getDimension();
+        final String groupName = finder.getGroupName();
+        final CoordinateChange toStd = finder.getToStd();
+        final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
+        
         // --- set up a buffer to write a Systre readable output description to
         final StringWriter cgdStringWriter = new StringWriter();
         final PrintWriter cgd = new PrintWriter(cgdStringWriter);
