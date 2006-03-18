@@ -24,7 +24,7 @@ import org.gavrog.joss.pgraphs.basic.INode;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.1 2006/03/08 20:16:42 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.2 2006/03/18 06:23:13 odf Exp $
  */
 public interface IEmbedder {
     public double[] edgeStatistics();
@@ -50,4 +50,8 @@ public interface IEmbedder {
     public boolean getRelaxPositions();
 
     public void setRelaxPositions(boolean value);
+    
+    public boolean cellRelaxed();
+    
+    public boolean positionsRelaxed();
 }

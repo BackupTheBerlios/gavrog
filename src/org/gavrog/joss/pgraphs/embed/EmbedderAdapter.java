@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.2 2006/03/09 23:58:08 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.3 2006/03/18 06:23:13 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -45,6 +45,9 @@ public abstract class EmbedderAdapter implements IEmbedder{
     private final Set angles;
 
     private boolean optimizePositions = true;
+    
+    protected boolean _positionsRelaxed = false;
+    protected boolean _cellRelaxed = false;
 
 
     protected class Angle {
@@ -154,6 +157,8 @@ public abstract class EmbedderAdapter implements IEmbedder{
     public void reset() {
         setPositions(getGraph().barycentricPlacement());
         setGramMatrix(defaultGramMatrix(getGraph()));
+        this._positionsRelaxed = false;
+        this._cellRelaxed = false;
     }
     
     private Set makeAngles() {
@@ -284,5 +289,13 @@ public abstract class EmbedderAdapter implements IEmbedder{
     
     public void setRelaxPositions(boolean optimizePositions) {
         this.optimizePositions = optimizePositions;
+    }
+    
+    public boolean positionsRelaxed() {
+        return this._positionsRelaxed;
+    }
+    
+    public boolean cellRelaxed() {
+        return this._cellRelaxed;
     }
 }

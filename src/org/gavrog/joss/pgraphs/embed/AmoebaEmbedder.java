@@ -41,7 +41,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.11 2006/03/15 23:52:34 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.12 2006/03/18 06:23:13 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -514,6 +514,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
      */
     public int go(final int steps) {
         if (dimParSpace == 0) {
+            this._positionsRelaxed = getRelaxPositions();
+            this._cellRelaxed = true;
             return 0;
         }
         
@@ -551,6 +553,8 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         if (DEBUG) {
             System.out.println();
         }
+        this._positionsRelaxed = getRelaxPositions();
+        this._cellRelaxed = true;
         return steps;
     }
 }
