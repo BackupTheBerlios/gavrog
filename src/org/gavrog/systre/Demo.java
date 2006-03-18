@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.52 2006/03/18 06:26:35 odf Exp $
+ * @version $Id: Demo.java,v 1.53 2006/03/18 06:46:09 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -314,88 +314,103 @@ public class Demo {
         out.println();
         out.flush();
 
-        // --- relax the structure from the barycentric embedding
-        IEmbedder embedder = new AmoebaEmbedder(G);
-        try {
-            embedder.setRelaxPositions(false);
-            embedder.go(500);
-            embedder.setRelaxPositions(relax);
-            embedder.go(1000);
-        } catch (Exception ex) {
-            out.println("==================================================");
-            final String msg = "!!! WARNING (INTERNAL) - Could not relax: "
-                    + ex;
-            out.println(msg);
-            out.println(Misc.stackTrace(ex));
-            out.println("==================================================");
-            embedder.reset();
-        }
-        embedder.normalize();
-        
-        // --- do some checking
-        final IArithmetic det = embedder.getGramMatrix().determinant();
-        if (det.abs().isLessThan(new FloatingPoint(0.001))) {
-            out.println("==================================================");
-            final String msg = "!!! WARNING (INTERNAL) - Unit cell degenerated in relaxation.";
-            out.println(msg);
-            out.println("==================================================");
-            embedder.reset();
+        for (int pass = 0; pass <= 1; ++pass) {
+            // --- relax the structure from the barycentric embedding
+            IEmbedder embedder = new AmoebaEmbedder(G);
+            try {
+                embedder.setRelaxPositions(false);
+                embedder.go(500);
+                embedder.setRelaxPositions(relax && pass == 0);
+                embedder.go(1000);
+            } catch (Exception ex) {
+                out.println("==================================================");
+                final String msg = "!!! WARNING (INTERNAL) - Could not relax: " + ex;
+                out.println(msg);
+                out.println(Misc.stackTrace(ex));
+                out.println("==================================================");
+                embedder.reset();
+            }
             embedder.normalize();
-        }
-        if (!embedder.positionsRelaxed()) {
-            final Map pos = embedder.getPositions();
-            final Map bari = G.barycentricPlacement();
-            int problems = 0;
-            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-                final INode v = (INode) nodes.next();
-                final Point p = (Point) pos.get(v);
-                final Point q = (Point) bari.get(v);
-                final Vector diff = (Vector) p.minus(q);
-                final double err = ((Real) Vector.dot(diff, diff)).sqrt().doubleValue();
-                if (err > 1e-12) {
-                    out.println("\t\t@@@ " + v + " is at " + p + ", but should be " + q);
-                    ++problems;
+
+            // --- do some checking
+            final IArithmetic det = embedder.getGramMatrix().determinant();
+            if (det.abs().isLessThan(new FloatingPoint(0.001))) {
+                out.println("==================================================");
+                final String msg = "!!! WARNING (INTERNAL) - Unit cell degenerated in relaxation.";
+                out.println(msg);
+                out.println("==================================================");
+                embedder.reset();
+                embedder.normalize();
+            }
+            if (!embedder.positionsRelaxed()) {
+                final Map pos = embedder.getPositions();
+                final Map bari = G.barycentricPlacement();
+                int problems = 0;
+                for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+                    final INode v = (INode) nodes.next();
+                    final Point p = (Point) pos.get(v);
+                    final Point q = (Point) bari.get(v);
+                    final Vector diff = (Vector) p.minus(q);
+                    final double err = ((Real) Vector.dot(diff, diff)).sqrt()
+                            .doubleValue();
+                    if (err > 1e-12) {
+                        out.println("\t\t@@@ " + v + " is at " + p + ", but should be "
+                                    + q);
+                        ++problems;
+                    }
+                }
+                if (problems > 0) {
+                    out.println("!!! ERROR (INTERNAL) - Embedder misplaced " + problems
+                                + " points.");
+                    break;
                 }
             }
-            if (problems > 0) {
-                out.println("!!! ERROR (INTERNAL) - Embedder misplaced " + problems
-                        + " points.");
+
+            // --- write a Systre readable net description to a string buffer
+            final StringWriter cgdStringWriter = new StringWriter();
+            final PrintWriter cgd = new PrintWriter(cgdStringWriter);
+            writeEmbedding(cgd, true, G, finder, embedder);
+
+            // --- check if it can be read back in and produces the correct
+            // graph
+            final String cgdString = cgdStringWriter.toString();
+            boolean success = false;
+            try {
+                out.println("   Consistency test:");
+                out.print("       reading...");
+                out.flush();
+                final PeriodicGraph test = NetParser.stringToNet(cgdString);
+                out.println(" OK!");
+                out.print("       comparing...");
+                out.flush();
+                if (!test.equals(G)) {
+                    final String msg = "Output does not match original graph.";
+                    throw new RuntimeException(msg);
+                }
+                out.println(" OK!");
+                out.println();
+                success = true;
+            } catch (Exception ex) {
+                out.println(" Failed!");
+                if (pass == 0) {
+                    if (relax) {
+                        out.println("   Falling back to barycentric positions.");
+                    }
+                } else {
+                    out.println();
+                    out.println("==================================================");
+                    out.println("!!! ERROR (INTERNAL) - could not verify output data: "
+                                + ex);
+                    out.println(Misc.stackTrace(ex));
+                    out.println("==================================================");
+                }
             }
-        }
-        
-        // --- write a Systre readable net description to a string buffer
-        final StringWriter cgdStringWriter = new StringWriter();
-        final PrintWriter cgd = new PrintWriter(cgdStringWriter);
-        writeEmbedding(cgd, true, G, finder, embedder);
-        
-        // --- check if it can be read back in and produces the correct graph
-        final String cgdString = cgdStringWriter.toString();
-        boolean success = true;
-        try {
-            out.println("   Consistency test:");
-            out.print("       reading...");
-            out.flush();
-            final PeriodicGraph test = NetParser.stringToNet(cgdString);
-            out.println(" OK!");
-            out.print("       comparing...");
-            out.flush();
-            if (!test.equals(G)) {
-                final String msg = "Output does not match original graph.";
-                throw new RuntimeException(msg);
+
+            // --- now write the actual output
+            if (success) {
+                writeEmbedding(new PrintWriter(out), false, G, finder, embedder);
+                break;
             }
-            out.println(" OK!");
-            out.println();
-        } catch (Exception ex) {
-            out.println("==================================================");
-            out.println("!!! ERROR (INTERNAL) - could not verify output data: " + ex);
-            out.println(Misc.stackTrace(ex));
-            out.println("==================================================");
-            success = false;
-        }
-        
-        // --- now write the actual output
-        if (success) {
-            writeEmbedding(new PrintWriter(out), false, G, finder, embedder);
         }
     }
         
