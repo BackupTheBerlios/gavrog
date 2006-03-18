@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.51 2006/03/17 23:51:32 odf Exp $
+ * @version $Id: Demo.java,v 1.52 2006/03/18 06:26:35 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -316,8 +316,6 @@ public class Demo {
 
         // --- relax the structure from the barycentric embedding
         IEmbedder embedder = new AmoebaEmbedder(G);
-        boolean posRelaxed = this.relax;
-        boolean cellRelaxed = true;
         try {
             embedder.setRelaxPositions(false);
             embedder.go(500);
@@ -331,10 +329,10 @@ public class Demo {
             out.println(Misc.stackTrace(ex));
             out.println("==================================================");
             embedder.reset();
-            cellRelaxed = false;
-            posRelaxed = false;
         }
         embedder.normalize();
+        
+        // --- do some checking
         final IArithmetic det = embedder.getGramMatrix().determinant();
         if (det.abs().isLessThan(new FloatingPoint(0.001))) {
             out.println("==================================================");
@@ -343,27 +341,80 @@ public class Demo {
             out.println("==================================================");
             embedder.reset();
             embedder.normalize();
-            cellRelaxed = false;
-            posRelaxed = false;
+        }
+        if (!embedder.positionsRelaxed()) {
+            final Map pos = embedder.getPositions();
+            final Map bari = G.barycentricPlacement();
+            int problems = 0;
+            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+                final INode v = (INode) nodes.next();
+                final Point p = (Point) pos.get(v);
+                final Point q = (Point) bari.get(v);
+                final Vector diff = (Vector) p.minus(q);
+                final double err = ((Real) Vector.dot(diff, diff)).sqrt().doubleValue();
+                if (err > 1e-12) {
+                    out.println("\t\t@@@ " + v + " is at " + p + ", but should be " + q);
+                    ++problems;
+                }
+            }
+            if (problems > 0) {
+                out.println("!!! ERROR (INTERNAL) - Embedder misplaced " + problems
+                        + " points.");
+            }
         }
         
-        writeEmbedding(G, finder, embedder, cellRelaxed, posRelaxed);
+        // --- write a Systre readable net description to a string buffer
+        final StringWriter cgdStringWriter = new StringWriter();
+        final PrintWriter cgd = new PrintWriter(cgdStringWriter);
+        writeEmbedding(cgd, true, G, finder, embedder);
+        
+        // --- check if it can be read back in and produces the correct graph
+        final String cgdString = cgdStringWriter.toString();
+        boolean success = true;
+        try {
+            out.println("   Consistency test:");
+            out.print("       reading...");
+            out.flush();
+            final PeriodicGraph test = NetParser.stringToNet(cgdString);
+            out.println(" OK!");
+            out.print("       comparing...");
+            out.flush();
+            if (!test.equals(G)) {
+                final String msg = "Output does not match original graph.";
+                throw new RuntimeException(msg);
+            }
+            out.println(" OK!");
+            out.println();
+        } catch (Exception ex) {
+            out.println("==================================================");
+            out.println("!!! ERROR (INTERNAL) - could not verify output data: " + ex);
+            out.println(Misc.stackTrace(ex));
+            out.println("==================================================");
+            success = false;
+        }
+        
+        // --- now write the actual output
+        if (success) {
+            writeEmbedding(new PrintWriter(out), false, G, finder, embedder);
+        }
     }
         
-    private void writeEmbedding(final PeriodicGraph G, final SpaceGroupFinder finder,
-            final IEmbedder embedder, final boolean cellRelaxed, final boolean posRelaxed) {
+    private void writeEmbedding(final PrintWriter out, final boolean cgd,
+            final PeriodicGraph G, final SpaceGroupFinder finder, final IEmbedder embedder) {
         
         // --- extract some data from the arguments
         final int d = G.getDimension();
         final String groupName = finder.getGroupName();
         final CoordinateChange toStd = finder.getToStd();
         final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
+        final boolean cellRelaxed = embedder.cellRelaxed();
+        final boolean posRelaxed = embedder.positionsRelaxed();
         
-        // --- set up a buffer to write a Systre readable output description to
-        final StringWriter cgdStringWriter = new StringWriter();
-        final PrintWriter cgd = new PrintWriter(cgdStringWriter);
-        cgd.println("CRYSTAL");
-        cgd.println("  GROUP " + groupName);
+        // --- print a header if necessary
+        if (cgd) {
+            out.println("CRYSTAL");
+            out.println("  GROUP " + groupName);
+        }
         
         // --- print the results of the relaxation in the conventional setting
         final Matrix gram = embedder.getGramMatrix();
@@ -383,19 +434,22 @@ public class Demo {
                 .dividedBy(a.times(b))).acos().times(f);
 
         //    ... print the cell parameters
-        out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
-        out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
-                    + fmtReal5.format(b.doubleValue()) + ", c = "
-                    + fmtReal5.format(c.doubleValue()));
-        out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
-                    + ", beta = " + fmtReal4.format(beta.doubleValue())
-                    + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
-        cgd.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
-                    + fmtReal5.format(b.doubleValue()) + " "
-                    + fmtReal5.format(c.doubleValue()) + " "
-                    + fmtReal4.format(alpha.doubleValue()) + " "
-                    + fmtReal4.format(beta.doubleValue()) + " "
-                    + fmtReal4.format(gamma.doubleValue()));
+        if (cgd) {
+            out.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
+                        + fmtReal5.format(b.doubleValue()) + " "
+                        + fmtReal5.format(c.doubleValue()) + " "
+                        + fmtReal4.format(alpha.doubleValue()) + " "
+                        + fmtReal4.format(beta.doubleValue()) + " "
+                        + fmtReal4.format(gamma.doubleValue()));
+        } else {
+            out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
+            out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
+                        + fmtReal5.format(b.doubleValue()) + ", c = "
+                        + fmtReal5.format(c.doubleValue()));
+            out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
+                        + ", beta = " + fmtReal4.format(beta.doubleValue())
+                        + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
+        }
         
         if (DEBUG) {
             for (int i = 0; i < d; ++i) {
@@ -406,105 +460,62 @@ public class Demo {
         }
         
         //    ... print the atom positions
-        out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
-        final Map pos = embedder.getPositions();
-        if (!posRelaxed) {
-            final Map bari = G.barycentricPlacement();
-            int problems = 0;
-            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-                final INode v = (INode) nodes.next();
-                final Point p = (Point) pos.get(v);
-                final Point q = (Point) bari.get(v);
-                final Vector diff = (Vector) p.minus(q);
-                final double err = ((Real) Vector.dot(diff, diff)).sqrt().doubleValue();
-                if (err > 1e-12) {
-                    out.println("\t\t@@@ " + v + " is at " + p + ", but should be " + q);
-                    ++problems;
-                }
-            }
-            if (problems > 0) {
-                out.println("!!! ERROR (INTERNAL) - Embedder misplaced " + problems
-                        + " points.");
-            }
+        if (!cgd) {
+            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         }
+        final Map pos = embedder.getPositions();
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
             final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
-            out.print("     ");
-            cgd.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
+            if (cgd) {
+                out.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
+            } else {
+                out.print("     ");
+            }
             for (int i = 0; i < d; ++i) {
                 out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
-                cgd.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
             }
             out.println();
-            cgd.println();
-        }
-        
-        if (DEBUG) {
-            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-                final Point p = (Point) pos.get(nodes.next());
-                out.println("\t\t@@@ " + p + " -> " + p.times(toStd));
-            }
-            out.flush();
         }
         
         //    ... print the edges
-        out.println("   Edges:");
+        if (!cgd) {
+            out.println("   Edges:");
+        }
         for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final IEdge e = (IEdge) orbit.iterator().next();
             final INode v = e.source();
             final INode w = e.target();
-            if (DEBUG) {
-                final Point p1 = (Point) pos.get(v);
-                final Point q1 = (Point) ((Point) pos.get(w)).plus(G.getShift(e));
-                out.println("\t\t@@@ " + p1 + ", " + q1 + "  -> " + p1.times(toStd) + ", " + q1.times(toStd));
-                out.flush();
-            }
             final Point p = ((Point) ((Point) pos.get(v)).times(toStd));
             final Point q = (Point) ((Point) pos.get(w)).plus(G.getShift(e)).times(
                     toStd);
             final Point p0 = p.modZ();
             final Point q0 = (Point) q.minus(p.minus(p0));
-            out.print("     ");
-            cgd.print("  EDGE ");
+            if (cgd) {
+                out.print("  EDGE ");
+            } else {
+                out.print("     ");
+            }
             for (int i = 0; i < d; ++i) {
                 out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
-                cgd.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
             }
-            out.print("  <-> ");
-            cgd.print("  ");
+            if (cgd) {
+                out.print("  ");
+            } else {
+                out.print("  <-> ");
+            }
             for (int i = 0; i < d; ++i) {
                 out.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
-                cgd.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
             }
             out.println();
-            cgd.println();
         }
-        cgd.println("END");
-        cgd.println();
-        cgd.flush();
-        final String cgdString = cgdStringWriter.toString();
-        try {
-            out.println("   Consistency test:");
-            out.print("       reading...");
-            out.flush();
-            final PeriodicGraph test = NetParser.stringToNet(cgdString);
-            out.println(" OK!");
-            out.print("       comparing...");
-            out.flush();
-            if (!test.equals(G)) {
-                final String msg = "Output does not match original graph.";
-                throw new RuntimeException(msg);
-            }
-            out.println(" OK!");
-        } catch (Exception ex) {
-            out.println("==================================================");
-            out.println("!!! ERROR (INTERNAL) - could not verify output data: " + ex);
-            out.println(Misc.stackTrace(ex));
-            out.println("==================================================");
+        if (cgd) {
+            out.println("END");
+            out.println();
         }
+        out.flush();
     }
     
     /**
