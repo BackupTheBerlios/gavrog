@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.53 2006/03/18 06:46:09 odf Exp $
+ * @version $Id: Demo.java,v 1.54 2006/03/19 05:16:30 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -414,7 +414,7 @@ public class Demo {
         }
     }
         
-    private void writeEmbedding(final PrintWriter out, final boolean cgd,
+    private void writeEmbedding(final PrintWriter out, final boolean cgdFormat,
             final PeriodicGraph G, final SpaceGroupFinder finder, final IEmbedder embedder) {
         
         // --- extract some data from the arguments
@@ -426,7 +426,7 @@ public class Demo {
         final boolean posRelaxed = embedder.positionsRelaxed();
         
         // --- print a header if necessary
-        if (cgd) {
+        if (cgdFormat) {
             out.println("CRYSTAL");
             out.println("  GROUP " + groupName);
         }
@@ -449,7 +449,7 @@ public class Demo {
                 .dividedBy(a.times(b))).acos().times(f);
 
         //    ... print the cell parameters
-        if (cgd) {
+        if (cgdFormat) {
             out.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
                         + fmtReal5.format(b.doubleValue()) + " "
                         + fmtReal5.format(c.doubleValue()) + " "
@@ -475,7 +475,7 @@ public class Demo {
         }
         
         //    ... print the atom positions
-        if (!cgd) {
+        if (!cgdFormat) {
             out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         }
         final Map pos = embedder.getPositions();
@@ -483,7 +483,7 @@ public class Demo {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
             final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
-            if (cgd) {
+            if (cgdFormat) {
                 out.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
             } else {
                 out.print("     ");
@@ -495,7 +495,7 @@ public class Demo {
         }
         
         //    ... print the edges
-        if (!cgd) {
+        if (!cgdFormat) {
             out.println("   Edges:");
         }
         for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
@@ -508,7 +508,7 @@ public class Demo {
                     toStd);
             final Point p0 = p.modZ();
             final Point q0 = (Point) q.minus(p.minus(p0));
-            if (cgd) {
+            if (cgdFormat) {
                 out.print("  EDGE ");
             } else {
                 out.print("     ");
@@ -516,7 +516,7 @@ public class Demo {
             for (int i = 0; i < d; ++i) {
                 out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
             }
-            if (cgd) {
+            if (cgdFormat) {
                 out.print("  ");
             } else {
                 out.print("  <-> ");
@@ -526,7 +526,7 @@ public class Demo {
             }
             out.println();
         }
-        if (cgd) {
+        if (cgdFormat) {
             out.println("END");
             out.println();
         }

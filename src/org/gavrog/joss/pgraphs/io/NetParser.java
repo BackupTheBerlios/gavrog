@@ -37,10 +37,10 @@ import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
-import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
@@ -54,7 +54,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.65 2006/02/26 03:18:13 odf Exp $
+ * @version $Id: NetParser.java,v 1.66 2006/03/19 05:16:29 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -822,7 +822,7 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
             System.err.println("Computing Dirichlet vectors...");
         }
-        final Vector dirichletVectors[] = Vector.dirichletVectors(basis, cellGram);
+        final Vector dirichletVectors[] = Lattices.dirichletVectors(basis, cellGram);
         if (DEBUG) {
             for (int i = 0; i < dirichletVectors.length; ++i) {
                 System.err.println("  " + dirichletVectors[i]);
@@ -837,7 +837,8 @@ public class NetParser extends GenericParser {
             if (DEBUG) {
                 System.err.println("Shifting " + p + " into Dirichlet domain...");
             }
-            final Vector shift = dirichletShifts(p, dirichletVectors, cellGram, 1)[0];
+            final Vector shift = Lattices.dirichletShifts(p, dirichletVectors, cellGram,
+					1)[0];
             if (DEBUG) {
                 System.err.println("  shift is " + shift);
             }
@@ -866,7 +867,8 @@ public class NetParser extends GenericParser {
                     System.err.println("  shifting by " + vec);
                 }
                 final Point p = (Point) pv.plus(vec);
-                final Vector shifts[] = dirichletShifts(p, dirichletVectors, cellGram, 2);
+                final Vector shifts[] = Lattices.dirichletShifts(p, dirichletVectors,
+						cellGram, 2);
                 if (DEBUG) {
                     System.err
                             .println("    induced " + shifts.length + " further shifts");
@@ -1141,92 +1143,5 @@ public class NetParser extends GenericParser {
             }
         }
         return true;
-    }
-    
-    /**
-     * Returns the vector(s) by which a point has to be shifted in order to
-     * obtain a translationally equivalent point within the Dirichlet cell
-     * around the origin. All calculations are with respect to the unit lattice
-     * and an specific metric, which is passed as one of the arguments. An
-     * integral scaling factor can be specified, in which case both the unit
-     * lattice and its Dirchlet domain are taken to be scaled by that factor.
-     * 
-     * If the shifted point is close to a boundary of the Dirichlet domain, more
-     * multiple shift vectors may be returned, namely all those that would place
-     * the original point close enough to the domain.
-     * 
-     * @param pos the original point position.
-     * @param dirichletVectors normals to the parallel face pairs of the
-     *            Dirichlet cell.
-     * @param metric the underlying metric.
-     * @param factor a scaling factor.
-     * @return the shift vector needed to move the point inside.
-     */
-    private static Vector[] dirichletShifts(final Point pos,
-            final Vector dirichletVectors[], final Matrix metric, final int factor) {
-
-        final int dim = pos.getDimension();
-        final Real half = new Fraction(1, 2);
-        final Real minusHalf = new Fraction(-1, 2);
-        final double eps = 1e-8;
-        final Vector posAsVector = (Vector) pos.minus(Point.origin(dim));
-        Vector shift = Vector.zero(dim);
-        if (DEBUG) {
-            System.err.print("    " + shift);
-            System.err.flush();
-        }
-        
-        // --- compute the first shift
-        while (true) {
-            boolean changed = false;
-            for (int i = 0; i < dirichletVectors.length; ++i) {
-                final Vector v = (Vector) dirichletVectors[i].times(factor);
-                final IArithmetic c = Vector.dot(v, v, metric);
-                final Vector p = (Vector) posAsVector.plus(shift);
-                final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
-                if (DEBUG) {
-                    System.err.print(" [q = " + q + "]");
-                    System.err.flush();
-                }
-                if (q.isGreaterThan(half.plus(eps))) {
-                    shift = (Vector) shift.minus(v.times(q.plus(half).floor()));
-                    changed = true;
-                } else if (q.isLessOrEqual(minusHalf)) {
-                    shift = (Vector) shift.minus(v.times(q.plus(half).minus(eps).floor()));
-                    changed = true;
-                }
-                if (DEBUG && changed) {
-                    System.err.print(" -> " + shift);
-                    System.err.flush();
-                }
-            }
-            if (!changed) {
-                break;
-            }
-        }
-        if (DEBUG) {
-            System.err.println();
-        }
-        
-        // --- compute further shifts
-        final Vector p = (Vector) posAsVector.plus(shift);
-        final Set shifts = new HashSet();
-        shifts.add(shift);
-        
-        for (int i = 0; i < dirichletVectors.length; ++i) {
-            final Vector v = (Vector) dirichletVectors[i].times(factor);
-            final IArithmetic c = Vector.dot(v, v, metric);
-            final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
-            if (q.isGreaterThan(half.minus(2*eps))) {
-                shifts.add(shift.minus(v));
-            } else if (q.isLessThan(minusHalf.plus(2*eps))) {
-                shifts.add(shift.plus(v));
-            }
-        }
-
-        // --- convert results
-        final Vector results[] = new Vector[shifts.size()];
-        shifts.toArray(results);
-        return results;
     }
 }

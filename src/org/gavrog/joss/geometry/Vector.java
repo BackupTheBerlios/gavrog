@@ -16,14 +16,11 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
-import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Real;
@@ -34,7 +31,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.27 2006/02/18 02:05:50 odf Exp $
+ * @version $Id: Vector.java,v 1.28 2006/03/19 05:16:29 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -511,8 +508,6 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         return new Vector((Matrix) getCoordinates().zero());
     }
     
-    // TODO create a new class for things like the following?
-    
     /**
      * Constructs an array of vectors from the rows of the given matrix.
      * 
@@ -521,191 +516,6 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public static Vector[] rowVectors(final Matrix M) {
         return fromMatrix(M);
-    }
-    
-    /**
-     * Determines if the given vectors form a basis.
-     * @param v an array of vectors.
-     * @return true if the vectors form a basis.
-     */
-    public static boolean isBasis(final Vector[] v) {
-        return !toMatrix(v).determinant().isZero();
-    }
-    
-    /**
-     * Performs a gauss elimination on a lattice basis.
-     * 
-     * @param v the vectors forming the basis.
-     * @param M the quadratic form determining the metric.
-     * @return vectors forming a reduced basis.
-     */
-    public static Vector[] gaussReduced(Vector[] v, Matrix M) {
-        if (v.length != 2 || v[0].getDimension() != 2) {
-            final String msg = "first argument must contain 2 vectors of dimension 2";
-            throw new IllegalArgumentException(msg);
-        }
-        if (M.numberOfRows() != 2 || !M.equals(M.transposed())) {
-            final String msg = "second argument must be a symmetric 2x2 matrix";
-            throw new IllegalArgumentException(msg);
-        }
-        
-        final Real eps = new FloatingPoint(1e-12);
-        IArithmetic sl[] = new IArithmetic[] { dot(v[0], v[0], M), dot(v[1], v[1], M) };
-        while (true) {
-            final int i = sl[0].isLessThan(sl[1]) ? 0 : 1;
-            final int j = 1 - i;
-            final IArithmetic t = dot(v[i], v[j], M).dividedBy(sl[i]).round();
-            v[j] = (Vector) v[j].minus(t.times(v[i]));
-            sl[j] = dot(v[j], v[j], M);
-            if (sl[j].isGreaterOrEqual(sl[i].minus(eps))) {
-                break;
-            }
-        }
-
-        if (dot(v[0], v[1], M).isPositive()) {
-            v[1] = (Vector) v[1].negative();
-        }
-        return v;
-    }
-    
-    /**
-     * Performs a single step of the Selling reduction algorithm.
-     * 
-     * @param v the augmented list of basis vectors.
-     * @param M the quadratic form determining the metric.
-     * @return true if there was a change.
-     */
-    private static boolean sellingStep(final Vector v[], final Matrix M) {
-        final Real eps = new FloatingPoint(1e-12);
-        for (int i = 0; i < 3; ++i) {
-            for (int j = i+1; j < 4; ++j) {
-                if (dot(v[i], v[j], M).isGreaterThan(eps)) {
-                    for (int k = 0; k < 4; ++k) {
-                        if (k != i && k != j) {
-                            v[k] = (Vector) v[k].plus(v[i]);
-                        }
-                    }
-                    v[i] = (Vector) v[i].negative();
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Performs a Selling reduction on a lattice basis
-     * 
-     * @param v the vectors forming the basis.
-     * @param M the quadratic form determining the metric.
-     * @return vectors forming a reduced basis.
-     */
-    public static Vector[] sellingReduced(final Vector[] v, final Matrix M) {
-        if (v.length != 3 || v[0].getDimension() != 3) {
-            final String msg = "first argument must contain 3 vectors of dimension 3";
-            throw new IllegalArgumentException(msg);
-        }
-        if (M.numberOfRows() != 3 || !M.equals(M.transposed())) {
-            final String msg = "second argument must be a symmetric 3x3 matrix";
-            throw new IllegalArgumentException(msg);
-        }
-        
-        final Vector[] w = new Vector[] { v[0], v[1], v[2],
-                (Vector) v[0].plus(v[1]).plus(v[2]).negative() };
-        
-        while (sellingStep(w, M)) {
-        }
-        
-        return new Vector[] { w[0], w[1], w[2] };
-    }
-    
-    /**
-     * Returns a lattice basis of shortest Dirichlet vectors.
-     * 
-     * @param v original basis.
-     * @param M the quadratic form determining the metric.
-     * @return the reduced basis.
-     */
-    public static Vector[] reducedLatticeBasis(final Vector[] v, final Matrix M) {
-        final Vector tmp[] = dirichletVectors(v, M);
-        Arrays.sort(tmp, new Comparator() {
-            public int compare(final Object o1, final Object o2) {
-                final Vector v1 = (Vector) o1;
-                final Vector v2 = (Vector) o2;
-                final int d = dot(v1, v1, M).compareTo(dot(v2, v2, M));
-                if (d == 0) {
-                    return v2.abs().compareTo(v1.abs());
-                } else {
-                    return d;
-                }
-            }
-        });
-        
-        final int d = v[0].getDimension();
-        final Vector w[] = new Vector[d];
-        final Matrix A = Matrix.zero(d, d).mutableClone();
-        int k = 0;
-        for (int i = 0; i < d; ++i) {
-            while (k < tmp.length) {
-                w[i] = tmp[k];
-                if (w[i].isNegative()) {
-                    w[i] = (Vector) w[i].negative();
-                }
-                if (i > 0 && dot(w[0], w[i], M).isPositive()) {
-                    w[i] = (Vector) w[i].negative();
-                }
-                A.setRow(i, w[i].getCoordinates());
-                if (A.rank() > i) {
-                    break;
-                }
-                ++k;
-            }
-        }
-        
-        if (!isBasis(v)) {
-            throw new RuntimeException("serious problem: could not find a basis");
-        }
-        if (toMatrix(w).determinant().sign() != toMatrix(v).determinant().sign()) {
-            w[d-1] = (Vector) w[d-1].negative(); 
-        }
-        return w;
-    }
-    
-    /**
-     * Computes the Dirichlet domain for a given vector lattice and returns the
-     * set of normal vectors for the pairs of parallel planes that bound it.
-     * 
-     * @param b vectors forming a lattice basis.
-     * @param M the quadratic form determining the metric.
-     * @return the normal vectors to the faces of the Dirichlet domain.
-     */
-    public static Vector[] dirichletVectors(final Vector[] b, final Matrix M) {
-        final int dim = b.length;
-        if (b[0].getDimension() != dim) {
-            final String msg = "illegal first argument";
-            throw new IllegalArgumentException(msg);
-        }
-        if (M.numberOfRows() != dim) {
-            final String msg = "wrong dimension for second argument";
-            throw new IllegalArgumentException(msg);
-        }
-        if (!M.equals(M.transposed())) {
-            final String msg = "second argument must be symmetric, but was " + M;
-            throw new IllegalArgumentException(msg);
-        }
-
-        if (dim == 2) {
-            final Vector t[] = Vector.gaussReduced(b, M);
-            return new Vector[] { t[0], t[1], (Vector) t[0].plus(t[1]) };
-        } else if (dim == 3) {
-            final Vector t[] = Vector.sellingReduced(b, M);
-            return new Vector[] { t[0], t[1], t[2], (Vector) t[0].plus(t[1]),
-                    (Vector) t[0].plus(t[2]), (Vector) t[1].plus(t[2]),
-                    (Vector) t[0].plus(t[1]).plus(t[2]) };
-        } else {
-            throw new UnsupportedOperationException("only dimensions 2 and 3 work");
-        }
     }
     
     /**

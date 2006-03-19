@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.Whole;
  * Unit tests for the Vector class.
  * 
  * @author Olaf Delgado
- * @version $Id: TestVector.java,v 1.14 2005/10/26 21:05:57 odf Exp $
+ * @version $Id: TestVector.java,v 1.15 2006/03/19 05:16:27 odf Exp $
  */
 public class TestVector extends TestCase {
     final Vector v = new Vector(1, 2, 3);
@@ -188,77 +188,6 @@ public class TestVector extends TestCase {
         assertEquals(r[1], rows[1]);
         assertEquals(r[2], rows[2]);
         assertEquals(r[3], rows[3]);
-    }
-    
-    public void testIsBasis() {
-        final Vector a[] = { new Vector(new int[] { 1, 2, 3 }),
-                new Vector(new int[] { 4, 5, 6 }), new Vector(new int[] { 7, 8, 9 }) };
-        assertFalse(Vector.isBasis(a));
-        final Vector b[] = { new Vector(new int[] { 1, 2 }),
-                new Vector(new int[] { 4, 5 }) };
-        assertTrue(Vector.isBasis(b));
-        final Vector c[] = { new Vector(new int[] { 1, 2, 3 }),
-                new Vector(new int[] { 4, 5, 6 }), new Vector(new int[] { 7, 8, 8 }) };
-        assertTrue(Vector.isBasis(c));
-    }
-    
-    public void testGaussReduced() {
-        final Matrix G = new Matrix(new int[][] { { 4, 1 }, { 1, 5 } });
-        final Vector b[] = { new Vector(new int[] { 1, 2 }),
-                new Vector(new int[] { 4, 5 }) };
-        final Vector v[] = Vector.gaussReduced(b, G);
-        assertTrue(Vector.isBasis(v));
-        final Vector w[] = new Vector[] { v[0], v[1],
-                (Vector) v[0].negative().minus(v[1]) };
-        for (int i = 0; i < 2; ++i) {
-            for (int j = i + 1; j < 3; ++j) {
-                assertFalse(Vector.dot(w[i], w[j], G).isPositive());
-            }
-        }
-        final Matrix A = (Matrix) Vector.toMatrix(v).dividedBy(Vector.toMatrix(b));
-        assertTrue(A.determinant().abs().isOne());
-        for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 2; ++j) {
-                assertTrue(A.get(i, j) instanceof Whole);
-            }
-        }
-    }
-    
-    public void testSellingReduced() {
-        final Matrix G = new Matrix(new int[][] { { 4, 1, 3 }, { 1, 5, 2 }, { 3, 2, 6 } });
-        final Vector b[] = { new Vector(new int[] { 1, 2, 3 }),
-                new Vector(new int[] { 4, 5, 6 }), new Vector(new int[] { 7, 8, 8 }) };
-        final Vector v[] = Vector.sellingReduced(b, G);
-        assertTrue(Vector.isBasis(v));
-        final Vector w[] = new Vector[] { v[0], v[1], v[2],
-                (Vector) v[0].negative().minus(v[1]).minus(v[2]) };
-        for (int i = 0; i < 3; ++i) {
-            for (int j = i + 1; j < 4; ++j) {
-                assertFalse(Vector.dot(w[i], w[j], G).isPositive());
-            }
-        }
-        final Matrix A = (Matrix) Vector.toMatrix(v).dividedBy(Vector.toMatrix(b));
-        assertTrue(A.determinant().abs().isOne());
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                assertTrue(A.get(i, j) instanceof Whole);
-            }
-        }
-    }
-    
-    public void testReducedBasis() {
-        final Matrix G = new Matrix(new int[][] { { 4, 1, 3 }, { 1, 5, 2 }, { 3, 2, 6 } });
-        final Vector b[] = { new Vector(new int[] { 1, 2, 3 }),
-                new Vector(new int[] { 4, 5, 6 }), new Vector(new int[] { 7, 8, 8 }) };
-        final Vector v[] = Vector.reducedLatticeBasis(b, G);
-        assertTrue(Vector.isBasis(v));
-        final Matrix A = (Matrix) Vector.toMatrix(v).dividedBy(Vector.toMatrix(b));
-        assertTrue(A.determinant().isOne());
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                assertTrue(A.get(i, j) instanceof Whole);
-            }
-        }
     }
     
     public void testIsCollinearTo() {

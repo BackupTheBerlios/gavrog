@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.46 2006/03/14 05:42:37 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.47 2006/03/19 05:16:29 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -372,7 +372,7 @@ public class SpaceGroupFinder {
      */
     private Object[] normalizedBasis(final Vector lattice[]) {
         // --- compute a lattice basis of smallest Dirichlet vectors
-        final Vector reduced[] = Vector.reducedLatticeBasis(lattice, Matrix.one(3));
+        final Vector reduced[] = Lattices.reducedLatticeBasis(lattice, Matrix.one(3));
         final Object res[];
         
         // --- call the appropriate method for the group's crystal system
