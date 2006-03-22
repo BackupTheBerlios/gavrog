@@ -28,6 +28,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -61,7 +62,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.55 2006/03/22 05:39:55 odf Exp $
+ * @version $Id: Demo.java,v 1.56 2006/03/22 22:28:21 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -530,21 +531,63 @@ public class Demo {
             out.println("END");
             out.println();
         } else {
+        	// --- write edge statistics
         	final String min = fmtReal5.format(embedder.minimalEdgeLength());
         	final String max = fmtReal5.format(embedder.maximalEdgeLength());
         	final String avg = fmtReal5.format(embedder.averageEdgeLength());
         	out.println();
         	out.println("   Edge statistics: minimum = " + min + ", maximum = " + max
 					+ ", average = " + avg);
+        	
+        	// --- compute and write angle statistics
+        	double minAngle = Double.MAX_VALUE;
+        	double maxAngle = 0.0;
+        	double sumAngle = 0.0;
+        	int count = 0;
+        	
+            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+				final INode v = (INode) nodes.next();
+				final Point p = (Point) pos.get(v);
+				final List incidences = G.allIncidences(v);
+				final List vectors = new ArrayList();
+				for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
+					final IEdge e = (IEdge) iter.next();
+					final INode w = e.target();
+					final Point q = (Point) pos.get(w);
+					vectors.add(q.plus(G.getShift(e)).minus(p));
+				}
+				final int m = vectors.size();
+				for (int i = 0; i < m; ++i) {
+					final Vector s = (Vector) vectors.get(i);
+					final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
+							.doubleValue();
+					for (int j = i + 1; j < m; ++j) {
+						final Vector t = (Vector) vectors.get(j);
+						final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
+								.doubleValue();
+						final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
+						final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
+						final double angle = Math.acos(arg) / Math.PI * 180;
+						minAngle = Math.min(minAngle, angle);
+						maxAngle = Math.max(maxAngle, angle);
+						sumAngle += angle;
+						++count;
+					}
+				}
+			}
+        	out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
+					+ ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
+					+ fmtReal5.format(sumAngle / count));
         }
         out.flush();
     }
     
     /**
-     * Analyzes all nets specified in a file and prints the results.
-     * 
-     * @param filePath the name of the input file.
-     */
+	 * Analyzes all nets specified in a file and prints the results.
+	 * 
+	 * @param filePath
+	 *            the name of the input file.
+	 */
     public void processDataFile(final String filePath) {
         // --- set up a parser for reading input from the given file
         NetParser parser = null;
