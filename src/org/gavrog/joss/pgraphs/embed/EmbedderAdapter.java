@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EmbedderAdapter.java,v 1.3 2006/03/18 06:23:13 odf Exp $
+ * @version $Id: EmbedderAdapter.java,v 1.4 2006/03/22 05:39:19 odf Exp $
  */
 public abstract class EmbedderAdapter implements IEmbedder{
     private final PeriodicGraph graph;
@@ -221,29 +221,39 @@ public abstract class EmbedderAdapter implements IEmbedder{
         }
     }
     
-    /* (non-Javadoc)
-     * @see org.gavrog.joss.pgraphs.basic.IEmbedder#edgeStatistics()
-     */
-    public double[] edgeStatistics() {
-        double minLength = Double.MAX_VALUE;
+    public double maximalEdgeLength() {
         double maxLength = 0.0;
-        double sumLength = 0.0;
         for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final Point p = getPosition(e.source());
-            final Point q = getPosition(e.target());
-            final Vector s = this.graph.getShift(e);
-            final double length = length((Vector) q.plus(s).minus(p));
-            if (length > 0) {
-                minLength = Math.min(minLength, length);
-            }
-            maxLength = Math.max(maxLength, length);
-            sumLength += length;
+            maxLength = Math.max(maxLength, length((IEdge) edges.next()));
         }
-        final double avgLength = sumLength / this.graph.numberOfEdges();
-        return new double[] { minLength, maxLength, avgLength };
+        return maxLength;
     }
-
+    
+    public double minimalEdgeLength() {
+        double minLength = Double.MAX_VALUE;
+        for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
+            minLength = Math.min(minLength, length((IEdge) edges.next()));
+        }
+        return minLength;
+    }
+    
+    public double averageEdgeLength() {
+        double sumLength = 0.0;
+        int count = 0;
+        for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
+            sumLength += length((IEdge) edges.next());
+            ++count;
+        }
+        return sumLength / count;
+    }
+    
+    protected double length(final IEdge e) {
+        final Point p = getPosition(e.source());
+        final Point q = getPosition(e.target());
+        final Vector s = this.graph.getShift(e);
+        return length((Vector) q.plus(s).minus(p));
+    }
+    
     protected double length(final Vector v) {
         final Real squareLength = (Real) Vector.dot(v, v, getGramMatrix());
         return Math.sqrt(squareLength.doubleValue());
@@ -269,7 +279,7 @@ public abstract class EmbedderAdapter implements IEmbedder{
      * @see org.gavrog.joss.pgraphs.basic.IEmbedder#normalize()
      */
     public void normalize() {
-        final double avg = edgeStatistics()[2];
+        final double avg = averageEdgeLength();
         if (avg < 1e-3) {
             throw new RuntimeException("degenerate unit cell while relaxing");
         }

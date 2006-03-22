@@ -37,7 +37,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.2 2006/03/18 06:23:13 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.3 2006/03/22 05:39:19 odf Exp $
  */
 public class SpringEmbedder extends EmbedderAdapter {
     private static final boolean DEBUG = false;
@@ -122,7 +122,7 @@ public class SpringEmbedder extends EmbedderAdapter {
     }
 
     private void normalizeUp() {
-        final double min = edgeStatistics()[0];
+        final double min = minimalEdgeLength();
         if (min < 1e-3) {
             throw new RuntimeException("edge got too small while relaxing");
         }
@@ -428,10 +428,9 @@ public class SpringEmbedder extends EmbedderAdapter {
                 System.out.println(" --- relaxing ... ---");
                 for (int i = 0; i < 10; ++i) {
                     relaxer.normalize();
-                    final double stats[] = relaxer.edgeStatistics();
-                    final double min = stats[0];
-                    final double max = stats[1];
-                    final double avg = stats[2];
+                    final double min = relaxer.minimalEdgeLength();
+                    final double max = relaxer.maximalEdgeLength();
+                    final double avg = relaxer.averageEdgeLength();
                     final Matrix gr = relaxer.getGramMatrix();
                     final double det = ((Real) gr.determinant()).doubleValue();
                     final double vol = Math.sqrt(det) / G.numberOfNodes();

@@ -113,7 +113,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.33 2006/03/12 02:21:50 odf Exp $
+ * @version $Id: NetViewer.java,v 1.34 2006/03/22 05:39:20 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -634,10 +634,13 @@ public class NetViewer extends Applet {
         // --- relax the structure from the barycentric embedding
         boolean error = false;
         final IEmbedder embedder;
-        if (relax && this.embedder != null) {
-            embedder = this.embedder;
+        if (this.embedder != null) {
+        	embedder = this.embedder;
+        	if (!relax) {
+        		embedder.reset();
+        	}
         } else {
-            embedder = new AmoebaEmbedder(G);
+        	embedder = new AmoebaEmbedder(G);
         }
         try {
             embedder.setRelaxPositions(relax);
@@ -650,10 +653,9 @@ public class NetViewer extends Applet {
         }
         embedder.normalize();
 
-        final double stats[] = embedder.edgeStatistics();
-        final double min = stats[0];
-        final double max = stats[1];
-        final double avg = stats[2];
+        final double min = embedder.minimalEdgeLength();
+        final double max = embedder.maximalEdgeLength();
+        final double avg = embedder.averageEdgeLength();
         final Matrix gr = embedder.getGramMatrix();
         final double det = ((Real) gr.determinant()).doubleValue();
         final double vol = Math.sqrt(det) / G.numberOfNodes();

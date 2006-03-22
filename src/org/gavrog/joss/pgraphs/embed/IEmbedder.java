@@ -24,10 +24,14 @@ import org.gavrog.joss.pgraphs.basic.INode;
 
 /**
  * @author Olaf Delgado
- * @version $Id: IEmbedder.java,v 1.2 2006/03/18 06:23:13 odf Exp $
+ * @version $Id: IEmbedder.java,v 1.3 2006/03/22 05:39:19 odf Exp $
  */
 public interface IEmbedder {
-    public double[] edgeStatistics();
+    public double minimalEdgeLength();
+    
+    public double maximalEdgeLength();
+    
+    public double averageEdgeLength();
 
     public void normalize();
     
