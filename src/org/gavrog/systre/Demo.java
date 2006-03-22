@@ -61,7 +61,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.54 2006/03/19 05:16:30 odf Exp $
+ * @version $Id: Demo.java,v 1.55 2006/03/22 05:39:55 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -529,6 +529,13 @@ public class Demo {
         if (cgdFormat) {
             out.println("END");
             out.println();
+        } else {
+        	final String min = fmtReal5.format(embedder.minimalEdgeLength());
+        	final String max = fmtReal5.format(embedder.maximalEdgeLength());
+        	final String avg = fmtReal5.format(embedder.averageEdgeLength());
+        	out.println();
+        	out.println("   Edge statistics: minimum = " + min + ", maximum = " + max
+					+ ", average = " + avg);
         }
         out.flush();
     }
