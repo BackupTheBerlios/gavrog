@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.46 2006/02/12 04:30:46 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.47 2006/03/23 22:04:13 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -2028,7 +2028,7 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- find translation representatives modulo the unit lattice
         final Set translations = new HashSet();
         final int d = getDimension();
-            for (int i = 0; i < d; ++i) {
+        for (int i = 0; i < d; ++i) {
             final Vector e = Vector.unit(d, i);
             final Vector b = ((Vector) e.times(C)).modZ();
             if (!translations.contains(b)) {
@@ -2053,25 +2053,25 @@ public class PeriodicGraph extends UndirectedGraph {
 
         // --- find node and edge representatives in the new coordinate system
         final Map pos = barycentricPlacement();
-        final List nodes = new ArrayList();
+        final List transformedNodes = new ArrayList();
         for (final Iterator iter = nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
-            nodes.add(((Point) pos.get(v)).times(C));
+            transformedNodes.add(((Point) pos.get(v)).times(C));
         }
-        final List edges = new ArrayList();
+        final List transformedEdges = new ArrayList();
         for (final Iterator iter = edges(); iter.hasNext();) {
             final IEdge e = (IEdge) iter.next();
             final Point p = (Point) pos.get(e.source());
             final Point q = (Point) pos.get(e.target());
             final Point src = (Point) p.times(C);
             final Point dst = (Point) q.plus(getShift(e)).times(C);
-            edges.add(new Pair(src, dst));
+            transformedEdges.add(new Pair(src, dst));
         }
 
         // --- extend the system of representatives to the new unit cell
         final List coverNodes = new ArrayList();
         
-        for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
+        for (final Iterator iter = transformedNodes.iterator(); iter.hasNext();) {
             final Point p = (Point) iter.next();
             for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
                 final Vector v = (Vector) shifts.next();
@@ -2081,7 +2081,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         final List coverEdges = new ArrayList();
-        for (final Iterator iter = edges.iterator(); iter.hasNext();) {
+        for (final Iterator iter = transformedEdges.iterator(); iter.hasNext();) {
             final Pair e = (Pair) iter.next();
             final Point p = (Point) e.getFirst();
             final Point q = (Point) e.getSecond();
@@ -2129,6 +2129,4 @@ public class PeriodicGraph extends UndirectedGraph {
     public int hashCode() {
         return this.invariant().hashCode();
     }
-    
-    // TODO compute node configuration space
 }
