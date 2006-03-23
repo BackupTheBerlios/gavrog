@@ -39,12 +39,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
@@ -62,7 +64,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.56 2006/03/22 22:28:21 odf Exp $
+ * @version $Id: Demo.java,v 1.57 2006/03/23 02:37:37 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -581,6 +583,53 @@ public class Demo {
         }
         out.flush();
     }
+    
+    /**
+     * Does what it says.
+     * 
+     * @param G a periodic graph.
+     * @param embedder an embedding for G.
+     * @return the smallest distance between nodes that are not connected.
+     */
+    private double smallestNonBondedDistance(final PeriodicGraph G,
+			final IEmbedder embedder) {
+    	// --- get some data about the embedding
+    	final Matrix gram = embedder.getGramMatrix();
+    	final Map pos = embedder.getPositions();
+    	
+    	// --- compute a Dirichlet domain for the translation lattice
+        final Vector basis[] = Vector.rowVectors(Matrix.one(G.getDimension()));
+        final Vector dirichletVectors[] = Lattices.dirichletVectors(basis, gram);
+        
+        // --- determine how to shift each node into the Dirichlet domain
+        final Map shift = new HashMap();
+        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+        	final INode v = (INode) nodes.next();
+        	final Point p = (Point) pos.get(v);
+            shift.put(v, Lattices.dirichletShifts(p, dirichletVectors, gram, 1)[0]);
+        }
+        
+        // --- list all points in two times extended Dirichlet domain
+        final Set moreNodes = new HashSet();
+        final Vector zero = Vector.zero(G.getDimension());
+        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+            final INode v = (INode) iter.next();
+            final Vector s = (Vector) shift.get(v);
+            final Point p = (Point) pos.get(v);
+            moreNodes.add(new Pair(v, zero));
+            for (int i = 0; i < dirichletVectors.length; ++i) {
+                final Vector vec = (Vector) s.plus(dirichletVectors[i]);
+                final Vector shifts[] = Lattices.dirichletShifts((Point) p.plus(vec),
+						dirichletVectors, gram, 2);
+                for (int k = 0; k < shifts.length; ++k) {
+                    moreNodes.add(new Pair(v, vec.plus(shifts[k])));
+                }
+            }
+        }
+        
+    	//TODO finish implementing this
+		return 0.0;
+	}
     
     /**
 	 * Analyzes all nets specified in a file and prints the results.
