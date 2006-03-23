@@ -64,7 +64,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * First preview of the upcoming Gavrog version of Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.57 2006/03/23 02:37:37 odf Exp $
+ * @version $Id: Demo.java,v 1.58 2006/03/23 06:03:22 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -580,7 +580,11 @@ public class Demo {
         	out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
 					+ ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
 					+ fmtReal5.format(sumAngle / count));
-        }
+        	
+        	// --- write the shortest non-bonded distance
+        	out.println("   Shortest non-bonded distance = "
+					+ fmtReal5.format(smallestNonBondedDistance(G, embedder)));
+		}
         out.flush();
     }
     
@@ -611,12 +615,11 @@ public class Demo {
         
         // --- list all points in two times extended Dirichlet domain
         final Set moreNodes = new HashSet();
-        final Vector zero = Vector.zero(G.getDimension());
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Vector s = (Vector) shift.get(v);
             final Point p = (Point) pos.get(v);
-            moreNodes.add(new Pair(v, zero));
+            moreNodes.add(new Pair(v, s));
             for (int i = 0; i < dirichletVectors.length; ++i) {
                 final Vector vec = (Vector) s.plus(dirichletVectors[i]);
                 final Vector shifts[] = Lattices.dirichletShifts((Point) p.plus(vec),
@@ -627,8 +630,42 @@ public class Demo {
             }
         }
         
-    	//TODO finish implementing this
-		return 0.0;
+        // --- determine all distances from orbit representatives
+        double minDist = Double.MAX_VALUE;
+        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+        	// --- get shift and position for next orbit representative
+            final Set orbit = (Set) orbits.next();
+            final INode v = (INode) orbit.iterator().next();
+            final Vector s = (Vector) shift.get(v);
+            final Point p = (Point) ((Point) pos.get(v)).plus(s);
+            
+            // --- ignore node itself and its neighbors
+            final Set ignore = new HashSet();
+            ignore.add(new Pair(v, s));
+            for (final Iterator inc = G.allIncidences(v).iterator(); inc.hasNext();) {
+            	final IEdge e = (IEdge) inc.next();
+            	final INode w = e.target();
+            	final Vector t = (Vector) G.getShift(e).plus(s);
+            	ignore.add(new Pair(w, t));
+            }
+            
+            // --- now looks for closest other point in extended Dirichlet domain
+            for (final Iterator others = moreNodes.iterator(); others.hasNext();) {
+            	final Pair item = (Pair) others.next();
+            	if (ignore.contains(item)) {
+            		continue;
+            	}
+            	final INode w = (INode) item.getFirst();
+            	final Vector t = (Vector) item.getSecond();
+            	final Point q = (Point) ((Point) pos.get(w)).plus(t);
+            	final Vector d = (Vector) q.minus(p);
+            	final double dist = ((Real) Vector.dot(d, d, gram)).sqrt().doubleValue();
+            	minDist = Math.min(minDist, dist);
+            }
+        }
+        
+        // --- return the result
+		return minDist;
 	}
     
     /**
