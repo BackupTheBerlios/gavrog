@@ -45,7 +45,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre (in the making).
  * 
  * @author Olaf Delgado
- * @version $Id: GUI.java,v 1.3 2006/03/24 22:24:53 odf Exp $
+ * @version $Id: GUI.java,v 1.4 2006/03/24 22:35:06 odf Exp $
  */
 public class GUI extends BFrame {
 	final private static Color textColor = new Color(255, 250, 240);
@@ -182,16 +182,20 @@ public class GUI extends BFrame {
             final String filename = this.outFileChooser.getSelectedFile().getName();
             final File dir = this.outFileChooser.getDirectory();
             final File file = new File(dir, filename);
+            boolean append = false;
             if (file.exists()) {
                 final int choice = new BStandardDialog("File exists", "File \"" + file
                         + "\" already exists. Overwrite?", BStandardDialog.WARNING)
-                        .showOptionDialog(this, new String[] { "yes", "no" }, "no");
-                if (choice > 0) {
+                        .showOptionDialog(this, new String[] { "Overwrite", "Append",
+                                "Cancel" }, "Cancel");
+                if (choice > 1) {
                     return;
+                } else {
+                    append = choice == 1;
                 }
             }
             try {
-                final Writer writer = new FileWriter(file);
+                final Writer writer = new FileWriter(file, append);
                 writer.write(this.output.getText());
                 writer.flush();
                 writer.close();
