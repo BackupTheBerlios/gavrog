@@ -61,10 +61,10 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
- * First preview of the upcoming Gavrog version of Systre.
+ * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.58 2006/03/23 06:03:22 odf Exp $
+ * @version $Id: Demo.java,v 1.59 2006/03/24 00:45:04 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
