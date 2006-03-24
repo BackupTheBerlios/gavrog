@@ -64,7 +64,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.59 2006/03/24 00:45:04 odf Exp $
+ * @version $Id: Demo.java,v 1.60 2006/03/24 22:24:28 odf Exp $
  */
 public class Demo {
     final static boolean DEBUG = false;
@@ -76,7 +76,7 @@ public class Demo {
     private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
 
     // --- the output stream
-    private static PrintStream out = System.out;
+    private PrintStream out = System.out;
     
     // --- the various archives
     private final Archive mainArchive;
@@ -87,6 +87,10 @@ public class Demo {
     private boolean relax = true;
     private boolean useBuiltin = true;
     private BufferedWriter outputArchive = null;
+    
+    // --- the last file that was opened for processing
+    private String lastFileNameWithoutExtension;
+    
     
     public Demo() {
         // --- read the default archive
@@ -684,7 +688,8 @@ public class Demo {
             out.println("!!! ERROR (FILE) - Could not find file \"" + filePath + "\".");
             return;
         }
-        final String fileName = new File(filePath).getName().replaceFirst("\\..*$", "");
+        this.lastFileNameWithoutExtension = new File(filePath).getName().replaceFirst(
+                "\\..*$", "");
         out.println("Data file \"" + filePath + "\".");
         
         // --- loop through the structures specied in the input file
@@ -715,7 +720,7 @@ public class Demo {
             final String archiveName;
             final String displayName;
             if (name == null) {
-                archiveName = fileName + "-#" + count;
+                archiveName = lastFileNameWithoutExtension + "-#" + count;
                 displayName = "";
             } else {
                 archiveName = name;
@@ -745,6 +750,13 @@ public class Demo {
     }
     
     /**
+     * @return the base name of the file last opened for processing.
+     */
+    public String getLastFileNameWithoutExtension() {
+        return this.lastFileNameWithoutExtension;
+    }
+    
+    /**
      * Writes all the entries read from data files onto a stream.
      * 
      * @param writer represents the output stream.
@@ -763,20 +775,19 @@ public class Demo {
     
     
     /**
-     * The main method takes command line arguments one by one and passes them to
+     * This method takes command line arguments one by one and passes them to
      * {@link #processDataFile} or {@link #processArchive}.
      * 
      * @param args the command line arguments.
      */
-    public static void main(final String args[]) {
-        final Demo demo = new Demo();
+    public void run(final String args[]) {
         final List files = new LinkedList();
         String outputArchiveFileName = null;
         
         for (int i = 0; i < args.length; ++i) {
             final String s = args[i];
             if (s.equals("-b")) {
-                demo.relax = false;
+                this.relax = false;
             } else if (s.equals("-a")) {
                 if (i == args.length - 1) {
                     out.println("!!! WARNING (USAGE) - Argument missing for \"-a\".");
@@ -785,7 +796,7 @@ public class Demo {
                 }
             } else if (s.equalsIgnoreCase("--nobuiltin")
                     || s.equalsIgnoreCase("-nobuiltin")) {
-                demo.useBuiltin = false;
+                this.useBuiltin = false;
             } else {
                 files.add(args[i]);
             }
@@ -800,7 +811,7 @@ public class Demo {
         
         if (outputArchiveFileName != null) {
             try {
-                demo.outputArchive = new BufferedWriter(new FileWriter(outputArchiveFileName));
+                this.outputArchive = new BufferedWriter(new FileWriter(outputArchiveFileName));
             } catch (IOException ex) {
                 out.println("!!! ERROR (FILE) - Could not open output archive:" + ex);
             }
@@ -809,7 +820,7 @@ public class Demo {
         for (final Iterator iter = files.iterator(); iter.hasNext();) {
             final String filename = (String) iter.next();
             if (filename.endsWith(".arc")) {
-                demo.processArchive(filename);
+                this.processArchive(filename);
             } else {
                 ++count;
                 if (count > 1) {
@@ -817,17 +828,35 @@ public class Demo {
                     out.println();
                     out.println();
                 }
-                demo.processDataFile(filename);
+               this.processDataFile(filename);
             }
         }
         
-        if (demo.outputArchive != null) {
+        if (this.outputArchive != null) {
             try {
-                demo.outputArchive.flush();
-                demo.outputArchive.close();
+                this.outputArchive.flush();
+                this.outputArchive.close();
             } catch (IOException ex) {
                 out.println("!!! ERROR (FILE) - Output archive not completely written.");
             }
         }
+    }
+    
+    /**
+     * @return the current output stream.
+     */
+    protected PrintStream getOutStream() {
+        return this.out;
+    }
+    
+    /**
+     * @param out The new value output stream.
+     */
+    protected void setOutStream(final PrintStream out) {
+        this.out = out;
+    }
+    
+    public static void main(final String args[]) {
+        new Demo().run(args);
     }
 }
