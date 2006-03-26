@@ -28,8 +28,12 @@ import java.io.Writer;
 import javax.swing.SwingUtilities;
 
 import buoy.event.CommandEvent;
+import buoy.event.EventProcessor;
+import buoy.event.ValueChangedEvent;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
+import buoy.widget.BCheckBox;
+import buoy.widget.BDialog;
 import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
 import buoy.widget.BLabel;
@@ -38,6 +42,7 @@ import buoy.widget.BScrollPane;
 import buoy.widget.BStandardDialog;
 import buoy.widget.BTextArea;
 import buoy.widget.BorderContainer;
+import buoy.widget.ColumnContainer;
 import buoy.widget.GridContainer;
 import buoy.widget.LayoutInfo;
 
@@ -45,11 +50,12 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.1 2006/03/26 01:05:56 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.2 2006/03/26 03:08:30 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final private static Color textColor = new Color(255, 250, 240);
 	final private static Color buttonColor = new Color(224, 224, 240);
+	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
     private final BFileChooser inFileChooser = new BFileChooser(BFileChooser.OPEN_FILE,
             "Open data file");
@@ -62,6 +68,7 @@ public class SystreGUI extends BFrame {
 	private BScrollBar vscroll;
     private BButton openButton;
     private BButton saveButton;
+    private BButton optionsButton;
 
     /**
      * Constructs an instance.
@@ -76,19 +83,20 @@ public class SystreGUI extends BFrame {
 
 		final BorderContainer top = new BorderContainer();
 		top.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
-				new Insets(5, 5, 5, 5), null));
+				defaultInsets, null));
 		top.setBackground(null);
 		final BLabel label = new BLabel("<html><h1>Gavrog Systre</h1><br>"
 				+ "Version 1.0 beta 0<br><br>"
 				+ "by Olaf Delgado-Friedrichs 2001-2006</html>");
 		top.add(label, BorderContainer.NORTH);
         
-        final GridContainer buttonBar = new GridContainer(2, 1);
+        final GridContainer buttonBar = new GridContainer(3, 1);
         buttonBar.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER,
                 LayoutInfo.HORIZONTAL, null, null));
         
-        buttonBar.add(openButton = makeButton("Open"), 0, 0);
-        buttonBar.add(saveButton = makeButton("Save"), 1, 0);
+        buttonBar.add(openButton = makeButton("Open..."), 0, 0);
+        buttonBar.add(saveButton = makeButton("Save as..."), 1, 0);
+        buttonBar.add(optionsButton = makeButton("Options..."), 2, 0);
         
         top.add(buttonBar, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
@@ -106,7 +114,7 @@ public class SystreGUI extends BFrame {
 		
 		final BButton okButton = makeButton("Exit");
         main.add(okButton, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
-				LayoutInfo.NONE, new Insets(5, 5, 5, 5), null));
+				LayoutInfo.NONE, defaultInsets, null));
         
         setContent(main);
         
@@ -114,6 +122,7 @@ public class SystreGUI extends BFrame {
         
         openButton.addEventLink(CommandEvent.class, this, "doOpen");
         saveButton.addEventLink(CommandEvent.class, this, "doSave");
+        optionsButton.addEventLink(CommandEvent.class, this, "doOptions");
         okButton.addEventLink(CommandEvent.class, this, "doQuit");
         addEventLink(WindowClosingEvent.class, this, "doQuit");
         
@@ -145,7 +154,7 @@ public class SystreGUI extends BFrame {
         this.systre.setOutStream(new PrintStream(stream));
     }
     
-    protected void doOpen() {
+    public void doOpen() {
         final boolean success = this.inFileChooser.showDialog(this);
         if (success) {
             final String filename = this.inFileChooser.getSelectedFile().getName();
@@ -178,7 +187,7 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    protected void doSave() {
+    public void doSave() {
         final String name = systre.getLastFileNameWithoutExtension();
         this.outFileChooser.setSelectedFile(new File(name + ".out"));
         final boolean success = this.outFileChooser.showDialog(this);
@@ -188,8 +197,8 @@ public class SystreGUI extends BFrame {
             final File file = new File(dir, filename);
             boolean append = false;
             if (file.exists()) {
-                final int choice = new BStandardDialog("File exists", "File \"" + file
-                        + "\" already exists. Overwrite?", BStandardDialog.WARNING)
+                final int choice = new BStandardDialog("Systre - File exists", "File \"" + file
+                        + "\" already exists. Overwrite?", BStandardDialog.PLAIN)
                         .showOptionDialog(this, new String[] { "Overwrite", "Append",
                                 "Cancel" }, "Cancel");
                 if (choice > 1) {
@@ -208,17 +217,56 @@ public class SystreGUI extends BFrame {
         }
     }
     
+    public void doOptions() {
+		final BDialog dialog = new BDialog(this, "Systre - Options", true);
+		final ColumnContainer column = new ColumnContainer();
+		column.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
+				defaultInsets, null));
+		column.setBackground(textColor);
+		final BCheckBox baryBox = new BCheckBox("Relax Node Positions", this.systre
+				.getRelaxPositions());
+		baryBox.setBackground(null);
+		column.add(baryBox);
+		final BCheckBox builtinBox = new BCheckBox("Use Builtin Archive", this.systre
+				.getUseBuiltinArchive());
+		builtinBox.setBackground(null);
+		column.add(builtinBox);
+		final BButton okButton = makeButton("Ok");
+		column.add(okButton, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
+				defaultInsets, null));
+
+		dialog.setContent(column);
+
+		baryBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
+			public void handleEvent(final Object event) {
+				systre.setRelaxPositions(baryBox.getState());
+			}
+		});
+		builtinBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
+			public void handleEvent(final Object event) {
+				systre.setUseBuiltinArchive(builtinBox.getState());
+			}
+		});
+		okButton.addEventLink(CommandEvent.class, dialog, "dispose");
+		dialog.addEventLink(WindowClosingEvent.class, dialog, "dispose");
+
+		dialog.pack();
+		dialog.setVisible(true);
+	}
+    
     private void disableButtons() {
         this.openButton.setEnabled(false);
         this.saveButton.setEnabled(false);
+        this.optionsButton.setEnabled(false);
     }
     
     private void enableButtons() {
         this.openButton.setEnabled(true);
         this.saveButton.setEnabled(true);
+        this.optionsButton.setEnabled(true);
     }
     
-    protected void doQuit() {
+    public void doQuit() {
         System.exit(0);
     }
     
