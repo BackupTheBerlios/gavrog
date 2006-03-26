@@ -64,7 +64,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.1 2006/03/26 00:58:22 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.2 2006/03/26 03:07:44 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -84,8 +84,8 @@ public class SystreCmdline {
     private final Archive internalArchive = new Archive("1.0");
     
     // --- options
-    private boolean relax = true;
-    private boolean useBuiltin = true;
+    private boolean relaxPositions = true;
+    private boolean useBuiltinArchive = true;
     private BufferedWriter outputArchive = null;
     
     // --- the last file that was opened for processing
@@ -280,7 +280,7 @@ public class SystreCmdline {
         final String invariant = G.invariant().toString();
         int countMatches = 0;
         Archive.Entry found = null;
-        if (this.useBuiltin) {
+        if (this.useBuiltinArchive) {
             found = mainArchive.getByKey(invariant);
         }
         if (found != null) {
@@ -327,7 +327,7 @@ public class SystreCmdline {
             try {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);
-                embedder.setRelaxPositions(relax && pass == 0);
+                embedder.setRelaxPositions(relaxPositions && pass == 0);
                 embedder.go(1000);
             } catch (Exception ex) {
                 out.println("==================================================");
@@ -400,7 +400,7 @@ public class SystreCmdline {
             } catch (Exception ex) {
                 out.println(" Failed!");
                 if (pass == 0) {
-                    if (relax) {
+                    if (relaxPositions) {
                         out.println("   Falling back to barycentric positions.");
                     }
                 } else {
@@ -787,7 +787,7 @@ public class SystreCmdline {
         for (int i = 0; i < args.length; ++i) {
             final String s = args[i];
             if (s.equals("-b")) {
-                this.relax = false;
+                setRelaxPositions(false);
             } else if (s.equals("-a")) {
                 if (i == args.length - 1) {
                     out.println("!!! WARNING (USAGE) - Argument missing for \"-a\".");
@@ -796,7 +796,7 @@ public class SystreCmdline {
                 }
             } else if (s.equalsIgnoreCase("--nobuiltin")
                     || s.equalsIgnoreCase("-nobuiltin")) {
-                this.useBuiltin = false;
+                setUseBuiltinArchive(false);
             } else {
                 files.add(args[i]);
             }
@@ -842,7 +842,23 @@ public class SystreCmdline {
         }
     }
     
-    /**
+    public boolean getUseBuiltinArchive() {
+		return useBuiltinArchive;
+	}
+
+	public void setUseBuiltinArchive(boolean useBuiltinArchive) {
+		this.useBuiltinArchive = useBuiltinArchive;
+	}
+
+	public boolean getRelaxPositions() {
+		return relaxPositions;
+	}
+
+	public void setRelaxPositions(boolean relax) {
+		this.relaxPositions = relax;
+	}
+
+	/**
      * @return the current output stream.
      */
     protected PrintStream getOutStream() {
