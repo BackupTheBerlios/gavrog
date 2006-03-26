@@ -45,9 +45,9 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: GUI.java,v 1.5 2006/03/26 00:38:56 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.1 2006/03/26 01:05:56 odf Exp $
  */
-public class GUI extends BFrame {
+public class SystreGUI extends BFrame {
 	final private static Color textColor = new Color(255, 250, 240);
 	final private static Color buttonColor = new Color(224, 224, 240);
 
@@ -56,7 +56,7 @@ public class GUI extends BFrame {
     private final BFileChooser outFileChooser = new BFileChooser(BFileChooser.SAVE_FILE,
             "Save output");
     
-    private final Demo systre = new Demo();
+    private final SystreCmdline systre = new SystreCmdline();
 
     private BTextArea output;
 	private BScrollBar vscroll;
@@ -66,7 +66,7 @@ public class GUI extends BFrame {
     /**
      * Constructs an instance.
      */
-    public GUI() {
+    public SystreGUI() {
 		super("Systre 1.0 beta");
 		
 		final BorderContainer main = new BorderContainer();
@@ -223,6 +223,6 @@ public class GUI extends BFrame {
     }
     
     public static void main(final String args[]) {
-        new GUI();
+        new SystreGUI();
     }
 }
