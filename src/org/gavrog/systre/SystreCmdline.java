@@ -64,9 +64,9 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: Demo.java,v 1.60 2006/03/24 22:24:28 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.1 2006/03/26 00:58:22 odf Exp $
  */
-public class Demo {
+public class SystreCmdline {
     final static boolean DEBUG = false;
     
     static {
@@ -92,7 +92,7 @@ public class Demo {
     private String lastFileNameWithoutExtension;
     
     
-    public Demo() {
+    public SystreCmdline() {
         // --- read the default archive
         final Package pkg = Archive.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
@@ -857,6 +857,6 @@ public class Demo {
     }
     
     public static void main(final String args[]) {
-        new Demo().run(args);
+        new SystreCmdline().run(args);
     }
 }
