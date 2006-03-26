@@ -42,10 +42,10 @@ import buoy.widget.GridContainer;
 import buoy.widget.LayoutInfo;
 
 /**
- * A simple GUI for Gavrog Systre (in the making).
+ * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: GUI.java,v 1.4 2006/03/24 22:35:06 odf Exp $
+ * @version $Id: GUI.java,v 1.5 2006/03/26 00:38:56 odf Exp $
  */
 public class GUI extends BFrame {
 	final private static Color textColor = new Color(255, 250, 240);
@@ -163,7 +163,11 @@ public class GUI extends BFrame {
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
-                    systre.processDataFile(path);
+                    if (filename.endsWith(".arc")) {
+                        systre.processArchive(path);
+                    } else {
+                    	systre.processDataFile(path);
+                    }
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             enableButtons();
