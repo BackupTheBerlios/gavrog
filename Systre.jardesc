@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jardesc>
+<jar path="Gavrog/Systre.jar"/>
+<options buildIfNeeded="true" compress="true" descriptionLocation="/Gavrog/Systre.jardesc" exportErrors="true" exportWarnings="true" overwrite="false" saveDescription="true" useSourceFolders="false"/>
+<manifest generateManifest="true" mainClassHandleIdentifier="=Gavrog/src&lt;org.gavrog.systre{SystreGUI.java[SystreGUI" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+<sealing sealJar="true">
+<packagesToSeal/>
+<packagesToUnSeal/>
+</sealing>
+</manifest>
+<selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.jane.numbers"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.joss.geometry"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.jane.algorithms"/>
+<file path="/Gavrog/.cvsignore"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.box.simple"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.joss.pgraphs.embed"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.internal"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.widget"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.jane.compounds"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.joss.pgraphs.io"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.systre"/>
+<file path="/Gavrog/.project"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.event"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.box.collections"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.xml"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.xml.delegate"/>
+<file path="/Gavrog/.classpath"/>
+<file path="/Gavrog/Gavrog.jardesc"/>
+<javaElement handleIdentifier="=Gavrog/src&lt;org.gavrog.joss.pgraphs.basic"/>
+</selectedElements>
+</jardesc>
