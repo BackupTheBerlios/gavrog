@@ -64,7 +64,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.2 2006/03/26 03:07:44 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.3 2006/03/27 05:26:38 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -103,6 +103,7 @@ public class SystreCmdline {
     }
     
     /**
+    /**
      * Reads an archive file and stores it internally.
      * 
      * @param filename the name of the archive file.
@@ -116,13 +117,14 @@ public class SystreCmdline {
             try {
                 arc.addAll(new FileReader(filename));
             } catch (FileNotFoundException ex) {
-                out.println("!!! ERROR (FILE) - Could not find file \"" + filename + "\".");
-                return;
-            } catch (Exception ex) {
-                out.println("!!! ERROR (FILE) - Problem reading \"" + filename
-                                   + "\" - ignoring this archive.");
-                return;
-            }
+				out.println("!!! ERROR (FILE) - Could not find file \"" + filename
+						+ "\".");
+				return;
+			} catch (Exception ex) {
+				out.println("!!! ERROR (FILE) - " + ex.getMessage()
+						+ " - ignoring archive \"" + filename + "\".");
+				return;
+			}
             this.name2archive.put(name, arc);
             final int n = arc.size();
             out.println("Read " + n + " entr" + (n == 1 ? "y" : "ies")

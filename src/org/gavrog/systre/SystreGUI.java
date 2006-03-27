@@ -18,12 +18,12 @@ package org.gavrog.systre;
 
 import java.awt.Color;
 import java.awt.Insets;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.Writer;
 
 import javax.swing.SwingUtilities;
 
@@ -50,7 +50,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.2 2006/03/26 03:08:30 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.3 2006/03/27 05:26:38 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final private static Color textColor = new Color(255, 250, 240);
@@ -188,7 +188,7 @@ public class SystreGUI extends BFrame {
     }
     
     public void doSave() {
-        final String name = systre.getLastFileNameWithoutExtension();
+        final String name = this.systre.getLastFileNameWithoutExtension();
         this.outFileChooser.setSelectedFile(new File(name + ".out"));
         final boolean success = this.outFileChooser.showDialog(this);
         if (success) {
@@ -208,8 +208,13 @@ public class SystreGUI extends BFrame {
                 }
             }
             try {
-                final Writer writer = new FileWriter(file, append);
-                writer.write(this.output.getText());
+                final BufferedWriter writer = new BufferedWriter(new FileWriter(file,
+						append));
+                if (filename.endsWith(".arc")) {
+                	this.systre.writeInternalArchive(writer);
+                } else {
+                	writer.write(this.output.getText());
+                }
                 writer.flush();
                 writer.close();
             } catch (IOException ex) {

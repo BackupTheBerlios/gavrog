@@ -32,7 +32,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.8 2006/02/20 23:13:08 odf Exp $
+ * @version $Id: Archive.java,v 1.9 2006/03/27 05:26:38 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -183,7 +183,8 @@ public class Archive {
                     final String checksum = (String) fields.get("checksum");
                     final Entry entry = new Entry(key, version, name);
                     if (!entry.getDigestString().equals(checksum)) {
-                        throw new DataFormatException("checksum does not match");
+                        throw new DataFormatException("checksum mismatch for entry '"
+								+ name + "'.");
                     }
                     return entry;
                 } else {
@@ -238,17 +239,18 @@ public class Archive {
         final String key = entry.getKey();
         final String name = entry.getName();
         if (!version.equals(getKeyVersion())) {
-            throw new IllegalArgumentException("entry has key of version " + version
-                                               + ", but " + getKeyVersion()
-                                               + " is required.");
+            throw new IllegalArgumentException("entry '" + name + "' has key of version "
+					+ version + ", but " + getKeyVersion() + " is required.");
         }
         if (this.byKey.containsKey(key)) {
-            final String clashing = ((Entry) this.byKey.get(key)).getName();
-            throw new IllegalArgumentException("duplicates key for structure " + clashing);
-        }
-        if (this.byName.containsKey(name)) {
-            throw new IllegalArgumentException("we already have a structure " + name);
-        }
+			final String clashing = ((Entry) this.byKey.get(key)).getName();
+			if (!clashing.equals(name)) {
+				throw new IllegalArgumentException("identical keys for entries '"
+						+ clashing + "' and '" + name + "'");
+			}
+		} else if (this.byName.containsKey(name)) {
+			throw new IllegalArgumentException("multiple entries for id '" + name + "'");
+		}
         this.byKey.put(key, entry);
         this.byName.put(name, entry);
     }
