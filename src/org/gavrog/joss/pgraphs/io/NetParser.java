@@ -54,7 +54,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.66 2006/03/19 05:16:29 odf Exp $
+ * @version $Id: NetParser.java,v 1.67 2006/03/28 20:23:17 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -194,7 +194,7 @@ public class NetParser extends GenericParser {
         } else if (type.equals("net")) {
             return parseSymmetricNet(entries);
         } else {
-            throw new UnsupportedOperationException("type " + type + " not supported");
+            throw new DataFormatException("type " + type + " not supported");
         }
     }
     
@@ -797,10 +797,10 @@ public class NetParser extends GenericParser {
                 final Pair pAdr = lookup(p, nodeToPosition, precision);
                 final Pair qAdr = lookup(q, nodeToPosition, precision);
                 if (pAdr == null) {
-                    throw new RuntimeException("no point at " + p.times(from));
+                    throw new DataFormatException("no point at " + p.times(from));
                 }
                 if (qAdr == null) {
-                    throw new RuntimeException("no point at " + q.times(from));
+                    throw new DataFormatException("no point at " + q.times(from));
                 }
                 final INode v = (INode) pAdr.getFirst();
                 final INode w = (INode) qAdr.getFirst();
@@ -974,7 +974,7 @@ public class NetParser extends GenericParser {
             final INode v = (INode) nodes.next();
             final List inc = G.allIncidences(v);
             if (inc.size() != 2) {
-                throw new RuntimeException("Edge center has connectivity != 2");
+                throw new DataFormatException("Edge center has connectivity != 2");
             }
             final IEdge e1 = (IEdge) inc.get(0);
             final Vector s1 = G.getShift(e1);
@@ -1056,7 +1056,7 @@ public class NetParser extends GenericParser {
                             { gammaG, b.raisedTo(2), alphaG },
                             { betaG, alphaG, c.raisedTo(2) }, });
         } else {
-            throw new UnsupportedOperationException("supporting only dimensions 2 and 3");
+            throw new DataFormatException("supporting only dimensions 2 and 3");
         }
     }
     
