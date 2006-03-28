@@ -27,6 +27,8 @@ import java.io.PrintStream;
 
 import javax.swing.SwingUtilities;
 
+import org.gavrog.box.simple.Misc;
+
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
 import buoy.event.ValueChangedEvent;
@@ -50,7 +52,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.3 2006/03/27 05:26:38 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.4 2006/03/28 22:43:46 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final private static Color textColor = new Color(255, 250, 240);
@@ -141,7 +143,6 @@ public class SystreGUI extends BFrame {
             public void write(int b) throws IOException {
                 output.append(new String(new char[] { (char) b }));
                 if ((char) b == '\n') {
-                    // --- finally found out what invokeLater is for :)
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             vscroll.setValue(vscroll.getMaximum());
@@ -164,24 +165,21 @@ public class SystreGUI extends BFrame {
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        SwingUtilities.invokeAndWait(new Runnable() {
-                            public void run() {
-                                disableButtons();
-                            }
-                        });
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                    if (filename.endsWith(".arc")) {
-                        systre.processArchive(path);
-                    } else {
-                    	systre.processDataFile(path);
-                    }
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            enableButtons();
+                        disableButtons();
+                        if (filename.endsWith(".arc")) {
+                            systre.processArchive(path);
+                        } else {
+                            systre.processDataFile(path);
                         }
-                    });
+                        enableButtons();
+                    } catch (Exception ex) {
+                        final PrintStream out = systre.getOutStream();
+                        out.println(); 
+                        out.println("==================================================");
+                        out.println("!!! ERROR (INTERNAL) - Unexpected exception:");
+                        out.print(Misc.stackTrace(ex));
+                        out.println("==================================================");
+                    }
                 }
             }).start();
         }
@@ -260,15 +258,27 @@ public class SystreGUI extends BFrame {
 	}
     
     private void disableButtons() {
-        this.openButton.setEnabled(false);
-        this.saveButton.setEnabled(false);
-        this.optionsButton.setEnabled(false);
+        try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+                public void run() {
+                    openButton.setEnabled(false);
+                    saveButton.setEnabled(false);
+                    optionsButton.setEnabled(false);
+                }
+            });
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
     private void enableButtons() {
-        this.openButton.setEnabled(true);
-        this.saveButton.setEnabled(true);
-        this.optionsButton.setEnabled(true);
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                openButton.setEnabled(true);
+                saveButton.setEnabled(true);
+                optionsButton.setEnabled(true);
+            }
+        });
     }
     
     public void doQuit() {
