@@ -40,6 +40,7 @@ import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -64,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.3 2006/03/27 05:26:38 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.4 2006/03/28 20:23:56 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -702,8 +703,14 @@ public class SystreCmdline {
             // --- read the next net
             try {
                 G = parser.parseNet();
-            } catch (Exception ex) {
+            } catch (DataFormatException ex) {
                 problem = ex;
+            } catch (Exception ex) {
+                out.println("==================================================");
+                out.println("!!! ERROR (INTERNAL) - " + ex);
+                out.println(Misc.stackTrace(ex));
+                out.println("==================================================");
+                continue;
             }
             if (problem == null && G == null) {
                 break;
@@ -718,7 +725,14 @@ public class SystreCmdline {
             }
             
             // --- process the graph
-            final String name = parser.getName();
+            final String name = null;
+            try {
+                parser.getName();
+            } catch (Exception ex) {
+                if (problem == null) {
+                    problem = ex;
+                }
+            }
             final String archiveName;
             final String displayName;
             if (name == null) {
