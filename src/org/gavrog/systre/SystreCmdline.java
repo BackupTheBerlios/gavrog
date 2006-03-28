@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.4 2006/03/28 20:23:56 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.5 2006/03/28 22:42:08 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -707,7 +707,7 @@ public class SystreCmdline {
                 problem = ex;
             } catch (Exception ex) {
                 out.println("==================================================");
-                out.println("!!! ERROR (INTERNAL) - " + ex);
+                out.println("!!! ERROR (INTERNAL) - Unexpected exception:");
                 out.println(Misc.stackTrace(ex));
                 out.println("==================================================");
                 continue;
@@ -752,7 +752,7 @@ public class SystreCmdline {
                     processGraph(G, archiveName, parser.getSpaceGroup());
                 } catch (Exception ex) {
                     out.println("==================================================");
-                    out.println("!!! ERROR (INTERNAL) - " + ex);
+                    out.println("!!! ERROR (INTERNAL) - Unexpected exception:");
                     out.println(Misc.stackTrace(ex));
                     out.println("==================================================");
                 }
