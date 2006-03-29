@@ -20,6 +20,8 @@ import java.awt.Color;
 import java.awt.Insets;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,7 +29,10 @@ import java.io.PrintStream;
 
 import javax.swing.SwingUtilities;
 
+import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.io.NetParser;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
@@ -52,7 +57,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.5 2006/03/29 00:29:54 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.6 2006/03/29 05:38:22 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -65,6 +70,7 @@ public class SystreGUI extends BFrame {
             "Save output");
     
     private final SystreCmdline systre = new SystreCmdline();
+	private String strippedFileName;
 
     private BTextArea output;
 	private BScrollBar vscroll;
@@ -170,7 +176,7 @@ public class SystreGUI extends BFrame {
                         if (filename.endsWith(".arc")) {
                             systre.processArchive(path);
                         } else {
-                            systre.processDataFile(path);
+                            processDataFile(path);
                         }
                     } catch (Exception ex) {
                         reportException(ex, "INTERNAL", "Unexpected exception", true);
@@ -187,7 +193,7 @@ public class SystreGUI extends BFrame {
     }
     
     public void doSave() {
-        final String name = this.systre.getLastFileNameWithoutExtension();
+        final String name = this.strippedFileName;
         this.outFileChooser.setSelectedFile(new File(name + ".out"));
         final boolean success = this.outFileChooser.showDialog(this);
         if (success) {
@@ -223,7 +229,7 @@ public class SystreGUI extends BFrame {
                         writer.flush();
                         writer.close();
                     } catch (IOException ex) {
-                        reportException(ex, "FILE", "Could not write " + file, false);
+                        reportException(ex, "FILE", null, false);
                     } catch (Exception ex) {
                         reportException(ex, "INTERNAL",
                                 "Unexpected exception while writing " + file, true);
@@ -276,19 +282,110 @@ public class SystreGUI extends BFrame {
 		dialog.setVisible(true);
 	}
     
+    /**
+	 * Analyzes all nets specified in a file and prints the results.
+	 * 
+	 * @param filePath the name of the input file.
+	 */
+	public void processDataFile(final String filePath) {
+		final PrintStream out = this.systre.getOutStream();
+		
+	    // --- set up a parser for reading input from the given file
+	    NetParser parser = null;
+	    int count = 0;
+	    try {
+	        parser = new NetParser(new FileReader(filePath));
+	    } catch (FileNotFoundException ex) {
+	    	reportException(ex, "FILE", null, false);
+	        return;
+	    }
+	    strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
+		out.println("Data file \"" + filePath + "\".");
+	    
+	    // --- loop through the structures specied in the input file
+	    while (true) {
+	        PeriodicGraph G = null;
+	        Exception problem = null;
+	        
+	        // --- read the next net
+	        try {
+	            G = parser.parseNet();
+	        } catch (DataFormatException ex) {
+	            problem = ex;
+	        } catch (Exception ex) {
+	        	reportException(ex, "INTERNAL", "Unexpected exception", true);
+	            continue;
+	        }
+	        if (G == null) {
+	        	if (problem == null) {
+	        		break;
+	        	} else {
+	        		reportException(problem, "INPUT", null, false);
+	        		continue;
+	        	}
+	        }
+	        ++count;
+	        
+	        // --- some blank lines as separators
+	        out.println();
+	        if (count > 1) {
+	            out.println();
+	            out.println();
+	        }
+	        
+	        // --- process the graph
+	        final String name = null;
+	        try {
+	            parser.getName();
+	        } catch (Exception ex) {
+	            if (problem == null) {
+	                problem = ex;
+	            }
+	        }
+	        final String archiveName;
+	        final String displayName;
+	        if (name == null) {
+	            archiveName = strippedFileName + "-#" + count;
+	            displayName = "";
+	        } else {
+	            archiveName = name;
+	            displayName = " - \"" + name + "\"";
+	        }
+	        
+	        out.println("Structure #" + count + displayName + ".");
+	        out.println();
+	        if (problem != null) {
+        		reportException(problem, "INPUT", null, false);
+	        } else {
+	            try {
+	                systre.processGraph(G, archiveName, parser.getSpaceGroup());
+	            } catch (Exception ex) {
+		        	reportException(ex, "INTERNAL", "Unexpected exception", true);
+	            }
+	        }
+	        out.println();
+			out.println("Finished structure #" + count + displayName + ".");
+	    }
+	
+	    out.println();
+	    out.println("Finished data file \"" + filePath + "\".");
+	}
+
     private void reportException(final Throwable ex, final String type, final String msg,
             final boolean details) {
         final PrintStream out = systre.getOutStream();
-        out.println(); 
-        out.println("==================================================");
-        out.print("!!! ERROR (" + type + ") - " + msg + ":");
+        out.println();
+        if (details) {
+        	out.println("==================================================");
+        }
+        out.print("!!! ERROR (" + type + ") - " + (msg == null ? "" : msg + ":"));
         if (details) {
             out.println();
             out.print(Misc.stackTrace(ex));
+            out.println("==================================================");
         } else {
             out.println(ex.getMessage());
         }
-        out.println("==================================================");
     }
     
     private void disableButtons() {
@@ -307,7 +404,7 @@ public class SystreGUI extends BFrame {
         System.exit(0);
     }
     
-    public static void main(final String args[]) {
+	public static void main(final String args[]) {
         new SystreGUI();
     }
 }

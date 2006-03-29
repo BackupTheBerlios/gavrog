@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.6 2006/03/29 04:17:46 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.7 2006/03/29 05:38:22 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -768,13 +768,6 @@ public class SystreCmdline {
 
         out.println();
         out.println("Finished data file \"" + filePath + "\".");
-    }
-    
-    /**
-     * @return the base name of the file last opened for processing.
-     */
-    public String getLastFileNameWithoutExtension() {
-        return this.lastFileNameWithoutExtension;
     }
     
     /**
