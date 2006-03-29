@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.5 2006/03/28 22:42:08 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.6 2006/03/29 04:17:46 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -712,8 +712,13 @@ public class SystreCmdline {
                 out.println("==================================================");
                 continue;
             }
-            if (problem == null && G == null) {
-                break;
+            if (G == null) {
+            	if (problem == null) {
+            		break;
+            	} else {
+                    out.println("!!! ERROR (INPUT) - " + problem.getMessage());
+            		continue;
+            	}
             }
             ++count;
             
@@ -746,7 +751,7 @@ public class SystreCmdline {
             out.println("Structure #" + count + displayName + ".");
             out.println();
             if (problem != null) {
-                out.println("!!! ERROR (INPUT) - " + problem);
+                out.println("!!! ERROR (INPUT) - " + problem.getMessage());
             } else {
                 try {
                     processGraph(G, archiveName, parser.getSpaceGroup());
@@ -758,7 +763,7 @@ public class SystreCmdline {
                 }
             }
             out.println();
-            out.println("Finished structure #" + count + displayName + ".");
+			out.println("Finished structure #" + count + displayName + ".");
         }
 
         out.println();
