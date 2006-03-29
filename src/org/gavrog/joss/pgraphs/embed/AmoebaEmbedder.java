@@ -41,7 +41,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.12 2006/03/18 06:23:13 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.13 2006/03/29 22:17:27 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -181,6 +181,11 @@ public class AmoebaEmbedder extends EmbedderAdapter {
 
     public AmoebaEmbedder(final PeriodicGraph G) {
         this(G, G.barycentricPlacement(), defaultGramMatrix(G));
+    }
+    
+    public int degreesOfFreedom() {
+        // TODO this probably overcounts
+        return this.dimParSpace;
     }
     
    private Matrix normalizedPositionSpace(final INode v) {

@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.7 2006/03/29 05:38:22 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.8 2006/03/29 22:17:28 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -591,6 +591,12 @@ public class SystreCmdline {
         	// --- write the shortest non-bonded distance
         	out.println("   Shortest non-bonded distance = "
 					+ fmtReal5.format(smallestNonBondedDistance(G, embedder)));
+            
+            // --- write the degrees of freedom as found by the embedder
+            if (embedder instanceof AmoebaEmbedder) {
+                out.println("   Degrees of freedom: "
+                        + ((AmoebaEmbedder) embedder).degreesOfFreedom());
+            }
 		}
         out.flush();
     }
