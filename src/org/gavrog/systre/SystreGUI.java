@@ -52,10 +52,10 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.4 2006/03/28 22:43:46 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.5 2006/03/29 00:29:54 odf Exp $
  */
 public class SystreGUI extends BFrame {
-	final private static Color textColor = new Color(255, 250, 240);
+    final private static Color textColor = new Color(255, 250, 240);
 	final private static Color buttonColor = new Color(224, 224, 240);
 	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
@@ -162,23 +162,24 @@ public class SystreGUI extends BFrame {
             final File dir = this.inFileChooser.getDirectory();
             final String path = new File(dir, filename).getAbsolutePath();
             this.output.setText("");
+            disableButtons();
+            
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        disableButtons();
                         if (filename.endsWith(".arc")) {
                             systre.processArchive(path);
                         } else {
                             systre.processDataFile(path);
                         }
-                        enableButtons();
                     } catch (Exception ex) {
-                        final PrintStream out = systre.getOutStream();
-                        out.println(); 
-                        out.println("==================================================");
-                        out.println("!!! ERROR (INTERNAL) - Unexpected exception:");
-                        out.print(Misc.stackTrace(ex));
-                        out.println("==================================================");
+                        reportException(ex, "INTERNAL", "Unexpected exception", true);
+                    } finally {
+                        SwingUtilities.invokeLater(new Runnable() {
+                            public void run() {
+                                enableButtons();
+                            }
+                        });
                     }
                 }
             }).start();
@@ -193,10 +194,10 @@ public class SystreGUI extends BFrame {
             final String filename = this.outFileChooser.getSelectedFile().getName();
             final File dir = this.outFileChooser.getDirectory();
             final File file = new File(dir, filename);
-            boolean append = false;
+            final boolean append;
             if (file.exists()) {
-                final int choice = new BStandardDialog("Systre - File exists", "File \"" + file
-                        + "\" already exists. Overwrite?", BStandardDialog.PLAIN)
+                final int choice = new BStandardDialog("Systre - File exists", "File \""
+                        + file + "\" exists. Overwrite?", BStandardDialog.QUESTION)
                         .showOptionDialog(this, new String[] { "Overwrite", "Append",
                                 "Cancel" }, "Cancel");
                 if (choice > 1) {
@@ -204,19 +205,37 @@ public class SystreGUI extends BFrame {
                 } else {
                     append = choice == 1;
                 }
+            } else {
+                append = false;
             }
-            try {
-                final BufferedWriter writer = new BufferedWriter(new FileWriter(file,
-						append));
-                if (filename.endsWith(".arc")) {
-                	this.systre.writeInternalArchive(writer);
-                } else {
-                	writer.write(this.output.getText());
+            disableButtons();
+            
+            new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        final BufferedWriter writer = new BufferedWriter(new FileWriter(
+                                file, append));
+                        if (filename.endsWith(".arc")) {
+                            systre.writeInternalArchive(writer);
+                        } else {
+                            writer.write(output.getText());
+                        }
+                        writer.flush();
+                        writer.close();
+                    } catch (IOException ex) {
+                        reportException(ex, "FILE", "Could not write " + file, false);
+                    } catch (Exception ex) {
+                        reportException(ex, "INTERNAL",
+                                "Unexpected exception while writing " + file, true);
+                    } finally {
+                        SwingUtilities.invokeLater(new Runnable() {
+                            public void run() {
+                                enableButtons();
+                            }
+                        });
+                    }
                 }
-                writer.flush();
-                writer.close();
-            } catch (IOException ex) {
-            }
+            }).start();
         }
     }
     
@@ -257,28 +276,31 @@ public class SystreGUI extends BFrame {
 		dialog.setVisible(true);
 	}
     
-    private void disableButtons() {
-        try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                public void run() {
-                    openButton.setEnabled(false);
-                    saveButton.setEnabled(false);
-                    optionsButton.setEnabled(false);
-                }
-            });
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+    private void reportException(final Throwable ex, final String type, final String msg,
+            final boolean details) {
+        final PrintStream out = systre.getOutStream();
+        out.println(); 
+        out.println("==================================================");
+        out.print("!!! ERROR (" + type + ") - " + msg + ":");
+        if (details) {
+            out.println();
+            out.print(Misc.stackTrace(ex));
+        } else {
+            out.println(ex.getMessage());
         }
+        out.println("==================================================");
     }
     
+    private void disableButtons() {
+        openButton.setEnabled(false);
+        saveButton.setEnabled(false);
+        optionsButton.setEnabled(false);
+    }
+
     private void enableButtons() {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                openButton.setEnabled(true);
-                saveButton.setEnabled(true);
-                optionsButton.setEnabled(true);
-            }
-        });
+        openButton.setEnabled(true);
+        saveButton.setEnabled(true);
+        optionsButton.setEnabled(true);
     }
     
     public void doQuit() {
