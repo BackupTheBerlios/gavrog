@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.4 2006/01/24 22:46:43 odf Exp $
+ * @version $Id: GenericParser.java,v 1.5 2006/03/29 03:53:27 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
@@ -99,7 +99,7 @@ public class GenericParser {
                 int j = i;
                 if (line.charAt(i) == '"') {
                     ++j;
-                    while (j < line.length() && line.charAt(j) != '"') {
+                    while (j < line.length() - 1 && line.charAt(j) != '"') {
                         ++j;
                     }
                     if (line.charAt(j) == '"') {
@@ -124,7 +124,9 @@ public class GenericParser {
                         ++j;
                     }
                 }
-                fields.add(line.substring(i, j));
+                if (j > i) {
+                	fields.add(line.substring(i, j));
+                }
                 i = j;
                 if (i < line.length() && line.charAt(i) == '#') {
                     break;
