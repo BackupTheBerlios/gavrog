@@ -20,6 +20,8 @@ Still open:
 
 - Plot the quotient graph.
 
+- Compute vertex symbols.
+
 
 =====================================================
 
