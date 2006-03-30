@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.8 2006/03/29 22:17:28 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.9 2006/03/30 05:01:52 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -594,7 +594,8 @@ public class SystreCmdline {
             
             // --- write the degrees of freedom as found by the embedder
             if (embedder instanceof AmoebaEmbedder) {
-                out.println("   Degrees of freedom: "
+            	out.println();
+                out.println("   Degrees of freedom (fixed scale): "
                         + ((AmoebaEmbedder) embedder).degreesOfFreedom());
             }
 		}

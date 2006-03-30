@@ -41,7 +41,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.14 2006/03/30 00:50:31 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.15 2006/03/30 05:01:51 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -187,9 +187,17 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         final int d = group.getDimension();
         final Set ops = group.primitiveOperators();
         final Matrix M = new Matrix(d, d * ops.size());
-        // TODO finish this
+        final Matrix I = Matrix.one(d);
+        int i = 0;
+        for (final Iterator iter = ops.iterator(); iter.hasNext();) {
+        	final Matrix op = ((Operator) iter.next()).getCoordinates();
+        	final Matrix A = (Matrix) op.getSubMatrix(0, 0, d, d).minus(I);
+        	M.setSubMatrix(0, i, A);
+        	i += d;
+        }
+        final Matrix S = LinearAlgebra.rowNullSpace(M, false);
         
-        return 0;
+        return S.numberOfRows();
     }
 
     public AmoebaEmbedder(final PeriodicGraph G) {
