@@ -1,8 +1,8 @@
+Still open:
+
 - For monoclinic structures, make beta >= 90 (and otherwise smallest possible).
 
 - Phrase "Structure is new" differently.
-
-- Give TD10 (weighted mean of cumulative cs numbers starting from 1).
 
 - Have all edges starting from one of the vertices listed.
 
@@ -19,3 +19,10 @@
 - If graph has collisions, try to refine anyway.
 
 - Plot the quotient graph.
+
+
+=====================================================
+
+Recently done:
+
+- Give TD10 (weighted mean of cumulative cs numbers starting from 1).

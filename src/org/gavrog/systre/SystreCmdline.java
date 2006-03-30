@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.9 2006/03/30 05:01:52 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.10 2006/03/30 05:54:04 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -210,17 +210,24 @@ public class SystreCmdline {
         
         // --- determine the coordination sequences
         out.println("   Coordination sequences:");
+        int cum = 0;
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
             out.print("      ");
             final Iterator cs = G.coordinationSequence(v);
             cs.next();
+            int sum = 1;
             for (int i = 0; i < 10; ++i) {
-                out.print(" " + ((Integer) cs.next()).intValue());
+            	final int x = ((Integer) cs.next()).intValue();
+                out.print(" " + x);
+                sum += x;
             }
             out.println();
+            cum += orbit.size() * sum;
         }
+        out.println();
+        out.println("   TD10 = " + fmtReal4.format(((double) cum) / G.numberOfNodes()));
         out.println();
         out.flush();
 
