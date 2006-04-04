@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.10 2006/03/30 05:54:04 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.11 2006/04/04 22:19:49 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -91,6 +91,11 @@ public class SystreCmdline {
     
     // --- the last file that was opened for processing
     private String lastFileNameWithoutExtension;
+    
+    // --- the last graph processed in '.cgd' format
+	private String lastCgdString;
+    // --- the last graph processed with minimal repeat unit
+    private PeriodicGraph lastGraphMinimal;
     
     
     public SystreCmdline() {
@@ -193,6 +198,8 @@ public class SystreCmdline {
         out.println();
         out.flush();
 
+        this.lastGraphMinimal = G;
+        
         // --- determine the ideal symmetries
         final List ops = G.symmetryOperators();
         if (DEBUG) {
@@ -315,7 +322,7 @@ public class SystreCmdline {
             out.println("       Name: " + found.getName());
         }
         if (countMatches == 0) {
-            out.println("   Structure is new.");
+            out.println("   Structure is new for this run.");
             final Archive.Entry entry = this.internalArchive.add(G,
                     name == null ? "nameless" : name);
             if (this.outputArchive != null) {
@@ -386,17 +393,15 @@ public class SystreCmdline {
             // --- write a Systre readable net description to a string buffer
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
-            writeEmbedding(cgd, true, G, finder, embedder);
+            writeEmbedding(cgd, true, G, name, finder, embedder);
 
-            // --- check if it can be read back in and produces the correct
-            // graph
-            final String cgdString = cgdStringWriter.toString();
-            boolean success = false;
+            lastCgdString = cgdStringWriter.toString();
+			boolean success = false;
             try {
                 out.println("   Consistency test:");
                 out.print("       reading...");
                 out.flush();
-                final PeriodicGraph test = NetParser.stringToNet(cgdString);
+                final PeriodicGraph test = NetParser.stringToNet(lastCgdString);
                 out.println(" OK!");
                 out.print("       comparing...");
                 out.flush();
@@ -424,15 +429,16 @@ public class SystreCmdline {
             }
 
             // --- now write the actual output
+            writeEmbedding(new PrintWriter(out), false, G, name, finder, embedder);
             if (success) {
-                writeEmbedding(new PrintWriter(out), false, G, finder, embedder);
                 break;
             }
         }
     }
         
     private void writeEmbedding(final PrintWriter out, final boolean cgdFormat,
-            final PeriodicGraph G, final SpaceGroupFinder finder, final IEmbedder embedder) {
+			final PeriodicGraph G, String name, final SpaceGroupFinder finder,
+			final IEmbedder embedder) {
         
         // --- extract some data from the arguments
         final int d = G.getDimension();
@@ -445,6 +451,7 @@ public class SystreCmdline {
         // --- print a header if necessary
         if (cgdFormat) {
             out.println("CRYSTAL");
+            out.println("  NAME " + name);
             out.println("  GROUP " + groupName);
         }
         
@@ -483,7 +490,7 @@ public class SystreCmdline {
                         + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
         }
         
-        if (DEBUG) {
+        if (DEBUG && !cgdFormat) {
             for (int i = 0; i < d; ++i) {
                 final Vector v = Vector.unit(d, i);
                 out.println("\t\t@@@ " + v + " -> " + v.times(toStd));
@@ -495,10 +502,12 @@ public class SystreCmdline {
         if (!cgdFormat) {
             out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         }
+        final Set reps = new HashSet();
         final Map pos = embedder.getPositions();
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-            final Set orbit = (Set) orbits.next();
+        	final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
+            reps.add(v);
             final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
             if (cgdFormat) {
                 out.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
@@ -517,7 +526,16 @@ public class SystreCmdline {
         }
         for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
-            final IEdge e = (IEdge) orbit.iterator().next();
+            IEdge e = null;
+            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
+            	e = (IEdge) iter.next();
+            	if (reps.contains(e.source())) {
+            		break;
+            	} else if (reps.contains(e.target())) {
+            		e = e.reverse();
+            		break;
+            	}
+            }
             final INode v = e.source();
             final INode w = e.target();
             final Point p = ((Point) ((Point) pos.get(v)).times(toStd));
@@ -602,7 +620,7 @@ public class SystreCmdline {
             // --- write the degrees of freedom as found by the embedder
             if (embedder instanceof AmoebaEmbedder) {
             	out.println();
-                out.println("   Degrees of freedom (fixed scale): "
+                out.println("   Degrees of freedom: "
                         + ((AmoebaEmbedder) embedder).degreesOfFreedom());
             }
 		}
@@ -744,9 +762,9 @@ public class SystreCmdline {
             }
             
             // --- process the graph
-            final String name = null;
+            String name = null;
             try {
-                parser.getName();
+                name = parser.getName();
             } catch (Exception ex) {
                 if (problem == null) {
                     problem = ex;
@@ -900,6 +918,14 @@ public class SystreCmdline {
         this.out = out;
     }
     
+	public String getLastCgdString() {
+		return lastCgdString;
+	}
+	
+    public PeriodicGraph getLastGraphMinimal() {
+        return this.lastGraphMinimal;
+    }
+
     public static void main(final String args[]) {
         new SystreCmdline().run(args);
     }
