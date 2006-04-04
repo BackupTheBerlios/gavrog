@@ -41,7 +41,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.15 2006/03/30 05:01:51 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.16 2006/04/04 22:11:38 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -176,7 +176,7 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         this.p = new double[this.dimParSpace];
         
         // --- compute the degrees of freedom
-        this.degreesOfFreedom = this.dimParSpace - 1 - translationalFreedom(group);
+        this.degreesOfFreedom = this.dimParSpace - translationalFreedom(group);
         
         // --- set initial positions and cell parameters
         setPositions(positions);
