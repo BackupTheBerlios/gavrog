@@ -54,7 +54,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.67 2006/03/28 20:23:17 odf Exp $
+ * @version $Id: NetParser.java,v 1.68 2006/04/04 22:15:18 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -815,6 +815,8 @@ public class NetParser extends GenericParser {
         
         if (DEBUG) {
             System.err.println("Graph after adding explicit edges: " + G);
+            System.err.println("  Graph is " + (G.isConnected() ? "" : "not ") +
+            		"connected.");
         }
         
         // --- construct a Dirichlet domain for the translation group
