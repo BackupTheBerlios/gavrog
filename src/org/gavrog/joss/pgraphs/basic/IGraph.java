@@ -22,7 +22,7 @@ import java.util.Iterator;
  * Common interface for graph classes (not necessarily simple).
  * 
  * @author Olaf Delgado
- * @version $Id: IGraph.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: IGraph.java,v 1.2 2006/04/04 22:59:26 odf Exp $
  */
 public interface IGraph {
     /**
@@ -50,25 +50,18 @@ public interface IGraph {
     public int numberOfEdges();
     
     /**
-     * Retrieves all the nodes of this graph.
+     * Retrieves all the nodes of this graph in the order they were added.
      * 
      * @return an iterator over the node set.
      */
     public Iterator nodes();
 
     /**
-     * Retrieves all the edges of this graph.
+     * Retrieves all the edges of this graph in the order they were added.
      * 
      * @return an iterator over the edge set.
      */
     public Iterator edges();
-
-    /**
-     * Retrieves all the elements of this graph.
-     * 
-     * @return an iterator over the element set.
-     */
-    public Iterator elements();
 
     /**
      * Retrieves an element of this graph with the given identifyer.

@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 /**
  * Tests class UndirectedGraph.
  * @author Olaf Delgado
- * @version $Id: TestUndirectedGraph.java,v 1.2 2005/07/18 23:33:29 odf Exp $
+ * @version $Id: TestUndirectedGraph.java,v 1.3 2006/04/04 22:59:27 odf Exp $
  */
 public class TestUndirectedGraph extends TestCase {
     private UndirectedGraph G;
@@ -83,20 +83,6 @@ public class TestUndirectedGraph extends TestCase {
         assertTrue(edges.contains(e4));
     }
 
-    public void testElements() {
-        final List elements = Iterators.asList(G.elements());
-        assertEquals(9, elements.size());
-        assertTrue(elements.contains(v1));
-        assertTrue(elements.contains(v2));
-        assertTrue(elements.contains(v3));
-        assertTrue(elements.contains(v4));
-        assertTrue(elements.contains(v5));
-        assertTrue(elements.contains(e1));
-        assertTrue(elements.contains(e2));
-        assertTrue(elements.contains(e3));
-        assertTrue(elements.contains(e4));
-    }
-    
     public void testGetElement() {
         IGraphElement x;
         x = G.getElement(v1.id());

@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.48 2006/04/04 22:09:06 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.49 2006/04/04 22:59:26 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1609,8 +1609,6 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         return P.classes();
     }
-    
-    // TODO compute more orbits and stabilizers
     
     /**
      * Computes a invariant for this periodic graph. An invariant is an object,

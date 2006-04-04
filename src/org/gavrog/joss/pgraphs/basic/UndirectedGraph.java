@@ -26,11 +26,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.FilteredIterator;
-import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 
 
@@ -43,7 +41,7 @@ import org.gavrog.box.collections.Pair;
  * reverse.
  * 
  * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.4 2005/10/31 22:23:56 odf Exp $
+ * @version $Id: UndirectedGraph.java,v 1.5 2006/04/04 22:59:26 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;
@@ -394,25 +392,6 @@ public class UndirectedGraph implements IGraph {
         };
     }
 
-    /* (non-Javadoc)
-     * @see javaPGraphs.IGraph#elements()
-     */
-    public Iterator elements() {
-        final Iterator nodes = nodes();
-        final Iterator edges = edges();
-        return new IteratorAdapter() {
-            protected Object findNext() throws NoSuchElementException {
-                if (nodes.hasNext()) {
-                    return nodes.next();
-                } else if (edges.hasNext()) {
-                    return edges.next();
-                } else {
-                    throw new NoSuchElementException("at end");
-                }
-            }
-        };
-    }
-    
     /*
      * (non-Javadoc)
      * 
