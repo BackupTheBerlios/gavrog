@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.47 2006/03/23 22:04:13 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.48 2006/04/04 22:09:06 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -686,7 +686,10 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- check if the reachable translations found generate all translations
-        if (!Vector.toMatrix(shifts).determinant().norm().isOne()) {
+        Matrix M = Vector.toMatrix(shifts).mutableClone();
+        Matrix.triangulate(M, null, true, true);
+        final int dim = getDimension();
+        if (M.getSubMatrix(0, 0, dim, dim).isOne() == false) {
             cache.put(IS_CONNECTED, new Boolean(false));
             return false;
         }
@@ -1365,7 +1368,8 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-     * Checks if all entries of the given matrix are whole numbers.
+     * Checks if all entries of the given matrix are whole numbers and the determinant is
+     * one.
      * 
      * @param M a matrix
      * @return true if M has only integer entries
