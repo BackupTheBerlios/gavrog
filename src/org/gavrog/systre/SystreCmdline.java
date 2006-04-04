@@ -65,7 +65,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.11 2006/04/04 22:19:49 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.12 2006/04/04 22:21:11 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -429,8 +429,8 @@ public class SystreCmdline {
             }
 
             // --- now write the actual output
-            writeEmbedding(new PrintWriter(out), false, G, name, finder, embedder);
             if (success) {
+                writeEmbedding(new PrintWriter(out), false, G, name, finder, embedder);
                 break;
             }
         }
