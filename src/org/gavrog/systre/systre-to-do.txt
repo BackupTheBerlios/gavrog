@@ -1,16 +1,20 @@
 Still open:
 
-- For monoclinic structures, make beta >= 90 (and otherwise smallest possible).
-
-- Phrase "Structure is new" differently.
-
-- Have all edges starting from one of the vertices listed.
-
-- Give coordinates of edge centers.
-
 - Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
 
+- For monoclinic structures, make beta >= 90 (and otherwise smallest possible).
+
+- Give coordinates of edge centers (optional).
+
 - Add "Next" and "Cancel" buttons for multi-structure files.
+
+- Support more output options (e.g. CrystalMaker).
+
+- Make available I/O formats more transparent.
+
+- Support "Description" and "Reference" entries in .cgd and .arc files.
+
+
 
 - Print the number of independent edge lengths (what does that mean?).
 
@@ -26,5 +30,9 @@ Still open:
 =====================================================
 
 Recently done:
+
+- Have all edges starting from one of the vertices listed.
+
+- Phrase "Structure is new" differently.
 
 - Give TD10 (weighted mean of cumulative cs numbers starting from 1).
