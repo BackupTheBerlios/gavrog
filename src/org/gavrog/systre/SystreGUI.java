@@ -33,6 +33,7 @@ import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
+import org.gavrog.joss.pgraphs.io.Output;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
@@ -57,7 +58,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.6 2006/03/29 05:38:22 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.7 2006/04/04 22:16:39 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -77,13 +78,14 @@ public class SystreGUI extends BFrame {
     private BButton openButton;
     private BButton saveButton;
     private BButton optionsButton;
+    private String lastGraphName;
 
     /**
      * Constructs an instance.
      */
     public SystreGUI() {
 		super("Systre 1.0 beta");
-		
+        
 		final BorderContainer main = new BorderContainer();
 		main.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH, null,
                 null));
@@ -94,7 +96,7 @@ public class SystreGUI extends BFrame {
 				defaultInsets, null));
 		top.setBackground(null);
 		final BLabel label = new BLabel("<html><h1>Gavrog Systre</h1><br>"
-				+ "Version 1.0 beta 0<br><br>"
+				+ "Version 1.0 beta 1 (2006-04-04)<br><br>"
 				+ "by Olaf Delgado-Friedrichs 2001-2006</html>");
 		top.add(label, BorderContainer.NORTH);
         
@@ -223,6 +225,11 @@ public class SystreGUI extends BFrame {
                                 file, append));
                         if (filename.endsWith(".arc")) {
                             systre.writeInternalArchive(writer);
+                        } else if (filename.endsWith(".cgd")) {
+                        	writer.write(systre.getLastCgdString());
+                        } else if (filename.endsWith(".pgr")) {
+                            Output.writePGR(writer, systre.getLastGraphMinimal()
+                                    .canonical(), lastGraphName);
                         } else {
                             writer.write(output.getText());
                         }
@@ -333,23 +340,22 @@ public class SystreGUI extends BFrame {
 	            out.println();
 	        }
 	        
-	        // --- process the graph
-	        final String name = null;
-	        try {
-	            parser.getName();
-	        } catch (Exception ex) {
-	            if (problem == null) {
-	                problem = ex;
-	            }
-	        }
+            lastGraphName = null;
+            try {
+                lastGraphName = parser.getName();
+            } catch (Exception ex) {
+                if (problem == null) {
+                    problem = ex;
+                }
+            }
 	        final String archiveName;
 	        final String displayName;
-	        if (name == null) {
+	        if (lastGraphName == null) {
 	            archiveName = strippedFileName + "-#" + count;
 	            displayName = "";
 	        } else {
-	            archiveName = name;
-	            displayName = " - \"" + name + "\"";
+	            archiveName = lastGraphName;
+	            displayName = " - \"" + lastGraphName + "\"";
 	        }
 	        
 	        out.println("Structure #" + count + displayName + ".");
