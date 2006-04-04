@@ -24,6 +24,7 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 
 public class Matrix extends ArithmeticBase {
+    final private static boolean DEBUG = false;
 
     private IArithmetic[] data;
     private int nrows;
@@ -475,6 +476,9 @@ public class Matrix extends ArithmeticBase {
 
         // --- try to annihilate one entry at a time
         while (row < A.nrows && col < A.ncols) {
+            if (DEBUG) {
+                System.err.println(A);
+            }
             // --- find the entry of smallest norm in the current column
             IArithmetic pivot = null;
             int pivot_row = -1;
@@ -529,7 +533,7 @@ public class Matrix extends ArithmeticBase {
                 }
                 sign = -sign;
             }
-
+            
             // --- attempt to clear the current column below the diagonal
             boolean cleared = true;
 
@@ -592,6 +596,9 @@ public class Matrix extends ArithmeticBase {
                         final IArithmetic b = A.get(i, j);
                         A.set(i, j, b.minus(f.times(a)));
                     }
+                    if (!useTruncatedDivision) {
+                        A.set(i, col, Whole.ZERO);
+                    }
                     if (B != null) {
                         for (int j = 0; j < B.ncols; ++j) {
                             final IArithmetic a = B.get(row, j);
@@ -628,6 +635,9 @@ public class Matrix extends ArithmeticBase {
      * @return the determinant.
      */
     public IArithmetic determinant() {
+        if (numberOfRows() != numberOfColumns()) {
+            throw new IllegalArgumentException("only defined for square matrices");
+        }
         if (numberOfRows() == 0 || numberOfColumns() == 0) {
             return Whole.ZERO;
         }
