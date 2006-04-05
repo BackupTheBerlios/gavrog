@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.31 2006/02/12 04:30:47 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.32 2006/04/05 23:00:19 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -703,14 +703,16 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testConventionalCellCover(final PeriodicGraph G) {
-        final PeriodicGraph cov = G.conventionalCellCover();
+        final Cover cov = G.conventionalCellCover();
         final Map pos = cov.barycentricPlacement();
+        final Map posG = G.barycentricPlacement();
         assertTrue(cov.isBarycentric(pos));
         assertEquals(G, cov.minimalImage());
         for (final Iterator iter = cov.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Point p = (Point) pos.get(v);
             assertEquals(p, p.modZ());
+            assertEquals(p, cov.liftedPosition(v, (Point) posG.get(cov.image(v))));
         }
     }
 }
