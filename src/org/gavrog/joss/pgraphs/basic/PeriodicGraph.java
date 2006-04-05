@@ -52,26 +52,26 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.49 2006/04/04 22:59:26 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.50 2006/04/05 22:59:13 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
     public final String invariantVersion = "1.0";
 
-    private static final String IS_CONNECTED = "isConnected";
-    private static final String BARYCENTRIC_PLACEMENT = "barycentricPlacement";
-    private static final String IS_LOCALLY_STABLE = "isLocallyStable";
-    private static final String CHARACTERISTIC_BASES = "characteristicBases";
-    private static final String SYMMETRIES = "symmetries";
-    private static final String INVARIANT = "invariant";
-    private static final String CANONICAL = "canonical";
+    protected static final String IS_CONNECTED = "isConnected";
+    protected static final String BARYCENTRIC_PLACEMENT = "barycentricPlacement";
+    protected static final String IS_LOCALLY_STABLE = "isLocallyStable";
+    protected static final String CHARACTERISTIC_BASES = "characteristicBases";
+    protected static final String SYMMETRIES = "symmetries";
+    protected static final String INVARIANT = "invariant";
+    protected static final String CANONICAL = "canonical";
 
     private static final boolean DEBUG = false;
     
-    private final int dimension;
-    private final Map edgeIdToShift = new HashMap();
+    protected final int dimension;
+    protected final Map edgeIdToShift = new HashMap();
     // === IMPORTANT: always check for a non-null return value of a cache.get() ===
-    private Map cache = new WeakHashMap();
+    protected Map cache = new WeakHashMap();
 
     /**
      * Constructs an instance.
@@ -2015,7 +2015,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the covering periodic graph.
      */
-    public PeriodicGraph conventionalCellCover() {
+    public Cover conventionalCellCover() {
         // --- see if we can do this
         if (!isMinimal()) {
             throw new UnsupportedOperationException("must start with minimal graph");
@@ -2027,102 +2027,18 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- determine a coordinate mapping into a conventional cell
         final CoordinateChange C = finder.getToStd();
         
-        // --- find translation representatives modulo the unit lattice
-        final Set translations = new HashSet();
-        final int d = getDimension();
-        for (int i = 0; i < d; ++i) {
-            final Vector e = Vector.unit(d, i);
-            final Vector b = ((Vector) e.times(C)).modZ();
-            if (!translations.contains(b)) {
-                translations.add(b);
-            }
-        }
-        final LinkedList Q = new LinkedList();
-        Q.addAll(translations);
-        final Set gens = new HashSet();
-        gens.addAll(translations);
-        while (Q.size() > 0) {
-            final Vector s = (Vector) Q.removeFirst();
-            for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-                final Vector t = (Vector) iter.next();
-                final Vector sum = ((Vector) s.plus(t)).modZ();
-                if (!translations.contains(sum)) {
-                    translations.add(sum);
-                    Q.addFirst(sum);
-                }
-            }
-        }
-
-        // --- find node and edge representatives in the new coordinate system
-        final Map pos = barycentricPlacement();
-        final List transformedNodes = new ArrayList();
-        for (final Iterator iter = nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            transformedNodes.add(((Point) pos.get(v)).times(C));
-        }
-        final List transformedEdges = new ArrayList();
-        for (final Iterator iter = edges(); iter.hasNext();) {
-            final IEdge e = (IEdge) iter.next();
-            final Point p = (Point) pos.get(e.source());
-            final Point q = (Point) pos.get(e.target());
-            final Point src = (Point) p.times(C);
-            final Point dst = (Point) q.plus(getShift(e)).times(C);
-            transformedEdges.add(new Pair(src, dst));
-        }
-
-        // --- extend the system of representatives to the new unit cell
-        final List coverNodes = new ArrayList();
-        
-        for (final Iterator iter = transformedNodes.iterator(); iter.hasNext();) {
-            final Point p = (Point) iter.next();
-            for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
-                final Vector v = (Vector) shifts.next();
-                final Point pv = (Point) p.plus(v);
-                coverNodes.add(pv.modZ());
-            }
+        // --- express the new unit cell in terms of the old one
+        final int dim = getDimension();
+        final CoordinateChange Cinv = (CoordinateChange) C.inverse();
+        final Vector basis[] = new Vector[dim];
+        for (int i = 0; i < dim; ++i) {
+            basis[i] = (Vector)Vector.unit(dim, i).times(Cinv);
         }
         
-        final List coverEdges = new ArrayList();
-        for (final Iterator iter = transformedEdges.iterator(); iter.hasNext();) {
-            final Pair e = (Pair) iter.next();
-            final Point p = (Point) e.getFirst();
-            final Point q = (Point) e.getSecond();
-            for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
-                final Vector v = (Vector) shifts.next();
-                final Point pv = (Point) p.plus(v);
-                final Point qv = (Point) q.plus(v);
-                final Point rv = pv.modZ();
-                coverEdges.add(new Pair(rv, qv.minus(pv).plus(rv)));
-            }
-        }
-
-        // --- extract a representation of the new graph
-        final PeriodicGraph result = new PeriodicGraph(getDimension());
-        final Map pos2node = new HashMap();
-        final Map node2pos = new HashMap();
-        for (final Iterator iter = coverNodes.iterator(); iter.hasNext();) {
-            final Point p = (Point) iter.next();
-            final INode v = result.newNode();
-            pos2node.put(p, v);
-            node2pos.put(v, p);
-        }
-        for (final Iterator iter = coverEdges.iterator(); iter.hasNext();) {
-            final Pair e = (Pair) iter.next();
-            final Point p = (Point) e.getFirst();
-            final Point q = (Point) e.getSecond();
-            final Point r = q.modZ();
-            final Vector s = (Vector) q.minus(r);
-            final INode v = (INode) pos2node.get(p);
-            final INode w = (INode) pos2node.get(r);
-            result.newEdge(v, w, s);
-        }
-        
-        // --- we do not need to recompute the cover's barycentric placement
-        result.cache.put(BARYCENTRIC_PLACEMENT, node2pos);
-        
-        return result;
+        // --- construct and return the cover
+        return new Cover(this, basis);
     }
-    
+        
     /*
      * (non-Javadoc)
      * 
