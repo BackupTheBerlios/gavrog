@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: CoordinateChange.java,v 1.3 2005/10/30 02:22:24 odf Exp $
+ * @version $Id: CoordinateChange.java,v 1.4 2006/04/05 22:58:13 odf Exp $
  */
 public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
@@ -260,6 +260,13 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     public Point getOrigin() {
         final int d = getDimension();
         return new Point(this.left.getSubMatrix(d, 0, 1, d));
+    }
+    
+    /**
+     * Retrieve the corresponding operator.
+     */
+    public Operator getOperator() {
+        return new Operator(this.right);
     }
     
     /**
