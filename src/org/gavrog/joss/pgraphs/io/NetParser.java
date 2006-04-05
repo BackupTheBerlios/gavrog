@@ -44,6 +44,7 @@ import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
+import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -54,7 +55,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.68 2006/04/04 22:15:18 odf Exp $
+ * @version $Id: NetParser.java,v 1.69 2006/04/05 20:19:39 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -279,6 +280,29 @@ public class NetParser extends GenericParser {
         return G;
     }
 
+    
+    /**
+     * Constructs a space group with the given name.
+     * 
+     * @param name the name of the group (as according to the International Tables).
+     * @return the group constructed.
+     */
+    private static SpaceGroup parseSpaceGroupName(final String name) {
+        final int dim;
+        if (Character.isLowerCase(name.charAt(0))) {
+            dim = 2;
+        } else {
+            dim = 3;
+        }
+        final Collection ops = SpaceGroupCatalogue.operators(dim, name);
+        if (ops == null) {
+            return null;
+        } else {
+            return new SpaceGroup(dim, ops, false, false);
+        }
+    }
+    
+    
     /**
      * Parses a periodic net given in terms of a crystallographic group. Edges are
      * specified in a similar way as in parsePeriodicGraph(), but instead of just lattice
@@ -323,17 +347,14 @@ public class NetParser extends GenericParser {
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
                     groupName = (String) row.get(0);
-                    if (Character.isLowerCase(groupName.charAt(0))) {
-                        dimension = 2;
-                    } else if (dimension == 0) {
-                        dimension = 3;
-                    }
-                    group = new SpaceGroup(dimension, groupName);
-                    ops.addAll(group.getOperators());
-                    if (ops == null) {
-                        final String msg = "Space group not recognized at line ";
+                    group = parseSpaceGroupName(groupName);
+                    if (group == null) {
+                        final String msg = "Space group \"" + groupName
+                                + "\" not recognized at line ";
                         throw new DataFormatException(msg + block[i].lineNumber);
                     }
+                    dimension = group.getDimension();
+                    ops.addAll(group.getOperators());
                 } else {
                     final String msg = "Group specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -533,17 +554,14 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + lineNr);
                 }
                 groupName = (String) row.get(0);
-                if (Character.isLowerCase(groupName.charAt(0))) {
-                    dim = 2;
-                } else if (dim == 0) {
-                    dim = 3;
-                }
-                group = new SpaceGroup(dim, groupName);
-                ops.addAll(group.getOperators());
-                if (ops == null) {
-                    final String msg = "Space group not recognized at line ";
+                group = parseSpaceGroupName(groupName);
+                if (group == null) {
+                    final String msg = "Space group \"" + groupName
+                            + "\" not recognized at line ";
                     throw new DataFormatException(msg + lineNr);
                 }
+                dim = group.getDimension();
+                ops.addAll(group.getOperators());
             } else if (key.equals("cell")) {
                 if (seen.contains(key)) {
                     final String msg = "Cell specified twice at line ";
