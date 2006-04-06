@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.15 2006/04/06 20:53:43 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.16 2006/04/06 21:37:50 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -752,12 +752,10 @@ public class SystreCmdline {
             out.flush();
         }
         
-        //    ... print the atom positions
-        if (!cgdFormat) {
-            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
-        }
+        // --- compute graph representation with respect to a conventional unit cell
         final Cover cov = G.conventionalCellCover();
-        final Set reps = new HashSet();
+
+        // --- compute the relaxed node positions in to the conventional unit cell
         final Map pos = embedder.getPositions();
         final INode v0 = (INode) cov.nodes().next();
         final Vector shift = (Vector) ((Point) pos.get(cov.image(v0))).times(toStd)
@@ -767,8 +765,17 @@ public class SystreCmdline {
             final INode v = (INode) nodes.next();
             lifted.put(v, cov.liftedPosition(v, pos).plus(shift));
         }
+        
+        //    ... print the atom positions
+        if (!cgdFormat) {
+            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
+        }
+        final Set reps = new HashSet();
         for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
+            // --- grab the next node orbit
             final Set orbit = (Set) orbits.next();
+            
+            // --- find the best representative
             final List tmp = new ArrayList();
             for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
                 final INode v = (INode) iter.next();
@@ -780,7 +787,10 @@ public class SystreCmdline {
             final INode v = pn.v;
             final Point p = pn.p;
 
+            // --- remember it for later
             reps.add(v);
+            
+            // --- print its position
             if (cgdFormat) {
                 out.print("  NODE " + v.id() + " " + cov.new CoverNode(v).degree() + " ");
             } else {
@@ -797,7 +807,10 @@ public class SystreCmdline {
             out.println("   Edges:");
         }
         for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
+            // --- grab the next edge orbit
             final Set orbit = (Set) orbits.next();
+            
+            // --- extract those edges starting or ending in a node that has been printed
             final List candidates = new ArrayList();
             for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
                 final IEdge e = (IEdge) iter.next();
@@ -808,6 +821,8 @@ public class SystreCmdline {
 					candidates.add(e.reverse());
 				}
             }
+            
+            // --- find the best representative among those
             for (int i = 0; i < candidates.size(); ++i) {
                 final IEdge e = (IEdge) candidates.get(i);
                 final INode v = e.source();
@@ -823,6 +838,7 @@ public class SystreCmdline {
             final Point p = ((PlacedNode) pair.getFirst()).p;
             final Point q = ((PlacedNode) pair.getSecond()).p;
 
+            // --- print its start and end positions
             if (cgdFormat) {
                 out.print("  EDGE ");
             } else {
@@ -841,6 +857,8 @@ public class SystreCmdline {
             }
             out.println();
         }
+        
+        // --- finish up
         if (cgdFormat) {
             out.println("END");
             out.println();
