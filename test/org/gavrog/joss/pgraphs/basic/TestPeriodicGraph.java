@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.32 2006/04/05 23:00:19 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.33 2006/04/06 01:13:51 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -712,7 +712,7 @@ public class TestPeriodicGraph extends TestCase {
             final INode v = (INode) iter.next();
             final Point p = (Point) pos.get(v);
             assertEquals(p, p.modZ());
-            assertEquals(p, cov.liftedPosition(v, (Point) posG.get(cov.image(v))));
+            assertEquals(p, cov.liftedPosition(v, posG));
         }
     }
 }
