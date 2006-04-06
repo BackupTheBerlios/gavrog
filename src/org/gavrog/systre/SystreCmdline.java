@@ -29,9 +29,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.14 2006/04/06 04:21:48 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.15 2006/04/06 20:53:43 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -631,92 +629,67 @@ public class SystreCmdline {
 //        out.flush();
 //    }
 
-    private static int cmpCoords(final IArithmetic a, final IArithmetic b) {
-    	final double x = ((Real) a).doubleValue();
-    	final double y = ((Real) b).doubleValue();
-    	if (x < 0) {
-    		if (y > 0) {
-    			return 1;
-    		}
-    	} else if (y < 0) {
-    		return -1;
-    	}
-    	final double d = Math.abs(x) - Math.abs(y);
-    	if (Math.abs(d) < 1e-6) {
-    		return 0;
-    	} else {
-    		return Double.compare(Math.abs(x), Math.abs(y));
-    	}
-    }
-    
-    
-    private int cmpPoints(final Point p, final Point q) {
-    	final int dim = p.getDimension();
-        final Point o = Point.origin(dim);
-        final Vector s = (Vector) p.minus(o);
-        final Vector t = (Vector) q.minus(o);
-        if (s.isNegative()) {
-        	if (!t.isNegative()) {
-        		return 1;
-        	}
-        } else if (t.isNegative()) {
-        	return -1;
+    /*
+     * Auxiliary type.
+     */
+    private class PlacedNode implements Comparable {
+        final public INode v;
+        final public Point p;
+        
+        public PlacedNode(final INode v, final Point p) {
+            this.v = v;
+            this.p = p;
         }
-        int diff = cmpCoords(Vector.dot(s, s), Vector.dot(t, t));
-        if (diff != 0) {
-            return diff;
-        }
-        for (int i = 0; i < dim; ++i) {
-            diff = cmpCoords(p.get(i), q.get(i));
+        
+        /* (non-Javadoc)
+         * @see java.lang.Comparable#compareTo(java.lang.Object)
+         */
+        public int compareTo(final Object other) {
+            final Point p = this.p;
+            final Point q = ((PlacedNode) other).p;
+            final int dim = p.getDimension();
+            final Point o = Point.origin(dim);
+            final Vector s = (Vector) p.minus(o);
+            final Vector t = (Vector) q.minus(o);
+            if (s.isNegative()) {
+                if (t.isNonNegative()) {
+                    return 1;
+                }
+            } else if (t.isNegative()) {
+                return -1;
+            }
+            int diff = cmpCoords(Vector.dot(s, s), Vector.dot(t, t));
             if (diff != 0) {
                 return diff;
             }
-        }
-        return 0;
-    }
-    
-    private class NodeComparator implements Comparator {
-    	private Map pos;
-    	
-    	public NodeComparator(final Map pos) {
-    		this.pos = pos;
-    	}
-    	
-        public int compare(final Object o1, final Object o2) {
-            final Point p = ((Point) pos.get(o1)).modZ();
-            final Point q = ((Point) pos.get(o2)).modZ();
-            return cmpPoints(p, q);
-        }
-    };
-    
-    private class EdgeComparator implements Comparator {
-    	final private Map pos;
-    	final private PeriodicGraph G;
-    	
-    	public EdgeComparator(final Map pos, final PeriodicGraph G) {
-    		this.pos = pos;
-    		this.G = G;
-    	}
-    	
-        public int compare(final Object o1, final Object o2) {
-            final IEdge e1 = (IEdge) o1;
-            final IEdge e2 = (IEdge) o2;
-            final Point s1 = (Point) pos.get(e1.source());
-            final Point s2 = (Point) pos.get(e2.source());
-            final Point s1t = s1.modZ();
-            final Point s2t = s2.modZ();
-            int diff = cmpPoints(s1t, s2t);
-            if (diff != 0) {
-            	return diff;
+            for (int i = 0; i < dim; ++i) {
+                diff = cmpCoords(p.get(i), q.get(i));
+                if (diff != 0) {
+                    return diff;
+                }
             }
-            final Point t1 = (Point) ((Point) pos.get(e1.target())).plus(G.getShift(e1));
-            final Point t2 = (Point) ((Point) pos.get(e2.target())).plus(G.getShift(e2));
-            final Point t1t = (Point) t1.minus(s1.minus(s1t));
-            final Point t2t = (Point) t2.minus(s2.minus(s2t));
-            return cmpPoints(t1t, t2t);
+            return 0;
+        }
+        
+        private int cmpCoords(final IArithmetic a, final IArithmetic b) {
+            final double x = ((Real) a).doubleValue();
+            final double y = ((Real) b).doubleValue();
+            if (x < 0) {
+                if (y > 0) {
+                    return 1;
+                }
+            } else if (y < 0) {
+                return -1;
+            }
+            final double d = Math.abs(x) - Math.abs(y);
+            if (Math.abs(d) < 1e-6) {
+                return 0;
+            } else {
+                return Double.compare(Math.abs(x), Math.abs(y));
+            }
         }
     };
-    
+
     private void writeEmbedding(final PrintWriter out, final boolean cgdFormat,
             final PeriodicGraph G, String name, final SpaceGroupFinder finder,
             final IEmbedder embedder) {
@@ -795,12 +768,19 @@ public class SystreCmdline {
             lifted.put(v, cov.liftedPosition(v, pos).plus(shift));
         }
         for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
-            final List orbit = new ArrayList();
-            orbit.addAll((Collection) orbits.next());
-            Collections.sort(orbit, new NodeComparator(lifted));
-            final INode v = (INode) orbit.get(0);
+            final Set orbit = (Set) orbits.next();
+            final List tmp = new ArrayList();
+            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
+                final INode v = (INode) iter.next();
+                final Point p = ((Point) lifted.get(v)).modZ();
+                tmp.add(new PlacedNode(v, p));
+            }
+            Collections.sort(tmp);
+            final PlacedNode pn = (PlacedNode) tmp.get(0);
+            final INode v = pn.v;
+            final Point p = pn.p;
+
             reps.add(v);
-            final Point p = ((Point) lifted.get(v)).modZ();
             if (cgdFormat) {
                 out.print("  NODE " + v.id() + " " + cov.new CoverNode(v).degree() + " ");
             } else {
@@ -828,21 +808,28 @@ public class SystreCmdline {
 					candidates.add(e.reverse());
 				}
             }
-            Collections.sort(candidates, new EdgeComparator(lifted, cov));
-            final IEdge e = (IEdge) candidates.get(0);
-            final INode v = e.source();
-            final INode w = e.target();
-            final Point p = (Point) lifted.get(v);
-            final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e));
-            final Point p0 = p.modZ();
-            final Point q0 = (Point) q.minus(p.minus(p0));
+            for (int i = 0; i < candidates.size(); ++i) {
+                final IEdge e = (IEdge) candidates.get(i);
+                final INode v = e.source();
+                final INode w = e.target();
+                final Point p = (Point) lifted.get(v);
+                final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e));
+                final Point p0 = p.modZ();
+                final Point q0 = (Point) q.minus(p.minus(p0));
+                candidates.set(i, new Pair(new PlacedNode(v, p0), new PlacedNode(w, q0)));
+            }
+            Collections.sort(candidates);
+            final Pair pair = (Pair) candidates.get(0);
+            final Point p = ((PlacedNode) pair.getFirst()).p;
+            final Point q = ((PlacedNode) pair.getSecond()).p;
+
             if (cgdFormat) {
                 out.print("  EDGE ");
             } else {
                 out.print("     ");
             }
             for (int i = 0; i < d; ++i) {
-                out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
+                out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
             }
             if (cgdFormat) {
                 out.print("  ");
@@ -850,7 +837,7 @@ public class SystreCmdline {
                 out.print("  <-> ");
             }
             for (int i = 0; i < d; ++i) {
-                out.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
+                out.print(" " + fmtReal5.format(((Real) q.get(i)).doubleValue()));
             }
             out.println();
         }
