@@ -1,5 +1,9 @@
 Still open:
 
+- Option to use first origin choice by default, instead of second.
+
+- Include zeolite frameworks from Atlas.
+
 - Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
 
 - For monoclinic structures, make beta >= 90 (and otherwise smallest possible).
