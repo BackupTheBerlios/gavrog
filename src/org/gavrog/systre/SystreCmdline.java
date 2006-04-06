@@ -69,7 +69,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.13 2006/04/06 01:15:51 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.14 2006/04/06 04:21:48 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -630,6 +630,92 @@ public class SystreCmdline {
 //		}
 //        out.flush();
 //    }
+
+    private static int cmpCoords(final IArithmetic a, final IArithmetic b) {
+    	final double x = ((Real) a).doubleValue();
+    	final double y = ((Real) b).doubleValue();
+    	if (x < 0) {
+    		if (y > 0) {
+    			return 1;
+    		}
+    	} else if (y < 0) {
+    		return -1;
+    	}
+    	final double d = Math.abs(x) - Math.abs(y);
+    	if (Math.abs(d) < 1e-6) {
+    		return 0;
+    	} else {
+    		return Double.compare(Math.abs(x), Math.abs(y));
+    	}
+    }
+    
+    
+    private int cmpPoints(final Point p, final Point q) {
+    	final int dim = p.getDimension();
+        final Point o = Point.origin(dim);
+        final Vector s = (Vector) p.minus(o);
+        final Vector t = (Vector) q.minus(o);
+        if (s.isNegative()) {
+        	if (!t.isNegative()) {
+        		return 1;
+        	}
+        } else if (t.isNegative()) {
+        	return -1;
+        }
+        int diff = cmpCoords(Vector.dot(s, s), Vector.dot(t, t));
+        if (diff != 0) {
+            return diff;
+        }
+        for (int i = 0; i < dim; ++i) {
+            diff = cmpCoords(p.get(i), q.get(i));
+            if (diff != 0) {
+                return diff;
+            }
+        }
+        return 0;
+    }
+    
+    private class NodeComparator implements Comparator {
+    	private Map pos;
+    	
+    	public NodeComparator(final Map pos) {
+    		this.pos = pos;
+    	}
+    	
+        public int compare(final Object o1, final Object o2) {
+            final Point p = ((Point) pos.get(o1)).modZ();
+            final Point q = ((Point) pos.get(o2)).modZ();
+            return cmpPoints(p, q);
+        }
+    };
+    
+    private class EdgeComparator implements Comparator {
+    	final private Map pos;
+    	final private PeriodicGraph G;
+    	
+    	public EdgeComparator(final Map pos, final PeriodicGraph G) {
+    		this.pos = pos;
+    		this.G = G;
+    	}
+    	
+        public int compare(final Object o1, final Object o2) {
+            final IEdge e1 = (IEdge) o1;
+            final IEdge e2 = (IEdge) o2;
+            final Point s1 = (Point) pos.get(e1.source());
+            final Point s2 = (Point) pos.get(e2.source());
+            final Point s1t = s1.modZ();
+            final Point s2t = s2.modZ();
+            int diff = cmpPoints(s1t, s2t);
+            if (diff != 0) {
+            	return diff;
+            }
+            final Point t1 = (Point) ((Point) pos.get(e1.target())).plus(G.getShift(e1));
+            final Point t2 = (Point) ((Point) pos.get(e2.target())).plus(G.getShift(e2));
+            final Point t1t = (Point) t1.minus(s1.minus(s1t));
+            final Point t2t = (Point) t2.minus(s2.minus(s2t));
+            return cmpPoints(t1t, t2t);
+        }
+    };
     
     private void writeEmbedding(final PrintWriter out, final boolean cgdFormat,
             final PeriodicGraph G, String name, final SpaceGroupFinder finder,
@@ -711,27 +797,8 @@ public class SystreCmdline {
         for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
             final List orbit = new ArrayList();
             orbit.addAll((Collection) orbits.next());
-            Collections.sort(orbit, new Comparator() {
-                public int compare(final Object o1, final Object o2) {
-                    final Point o = Point.origin(d);
-                    final Point p = ((Point) lifted.get(o1)).modZ();
-                    final Point q = ((Point) lifted.get(o2)).modZ();
-                    final Vector s = (Vector) p.minus(o);
-                    final Vector t = (Vector) q.minus(o);
-                    int diff =  ((Real) Vector.dot(s, s)).compareTo(Vector.dot(t, t));
-                    if (diff != 0) {
-                        return diff;
-                    }
-                    for (int i = 0; i < d; ++i) {
-                        diff = ((Real) p.get(i)).compareTo(q.get(i));
-                        if (diff != 0) {
-                            return diff;
-                        }
-                    }
-                    return 0;
-                }
-            });
-            final INode v = (INode) orbit.iterator().next();
+            Collections.sort(orbit, new NodeComparator(lifted));
+            final INode v = (INode) orbit.get(0);
             reps.add(v);
             final Point p = ((Point) lifted.get(v)).modZ();
             if (cgdFormat) {
@@ -751,16 +818,18 @@ public class SystreCmdline {
         }
         for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
-            IEdge e = null;
+            final List candidates = new ArrayList();
             for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
-                e = (IEdge) iter.next();
+                final IEdge e = (IEdge) iter.next();
                 if (reps.contains(e.source())) {
-                    break;
-                } else if (reps.contains(e.target())) {
-                    e = e.reverse();
-                    break;
-                }
+					candidates.add(e);
+				}
+				if (reps.contains(e.target())) {
+					candidates.add(e.reverse());
+				}
             }
+            Collections.sort(candidates, new EdgeComparator(lifted, cov));
+            final IEdge e = (IEdge) candidates.get(0);
             final INode v = e.source();
             final INode w = e.target();
             final Point p = (Point) lifted.get(v);
