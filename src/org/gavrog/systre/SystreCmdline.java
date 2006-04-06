@@ -29,6 +29,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,6 +57,7 @@ import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.Cover;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -65,7 +69,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.12 2006/04/04 22:21:11 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.13 2006/04/06 01:15:51 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -435,10 +439,201 @@ public class SystreCmdline {
             }
         }
     }
-        
+
+//    private void writeEmbedding(final PrintWriter out, final boolean cgdFormat,
+//			final PeriodicGraph G, String name, final SpaceGroupFinder finder,
+//			final IEmbedder embedder) {
+//        
+//        // --- extract some data from the arguments
+//        final int d = G.getDimension();
+//        final String groupName = finder.getGroupName();
+//        final CoordinateChange toStd = finder.getToStd();
+//        final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
+//        final boolean cellRelaxed = embedder.cellRelaxed();
+//        final boolean posRelaxed = embedder.positionsRelaxed();
+//        
+//        // --- print a header if necessary
+//        if (cgdFormat) {
+//            out.println("CRYSTAL");
+//            out.println("  NAME " + name);
+//            out.println("  GROUP " + groupName);
+//        }
+//        
+//        // --- print the results of the relaxation in the conventional setting
+//        final Matrix gram = embedder.getGramMatrix();
+//        final Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
+//        final Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
+//        final Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
+//
+//        final Real a = ((Real) Vector.dot(x, x, gram)).sqrt();
+//        final Real b = ((Real) Vector.dot(y, y, gram)).sqrt();
+//        final Real c = ((Real) Vector.dot(z, z, gram)).sqrt();
+//        final Real f = new FloatingPoint(180.0 / Math.PI);
+//        final Real alpha = (Real) ((Real) Vector.dot(y, z, gram)
+//                .dividedBy(b.times(c))).acos().times(f);
+//        final Real beta = (Real) ((Real) Vector.dot(x, z, gram).dividedBy(a.times(c)))
+//                .acos().times(f);
+//        final Real gamma = (Real) ((Real) Vector.dot(x, y, gram)
+//                .dividedBy(a.times(b))).acos().times(f);
+//
+//        //    ... print the cell parameters
+//        if (cgdFormat) {
+//            out.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
+//                        + fmtReal5.format(b.doubleValue()) + " "
+//                        + fmtReal5.format(c.doubleValue()) + " "
+//                        + fmtReal4.format(alpha.doubleValue()) + " "
+//                        + fmtReal4.format(beta.doubleValue()) + " "
+//                        + fmtReal4.format(gamma.doubleValue()));
+//        } else {
+//            out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
+//            out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
+//                        + fmtReal5.format(b.doubleValue()) + ", c = "
+//                        + fmtReal5.format(c.doubleValue()));
+//            out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
+//                        + ", beta = " + fmtReal4.format(beta.doubleValue())
+//                        + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
+//        }
+//        
+//        if (DEBUG && !cgdFormat) {
+//            for (int i = 0; i < d; ++i) {
+//                final Vector v = Vector.unit(d, i);
+//                out.println("\t\t@@@ " + v + " -> " + v.times(toStd));
+//            }
+//            out.flush();
+//        }
+//        
+//        //    ... print the atom positions
+//        if (!cgdFormat) {
+//            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
+//        }
+//        final Set reps = new HashSet();
+//        final Map pos = embedder.getPositions();
+//        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+//        	final Set orbit = (Set) orbits.next();
+//            final INode v = (INode) orbit.iterator().next();
+//            reps.add(v);
+//            final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
+//            if (cgdFormat) {
+//                out.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
+//            } else {
+//                out.print("     ");
+//            }
+//            for (int i = 0; i < d; ++i) {
+//                out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
+//            }
+//            out.println();
+//        }
+//        
+//        //    ... print the edges
+//        if (!cgdFormat) {
+//            out.println("   Edges:");
+//        }
+//        for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
+//            final Set orbit = (Set) orbits.next();
+//            IEdge e = null;
+//            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
+//            	e = (IEdge) iter.next();
+//            	if (reps.contains(e.source())) {
+//            		break;
+//            	} else if (reps.contains(e.target())) {
+//            		e = e.reverse();
+//            		break;
+//            	}
+//            }
+//            final INode v = e.source();
+//            final INode w = e.target();
+//            final Point p = ((Point) ((Point) pos.get(v)).times(toStd));
+//            final Point q = (Point) ((Point) pos.get(w)).plus(G.getShift(e)).times(
+//                    toStd);
+//            final Point p0 = p.modZ();
+//            final Point q0 = (Point) q.minus(p.minus(p0));
+//            if (cgdFormat) {
+//                out.print("  EDGE ");
+//            } else {
+//                out.print("     ");
+//            }
+//            for (int i = 0; i < d; ++i) {
+//                out.print(" " + fmtReal5.format(((Real) p0.get(i)).doubleValue()));
+//            }
+//            if (cgdFormat) {
+//                out.print("  ");
+//            } else {
+//                out.print("  <-> ");
+//            }
+//            for (int i = 0; i < d; ++i) {
+//                out.print(" " + fmtReal5.format(((Real) q0.get(i)).doubleValue()));
+//            }
+//            out.println();
+//        }
+//        if (cgdFormat) {
+//            out.println("END");
+//            out.println();
+//        } else {
+//        	// --- write edge statistics
+//        	final String min = fmtReal5.format(embedder.minimalEdgeLength());
+//        	final String max = fmtReal5.format(embedder.maximalEdgeLength());
+//        	final String avg = fmtReal5.format(embedder.averageEdgeLength());
+//        	out.println();
+//        	out.println("   Edge statistics: minimum = " + min + ", maximum = " + max
+//					+ ", average = " + avg);
+//        	
+//        	// --- compute and write angle statistics
+//        	double minAngle = Double.MAX_VALUE;
+//        	double maxAngle = 0.0;
+//        	double sumAngle = 0.0;
+//        	int count = 0;
+//        	
+//            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+//				final INode v = (INode) nodes.next();
+//				final Point p = (Point) pos.get(v);
+//				final List incidences = G.allIncidences(v);
+//				final List vectors = new ArrayList();
+//				for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
+//					final IEdge e = (IEdge) iter.next();
+//					final INode w = e.target();
+//					final Point q = (Point) pos.get(w);
+//					vectors.add(q.plus(G.getShift(e)).minus(p));
+//				}
+//				final int m = vectors.size();
+//				for (int i = 0; i < m; ++i) {
+//					final Vector s = (Vector) vectors.get(i);
+//					final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
+//							.doubleValue();
+//					for (int j = i + 1; j < m; ++j) {
+//						final Vector t = (Vector) vectors.get(j);
+//						final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
+//								.doubleValue();
+//						final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
+//						final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
+//						final double angle = Math.acos(arg) / Math.PI * 180;
+//						minAngle = Math.min(minAngle, angle);
+//						maxAngle = Math.max(maxAngle, angle);
+//						sumAngle += angle;
+//						++count;
+//					}
+//				}
+//			}
+//        	out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
+//					+ ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
+//					+ fmtReal5.format(sumAngle / count));
+//        	
+//        	// --- write the shortest non-bonded distance
+//        	out.println("   Shortest non-bonded distance = "
+//					+ fmtReal5.format(smallestNonBondedDistance(G, embedder)));
+//            
+//            // --- write the degrees of freedom as found by the embedder
+//            if (embedder instanceof AmoebaEmbedder) {
+//            	out.println();
+//                out.println("   Degrees of freedom: "
+//                        + ((AmoebaEmbedder) embedder).degreesOfFreedom());
+//            }
+//		}
+//        out.flush();
+//    }
+    
     private void writeEmbedding(final PrintWriter out, final boolean cgdFormat,
-			final PeriodicGraph G, String name, final SpaceGroupFinder finder,
-			final IEmbedder embedder) {
+            final PeriodicGraph G, String name, final SpaceGroupFinder finder,
+            final IEmbedder embedder) {
         
         // --- extract some data from the arguments
         final int d = G.getDimension();
@@ -460,7 +655,7 @@ public class SystreCmdline {
         final Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
         final Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
         final Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
-
+    
         final Real a = ((Real) Vector.dot(x, x, gram)).sqrt();
         final Real b = ((Real) Vector.dot(y, y, gram)).sqrt();
         final Real c = ((Real) Vector.dot(z, z, gram)).sqrt();
@@ -471,7 +666,7 @@ public class SystreCmdline {
                 .acos().times(f);
         final Real gamma = (Real) ((Real) Vector.dot(x, y, gram)
                 .dividedBy(a.times(b))).acos().times(f);
-
+    
         //    ... print the cell parameters
         if (cgdFormat) {
             out.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
@@ -502,15 +697,45 @@ public class SystreCmdline {
         if (!cgdFormat) {
             out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         }
+        final Cover cov = G.conventionalCellCover();
         final Set reps = new HashSet();
         final Map pos = embedder.getPositions();
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-        	final Set orbit = (Set) orbits.next();
+        final INode v0 = (INode) cov.nodes().next();
+        final Vector shift = (Vector) ((Point) pos.get(cov.image(v0))).times(toStd)
+                .minus(cov.liftedPosition(v0, pos));
+        final Map lifted = new HashMap();
+        for (final Iterator nodes = cov.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            lifted.put(v, cov.liftedPosition(v, pos).plus(shift));
+        }
+        for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
+            final List orbit = new ArrayList();
+            orbit.addAll((Collection) orbits.next());
+            Collections.sort(orbit, new Comparator() {
+                public int compare(final Object o1, final Object o2) {
+                    final Point o = Point.origin(d);
+                    final Point p = ((Point) lifted.get(o1)).modZ();
+                    final Point q = ((Point) lifted.get(o2)).modZ();
+                    final Vector s = (Vector) p.minus(o);
+                    final Vector t = (Vector) q.minus(o);
+                    int diff =  ((Real) Vector.dot(s, s)).compareTo(Vector.dot(t, t));
+                    if (diff != 0) {
+                        return diff;
+                    }
+                    for (int i = 0; i < d; ++i) {
+                        diff = ((Real) p.get(i)).compareTo(q.get(i));
+                        if (diff != 0) {
+                            return diff;
+                        }
+                    }
+                    return 0;
+                }
+            });
             final INode v = (INode) orbit.iterator().next();
             reps.add(v);
-            final Point p = ((Point) ((Point) pos.get(v)).times(toStd)).modZ();
+            final Point p = ((Point) lifted.get(v)).modZ();
             if (cgdFormat) {
-                out.print("  NODE " + v.id() + " " + G.new CoverNode(v).degree() + " ");
+                out.print("  NODE " + v.id() + " " + cov.new CoverNode(v).degree() + " ");
             } else {
                 out.print("     ");
             }
@@ -524,23 +749,22 @@ public class SystreCmdline {
         if (!cgdFormat) {
             out.println("   Edges:");
         }
-        for (final Iterator orbits = G.edgeOrbits(); orbits.hasNext();) {
+        for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             IEdge e = null;
             for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
-            	e = (IEdge) iter.next();
-            	if (reps.contains(e.source())) {
-            		break;
-            	} else if (reps.contains(e.target())) {
-            		e = e.reverse();
-            		break;
-            	}
+                e = (IEdge) iter.next();
+                if (reps.contains(e.source())) {
+                    break;
+                } else if (reps.contains(e.target())) {
+                    e = e.reverse();
+                    break;
+                }
             }
             final INode v = e.source();
             final INode w = e.target();
-            final Point p = ((Point) ((Point) pos.get(v)).times(toStd));
-            final Point q = (Point) ((Point) pos.get(w)).plus(G.getShift(e)).times(
-                    toStd);
+            final Point p = (Point) lifted.get(v);
+            final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e));
             final Point p0 = p.modZ();
             final Point q0 = (Point) q.minus(p.minus(p0));
             if (cgdFormat) {
@@ -565,68 +789,68 @@ public class SystreCmdline {
             out.println("END");
             out.println();
         } else {
-        	// --- write edge statistics
-        	final String min = fmtReal5.format(embedder.minimalEdgeLength());
-        	final String max = fmtReal5.format(embedder.maximalEdgeLength());
-        	final String avg = fmtReal5.format(embedder.averageEdgeLength());
-        	out.println();
-        	out.println("   Edge statistics: minimum = " + min + ", maximum = " + max
-					+ ", average = " + avg);
-        	
-        	// --- compute and write angle statistics
-        	double minAngle = Double.MAX_VALUE;
-        	double maxAngle = 0.0;
-        	double sumAngle = 0.0;
-        	int count = 0;
-        	
+            // --- write edge statistics
+            final String min = fmtReal5.format(embedder.minimalEdgeLength());
+            final String max = fmtReal5.format(embedder.maximalEdgeLength());
+            final String avg = fmtReal5.format(embedder.averageEdgeLength());
+            out.println();
+            out.println("   Edge statistics: minimum = " + min + ", maximum = " + max
+                    + ", average = " + avg);
+            
+            // --- compute and write angle statistics
+            double minAngle = Double.MAX_VALUE;
+            double maxAngle = 0.0;
+            double sumAngle = 0.0;
+            int count = 0;
+            
             for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-				final INode v = (INode) nodes.next();
-				final Point p = (Point) pos.get(v);
-				final List incidences = G.allIncidences(v);
-				final List vectors = new ArrayList();
-				for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
-					final IEdge e = (IEdge) iter.next();
-					final INode w = e.target();
-					final Point q = (Point) pos.get(w);
-					vectors.add(q.plus(G.getShift(e)).minus(p));
-				}
-				final int m = vectors.size();
-				for (int i = 0; i < m; ++i) {
-					final Vector s = (Vector) vectors.get(i);
-					final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
-							.doubleValue();
-					for (int j = i + 1; j < m; ++j) {
-						final Vector t = (Vector) vectors.get(j);
-						final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
-								.doubleValue();
-						final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
-						final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
-						final double angle = Math.acos(arg) / Math.PI * 180;
-						minAngle = Math.min(minAngle, angle);
-						maxAngle = Math.max(maxAngle, angle);
-						sumAngle += angle;
-						++count;
-					}
-				}
-			}
-        	out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
-					+ ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
-					+ fmtReal5.format(sumAngle / count));
-        	
-        	// --- write the shortest non-bonded distance
-        	out.println("   Shortest non-bonded distance = "
-					+ fmtReal5.format(smallestNonBondedDistance(G, embedder)));
+                final INode v = (INode) nodes.next();
+                final Point p = (Point) pos.get(v);
+                final List incidences = G.allIncidences(v);
+                final List vectors = new ArrayList();
+                for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
+                    final IEdge e = (IEdge) iter.next();
+                    final INode w = e.target();
+                    final Point q = (Point) pos.get(w);
+                    vectors.add(q.plus(G.getShift(e)).minus(p));
+                }
+                final int m = vectors.size();
+                for (int i = 0; i < m; ++i) {
+                    final Vector s = (Vector) vectors.get(i);
+                    final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
+                            .doubleValue();
+                    for (int j = i + 1; j < m; ++j) {
+                        final Vector t = (Vector) vectors.get(j);
+                        final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
+                                .doubleValue();
+                        final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
+                        final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
+                        final double angle = Math.acos(arg) / Math.PI * 180;
+                        minAngle = Math.min(minAngle, angle);
+                        maxAngle = Math.max(maxAngle, angle);
+                        sumAngle += angle;
+                        ++count;
+                    }
+                }
+            }
+            out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
+                    + ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
+                    + fmtReal5.format(sumAngle / count));
+            
+            // --- write the shortest non-bonded distance
+            out.println("   Shortest non-bonded distance = "
+                    + fmtReal5.format(smallestNonBondedDistance(G, embedder)));
             
             // --- write the degrees of freedom as found by the embedder
             if (embedder instanceof AmoebaEmbedder) {
-            	out.println();
+                out.println();
                 out.println("   Degrees of freedom: "
                         + ((AmoebaEmbedder) embedder).degreesOfFreedom());
             }
-		}
+        }
         out.flush();
     }
-    
+
     /**
      * Does what it says.
      * 
