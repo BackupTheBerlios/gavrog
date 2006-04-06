@@ -36,7 +36,7 @@ import org.gavrog.joss.geometry.Vector;
  * Represents a cover of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: Cover.java,v 1.1 2006/04/05 22:58:43 odf Exp $
+ * @version $Id: Cover.java,v 1.2 2006/04/06 01:12:51 odf Exp $
  */
 public class Cover extends PeriodicGraph {
     final private Morphism coverMorphism;
@@ -217,5 +217,18 @@ public class Cover extends PeriodicGraph {
         final Point bA = (Point) b.times(A);
         final Vector d = (Vector) bA.minus(image.barycentricPlacement().get(image(v)));
         return (Point) p.plus(d).times(A.inverse());
+    }
+    
+    /**
+     * Computes the position of a node with respect to the cover's coordinate system
+     * given the position of it's image under the cover morphism in the image's coordinate
+     * system.
+     * 
+     * @param v the node.
+     * @param pos a map assigning positions to image nodes.
+     * @return the corresponding position of v.
+     */
+    public Point liftedPosition(final INode v, final Map pos) {
+        return liftedPosition(v, (Point) pos.get(image(v)));
     }
 }
