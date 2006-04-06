@@ -1,42 +1,25 @@
 Still open:
 
-- Option to use first origin choice by default, instead of second.
-
+- Let user pick default origin choice (1st vs. 2nd). Same for hexagonal vs. rhombohedral.
 - Include zeolite frameworks from Atlas.
-
-- Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
-
 - For monoclinic structures, make beta >= 90 (and otherwise smallest possible).
-
 - Give coordinates of edge centers (optional).
-
 - Add "Next" and "Cancel" buttons for multi-structure files.
-
 - Support more output options (e.g. CrystalMaker).
-
 - Make available I/O formats more transparent.
-
 - Support "Description" and "Reference" entries in .cgd and .arc files.
 
-
-
 - Print the number of independent edge lengths (what does that mean?).
-
 - Check for edge intersections and similar problems.
-
 - If graph has collisions, try to refine anyway.
-
 - Plot the quotient graph.
-
 - Compute vertex symbols.
-
 
 =====================================================
 
 Recently done:
 
+- Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
 - Have all edges starting from one of the vertices listed.
-
 - Phrase "Structure is new" differently.
-
 - Give TD10 (weighted mean of cumulative cs numbers starting from 1).
