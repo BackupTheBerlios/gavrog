@@ -1,3 +1,7 @@
+In process:
+
+- Pop up a message box in case of an exception.
+
 Still open:
 
 - Let user pick default origin choice (1st vs. 2nd). Same for hexagonal vs. rhombohedral.

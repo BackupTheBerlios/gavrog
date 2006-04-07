@@ -58,7 +58,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.7 2006/04/04 22:16:39 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.8 2006/04/07 04:34:54 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -320,15 +320,26 @@ public class SystreGUI extends BFrame {
 	        } catch (DataFormatException ex) {
 	            problem = ex;
 	        } catch (Exception ex) {
-	        	reportException(ex, "INTERNAL", "Unexpected exception", true);
-	            continue;
+	        	final boolean cancel = reportException(ex, "INTERNAL",
+						"Unexpected exception", true);
+	        	if (cancel) {
+	        		out.println("Cancelled!");
+	        		break;
+	        	} else {
+	        		continue;
+	        	}
 	        }
 	        if (G == null) {
 	        	if (problem == null) {
 	        		break;
 	        	} else {
-	        		reportException(problem, "INPUT", null, false);
-	        		continue;
+	        		final boolean cancel = reportException(problem, "INPUT", null, false);
+		        	if (cancel) {
+		        		out.println("Cancelled!");
+		        		break;
+		        	} else {
+		        		continue;
+		        	}
 	        	}
 	        }
 	        ++count;
@@ -359,40 +370,62 @@ public class SystreGUI extends BFrame {
 	        }
 	        
 	        out.println("Structure #" + count + displayName + ".");
-	        out.println();
-	        if (problem != null) {
-        		reportException(problem, "INPUT", null, false);
-	        } else {
-	            try {
-	                systre.processGraph(G, archiveName, parser.getSpaceGroup());
-	            } catch (Exception ex) {
-		        	reportException(ex, "INTERNAL", "Unexpected exception", true);
-	            }
-	        }
+			out.println();
+			boolean cancel = false;
+			if (problem != null) {
+				cancel = reportException(problem, "INPUT", null, false);
+			} else {
+				try {
+					systre.processGraph(G, archiveName, parser.getSpaceGroup());
+				} catch (Exception ex) {
+					cancel = reportException(ex, "INTERNAL", "Unexpected exception", true);
+				}
+			}
 	        out.println();
 			out.println("Finished structure #" + count + displayName + ".");
+			if (cancel) {
+        		out.println("Cancelled!");
+				break;
+			}
 	    }
 	
 	    out.println();
 	    out.println("Finished data file \"" + filePath + "\".");
 	}
 
-    private void reportException(final Throwable ex, final String type, final String msg,
-            final boolean details) {
-        final PrintStream out = systre.getOutStream();
-        out.println();
-        if (details) {
-        	out.println("==================================================");
-        }
-        out.print("!!! ERROR (" + type + ") - " + (msg == null ? "" : msg + ":"));
-        if (details) {
-            out.println();
-            out.print(Misc.stackTrace(ex));
-            out.println("==================================================");
-        } else {
-            out.println(ex.getMessage());
-        }
-    }
+	boolean cancel;
+	
+    private boolean reportException(final Throwable ex, final String type,
+			final String msg, final boolean details) {
+		final PrintStream out = systre.getOutStream();
+		out.println();
+		if (details) {
+			out.println("==================================================");
+		}
+		final String text = "ERROR (" + type + ") - " + (msg == null ? "" : msg + ": ");
+		out.print("!!! " + text);
+		if (details) {
+			out.println();
+			out.print(Misc.stackTrace(ex));
+			out.println("==================================================");
+		} else {
+			out.println(ex.getMessage());
+		}
+		cancel = false;
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				public void run() {
+					final BStandardDialog dialog = new BStandardDialog("Systre: " + type
+							+ " ERROR", text + ex.getMessage(), BStandardDialog.ERROR);
+					final int val = dialog.showOptionDialog(SystreGUI.this, new String[] {
+							"OK", "Cancel" }, "OK");
+					cancel = val > 0;
+				}
+			});
+		} catch (final Exception ex2) {
+		}
+		return cancel;
+	}
     
     private void disableButtons() {
         openButton.setEnabled(false);
