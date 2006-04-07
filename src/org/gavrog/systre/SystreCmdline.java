@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.18 2006/04/07 22:33:00 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.19 2006/04/07 23:39:07 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -512,35 +512,38 @@ public class SystreCmdline {
         final Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
         final Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
     
-        final Real a = ((Real) Vector.dot(x, x, gram)).sqrt();
-        final Real b = ((Real) Vector.dot(y, y, gram)).sqrt();
-        final Real c = ((Real) Vector.dot(z, z, gram)).sqrt();
-        final Real f = new FloatingPoint(180.0 / Math.PI);
-        final Real alpha = (Real) ((Real) Vector.dot(y, z, gram)
-                .dividedBy(b.times(c))).acos().times(f);
-        final Real beta = (Real) ((Real) Vector.dot(x, z, gram).dividedBy(a.times(c)))
-                .acos().times(f);
-        final Real gamma = (Real) ((Real) Vector.dot(x, y, gram)
-                .dividedBy(a.times(b))).acos().times(f);
-    
-        //    ... print the cell parameters
-        if (cgdFormat) {
-            out.println("  CELL " + fmtReal5.format(a.doubleValue()) + " "
-                        + fmtReal5.format(b.doubleValue()) + " "
-                        + fmtReal5.format(c.doubleValue()) + " "
-                        + fmtReal4.format(alpha.doubleValue()) + " "
-                        + fmtReal4.format(beta.doubleValue()) + " "
-                        + fmtReal4.format(gamma.doubleValue()));
-        } else {
-            out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
-            out.println("       a = " + fmtReal5.format(a.doubleValue()) + ", b = "
-                        + fmtReal5.format(b.doubleValue()) + ", c = "
-                        + fmtReal5.format(c.doubleValue()));
-            out.println("       alpha = " + fmtReal4.format(alpha.doubleValue())
-                        + ", beta = " + fmtReal4.format(beta.doubleValue())
-                        + ", gamma = " + fmtReal4.format(gamma.doubleValue()));
+        final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
+        final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
+        final double c = Math.sqrt(((Real) Vector.dot(z, z, gram)).doubleValue());
+        final double f = 180.0 / Math.PI;
+        final double alpha = Math.acos(((Real) Vector.dot(y, z, gram)).doubleValue()
+                / (b * c)) * f;
+        final double beta = Math.acos(((Real) Vector.dot(x, z, gram)).doubleValue()
+                / (a * c)) * f;
+        final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
+                / (a * b)) * f;
+
+        //    ... special treatment for monoclinic groups
+        if (finder.getCrystalSystem() == SpaceGroupFinder.MONOCLINIC_SYSTEM) {
+            if (beta < 90.0) {
+                out.println("   # Monoclinic with beta < 90.0. Fix coming soon...");
+                out.println();
+            }
         }
         
+        //    ... print the cell parameters
+        if (cgdFormat) {
+            out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b) + " "
+                    + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
+                    + fmtReal4.format(beta) + " " + fmtReal4.format(gamma));
+        } else {
+            out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
+            out.println("       a = " + fmtReal5.format(a) + ", b = "
+                    + fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
+            out.println("       alpha = " + fmtReal4.format(alpha) + ", beta = "
+                    + fmtReal4.format(beta) + ", gamma = " + fmtReal4.format(gamma));
+        }
+
         if (DEBUG && !cgdFormat) {
             for (int i = 0; i < d; ++i) {
                 final Vector v = Vector.unit(d, i);
