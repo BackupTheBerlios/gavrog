@@ -1,12 +1,12 @@
 In process:
 
-- Pop up a message box in case of an exception.
+(empty)
 
 Still open:
 
+- For monoclinic structures, make beta >= 90.
 - Let user pick default origin choice (1st vs. 2nd). Same for hexagonal vs. rhombohedral.
 - Include zeolite frameworks from Atlas.
-- For monoclinic structures, make beta >= 90 (and otherwise smallest possible).
 - Give coordinates of edge centers (optional).
 - Add "Next" and "Cancel" buttons for multi-structure files.
 - Support more output options (e.g. CrystalMaker).
@@ -23,6 +23,7 @@ Still open:
 
 Recently done:
 
+- Pop up a message box in case of an exception.
 - Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
 - Have all edges starting from one of the vertices listed.
 - Phrase "Structure is new" differently.
