@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.17 2006/04/07 06:12:35 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.18 2006/04/07 22:33:00 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -98,7 +98,6 @@ public class SystreCmdline {
 	private String lastCgdString;
     // --- the last graph processed with minimal repeat unit
     private PeriodicGraph lastGraphMinimal;
-    
     
     public SystreCmdline() {
         // --- read the default archive
@@ -161,16 +160,12 @@ public class SystreCmdline {
 
         // --- test if it is Systre-compatible
         if (!G.isConnected()) {
-            out.println("!!! ERROR (STRUCTURE) - Graph must be connected.");
-            out.println();
-            out.flush();
-            return;
+            final String msg = "Structure is not connected";
+            throw new SystreException(SystreException.STRUCTURE, msg);
         }
         if (!G.isStable()) {
-            out.println("!!! ERROR (STRUCTURE) - Graph must not have collisions.");
-            out.println();
-            out.flush();
-            return;
+            final String msg = "Structure has collisions";
+            throw new SystreException(SystreException.STRUCTURE, msg);
         }
 
         // --- determine a minimal repeat unit
@@ -242,11 +237,8 @@ public class SystreCmdline {
 
         // --- bail out - for now - if not a 3d structure
         if (d != 3) {
-            out.println("!!! ERROR (STRUCTURE) - No further support yet for dimension "
-                    + d + ".");
-            out.println();
-            out.flush();
-            return;
+            final String msg = "No further support yet for dimension " + d;
+            throw new SystreException(SystreException.STRUCTURE, msg);
         }
 
         // --- find the space group name and conventional settings
@@ -333,7 +325,8 @@ public class SystreCmdline {
                     this.outputArchive.write("\n");
                     this.outputArchive.flush();
                 } catch (IOException ex) {
-                    out.println("!!! ERROR (FILE) - Could not write structure to file.");
+                    final String msg = "Could not write to archive";
+                    throw new SystreException(SystreException.FILE, msg);
                 }
             }
         }
@@ -386,9 +379,8 @@ public class SystreCmdline {
                     }
                 }
                 if (problems > 0) {
-                    out.println("!!! ERROR (INTERNAL) - Embedder misplaced " + problems
-                                + " points.");
-                    break;
+                    final String msg = "Embedder misplaced " + problems + " points";
+                    throw new SystreException(SystreException.INTERNAL, msg);
                 }
             }
 
@@ -421,12 +413,8 @@ public class SystreCmdline {
                         out.println("   Falling back to barycentric positions.");
                     }
                 } else {
-                    out.println();
-                    out.println("==================================================");
-                    out.println("!!! ERROR (INTERNAL) - could not verify output data: "
-                                + ex);
-                    out.println(Misc.stackTrace(ex));
-                    out.println("==================================================");
+                    final String msg = "Could not verify output data";
+                    throw new SystreException(SystreException.INTERNAL, msg, ex);
                 }
             }
 
@@ -894,6 +882,8 @@ public class SystreCmdline {
             } else {
                 try {
                     processGraph(G, archiveName, parser.getSpaceGroup());
+                } catch (SystreException ex) {
+                    out.println("!!! ERROR (" + ex.getType() + ") - " + ex.getMessage() + ".");
                 } catch (Exception ex) {
                     out.println("==================================================");
                     out.println("!!! ERROR (INTERNAL) - Unexpected exception:");

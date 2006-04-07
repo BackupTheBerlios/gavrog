@@ -58,7 +58,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.8 2006/04/07 04:34:54 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.9 2006/04/07 22:33:00 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -295,6 +295,7 @@ public class SystreGUI extends BFrame {
 	 * @param filePath the name of the input file.
 	 */
 	public void processDataFile(final String filePath) {
+        final String skipping = "\n!!! SKIPPING REST OF FILE AS REQUESTED.";
 		final PrintStream out = this.systre.getOutStream();
 		
 	    // --- set up a parser for reading input from the given file
@@ -323,7 +324,7 @@ public class SystreGUI extends BFrame {
 	        	final boolean cancel = reportException(ex, "INTERNAL",
 						"Unexpected exception", true);
 	        	if (cancel) {
-	        		out.println("Cancelled!");
+	        		out.println(skipping);
 	        		break;
 	        	} else {
 	        		continue;
@@ -335,7 +336,7 @@ public class SystreGUI extends BFrame {
 	        	} else {
 	        		final boolean cancel = reportException(problem, "INPUT", null, false);
 		        	if (cancel) {
-		        		out.println("Cancelled!");
+		        		out.println(skipping);
 		        		break;
 		        	} else {
 		        		continue;
@@ -377,6 +378,8 @@ public class SystreGUI extends BFrame {
 			} else {
 				try {
 					systre.processGraph(G, archiveName, parser.getSpaceGroup());
+                } catch (SystreException ex) {
+                    cancel = reportException(ex, ex.getType().toString(), null, false);
 				} catch (Exception ex) {
 					cancel = reportException(ex, "INTERNAL", "Unexpected exception", true);
 				}
@@ -384,7 +387,7 @@ public class SystreGUI extends BFrame {
 	        out.println();
 			out.println("Finished structure #" + count + displayName + ".");
 			if (cancel) {
-        		out.println("Cancelled!");
+        		out.println(skipping);
 				break;
 			}
 	    }
@@ -395,7 +398,7 @@ public class SystreGUI extends BFrame {
 
 	boolean cancel;
 	
-    private boolean reportException(final Throwable ex, final String type,
+    private synchronized boolean reportException(final Throwable ex, final String type,
 			final String msg, final boolean details) {
 		final PrintStream out = systre.getOutStream();
 		out.println();
@@ -403,25 +406,29 @@ public class SystreGUI extends BFrame {
 			out.println("==================================================");
 		}
 		final String text = "ERROR (" + type + ") - " + (msg == null ? "" : msg + ": ");
-		out.print("!!! " + text);
-		if (details) {
-			out.println();
-			out.print(Misc.stackTrace(ex));
-			out.println("==================================================");
-		} else {
-			out.println(ex.getMessage());
-		}
-		cancel = false;
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
-					final BStandardDialog dialog = new BStandardDialog("Systre: " + type
-							+ " ERROR", text + ex.getMessage(), BStandardDialog.ERROR);
-					final int val = dialog.showOptionDialog(SystreGUI.this, new String[] {
-							"OK", "Cancel" }, "OK");
-					cancel = val > 0;
-				}
-			});
+        out.print("!!! " + text);
+        if (details) {
+            out.println();
+            out.print(Misc.stackTrace(ex));
+            out.println("==================================================");
+        } else {
+            out.println(ex.getMessage() + ".");
+        }
+        cancel = false;
+        try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+                public synchronized void run() {
+                    final String title = "Systre: " + type + " ERROR";
+                    final String msg = text + ex.getMessage() + ".";
+                    final BStandardDialog dialog = new BStandardDialog(title, msg,
+                            BStandardDialog.ERROR);
+                    final String ok = "Continue with next structure";
+                    final String skip = "Skip rest of file";
+                    final String choices[] = new String[] { ok, skip };
+                    final int val = dialog.showOptionDialog(SystreGUI.this, choices, ok);
+                    cancel = val > 0;
+                }
+            });
 		} catch (final Exception ex2) {
 		}
 		return cancel;
