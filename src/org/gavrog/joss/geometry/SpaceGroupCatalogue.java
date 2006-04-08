@@ -36,9 +36,12 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.12 2006/01/24 22:46:18 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.13 2006/04/08 05:13:55 odf Exp $
  */
 public class SpaceGroupCatalogue {
+	private static boolean preferSecondOrigin = true;
+	private static boolean preferHexagonal = true;
+	
     /**
      * Making the constructor private prevents instantiation (I hope).
      */
@@ -238,13 +241,21 @@ public class SpaceGroupCatalogue {
         if (base.charAt(0) == 'R') {
             if (ext.equals("R")) {
                 candidates = new String[] { base + ":R" };
-            } else {
+            } else if (ext.equals("H")) {
+                candidates = new String[] { base + ":H" };
+            } else if (getPreferHexagonal()){
                 candidates = new String[] { base + ":H", base + ":R" };
+            } else {
+                candidates = new String[] { base + ":R", base + ":H" };
             }
         } else if (ext.equals("1")) {
             candidates = new String[] { base + ":1", base };
-        } else {
+        } else if (ext.equals("2")) {
+            candidates = new String[] { base + ":2", base };
+        } else if (getPreferSecondOrigin()){
             candidates = new String[] { base, base + ":2", base + ":1" };
+        } else {
+            candidates = new String[] { base, base + ":1", base + ":2" };
         }
         
         for (int i = 0; i < candidates.length; ++i) {
@@ -297,4 +308,20 @@ public class SpaceGroupCatalogue {
         }
         return lookup.values().iterator();
     }
+
+	public static boolean getPreferHexagonal() {
+		return preferHexagonal;
+	}
+
+	public static void setPreferHexagonal(boolean preferHexagonal) {
+		SpaceGroupCatalogue.preferHexagonal = preferHexagonal;
+	}
+
+	public static boolean getPreferSecondOrigin() {
+		return preferSecondOrigin;
+	}
+
+	public static void setPreferSecondOrigin(boolean preferSecondOrigin) {
+		SpaceGroupCatalogue.preferSecondOrigin = preferSecondOrigin;
+	}
 }

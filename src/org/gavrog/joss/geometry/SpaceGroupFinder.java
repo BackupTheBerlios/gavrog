@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.47 2006/03/19 05:16:29 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.48 2006/04/08 05:13:55 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -935,6 +935,21 @@ public class SpaceGroupFinder {
      */
     public String getGroupName() {
         return this.groupName;
+    }
+    
+    /**
+	 * Returns the extended name of the group under inspection. The extended
+	 * name consists of the groups name according to the crystallographic tables
+	 * and an extension of the form ':1', ':2', ':R' or ':H', indicating first
+	 * or second origin choice and rhombohedral or hexagonal setting for
+	 * rhombohedral groups, respectively.
+	 * 
+	 * @return the name of the matched group.
+	 */
+    public String getExtendedGroupName() {
+    	final String name = this.groupName;
+    	final String ext = (this.extension == null ? "" : ":" + this.extension);
+        return name + ext;
     }
     
     /**

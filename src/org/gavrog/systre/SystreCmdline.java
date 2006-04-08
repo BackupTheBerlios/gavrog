@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.19 2006/04/07 23:39:07 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.20 2006/04/08 05:13:56 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -245,12 +245,23 @@ public class SystreCmdline {
         final SpaceGroup group = new SpaceGroup(d, ops);
         final SpaceGroupFinder finder = new SpaceGroupFinder(group);
         final String groupName = finder.getGroupName();
+        final String extendedGroupName = finder.getExtendedGroupName();
         final CoordinateChange toStd = finder.getToStd();
         out.println("   Ideal space group is " + groupName + ".");
         final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
         if (!givenName.equals(groupName)) {
             out.println("   Ideal group differs from given (" + groupName
                     + " vs " + givenName + ").");
+        }
+        final String ext = finder.getExtension();
+        if ("1".equals(ext)) {
+        	out.println("     (using first origin choice)");
+        } else if ("2".equals(ext)) {
+        	out.println("     (using second origin choice)");
+        } else if ("H".equals(ext)) {
+        	out.println("     (using hexagonal setting)");
+        } else if ("R".equals(ext)) {
+        	out.println("     (using rhombohedral setting)");
         }
         if (DEBUG) {
             out.println("\t\t@@@ transformed operators:");
@@ -262,12 +273,14 @@ public class SystreCmdline {
         out.flush();
 
         // --- verify the output of the spacegroup finder
-        final CoordinateChange trans = SpaceGroupCatalogue.transform(d, groupName);
+        final CoordinateChange trans = SpaceGroupCatalogue
+				.transform(d, extendedGroupName);
         if (!trans.isOne()) {
             final String msg = "Produced non-conventional space group setting.";
             throw new RuntimeException(msg);
         }
-        final Set conventionalOps = new SpaceGroup(d, groupName).primitiveOperators();
+        final Set conventionalOps = new SpaceGroup(d, extendedGroupName)
+				.primitiveOperators();
         final Set opsFound = new HashSet();
         opsFound.addAll(ops);
         for (int i = 0; i < d; ++i) {
@@ -493,7 +506,7 @@ public class SystreCmdline {
         
         // --- extract some data from the arguments
         final int d = G.getDimension();
-        final String groupName = finder.getGroupName();
+        final String extendedGroupName = finder.getExtendedGroupName();
         final CoordinateChange toStd = finder.getToStd();
         final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
         final boolean cellRelaxed = embedder.cellRelaxed();
@@ -503,7 +516,7 @@ public class SystreCmdline {
         if (cgdFormat) {
             out.println("CRYSTAL");
             out.println("  NAME " + name);
-            out.println("  GROUP " + groupName);
+            out.println("  GROUP " + extendedGroupName);
         }
         
         // --- print the results of the relaxation in the conventional setting

@@ -31,6 +31,7 @@ import javax.swing.SwingUtilities;
 
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
+import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
@@ -58,7 +59,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.9 2006/04/07 22:33:00 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.10 2006/04/08 05:13:56 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -266,6 +267,14 @@ public class SystreGUI extends BFrame {
 				.getUseBuiltinArchive());
 		builtinBox.setBackground(null);
 		column.add(builtinBox);
+		final BCheckBox secondOriginBox = new BCheckBox("Prefer Second Origin Choice",
+				SpaceGroupCatalogue.getPreferSecondOrigin());
+		secondOriginBox.setBackground(null);
+		column.add(secondOriginBox);
+		final BCheckBox hexagonalBox = new BCheckBox("Prefer Hexagonal Group Setting",
+				SpaceGroupCatalogue.getPreferHexagonal());
+		hexagonalBox.setBackground(null);
+		column.add(hexagonalBox);
 		final BButton okButton = makeButton("Ok");
 		column.add(okButton, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
 				defaultInsets, null));
@@ -280,6 +289,16 @@ public class SystreGUI extends BFrame {
 		builtinBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				systre.setUseBuiltinArchive(builtinBox.getState());
+			}
+		});
+		secondOriginBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
+			public void handleEvent(final Object event) {
+				SpaceGroupCatalogue.setPreferSecondOrigin(secondOriginBox.getState());
+			}
+		});
+		hexagonalBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
+			public void handleEvent(final Object event) {
+				SpaceGroupCatalogue.setPreferHexagonal(hexagonalBox.getState());
 			}
 		});
 		okButton.addEventLink(CommandEvent.class, dialog, "dispose");
