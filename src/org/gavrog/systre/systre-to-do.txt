@@ -1,18 +1,22 @@
+=====================================================
+
 In process:
 
 (empty)
 
+=====================================================
+
 Still open:
 
-- For monoclinic structures, make beta >= 90.
-- Include zeolite frameworks from Atlas.
-- Give coordinates of edge centers (optional).
 - Add "Next" and "Cancel" buttons for multi-structure files.
-- Support more output options (e.g. CrystalMaker).
 - Make available I/O formats more transparent.
+- For monoclinic structures, make beta >= 90.
 - Support "Description" and "Reference" entries in .cgd and .arc files.
+- Include zeolite frameworks from Atlas.
+- Support more output options (e.g. CrystalMaker).
+- Give coordinates of edge centers (optional).
 
-- Print the number of independent edge lengths (what does that mean?).
+('bigger' projects:)
 - Check for edge intersections and similar problems.
 - If graph has collisions, try to refine anyway.
 - Plot the quotient graph.
@@ -28,3 +32,5 @@ Recently done:
 - Have all edges starting from one of the vertices listed.
 - Phrase "Structure is new" differently.
 - Give TD10 (weighted mean of cumulative cs numbers starting from 1).
+
+=====================================================
