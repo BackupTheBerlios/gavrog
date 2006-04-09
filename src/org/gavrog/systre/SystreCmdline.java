@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.22 2006/04/09 05:25:38 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.23 2006/04/09 05:33:18 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -793,6 +793,11 @@ public class SystreCmdline {
     	
     	// TODO add more corrections, also for triclinic
     	if (system == SpaceGroupFinder.MONOCLINIC_SYSTEM) {
+    		if (type1.contains(name)) {
+    		} else if (type2.contains(name)) {
+    		} else if (type3.contains(name)) {
+    		} else if (type4.contains(name)) {
+    		}
     		if (Vector.dot(x, z, gram).isPositive()) {
     			correction = correction.times("x, -y, -z");
     		}
