@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.Real;
  * Various methods related to lattices and lattice bases.
  * 
  * @author Olaf Delgado
- * @version $Id: Lattices.java,v 1.1 2006/03/19 05:16:29 odf Exp $
+ * @version $Id: Lattices.java,v 1.2 2006/04/09 05:25:00 odf Exp $
  */
 public class Lattices {
 
@@ -45,18 +45,18 @@ public class Lattices {
 	}
 
 	/**
-	 * Performs a gauss elimination on a lattice basis.
+	 * Performs a gauss elimination on a pair of independent vectors.
 	 * 
-	 * @param v the vectors forming the basis.
+	 * @param v the input vectors.
 	 * @param M the quadratic form determining the metric.
-	 * @return vectors forming a reduced basis.
+	 * @return reduced vectors spanning the same lattice.
 	 */
 	public static Vector[] gaussReduced(Vector[] v, Matrix M) {
-	    if (v.length != 2 || v[0].getDimension() != 2) {
-	        final String msg = "first argument must contain 2 vectors of dimension 2";
+	    if (v.length != 2) {
+	        final String msg = "first argument must contain 2 vectors";
 	        throw new IllegalArgumentException(msg);
 	    }
-	    if (M.numberOfRows() != 2 || !M.equals(M.transposed())) {
+	    if (!M.equals(M.transposed())) {
 	        final String msg = "second argument must be a symmetric 2x2 matrix";
 	        throw new IllegalArgumentException(msg);
 	    }
@@ -109,19 +109,19 @@ public class Lattices {
 	}
 
 	/**
-	 * Performs a Selling reduction on a lattice basis
+	 * Performs a Selling reduction on a set of 3 independent vectors.
 	 * 
-	 * @param v the vectors forming the basis.
+	 * @param v the input vectors.
 	 * @param M the quadratic form determining the metric.
-	 * @return vectors forming a reduced basis.
+	 * @return reduced vectors spanning the same lattice.
 	 */
 	public static Vector[] sellingReduced(final Vector[] v, final Matrix M) {
-	    if (v.length != 3 || v[0].getDimension() != 3) {
-	        final String msg = "first argument must contain 3 vectors of dimension 3";
+	    if (v.length != 3) {
+	        final String msg = "first argument must contain 3 vectors";
 	        throw new IllegalArgumentException(msg);
 	    }
-	    if (M.numberOfRows() != 3 || !M.equals(M.transposed())) {
-	        final String msg = "second argument must be a symmetric 3x3 matrix";
+	    if (!M.equals(M.transposed())) {
+	        final String msg = "second argument must be a symmetric matrix";
 	        throw new IllegalArgumentException(msg);
 	    }
 	    
@@ -144,14 +144,6 @@ public class Lattices {
 	 */
 	public static Vector[] dirichletVectors(final Vector[] b, final Matrix M) {
 	    final int dim = b.length;
-	    if (b[0].getDimension() != dim) {
-	        final String msg = "illegal first argument";
-	        throw new IllegalArgumentException(msg);
-	    }
-	    if (M.numberOfRows() != dim) {
-	        final String msg = "wrong dimension for second argument";
-	        throw new IllegalArgumentException(msg);
-	    }
 	    if (!M.equals(M.transposed())) {
 	        final String msg = "second argument must be symmetric, but was " + M;
 	        throw new IllegalArgumentException(msg);
