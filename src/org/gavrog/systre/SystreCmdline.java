@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.21 2006/04/09 02:25:13 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.22 2006/04/09 05:25:38 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -526,7 +526,7 @@ public class SystreCmdline {
         Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
     
         //    ... special treatment for monoclinic groups
-        final CoordinateChange correction = monoclinic_correction(finder, gram, x, y, z);
+        final CoordinateChange correction = cell_correction(finder, gram, x, y, z);
         x = (Vector) Vector.unit(3, 0).times(correction).times(fromStd);
         y = (Vector) Vector.unit(3, 1).times(correction).times(fromStd);
         z = (Vector) Vector.unit(3, 2).times(correction).times(fromStd);
@@ -736,23 +736,69 @@ public class SystreCmdline {
         out.flush();
     }
 
-    private CoordinateChange monoclinic_correction(final SpaceGroupFinder finder,
-			final Matrix gram, final Vector x, final Vector y, final Vector z) {
-    	// TODO add more corrections, also for triclinic
-    	final int dim = x.getDimension();
+    private CoordinateChange cell_correction(final SpaceGroupFinder finder,
+			final Matrix gram, final Vector old_x, Vector old_y, final Vector old_z) {
+    	
+    	// --- get and check the dimension
+    	final int dim = old_x.getDimension();
     	if (dim != 3) {
     		final String msg = "Method called with incorrect dimension";
     		throw new SystreException(SystreException.INTERNAL, msg);
     	}
-    	if (finder.getCrystalSystem() != SpaceGroupFinder.MONOCLINIC_SYSTEM) {
-        	return new CoordinateChange(Matrix.one(dim));
+    	
+    	// --- two little helper classes
+        final class NameSet extends HashSet {
+        	public NameSet(final String names[]) {
+        		super();
+        		for (int i = 0; i < names.length; ++i) {
+        			this.add(names[i]);
+        		}
+        	}
+        }
+        
+        final class Correction extends CoordinateChange {
+        	public Correction() {
+        		super(Matrix.one(dim));
+        	}
+        	
+        	private Correction(final IArithmetic op) {
+        		super((Operator) op);
+        	}
+        	
+        	public Correction times(final String other) {
+        		return new Correction(this.times(new Operator(other)));
+        	}
+        }
+        
+    	// --- no centering, no glide, both a and c are free
+    	final Set type1 = new NameSet(new String[] { "P121", "P1211", "P1m1", "P12/m1",
+				"P121/m1" });
+    	// --- no centering, a is free
+    	final Set type2 = new NameSet(new String[] { "P1c1", "P12/c1", "P121/c1" });
+    	// --- no glide, c is free
+    	final Set type3 = new NameSet(new String[] { "C121", "C1m1", "C12/m1" });
+    	// --- both glide and centering, only signs are free
+    	final Set type4 = new NameSet(new String[] { "C1c1", "C12/c1" });
+    	
+    	// --- extract some basic info
+    	final String name = finder.getGroupName();
+    	final int system = finder.getCrystalSystem();
+    	
+    	// --- copy the original cell vectors
+    	Vector x = old_x;
+    	Vector z = old_z;
+    	
+    	// --- start with no correction
+    	Correction correction = new Correction();
+    	
+    	// TODO add more corrections, also for triclinic
+    	if (system == SpaceGroupFinder.MONOCLINIC_SYSTEM) {
+    		if (Vector.dot(x, z, gram).isPositive()) {
+    			correction = correction.times("x, -y, -z");
+    		}
     	}
     	
-		if (Vector.dot(x, z, gram).isPositive()) {
-			return new CoordinateChange(new Operator("x, -y, -z"));
-		} else {
-			return new CoordinateChange(Matrix.one(dim));
-		}
+    	return correction;
 	}
 
 	/**
