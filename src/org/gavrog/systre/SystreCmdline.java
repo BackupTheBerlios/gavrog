@@ -67,7 +67,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.20 2006/04/08 05:13:56 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.21 2006/04/09 02:25:13 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -521,10 +521,16 @@ public class SystreCmdline {
         
         // --- print the results of the relaxation in the conventional setting
         final Matrix gram = embedder.getGramMatrix();
-        final Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
-        final Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
-        final Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
+        Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
+        Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
+        Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
     
+        //    ... special treatment for monoclinic groups
+        final CoordinateChange correction = monoclinic_correction(finder, gram, x, y, z);
+        x = (Vector) Vector.unit(3, 0).times(correction).times(fromStd);
+        y = (Vector) Vector.unit(3, 1).times(correction).times(fromStd);
+        z = (Vector) Vector.unit(3, 2).times(correction).times(fromStd);
+        
         final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
         final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
         final double c = Math.sqrt(((Real) Vector.dot(z, z, gram)).doubleValue());
@@ -536,15 +542,7 @@ public class SystreCmdline {
         final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
                 / (a * b)) * f;
 
-        //    ... special treatment for monoclinic groups
-        if (finder.getCrystalSystem() == SpaceGroupFinder.MONOCLINIC_SYSTEM) {
-            if (beta < 90.0) {
-                out.println("   # Monoclinic with beta < 90.0. Fix coming soon...");
-                out.println();
-            }
-        }
-        
-        //    ... print the cell parameters
+        // ... print the cell parameters
         if (cgdFormat) {
             out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b) + " "
                     + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
@@ -576,7 +574,7 @@ public class SystreCmdline {
         final Map lifted = new HashMap();
         for (final Iterator nodes = cov.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
-            lifted.put(v, cov.liftedPosition(v, pos).plus(shift));
+            lifted.put(v, cov.liftedPosition(v, pos).plus(shift).times(correction));
         }
         
         //    ... print the atom positions
@@ -738,13 +736,34 @@ public class SystreCmdline {
         out.flush();
     }
 
-    /**
-     * Does what it says.
-     * 
-     * @param G a periodic graph.
-     * @param embedder an embedding for G.
-     * @return the smallest distance between nodes that are not connected.
-     */
+    private CoordinateChange monoclinic_correction(final SpaceGroupFinder finder,
+			final Matrix gram, final Vector x, final Vector y, final Vector z) {
+    	// TODO add more corrections, also for triclinic
+    	final int dim = x.getDimension();
+    	if (dim != 3) {
+    		final String msg = "Method called with incorrect dimension";
+    		throw new SystreException(SystreException.INTERNAL, msg);
+    	}
+    	if (finder.getCrystalSystem() != SpaceGroupFinder.MONOCLINIC_SYSTEM) {
+        	return new CoordinateChange(Matrix.one(dim));
+    	}
+    	
+		if (Vector.dot(x, z, gram).isPositive()) {
+			return new CoordinateChange(new Operator("x, -y, -z"));
+		} else {
+			return new CoordinateChange(Matrix.one(dim));
+		}
+	}
+
+	/**
+	 * Does what it says.
+	 * 
+	 * @param G
+	 *            a periodic graph.
+	 * @param embedder
+	 *            an embedding for G.
+	 * @return the smallest distance between nodes that are not connected.
+	 */
     private double smallestNonBondedDistance(final PeriodicGraph G,
 			final IEmbedder embedder) {
     	// --- get some data about the embedding
