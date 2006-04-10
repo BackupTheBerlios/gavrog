@@ -20,12 +20,17 @@ package org.gavrog.systre;
  * Exceptions thrown by Systre's methods.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreException.java,v 1.1 2006/04/07 22:33:00 odf Exp $
+ * @version $Id: SystreException.java,v 1.2 2006/04/10 23:07:34 odf Exp $
  */
 public class SystreException extends RuntimeException {
     public static class Type {
         final private String text;
-        public Type(final String text) {
+        
+        /**
+         * Constructor is private, so only the instances below will exist.
+         * @param text
+         */
+        private Type(final String text) {
             this.text = text;
         }
         public String toString() {
