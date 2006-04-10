@@ -40,21 +40,13 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.48 2006/04/08 05:13:55 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.49 2006/04/10 23:08:17 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
     
-    final public static int CUBIC_SYSTEM = 432;
-    final public static int ORTHORHOMBIC_SYSTEM = 222;
-    final public static int HEXAGONAL_SYSTEM = 622;
-    final public static int TETRAGONAL_SYSTEM = 422;
-    final public static int TRIGONAL_SYSTEM = 32;
-    final public static int MONOCLINIC_SYSTEM = 2;
-    final public static int TRICLINIC_SYSTEM = 1;
-    
     final private SpaceGroup G;
-    final private int crystalSystem;
+    final private CrystalSystem crystalSystem;
     final private CoordinateChange toStd;
     final private String groupName;
     final private String extension;
@@ -73,7 +65,7 @@ public class SpaceGroupFinder {
         if (d == 3) {
             // --- first step of analysis
             Object res[] = analyzePointGroup3D();
-            this.crystalSystem = ((Integer) res[0]).intValue();
+            this.crystalSystem = (CrystalSystem) res[0];
             final Matrix preliminaryBasis = (Matrix) res[1];
             
             // --- compute the coordinate change to the preliminary basis
@@ -176,39 +168,34 @@ public class SpaceGroupFinder {
      * Generates an array of coordinate changes which the matching of normalized operator
      * lists needs to consider for a given crystal system and centering.
      * 
-     * @param crystalSystem the crystal system.
+     * @param system the crystal system.
      * @param centering the lattice centering.
      * @return the list of coordinate changes.
      */
-    private static CoordinateChange[] makeVariations(final int crystalSystem, final char centering) {
+    private static CoordinateChange[] makeVariations(final CrystalSystem system, final char centering) {
         final String codes[];
-        switch (crystalSystem) {
-        case MONOCLINIC_SYSTEM:
+        if (CrystalSystem.MONOCLINIC.equals(system)) {
             if (centering == 'A') {
                 codes = new String[] { "x,y,z", "-x,y-x,-z" };
             } else {
                 codes = new String[] { "x,y,z", "-y,x-y,z", "y-x,-x,z" };
             }
-            break;
-        case ORTHORHOMBIC_SYSTEM:
+        } else if (CrystalSystem.ORTHORHOMBIC.equals(system)) {
             if (centering == 'C') {
                 codes = new String[] { "x,y,z", "y,x,-z" };
             } else {
                 codes = new String[] { "x,y,z", "z,x,y", "y,z,x", "y,x,-z", "x,z,-y",
                         "z,y,-x" };
             }
-            break;
-        case TRIGONAL_SYSTEM:
+        } else if (CrystalSystem.TRIGONAL.equals(system)) {
             if (centering == 'P') {
                 codes = new String[] { "x,y,z", "x-y,x,z" };
             } else {
                 codes = new String[] { "x,y,z" };
             }
-            break;
-        case CUBIC_SYSTEM:
+        } else if (CrystalSystem.CUBIC.equals(system)) {
             codes = new String[] { "x,y,z", "-y,x,z" };
-            break;
-        default:
+        } else {
             codes = new String[] { "x,y,z" };
         }
         
@@ -247,7 +234,7 @@ public class SpaceGroupFinder {
         }
         
         // --- initialize some variables
-        final int crystalSystem;
+        final CrystalSystem crystalSystem;
         Vector x = null, y = null, z = null;
         Operator R = null;
         
@@ -257,13 +244,13 @@ public class SpaceGroupFinder {
         
         if (sixFold.size() > 0) {
             // --- there is a six-fold axis
-            crystalSystem = HEXAGONAL_SYSTEM;
+            crystalSystem = CrystalSystem.HEXAGONAL;
             final Operator A = (Operator) sixFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) A.times(A);
         } else if (fourFold.size() > 1) {
             // --- there is more than one four-fold, but no six-fold, axis
-            crystalSystem = CUBIC_SYSTEM;
+            crystalSystem = CrystalSystem.CUBIC;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) threeFold.iterator().next();
@@ -271,13 +258,13 @@ public class SpaceGroupFinder {
             y = (Vector) x.times(R);
         } else if (fourFold.size() > 0) {
             // --- there is exactly one four-fold, but no six-fold, axis
-            crystalSystem = TETRAGONAL_SYSTEM;
+            crystalSystem = CrystalSystem.TETRAGONAL;
             final Operator A = (Operator) fourFold.iterator().next();
             z = A.linearAxis();
             R = A;
         } else if (threeFold.size() > 1) {
             // --- multiple three-fold, but no four- or six-fold, axes
-            crystalSystem = CUBIC_SYSTEM;
+            crystalSystem = CrystalSystem.CUBIC;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) threeFold.iterator().next();
@@ -285,12 +272,12 @@ public class SpaceGroupFinder {
             y = (Vector) x.times(R);
         } else if (threeFold.size() > 0) {
             // --- exactly one three-fold axis, but no four- or six-fold axes
-            crystalSystem = TRIGONAL_SYSTEM;
+            crystalSystem = CrystalSystem.TRIGONAL;
             R = (Operator) threeFold.iterator().next();
             z = R.linearAxis();
         } else if (twoFold.size() > 1) {
             // --- mutliply two-fold, no three-, four- or six-fold, axes
-            crystalSystem = ORTHORHOMBIC_SYSTEM;
+            crystalSystem = CrystalSystem.ORTHORHOMBIC;
             final Iterator ops = twoFold.iterator();
             final Operator A = (Operator) ops.next();
             final Operator B = (Operator) ops.next();
@@ -300,12 +287,12 @@ public class SpaceGroupFinder {
             z = C.linearAxis();
         } else if (twoFold.size() > 0) {
             // --- exactly one two-fold, but no three-, four- or six-fold
-            crystalSystem = MONOCLINIC_SYSTEM;
+            crystalSystem = CrystalSystem.MONOCLINIC;
             final Operator A = (Operator) twoFold.iterator().next();
             z = A.linearAxis();
         } else {
             // --- no two-, three-, four- or six-fold axes
-            crystalSystem = TRICLINIC_SYSTEM;
+            crystalSystem = CrystalSystem.TRICLINIC;
             z = new Vector(0, 0, 1);
         }
 
@@ -330,7 +317,7 @@ public class SpaceGroupFinder {
                 } else if (twoFold.size() > 0) {
                     final Operator M = (Operator) twoFold.iterator().next();
                     x = (Vector) x.minus(x.times(M));
-                } else if (crystalSystem == TRIGONAL_SYSTEM) {
+                } else if (crystalSystem == CrystalSystem.TRIGONAL) {
                     x = (Vector) x.minus(x.times(R));
                 }
             }
@@ -360,7 +347,7 @@ public class SpaceGroupFinder {
         final Matrix M = Vector.toMatrix(new Vector[] { x, y, z });
         
         // --- return the results
-        return new Object[] { new Integer(crystalSystem), M };
+        return new Object[] { crystalSystem, M };
     }
     
     /**
@@ -376,29 +363,22 @@ public class SpaceGroupFinder {
         final Object res[];
         
         // --- call the appropriate method for the group's crystal system
-        switch (this.crystalSystem) {
-        case CUBIC_SYSTEM:
+        final CrystalSystem system = this.crystalSystem;
+        if (CrystalSystem.CUBIC.equals(system)) {
             res = normalizedBasisCubic(reduced);
-            break;
-        case HEXAGONAL_SYSTEM:
+        } else if (CrystalSystem.HEXAGONAL.equals(system)) {
             res = normalizedBasisHexagonal(reduced);
-            break;
-        case TRIGONAL_SYSTEM:
+        } else if (CrystalSystem.TRIGONAL.equals(system)) {
             res = normalizedBasisTrigonal(reduced);
-            break;
-        case TETRAGONAL_SYSTEM:
+        } else if (CrystalSystem.TETRAGONAL.equals(system)) {
             res = normalizedBasisTetragonal(reduced);
-            break;
-        case ORTHORHOMBIC_SYSTEM:
+        } else if (CrystalSystem.ORTHORHOMBIC.equals(system)) {
             res = normalizedBasisOrthorhombic(reduced);
-            break;
-        case MONOCLINIC_SYSTEM:
+        } else if (CrystalSystem.MONOCLINIC.equals(system)) {
             res = normalizedBasisMonoclinic(reduced);
-            break;
-        case TRICLINIC_SYSTEM:
+        } else if (CrystalSystem.TRICLINIC.equals(system)) {
             res = normalizedBasisTriclinic(reduced);
-            break;
-        default:
+        } else {
             throw new RuntimeException("unknown crystal system" + this.crystalSystem);
         }
         
@@ -923,7 +903,7 @@ public class SpaceGroupFinder {
     /**
      * @return the crystal system for the group.
      */
-    public int getCrystalSystem() {
+    public CrystalSystem getCrystalSystem() {
         return this.crystalSystem;
     }
 

@@ -48,6 +48,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.CrystalSystem;
 import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
@@ -67,7 +68,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.23 2006/04/09 05:33:18 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.24 2006/04/10 23:08:17 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -782,7 +783,7 @@ public class SystreCmdline {
     	
     	// --- extract some basic info
     	final String name = finder.getGroupName();
-    	final int system = finder.getCrystalSystem();
+    	final CrystalSystem system = finder.getCrystalSystem();
     	
     	// --- copy the original cell vectors
     	Vector x = old_x;
@@ -792,7 +793,7 @@ public class SystreCmdline {
     	Correction correction = new Correction();
     	
     	// TODO add more corrections, also for triclinic
-    	if (system == SpaceGroupFinder.MONOCLINIC_SYSTEM) {
+    	if (system == CrystalSystem.MONOCLINIC) {
     		if (type1.contains(name)) {
     		} else if (type2.contains(name)) {
     		} else if (type3.contains(name)) {

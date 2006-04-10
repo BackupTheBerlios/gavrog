@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.13 2006/04/08 05:13:55 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.14 2006/04/10 23:08:17 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
@@ -71,12 +71,12 @@ public class SpaceGroupCatalogue {
      */
     static class Lookup {
         final public String name;
-        final public int system;
+        final public CrystalSystem system;
         final public char centering;
         final public CoordinateChange fromStd;
         
-        public Lookup(final String name, final int system, final char centering,
-                final CoordinateChange fromStd) {
+        public Lookup(final String name, final CrystalSystem system,
+                final char centering, final CoordinateChange fromStd) {
             this.name = name;
             this.system = system;
             this.centering = centering;
@@ -132,21 +132,21 @@ public class SpaceGroupCatalogue {
                     aliases.put(fields[1], fields[2]);
                 } else if (fields[0].equalsIgnoreCase("lookup")) {
                     final String name = fields[1];
-                    final int system;
+                    final CrystalSystem system;
                     if (fields[2].equals("monoclinic")) {
-                        system = SpaceGroupFinder.MONOCLINIC_SYSTEM;
+                        system = CrystalSystem.MONOCLINIC;
                     } else if (fields[2].equals("triclinic")) {
-                        system = SpaceGroupFinder.TRICLINIC_SYSTEM;
+                        system = CrystalSystem.TRICLINIC;
                     } else if (fields[2].equals("orthorhombic")) {
-                        system = SpaceGroupFinder.ORTHORHOMBIC_SYSTEM;
+                        system = CrystalSystem.ORTHORHOMBIC;
                     } else if (fields[2].equals("trigonal")) {
-                        system = SpaceGroupFinder.TRIGONAL_SYSTEM;
+                        system = CrystalSystem.TRIGONAL;
                     } else if (fields[2].equals("tetragonal")) {
-                        system = SpaceGroupFinder.TETRAGONAL_SYSTEM;
+                        system = CrystalSystem.TETRAGONAL;
                     } else if (fields[2].equals("hexagonal")) {
-                        system = SpaceGroupFinder.HEXAGONAL_SYSTEM;
+                        system = CrystalSystem.HEXAGONAL;
                     } else if (fields[2].equals("cubic")) {
-                        system = SpaceGroupFinder.CUBIC_SYSTEM;
+                        system = CrystalSystem.CUBIC;
                     } else {
                         throw new RuntimeException(fields[2] + " system unknown");
                     }
@@ -302,7 +302,7 @@ public class SpaceGroupCatalogue {
      * 
      * @return an iterator over the values in the lookup table.
      */
-    static Iterator lookupInfo() {
+    public static Iterator lookupInfo() {
         if (groupTables[3] == null) {
             parseGroups(tablePath);
         }

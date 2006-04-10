@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.18 2006/01/03 22:39:00 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.19 2006/04/10 23:08:17 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     public void setUp() {
@@ -37,29 +37,47 @@ public class TestSpaceGroupFinder extends TestCase {
     }
     
     public void testGetCrystalSystem() {
-        assertEquals(2, new SpaceGroupFinder(new SpaceGroup(3, "A121")).getCrystalSystem());
-        assertEquals(2, new SpaceGroupFinder(new SpaceGroup(3, "B112")).getCrystalSystem());
-        assertEquals(2, new SpaceGroupFinder(new SpaceGroup(3, "C121")).getCrystalSystem());
-        assertEquals(2, new SpaceGroupFinder(new SpaceGroup(3, "I121")).getCrystalSystem());
-        
-        assertEquals(222, new SpaceGroupFinder(new SpaceGroup(3, "A222")).getCrystalSystem());
-        assertEquals(222, new SpaceGroupFinder(new SpaceGroup(3, "B222")).getCrystalSystem());
-        assertEquals(222, new SpaceGroupFinder(new SpaceGroup(3, "C222")).getCrystalSystem());
-        assertEquals(222, new SpaceGroupFinder(new SpaceGroup(3, "F222")).getCrystalSystem());
-        assertEquals(222, new SpaceGroupFinder(new SpaceGroup(3, "I222")).getCrystalSystem());
-        
-        assertEquals(422, new SpaceGroupFinder(new SpaceGroup(3, "P4")).getCrystalSystem());
-        assertEquals(422, new SpaceGroupFinder(new SpaceGroup(3, "I-4")).getCrystalSystem());
-        
-        assertEquals(32, new SpaceGroupFinder(new SpaceGroup(3, "P-3")).getCrystalSystem());
-        assertEquals(32, new SpaceGroupFinder(new SpaceGroup(3, "R-3")).getCrystalSystem());
-        
-        assertEquals(622, new SpaceGroupFinder(new SpaceGroup(3, "P6")).getCrystalSystem());
-        assertEquals(622, new SpaceGroupFinder(new SpaceGroup(3, "P-62c")).getCrystalSystem());
-        
-        assertEquals(432, new SpaceGroupFinder(new SpaceGroup(3, "P23")).getCrystalSystem());
-        assertEquals(432, new SpaceGroupFinder(new SpaceGroup(3, "F23")).getCrystalSystem());
-        assertEquals(432, new SpaceGroupFinder(new SpaceGroup(3, "I23")).getCrystalSystem());
+        assertEquals(CrystalSystem.MONOCLINIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "A121")).getCrystalSystem());
+        assertEquals(CrystalSystem.MONOCLINIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "B112")).getCrystalSystem());
+        assertEquals(CrystalSystem.MONOCLINIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "C121")).getCrystalSystem());
+        assertEquals(CrystalSystem.MONOCLINIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "I121")).getCrystalSystem());
+
+        assertEquals(CrystalSystem.ORTHORHOMBIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "A222")).getCrystalSystem());
+        assertEquals(CrystalSystem.ORTHORHOMBIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "B222")).getCrystalSystem());
+        assertEquals(CrystalSystem.ORTHORHOMBIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "C222")).getCrystalSystem());
+        assertEquals(CrystalSystem.ORTHORHOMBIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "F222")).getCrystalSystem());
+        assertEquals(CrystalSystem.ORTHORHOMBIC, new SpaceGroupFinder(new SpaceGroup(3,
+                "I222")).getCrystalSystem());
+
+        assertEquals(CrystalSystem.TETRAGONAL, new SpaceGroupFinder(new SpaceGroup(3,
+                "P4")).getCrystalSystem());
+        assertEquals(CrystalSystem.TETRAGONAL, new SpaceGroupFinder(new SpaceGroup(3,
+                "I-4")).getCrystalSystem());
+
+        assertEquals(CrystalSystem.TRIGONAL, new SpaceGroupFinder(
+                new SpaceGroup(3, "P-3")).getCrystalSystem());
+        assertEquals(CrystalSystem.TRIGONAL, new SpaceGroupFinder(
+                new SpaceGroup(3, "R-3")).getCrystalSystem());
+
+        assertEquals(CrystalSystem.HEXAGONAL, new SpaceGroupFinder(
+                new SpaceGroup(3, "P6")).getCrystalSystem());
+        assertEquals(CrystalSystem.HEXAGONAL, new SpaceGroupFinder(new SpaceGroup(3,
+                "P-62c")).getCrystalSystem());
+
+        assertEquals(CrystalSystem.CUBIC, new SpaceGroupFinder(new SpaceGroup(3, "P23"))
+                .getCrystalSystem());
+        assertEquals(CrystalSystem.CUBIC, new SpaceGroupFinder(new SpaceGroup(3, "F23"))
+                .getCrystalSystem());
+        assertEquals(CrystalSystem.CUBIC, new SpaceGroupFinder(new SpaceGroup(3, "I23"))
+                .getCrystalSystem());
     }
 
     public void testSettings() {
