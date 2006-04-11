@@ -12,6 +12,7 @@ Still open:
 - Make available I/O formats more transparent.
 - Support "Description" and "Reference" entries in .cgd and .arc files.
 - Include zeolite frameworks from Atlas.
+- Support Delaney symbol import.
 - Support more output options (e.g. CrystalMaker).
 - Give coordinates of edge centers (optional).
 
