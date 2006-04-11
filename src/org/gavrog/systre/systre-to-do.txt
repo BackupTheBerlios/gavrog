@@ -17,6 +17,7 @@ Still open:
 - Give coordinates of edge centers (optional).
 
 ('bigger' projects:)
+- If net is not connected, process components individually.
 - Check for edge intersections and similar problems.
 - If graph has collisions, try to refine anyway.
 - Plot the quotient graph.
