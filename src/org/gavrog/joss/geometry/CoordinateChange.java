@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.IArithmetic;
@@ -32,12 +33,26 @@ import org.gavrog.jane.numbers.Whole;
  * or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: CoordinateChange.java,v 1.4 2006/04/05 22:58:13 odf Exp $
+ * @version $Id: CoordinateChange.java,v 1.5 2006/04/11 23:21:26 odf Exp $
  */
 public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
     final Matrix right;
     final int dimension;
+    
+    /**
+     * If possible, constructs a coordinate change such that the first array of vectors
+     * passed as an argument is mapped onto the second. If, in other words, the first
+     * array describes a list of vectors w.r.t. the old coordinate system, then the second
+     * array describes the same list w.r.t. the new coordinate system.
+     * 
+     * @param from source vectors.
+     * @param to target vectors.
+     */
+    public CoordinateChange(final Vector from[], final Vector to[]) {
+        this(LinearAlgebra.solutionInColumns(Vector.toMatrix(to), Vector.toMatrix(from),
+                false));
+    }
     
     /**
      * Creates a new instance. The input consists of a matrix, the rows of which
