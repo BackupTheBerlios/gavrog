@@ -68,7 +68,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.24 2006/04/10 23:08:17 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.25 2006/04/11 23:21:58 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -738,10 +738,10 @@ public class SystreCmdline {
     }
 
     private CoordinateChange cell_correction(final SpaceGroupFinder finder,
-			final Matrix gram, final Vector old_x, Vector old_y, final Vector old_z) {
+			final Matrix gram, final Vector a, Vector b, final Vector c) {
     	
     	// --- get and check the dimension
-    	final int dim = old_x.getDimension();
+    	final int dim = a.getDimension();
     	if (dim != 3) {
     		final String msg = "Method called with incorrect dimension";
     		throw new SystreException(SystreException.INTERNAL, msg);
@@ -762,13 +762,19 @@ public class SystreCmdline {
         		super(Matrix.one(dim));
         	}
         	
-        	private Correction(final IArithmetic op) {
-        		super((Operator) op);
+        	private Correction(final Operator op) {
+        		super(op);
         	}
         	
         	public Correction times(final String other) {
-        		return new Correction(this.times(new Operator(other)));
+        		return new Correction((Operator) this.getOperator().times(
+                        new Operator(other)));
         	}
+            
+            public Correction times(final CoordinateChange other) {
+                return new Correction((Operator) this.getOperator().times(
+                        other.getOperator()));
+            }
         }
         
     	// --- no centering, no glide, both a and c are free
@@ -785,25 +791,63 @@ public class SystreCmdline {
     	final String name = finder.getGroupName();
     	final CrystalSystem system = finder.getCrystalSystem();
     	
-    	// --- copy the original cell vectors
-    	Vector x = old_x;
-    	Vector z = old_z;
-    	
     	// --- start with no correction
     	Correction correction = new Correction();
     	
-    	// TODO add more corrections, also for triclinic
     	if (system == CrystalSystem.MONOCLINIC) {
+            // --- find a pair of shortest vectors that span the same basis as x and z
+            final Vector old[] = new Vector[] { a, c };
+            final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
+            final Vector from[] = new Vector[] { a, b, c };
+            final Vector to[];
+                        
     		if (type1.contains(name)) {
+                // --- use the new vectors
+                to = new Vector[] { nu[0], b, nu[1] };
     		} else if (type2.contains(name)) {
+                // --- keep c and use the shortest independent new vector as a
+                final Vector new_a;
+                if (c.isCollinearTo(nu[0])) {
+                    new_a = nu[1];
+                } else if (c.isCollinearTo(nu[1])) {
+                    new_a = nu[0];
+                } else if (Vector.dot(nu[1], nu[1], gram).isLessThan(Vector.dot(nu[0], nu[0], gram))) {
+                    new_a = nu[1];
+                } else {
+                    new_a = nu[0];
+                }
+                to = new Vector[] { new_a, b, c };
     		} else if (type3.contains(name)) {
+                // --- keep a and use the shortest independent new vector as c
+                final Vector new_c;
+                if (a.isCollinearTo(nu[0])) {
+                    new_c = nu[1];
+                } else if (a.isCollinearTo(nu[1])) {
+                    new_c = nu[0];
+                } else if (Vector.dot(nu[1], nu[1], gram).isLessThan(Vector.dot(nu[0], nu[0], gram))) {
+                    new_c = nu[1];
+                } else {
+                    new_c = nu[0];
+                }
+                to = new Vector[] { a, b, new_c };
     		} else if (type4.contains(name)) {
-    		}
-    		if (Vector.dot(x, z, gram).isPositive()) {
+                // --- must keep all old vectors
+                to = null;
+    		} else {
+                final String msg = "Cannot handle monoclinic space group " + name + ".";
+    		    throw new SystreException(SystreException.INTERNAL, msg);
+            }
+            
+            if (to != null) {
+                correction = correction.times(new CoordinateChange(from, to));
+            }
+    		if (Vector.dot(to[0], to[2], gram).isPositive()) {
     			correction = correction.times("x, -y, -z");
     		}
     	}
     	
+        // TODO correct also for triclinic
+        
     	return correction;
 	}
 
