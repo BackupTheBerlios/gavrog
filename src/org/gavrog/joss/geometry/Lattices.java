@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.Real;
  * Various methods related to lattices and lattice bases.
  * 
  * @author Olaf Delgado
- * @version $Id: Lattices.java,v 1.2 2006/04/09 05:25:00 odf Exp $
+ * @version $Id: Lattices.java,v 1.3 2006/04/11 23:21:09 odf Exp $
  */
 public class Lattices {
 
@@ -163,12 +163,13 @@ public class Lattices {
 	}
 
 	/**
-	 * Returns a lattice basis of shortest Dirichlet vectors.
-	 * 
-	 * @param v original basis.
-	 * @param M the quadratic form determining the metric.
-	 * @return the reduced basis.
-	 */
+     * Returns a lattice basis of shortest Dirichlet vectors. The new basis has the same
+     * orientation (right or left handed) as the original one.
+     * 
+     * @param v original basis.
+     * @param M the quadratic form determining the metric.
+     * @return the reduced basis.
+     */
 	public static Vector[] reducedLatticeBasis(final Vector[] v, final Matrix M) {
 	    final Vector tmp[] = dirichletVectors(v, M);
 	    Arrays.sort(tmp, new Comparator() {
