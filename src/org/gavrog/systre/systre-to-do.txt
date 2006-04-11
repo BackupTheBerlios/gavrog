@@ -8,7 +8,6 @@ In process:
 
 Still open:
 
-- Add the "false" -z nets to the archive.
 - Add "Next" and "Cancel" buttons for multi-structure files.
 - Make available I/O formats more transparent.
 - Support "Description" and "Reference" entries in .cgd and .arc files.
@@ -27,6 +26,7 @@ Still open:
 
 Recently done:
 
+- Add the "false" -z nets to the archive.
 - Let user pick default origin choice (1st vs. 2nd). Same for hexagonal vs. rhombohedral.
 - Pop up a message box in case of an exception.
 - Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
