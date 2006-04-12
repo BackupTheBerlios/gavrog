@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +69,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.27 2006/04/12 06:08:53 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.28 2006/04/12 23:27:40 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -95,8 +96,9 @@ public class SystreCmdline {
     // --- the last file that was opened for processing
     private String lastFileNameWithoutExtension;
     
-    // --- the last graph processed in '.cgd' format
-	private String lastCgdString;
+    // --- accumulated cgd output
+	private StringBuffer cgdBuffer = new StringBuffer(100000);
+    
     // --- the last graph processed with minimal repeat unit
     private PeriodicGraph lastGraphMinimal;
     
@@ -403,13 +405,13 @@ public class SystreCmdline {
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
             writeEmbedding(cgd, true, G, name, finder, embedder);
 
-            lastCgdString = cgdStringWriter.toString();
+            final String cgdString = cgdStringWriter.toString();
 			boolean success = false;
             try {
                 out.println("   Consistency test:");
                 out.print("       reading...");
                 out.flush();
-                final PeriodicGraph test = NetParser.stringToNet(lastCgdString);
+                final PeriodicGraph test = NetParser.stringToNet(cgdString);
                 out.println(" OK!");
                 out.print("       comparing...");
                 out.flush();
@@ -422,21 +424,38 @@ public class SystreCmdline {
                 success = true;
             } catch (Exception ex) {
                 out.println(" Failed!");
+                if (DEBUG) {
+                    out.println("\t\t@@@ Failing output:");
+                    out.println(cgdString);
+                }
                 if (pass == 0) {
                     if (relaxPositions) {
                         out.println("   Falling back to barycentric positions.");
                     }
                 } else {
+                    if (cgdBuffer.length() > 0) {
+                        cgdBuffer.append("\n");
+                    }
+                    cgdBuffer.append("# Failed to verify the following output:\n\n");
+                    final String lines[] = cgdString.split("\n");
+                    for (int i = 0; i < lines.length; ++i) {
+                        cgdBuffer.append("#  ");
+                        cgdBuffer.append(lines[i]);
+                        cgdBuffer.append("\n");
+                    }
+                    cgdBuffer.append("\n");
                     final String msg = "Could not verify output data";
                     throw new SystreException(SystreException.INTERNAL, msg, ex);
                 }
             }
 
             // --- now write the actual output
-            if (success || DEBUG) {
-                writeEmbedding(new PrintWriter(out), false, G, name, finder, embedder);
-            }
             if (success) {
+                if (cgdBuffer.length() > 0) {
+                    cgdBuffer.append("\n");
+                }
+                writeEmbedding(new PrintWriter(out), false, G, name, finder, embedder);
+                cgdBuffer.append(cgdString);
                 break;
             }
         }
@@ -530,15 +549,11 @@ public class SystreCmdline {
     
         //    ... special treatment for monoclinic groups
         CoordinateChange correction = cell_correction(finder, gram, x, y, z);
-        final CoordinateChange cinv = (CoordinateChange) correction.inverse();
-        if (DEBUG && !cgdFormat) {
-        	out.println("\t\t@@@ correction = " + correction);
-        }
-        x = (Vector) x.times(cinv);
-        y = (Vector) y.times(cinv);
-        z = (Vector) z.times(cinv);
-        //TODO make this right
-        correction = (CoordinateChange) fromStd.times(correction).times(toStd);
+        final CoordinateChange ctmp = (CoordinateChange) correction.inverse().times(
+                fromStd);
+        x = (Vector) Vector.unit(3, 0).times(ctmp);
+        y = (Vector) Vector.unit(3, 1).times(ctmp);
+        z = (Vector) Vector.unit(3, 2).times(ctmp);
         
         final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
         final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
@@ -836,16 +851,20 @@ public class SystreCmdline {
         // TODO correct also for triclinic
         
     	if (DEBUG) {
-    		out.println("\t\t@@@from:");
+    		out.println("\t\t@@@ from:");
     		for (int i = 0; i < from.length; ++i) {
-    			out.println("\t\t\t" + from[i]);
+    			out.println("\t\t@@@\t" + from[i]);
     		}
-    		out.println("\t\t@@@to:");
+    		out.println("\t\t@@@ to:");
     		for (int i = 0; i < to.length; ++i) {
-    			out.println("\t\t\t" + to[i]);
+    			out.println("\t\t@@@\t" + to[i]);
     		}
     	}
-    	return new CoordinateChange(to, from);
+        final CoordinateChange F = new CoordinateChange(Vector.toMatrix(from));
+        final CoordinateChange T = new CoordinateChange(Vector.toMatrix(to));
+        //final CoordinateChange result = new CoordinateChange(to, from);
+        final CoordinateChange result = (CoordinateChange) F.inverse().times(T);
+    	return result;
 	}
 
 	/**
@@ -1044,6 +1063,23 @@ public class SystreCmdline {
                     + " to output archive.");
     }
     
+    /**
+     * Clears the cgd buffer.
+     */
+    public void clearCgdBuffer() {
+        this.cgdBuffer.delete(0, this.cgdBuffer.length());
+    }
+    
+    /**
+     * Writes the accumulated structures since the last {@link #clearCgdBuffer()} call in
+     * Systre ('.cgd') format.
+     * 
+     * @param writer represents the output stream.
+     * @throws IOException if writing didn't work.
+     */
+    public void writeCgd(final Writer writer) throws IOException {
+        writer.write(this.cgdBuffer.toString());
+    }
     
     /**
      * This method takes command line arguments one by one and passes them to
@@ -1143,10 +1179,6 @@ public class SystreCmdline {
         this.out = out;
     }
     
-	public String getLastCgdString() {
-		return lastCgdString;
-	}
-	
     public PeriodicGraph getLastGraphMinimal() {
         return this.lastGraphMinimal;
     }

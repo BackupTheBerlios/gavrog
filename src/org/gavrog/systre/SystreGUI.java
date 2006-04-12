@@ -59,7 +59,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.12 2006/04/12 03:32:09 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.13 2006/04/12 23:27:40 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -227,7 +227,7 @@ public class SystreGUI extends BFrame {
                         if (filename.endsWith(".arc")) {
                             systre.writeInternalArchive(writer);
                         } else if (filename.endsWith(".cgd")) {
-                        	writer.write(systre.getLastCgdString());
+                        	systre.writeCgd(writer);
                         } else if (filename.endsWith(".pgr")) {
                             Output.writePGR(writer, systre.getLastGraphMinimal()
                                     .canonical(), lastGraphName);
@@ -329,6 +329,9 @@ public class SystreGUI extends BFrame {
 	    strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
 		out.println("Data file \"" + filePath + "\".");
 	    
+        // --- clear the buffer for processed structures in .cgd format
+        systre.clearCgdBuffer();
+        
 	    // --- loop through the structures specied in the input file
 	    while (true) {
 	        PeriodicGraph G = null;
