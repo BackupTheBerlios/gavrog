@@ -68,7 +68,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.25 2006/04/11 23:21:58 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.26 2006/04/12 03:32:53 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -433,8 +433,10 @@ public class SystreCmdline {
             }
 
             // --- now write the actual output
-            if (success) {
+            if (success || DEBUG) {
                 writeEmbedding(new PrintWriter(out), false, G, name, finder, embedder);
+            }
+            if (success) {
                 break;
             }
         }
@@ -527,10 +529,14 @@ public class SystreCmdline {
         Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
     
         //    ... special treatment for monoclinic groups
-        final CoordinateChange correction = cell_correction(finder, gram, x, y, z);
-        x = (Vector) Vector.unit(3, 0).times(correction).times(fromStd);
-        y = (Vector) Vector.unit(3, 1).times(correction).times(fromStd);
-        z = (Vector) Vector.unit(3, 2).times(correction).times(fromStd);
+        CoordinateChange correction = cell_correction(finder, gram, x, y, z);
+        final CoordinateChange cinv = (CoordinateChange) correction.inverse();
+        if (DEBUG && !cgdFormat) {
+        	out.println("\t\t@@@ correction = " + correction);
+        }
+        x = (Vector) x.times(cinv);
+        y = (Vector) y.times(cinv);
+        z = (Vector) z.times(cinv);
         
         final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
         final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
@@ -640,7 +646,8 @@ public class SystreCmdline {
                 final INode v = e.source();
                 final INode w = e.target();
                 final Point p = (Point) lifted.get(v);
-                final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e));
+                final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e)
+						.times(correction));
                 final Point p0 = p.modZ();
                 final Point q0 = (Point) q.minus(p.minus(p0));
                 candidates.set(i, new Pair(new PlacedNode(v, p0), new PlacedNode(w, q0)));
@@ -747,7 +754,7 @@ public class SystreCmdline {
     		throw new SystreException(SystreException.INTERNAL, msg);
     	}
     	
-    	// --- two little helper classes
+    	// --- little helper class
         final class NameSet extends HashSet {
         	public NameSet(final String names[]) {
         		super();
@@ -755,26 +762,6 @@ public class SystreCmdline {
         			this.add(names[i]);
         		}
         	}
-        }
-        
-        final class Correction extends CoordinateChange {
-        	public Correction() {
-        		super(Matrix.one(dim));
-        	}
-        	
-        	private Correction(final Operator op) {
-        		super(op);
-        	}
-        	
-        	public Correction times(final String other) {
-        		return new Correction((Operator) this.getOperator().times(
-                        new Operator(other)));
-        	}
-            
-            public Correction times(final CoordinateChange other) {
-                return new Correction((Operator) this.getOperator().times(
-                        other.getOperator()));
-            }
         }
         
     	// --- no centering, no glide, both a and c are free
@@ -791,15 +778,14 @@ public class SystreCmdline {
     	final String name = finder.getGroupName();
     	final CrystalSystem system = finder.getCrystalSystem();
     	
-    	// --- start with no correction
-    	Correction correction = new Correction();
-    	
+    	// --- old and new basis
+        final Vector from[] = new Vector[] { a, b, c };
+        final Vector to[];
+        
     	if (system == CrystalSystem.MONOCLINIC) {
             // --- find a pair of shortest vectors that span the same basis as x and z
             final Vector old[] = new Vector[] { a, c };
             final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
-            final Vector from[] = new Vector[] { a, b, c };
-            final Vector to[];
                         
     		if (type1.contains(name)) {
                 // --- use the new vectors
@@ -832,23 +818,22 @@ public class SystreCmdline {
                 to = new Vector[] { a, b, new_c };
     		} else if (type4.contains(name)) {
                 // --- must keep all old vectors
-                to = null;
+                to = new Vector[] { a, b, c };
     		} else {
                 final String msg = "Cannot handle monoclinic space group " + name + ".";
     		    throw new SystreException(SystreException.INTERNAL, msg);
             }
             
-            if (to != null) {
-                correction = correction.times(new CoordinateChange(from, to));
-            }
     		if (Vector.dot(to[0], to[2], gram).isPositive()) {
-    			correction = correction.times("x, -y, -z");
+    			to[2] = (Vector) to[2].negative();
     		}
+    	} else {
+    		to = new Vector[] { a, b, c };
     	}
     	
         // TODO correct also for triclinic
         
-    	return correction;
+    	return new CoordinateChange(to, from);
 	}
 
 	/**
