@@ -68,7 +68,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.26 2006/04/12 03:32:53 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.27 2006/04/12 06:08:53 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -537,6 +537,8 @@ public class SystreCmdline {
         x = (Vector) x.times(cinv);
         y = (Vector) y.times(cinv);
         z = (Vector) z.times(cinv);
+        //TODO make this right
+        correction = (CoordinateChange) fromStd.times(correction).times(toStd);
         
         final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
         final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
@@ -833,6 +835,16 @@ public class SystreCmdline {
     	
         // TODO correct also for triclinic
         
+    	if (DEBUG) {
+    		out.println("\t\t@@@from:");
+    		for (int i = 0; i < from.length; ++i) {
+    			out.println("\t\t\t" + from[i]);
+    		}
+    		out.println("\t\t@@@to:");
+    		for (int i = 0; i < to.length; ++i) {
+    			out.println("\t\t\t" + to[i]);
+    		}
+    	}
     	return new CoordinateChange(to, from);
 	}
 
