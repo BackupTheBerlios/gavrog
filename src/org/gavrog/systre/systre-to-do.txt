@@ -2,7 +2,7 @@
 
 In process:
 
-- Revisit cell vectors for monoclinic and triciinic nets after cell relaxation.
+- Revisit cell vectors for monoclinic and triclinic nets after cell relaxation.
 
 =====================================================
 

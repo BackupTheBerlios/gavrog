@@ -69,7 +69,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.28 2006/04/12 23:27:40 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.29 2006/04/13 07:15:52 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -844,12 +844,12 @@ public class SystreCmdline {
     		if (Vector.dot(to[0], to[2], gram).isPositive()) {
     			to[2] = (Vector) to[2].negative();
     		}
+    	} else if (system == CrystalSystem.TRICLINIC) {
+    		to = Lattices.reducedLatticeBasis(from, gram);
     	} else {
     		to = new Vector[] { a, b, c };
     	}
     	
-        // TODO correct also for triclinic
-        
     	if (DEBUG) {
     		out.println("\t\t@@@ from:");
     		for (int i = 0; i < from.length; ++i) {
