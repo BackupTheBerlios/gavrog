@@ -69,7 +69,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.29 2006/04/13 07:15:52 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.30 2006/04/13 20:51:57 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -862,7 +862,6 @@ public class SystreCmdline {
     	}
         final CoordinateChange F = new CoordinateChange(Vector.toMatrix(from));
         final CoordinateChange T = new CoordinateChange(Vector.toMatrix(to));
-        //final CoordinateChange result = new CoordinateChange(to, from);
         final CoordinateChange result = (CoordinateChange) F.inverse().times(T);
     	return result;
 	}

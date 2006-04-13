@@ -2,7 +2,7 @@
 
 In process:
 
-- Revisit cell vectors for monoclinic and triclinic nets after cell relaxation.
+(none)
 
 =====================================================
 
@@ -15,6 +15,7 @@ Still open:
 - Support Delaney symbol import.
 - Support more output options (e.g. CrystalMaker).
 - Give coordinates of edge centers (optional).
+- Optionally report alternate monoclinic settings where better than first setting.
 
 ('bigger' projects:)
 - If net is not connected, process components individually.
@@ -27,6 +28,7 @@ Still open:
 
 Recently done:
 
+- Revise cell vectors for monoclinic and triclinic nets after cell relaxation.
 - Add the "false" -z nets to the archive.
 - Let user pick default origin choice (1st vs. 2nd). Same for hexagonal vs. rhombohedral.
 - Pop up a message box in case of an exception.
