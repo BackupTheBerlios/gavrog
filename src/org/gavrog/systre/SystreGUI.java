@@ -59,7 +59,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.13 2006/04/12 23:27:40 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.14 2006/04/13 22:44:33 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -418,9 +418,9 @@ public class SystreGUI extends BFrame {
 	    out.println("Finished data file \"" + filePath + "\".");
 	}
 
-	boolean cancel;
+	private boolean cancel;
 	
-    private synchronized boolean reportException(final Throwable ex, final String type,
+    private boolean reportException(final Throwable ex, final String type,
 			final String msg, final boolean details) {
 		final PrintStream out = systre.getOutStream();
 		out.println();
@@ -439,7 +439,7 @@ public class SystreGUI extends BFrame {
         cancel = false;
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
-                public synchronized void run() {
+                public void run() {
                     final String title = "Systre: " + type + " ERROR";
                     final String msg = text + ex.getMessage() + ".";
                     final BStandardDialog dialog = new BStandardDialog(title, msg,
