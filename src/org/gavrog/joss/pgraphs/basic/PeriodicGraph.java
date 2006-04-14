@@ -52,19 +52,41 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.50 2006/04/05 22:59:13 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.51 2006/04/14 18:45:43 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
     public final String invariantVersion = "1.0";
 
-    protected static final String IS_CONNECTED = "isConnected";
-    protected static final String BARYCENTRIC_PLACEMENT = "barycentricPlacement";
-    protected static final String IS_LOCALLY_STABLE = "isLocallyStable";
-    protected static final String CHARACTERISTIC_BASES = "characteristicBases";
-    protected static final String SYMMETRIES = "symmetries";
-    protected static final String INVARIANT = "invariant";
-    protected static final String CANONICAL = "canonical";
+    protected static class CacheKey {
+        private static int nextId = 1;
+        final private int id;
+        
+        public CacheKey() {
+            this.id = nextId++;
+        }
+        
+        public int hashCode() {
+            return id;
+        }
+        
+        public int compareTo(final Object other) {
+            if (other instanceof CacheKey) {
+                return this.id - ((CacheKey) other).id;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+    
+    protected static final CacheKey IS_CONNECTED = new CacheKey();
+    protected static final CacheKey BARYCENTRIC_PLACEMENT = new CacheKey();
+    protected static final CacheKey IS_LOCALLY_STABLE = new CacheKey();
+    protected static final CacheKey CHARACTERISTIC_BASES = new CacheKey();
+    protected static final CacheKey SYMMETRIES = new CacheKey();
+    protected static final CacheKey INVARIANT = new CacheKey();
+    protected static final CacheKey CANONICAL = new CacheKey();
+    protected static final CacheKey CONVENTIONAL_CELL = new CacheKey();
 
     private static final boolean DEBUG = false;
     
@@ -2016,6 +2038,11 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the covering periodic graph.
      */
     public Cover conventionalCellCover() {
+        final Object cached = cache.get(CONVENTIONAL_CELL);
+        if (cached != null) {
+            return (Cover) cached;
+        }
+
         // --- see if we can do this
         if (!isMinimal()) {
             throw new UnsupportedOperationException("must start with minimal graph");
@@ -2035,8 +2062,10 @@ public class PeriodicGraph extends UndirectedGraph {
             basis[i] = (Vector)Vector.unit(dim, i).times(Cinv);
         }
         
-        // --- construct and return the cover
-        return new Cover(this, basis);
+        // --- construct, cache and return the cover
+        final Cover cover = new Cover(this, basis);
+        cache.put(CONVENTIONAL_CELL, cover);
+        return cover;
     }
         
     /*
