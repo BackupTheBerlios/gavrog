@@ -69,7 +69,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.30 2006/04/13 20:51:57 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.31 2006/04/14 02:57:31 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -304,7 +304,7 @@ public class SystreCmdline {
         }
         
         // --- determine the Systre key and look it up in the archives
-        final String invariant = G.invariant().toString();
+        final String invariant = G.getSystreKey();
         int countMatches = 0;
         Archive.Entry found = null;
         if (this.useBuiltinArchive) {

@@ -29,7 +29,7 @@ import org.gavrog.systre.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.4 2005/10/24 22:58:24 odf Exp $
+ * @version $Id: TestArchive.java,v 1.5 2006/04/14 02:59:19 odf Exp $
  */
 public class TestArchive extends TestCase {
     final PeriodicGraph srs = NetParser.stringToNet(""
@@ -85,7 +85,7 @@ public class TestArchive extends TestCase {
         final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
         rcsr.addAll(reader);
         
-        final String key = srs.invariant().toString();
+        final String key = srs.getSystreKey();
         final Entry entry = rcsr.get(key);
         assertEquals(srs_name, entry.getName());
         assertEquals(srs_key, entry.getKey());
