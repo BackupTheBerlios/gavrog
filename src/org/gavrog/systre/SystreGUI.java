@@ -34,7 +34,6 @@ import org.gavrog.box.simple.Misc;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
-import org.gavrog.joss.pgraphs.io.Output;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
@@ -59,7 +58,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.14 2006/04/13 22:44:33 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.15 2006/04/14 20:30:59 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -226,11 +225,8 @@ public class SystreGUI extends BFrame {
                                 file, append));
                         if (filename.endsWith(".arc")) {
                             systre.writeInternalArchive(writer);
-                        } else if (filename.endsWith(".cgd")) {
-                        	systre.writeCgd(writer);
-                        } else if (filename.endsWith(".pgr")) {
-                            Output.writePGR(writer, systre.getLastGraphMinimal()
-                                    .canonical(), lastGraphName);
+//                        } else if (filename.endsWith(".cgd")) {
+                            // TODO implement this and other formats
                         } else {
                             writer.write(output.getText());
                         }
@@ -329,9 +325,6 @@ public class SystreGUI extends BFrame {
 	    strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
 		out.println("Data file \"" + filePath + "\".");
 	    
-        // --- clear the buffer for processed structures in .cgd format
-        systre.clearCgdBuffer();
-        
 	    // --- loop through the structures specied in the input file
 	    while (true) {
 	        PeriodicGraph G = null;
