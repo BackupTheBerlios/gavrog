@@ -8,9 +8,9 @@ In process:
 
 Still open:
 
+- Support "Description" and "Reference" entries in .cgd and .arc files.
 - Add "Next" and "Cancel" buttons for multi-structure files.
 - Make available I/O formats more transparent.
-- Support "Description" and "Reference" entries in .cgd and .arc files.
 - Include zeolite frameworks from Atlas.
 - Support Delaney symbol import.
 - Support more output options (e.g. CrystalMaker).
