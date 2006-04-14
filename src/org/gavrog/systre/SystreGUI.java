@@ -26,6 +26,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.SwingUtilities;
 
@@ -34,6 +39,7 @@ import org.gavrog.box.simple.Misc;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
+import org.gavrog.joss.pgraphs.io.Output;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
@@ -58,7 +64,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.15 2006/04/14 20:30:59 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.16 2006/04/14 22:11:53 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -79,6 +85,8 @@ public class SystreGUI extends BFrame {
     private BButton saveButton;
     private BButton optionsButton;
     private String lastGraphName;
+    
+    private List bufferedNets = new LinkedList();
 
     /**
      * Constructs an instance.
@@ -225,8 +233,10 @@ public class SystreGUI extends BFrame {
                                 file, append));
                         if (filename.endsWith(".arc")) {
                             systre.writeInternalArchive(writer);
-//                        } else if (filename.endsWith(".cgd")) {
-                            // TODO implement this and other formats
+                        } else if (filename.endsWith(".cgd")) {
+                            writeBufferedAsCGD(writer);
+                        } else if (filename.endsWith(".pgr")) {
+                            writeBufferedAsPGR(writer);
                         } else {
                             writer.write(output.getText());
                         }
@@ -246,6 +256,29 @@ public class SystreGUI extends BFrame {
                     }
                 }
             }).start();
+        }
+    }
+    
+    private void writeBufferedAsCGD(final BufferedWriter writer) {
+        for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
+            final ProcessedNet net = (ProcessedNet) iter.next();
+            if (net != null) {
+                net.writeEmbedding(new PrintWriter(writer), true);
+            }
+        }
+    }
+    
+    private void writeBufferedAsPGR(final Writer writer) {
+        for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
+            final ProcessedNet net = (ProcessedNet) iter.next();
+            if (net != null) {
+                final PeriodicGraph graph = net.getGraph().canonical();
+                Output.writePGR(writer, graph, net.getName());
+                try {
+                    writer.write("\n");
+                } catch (final Exception ex) {
+                }
+            }
         }
     }
     
@@ -325,6 +358,8 @@ public class SystreGUI extends BFrame {
 	    strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
 		out.println("Data file \"" + filePath + "\".");
 	    
+        this.bufferedNets.clear();
+        
 	    // --- loop through the structures specied in the input file
 	    while (true) {
 	        PeriodicGraph G = null;
@@ -388,11 +423,13 @@ public class SystreGUI extends BFrame {
 	        out.println("Structure #" + count + displayName + ".");
 			out.println();
 			boolean cancel = false;
+            boolean success = false;
 			if (problem != null) {
 				cancel = reportException(problem, "INPUT", null, false);
 			} else {
 				try {
 					systre.processGraph(G, archiveName, parser.getSpaceGroup());
+                    success = true;
                 } catch (SystreException ex) {
                     cancel = reportException(ex, ex.getType().toString(), null, false);
 				} catch (Exception ex) {
@@ -401,6 +438,10 @@ public class SystreGUI extends BFrame {
 			}
 	        out.println();
 			out.println("Finished structure #" + count + displayName + ".");
+            if (success) {
+                final ProcessedNet net = systre.getLastStructure();
+                this.bufferedNets.add(net);
+            }
 			if (cancel) {
         		out.println(skipping);
 				break;
