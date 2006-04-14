@@ -32,7 +32,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.1 2006/04/14 20:30:59 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.2 2006/04/14 22:09:37 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -519,6 +519,20 @@ class ProcessedNet {
         
         // --- return the result
         return minDist;
+    }
+    
+    /**
+     * @return the graph.
+     */
+    public PeriodicGraph getGraph() {
+        return this.graph;
+    }
+    
+    /**
+     * @return the name.
+     */
+    public String getName() {
+        return this.name;
     }
     
     /**
