@@ -6,19 +6,19 @@ In process:
 
 =====================================================
 
-Still open:
+For Systre 1.0:
 
 - Add option for writing complete unit cell data.
 - Support "Description" and "Reference" entries in .cgd and .arc files.
 - Add "Next" and "Cancel" buttons for multi-structure files.
 - Make available I/O formats more transparent.
 - Include zeolite frameworks from Atlas.
-- Support Delaney symbol import.
-- Support more output options (e.g. CrystalMaker).
-- Give coordinates of edge centers (optional).
+- Report coordinates of edge centers (optional).
 - Optionally report alternate monoclinic settings where better than first setting.
 
-('bigger' projects:)
+For later (maybe):
+- Support Delaney symbol import.
+- Support more output options (e.g. CrystalMaker).
 - If net is not connected, process components individually.
 - Check for edge intersections and similar problems.
 - If graph has collisions, try to refine anyway.
