@@ -20,7 +20,7 @@ package org.gavrog.systre;
  * Exceptions thrown by Systre's methods.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreException.java,v 1.2 2006/04/10 23:07:34 odf Exp $
+ * @version $Id: SystreException.java,v 1.3 2006/04/18 23:49:26 odf Exp $
  */
 public class SystreException extends RuntimeException {
     public static class Type {
@@ -38,8 +38,9 @@ public class SystreException extends RuntimeException {
         }
     }
     
-    final public static Type MISC = new Type("MISC");
+    final public static Type FATAL = new Type("FATAL");
     final public static Type INTERNAL = new Type("INTERNAL");
+    final public static Type MISC = new Type("MISC");
     final public static Type FILE = new Type("FILE");
     final public static Type INPUT = new Type("INPUT");
     final public static Type STRUCTURE = new Type("STRUCTURE");
