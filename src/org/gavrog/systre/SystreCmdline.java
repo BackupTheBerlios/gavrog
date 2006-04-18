@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.33 2006/04/14 22:10:27 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.34 2006/04/18 22:37:27 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -84,6 +84,7 @@ public class SystreCmdline {
     // --- options
     private boolean relaxPositions = true;
     private boolean useBuiltinArchive = true;
+    private boolean outputFullCell = false;
     private BufferedWriter outputArchive = null;
     
     // --- the last file that was opened for processing
@@ -394,7 +395,8 @@ public class SystreCmdline {
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
             final ProcessedNet net = new ProcessedNet(G, name, finder, embedder);
-            net.writeEmbedding(cgd, true);
+            setLastStructure(net);
+            net.writeEmbedding(cgd, true, getOutputFullCell());
 
             final String cgdString = cgdStringWriter.toString();
 			boolean success = false;
@@ -406,7 +408,7 @@ public class SystreCmdline {
                 out.println(" OK!");
                 out.print("       comparing...");
                 out.flush();
-                if (!test.equals(G)) {
+                if (!test.minimalImage().equals(G)) {
                     final String msg = "Output does not match original graph.";
                     throw new RuntimeException(msg);
                 }
@@ -431,9 +433,8 @@ public class SystreCmdline {
 
             // --- now write the actual output
             if (success) {
-                net.writeEmbedding(new PrintWriter(out), false);
+                net.writeEmbedding(new PrintWriter(out), false, getOutputFullCell());
                 net.setVerified(true);
-                setLastStructure(net);
                 break;
             }
         }
@@ -657,6 +658,20 @@ public class SystreCmdline {
      */
     protected void setOutStream(final PrintStream out) {
         this.out = out;
+    }
+    
+    /**
+     * @return the current value of fullCellOutput.
+     */
+    public boolean getOutputFullCell() {
+        return this.outputFullCell;
+    }
+    
+    /**
+     * @param fullCellOutput The new value for fullCellOutput.
+     */
+    public void setOutputFullCell(boolean fullCellOutput) {
+        this.outputFullCell = fullCellOutput;
     }
     
     public static void main(final String args[]) {
