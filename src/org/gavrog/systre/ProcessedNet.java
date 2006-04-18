@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +34,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.2 2006/04/14 22:09:37 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.3 2006/04/18 22:36:26 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -113,7 +115,7 @@ class ProcessedNet {
         this.embedder = embedder;
     }
 
-    public void writeEmbedding(final PrintWriter out, final boolean cgdFormat) {
+    public void writeEmbedding(final PrintWriter out, final boolean cgdFormat, boolean fullCell) {
         // --- extract some data from the arguments
         final int d = graph.getDimension();
         final String extendedGroupName = finder.getExtendedGroupName();
@@ -126,7 +128,11 @@ class ProcessedNet {
         if (cgdFormat) {
             out.println("CRYSTAL");
             out.println("  NAME " + name);
-            out.println("  GROUP " + extendedGroupName);
+            if (fullCell) {
+                out.println("  GROUP P1");
+            } else {
+                out.println("  GROUP " + extendedGroupName);
+            }
         }
         
         // --- get the relaxed Gram matrix
@@ -163,6 +169,9 @@ class ProcessedNet {
                     + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
                     + fmtReal4.format(beta) + " " + fmtReal4.format(gamma));
         } else {
+            if (fullCell) {
+                out.println("   Coordinates below are given for a full conventional cell.");
+            }
             out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
             out.println("       a = " + fmtReal5.format(a) + ", b = "
                     + fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
@@ -188,27 +197,14 @@ class ProcessedNet {
         if (!cgdFormat) {
             out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
         }
-        final Set reps = new HashSet();
-        for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
-            // --- grab the next node orbit
-            final Set orbit = (Set) orbits.next();
+        final boolean allNodes = fullCell;
+        final Map reps = nodeReps(cov, lifted, allNodes);
+        for (final Iterator iter = reps.keySet().iterator(); iter.hasNext();) {
+            // --- extract the next node and its position
+            final INode v = (INode) iter.next();
+            final Point p = (Point) reps.get(v);
             
-            // --- find the best representative
-            final List tmp = new ArrayList();
-            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
-                final INode v = (INode) iter.next();
-                final Point p = ((Point) lifted.get(v)).modZ();
-                tmp.add(new PlacedNode(v, p));
-            }
-            Collections.sort(tmp);
-            final PlacedNode pn = (PlacedNode) tmp.get(0);
-            final INode v = pn.v;
-            final Point p = pn.p;
-
-            // --- remember it for later
-            reps.add(v);
-            
-            // --- print its position
+            // --- print them
             if (cgdFormat) {
                 out.print("  NODE " + v.id() + " " + cov.new CoverNode(v).degree() + " ");
             } else {
@@ -224,36 +220,9 @@ class ProcessedNet {
         if (!cgdFormat) {
             out.println("   Edges:");
         }
-        for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
-            // --- grab the next edge orbit
-            final Set orbit = (Set) orbits.next();
-            
-            // --- extract those edges starting or ending in a node that has been printed
-            final List candidates = new ArrayList();
-            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
-                final IEdge e = (IEdge) iter.next();
-                if (reps.contains(e.source())) {
-                    candidates.add(e);
-                }
-                if (reps.contains(e.target())) {
-                    candidates.add(e.reverse());
-                }
-            }
-            
-            // --- find the best representative among those
-            for (int i = 0; i < candidates.size(); ++i) {
-                final IEdge e = (IEdge) candidates.get(i);
-                final INode v = e.source();
-                final INode w = e.target();
-                final Point p = (Point) lifted.get(v);
-                final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e)
-                        .times(correction));
-                final Point p0 = p.modZ();
-                final Point q0 = (Point) q.minus(p.minus(p0));
-                candidates.set(i, new Pair(new PlacedNode(v, p0), new PlacedNode(w, q0)));
-            }
-            Collections.sort(candidates);
-            final Pair pair = (Pair) candidates.get(0);
+        final List ereps = edgeReps(cov, reps, lifted, correction, fullCell);
+        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
+            final Pair pair = (Pair) iter.next();
             final Point p = ((PlacedNode) pair.getFirst()).p;
             final Point q = ((PlacedNode) pair.getSecond()).p;
 
@@ -344,6 +313,84 @@ class ProcessedNet {
         out.flush();
     }
 
+    private Map nodeReps(final PeriodicGraph cov, final Map lifted, boolean allNodes) {
+        final Map reps = new LinkedHashMap();
+        for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
+            // --- grab the next node orbit
+            final Set orbit = (Set) orbits.next();
+            
+            // --- find positions for all nodes
+            final List tmp = new ArrayList();
+            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
+                final INode v = (INode) iter.next();
+                final Point p = ((Point) lifted.get(v)).modZ();
+                tmp.add(new PlacedNode(v, p));
+            }
+            
+            // --- sort by position
+            Collections.sort(tmp);
+            
+            // --- extract the node (or nodes) to use
+            if (allNodes) {
+                for (int i = 0; i < tmp.size(); ++i) {
+                    final PlacedNode pn = (PlacedNode) tmp.get(i);
+                    reps.put(pn.v, pn.p);
+                }
+            } else {
+                final PlacedNode pn = (PlacedNode) tmp.get(0);
+                reps.put(pn.v, pn.p);
+            }
+        }
+        
+        return reps;
+    }
+
+    private List edgeReps(final PeriodicGraph cov, final Map reps, final Map lifted,
+            final CoordinateChange correction, boolean allEdges) {
+        final List result = new LinkedList();
+        
+        for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
+            // --- grab the next edge orbit
+            final Set orbit = (Set) orbits.next();
+            
+            // --- extract those edges starting or ending in a node that has been printed
+            final List candidates = new ArrayList();
+            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
+                final IEdge e = (IEdge) iter.next();
+                if (reps.containsKey(e.source())) {
+                    candidates.add(e);
+                }
+                if (reps.containsKey(e.target())) {
+                    candidates.add(e.reverse());
+                }
+            }
+            
+            // --- find positions for all the end points
+            for (int i = 0; i < candidates.size(); ++i) {
+                final IEdge e = (IEdge) candidates.get(i);
+                final INode v = e.source();
+                final INode w = e.target();
+                final Point p = (Point) lifted.get(v);
+                final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e)
+                        .times(correction));
+                final Point p0 = p.modZ();
+                final Point q0 = (Point) q.minus(p.minus(p0));
+                candidates.set(i, new Pair(new PlacedNode(v, p0), new PlacedNode(w, q0)));
+            }
+            
+            // --- sort edges by end point positions
+            Collections.sort(candidates);
+            
+            // --- extract the edge (or edges) to use
+            if (allEdges) {
+                result.addAll(candidates);
+            } else {
+                result.add(candidates.get(0));
+            }
+        }
+        return result;
+    }
+    
     private CoordinateChange cell_correction(final SpaceGroupFinder finder,
             final Matrix gram, final Vector a, Vector b, final Vector c) {
         
