@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.EventObject;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,7 +65,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.16 2006/04/14 22:11:53 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.17 2006/04/18 22:38:43 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -263,7 +264,7 @@ public class SystreGUI extends BFrame {
         for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
             final ProcessedNet net = (ProcessedNet) iter.next();
             if (net != null) {
-                net.writeEmbedding(new PrintWriter(writer), true);
+                net.writeEmbedding(new PrintWriter(writer), true, systre.getOutputFullCell());
             }
         }
     }
@@ -282,55 +283,65 @@ public class SystreGUI extends BFrame {
         }
     }
     
+    private abstract class CheckBoxProcessor extends EventProcessor {
+        public void handleEvent(final Object event) {
+            final BCheckBox source = (BCheckBox) ((EventObject) event).getSource();
+            handleEvent(source.getState());
+        }
+        public abstract void handleEvent(final boolean newState);
+    };
+    
+    private BCheckBox makeCheckBox(final String label, final boolean value, final EventProcessor processor) {
+        final BCheckBox box = new BCheckBox(label, value);
+        box.setBackground(null);
+        box.addEventLink(ValueChangedEvent.class, processor);
+        return box;
+    }
+    
     public void doOptions() {
 		final BDialog dialog = new BDialog(this, "Systre - Options", true);
 		final ColumnContainer column = new ColumnContainer();
 		column.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
 				defaultInsets, null));
 		column.setBackground(textColor);
-		final BCheckBox baryBox = new BCheckBox("Relax Node Positions", this.systre
-				.getRelaxPositions());
-		baryBox.setBackground(null);
-		column.add(baryBox);
-		final BCheckBox builtinBox = new BCheckBox("Use Builtin Archive", this.systre
-				.getUseBuiltinArchive());
-		builtinBox.setBackground(null);
-		column.add(builtinBox);
-		final BCheckBox secondOriginBox = new BCheckBox("Prefer Second Origin Choice",
-				SpaceGroupCatalogue.getPreferSecondOrigin());
-		secondOriginBox.setBackground(null);
-		column.add(secondOriginBox);
-		final BCheckBox hexagonalBox = new BCheckBox("Prefer Hexagonal Group Setting",
-				SpaceGroupCatalogue.getPreferHexagonal());
-		hexagonalBox.setBackground(null);
-		column.add(hexagonalBox);
+        column.add(makeCheckBox("Relax Node Positions", this.systre.getRelaxPositions(),
+                new CheckBoxProcessor() {
+                    public void handleEvent(final boolean state) {
+                        systre.setRelaxPositions(state);
+                    }
+                }));
+        column.add(makeCheckBox("Use Builtin Archive",
+                this.systre.getUseBuiltinArchive(), new CheckBoxProcessor() {
+                    public void handleEvent(final boolean state) {
+                        systre.setUseBuiltinArchive(state);
+                    }
+                }));
+        column.add(makeCheckBox("Prefer Second Origin Choice", SpaceGroupCatalogue
+                .getPreferSecondOrigin(), new CheckBoxProcessor() {
+            public void handleEvent(final boolean state) {
+                SpaceGroupCatalogue.setPreferSecondOrigin(state);
+            }
+        }));
+        column.add(makeCheckBox("Prefer Hexagonal Group Setting", SpaceGroupCatalogue
+                .getPreferHexagonal(), new CheckBoxProcessor() {
+            public void handleEvent(final boolean state) {
+                SpaceGroupCatalogue.setPreferHexagonal(state);
+            }
+        }));
+        column.add(makeCheckBox("Output Full Conventional Cell", this.systre
+                .getOutputFullCell(), new CheckBoxProcessor() {
+            public void handleEvent(final boolean state) {
+                systre.setOutputFullCell(state);
+            }
+        }));
+        
 		final BButton okButton = makeButton("Ok");
 		column.add(okButton, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
 				defaultInsets, null));
 
 		dialog.setContent(column);
 
-		baryBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
-			public void handleEvent(final Object event) {
-				systre.setRelaxPositions(baryBox.getState());
-			}
-		});
-		builtinBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
-			public void handleEvent(final Object event) {
-				systre.setUseBuiltinArchive(builtinBox.getState());
-			}
-		});
-		secondOriginBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
-			public void handleEvent(final Object event) {
-				SpaceGroupCatalogue.setPreferSecondOrigin(secondOriginBox.getState());
-			}
-		});
-		hexagonalBox.addEventLink(ValueChangedEvent.class, new EventProcessor() {
-			public void handleEvent(final Object event) {
-				SpaceGroupCatalogue.setPreferHexagonal(hexagonalBox.getState());
-			}
-		});
-		okButton.addEventLink(CommandEvent.class, dialog, "dispose");
+        okButton.addEventLink(CommandEvent.class, dialog, "dispose");
 		dialog.addEventLink(WindowClosingEvent.class, dialog, "dispose");
 
 		dialog.pack();
