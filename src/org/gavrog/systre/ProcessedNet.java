@@ -34,7 +34,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.3 2006/04/18 22:36:26 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.4 2006/04/18 22:39:54 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
