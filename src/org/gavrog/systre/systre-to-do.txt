@@ -8,7 +8,7 @@ In process:
 
 For Systre 1.0:
 
-- Add "Next" and "Cancel" buttons for multi-structure files.
+- Look ahead to see if the current input file contains more structures.
 - Make available input formats more transparent.
 - Add options to write the whole input file or only the last net seen.
 - Include zeolite frameworks from Atlas.
@@ -29,6 +29,7 @@ For later (maybe):
 
 Recently done:
 
+- Add "Next" button for multi-structure files.
 - Support "Description" and "Reference" entries in .cgd and .arc files.
 - Add option for writing complete unit cell data.
 - Revise cell vectors for monoclinic and triclinic nets after cell relaxation.
