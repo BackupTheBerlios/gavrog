@@ -65,7 +65,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.19 2006/04/18 23:53:17 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.20 2006/04/19 19:33:19 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -492,23 +492,30 @@ public class SystreGUI extends BFrame {
         } else {
             out.println(ex.getMessage() + ".");
         }
+        
+        final Runnable runnable = new Runnable() {
+            public void run() {
+                final String title = "Systre: " + type + " ERROR";
+                final String msg = text + ex.getMessage() + ".";
+                final BStandardDialog dialog = new BStandardDialog(title, msg,
+                        BStandardDialog.ERROR);
+                final String ok = "Continue with next structure";
+                final String skip = "Skip rest of file";
+                final String choices[] = new String[] { ok, skip };
+                final int val = dialog.showOptionDialog(SystreGUI.this, choices, ok);
+                cancel = val > 0;
+            }
+        };
+        
         cancel = false;
-        try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                public void run() {
-                    final String title = "Systre: " + type + " ERROR";
-                    final String msg = text + ex.getMessage() + ".";
-                    final BStandardDialog dialog = new BStandardDialog(title, msg,
-                            BStandardDialog.ERROR);
-                    final String ok = "Continue with next structure";
-                    final String skip = "Skip rest of file";
-                    final String choices[] = new String[] { ok, skip };
-                    final int val = dialog.showOptionDialog(SystreGUI.this, choices, ok);
-                    cancel = val > 0;
-                }
-            });
-		} catch (final Exception ex2) {
-		}
+        if (SwingUtilities.isEventDispatchThread()) {
+            runnable.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(runnable);
+            } catch (final Exception ex2) {
+            }
+        }
 		return cancel;
 	}
     
