@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.23 2006/04/19 21:46:00 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.24 2006/04/19 22:56:57 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -77,19 +77,23 @@ public class SystreGUI extends BFrame {
             "Open data file");
     private final BFileChooser outFileChooser = new BFileChooser(BFileChooser.SAVE_FILE,
             "Save output");
-    
-    private final SystreCmdline systre = new SystreCmdline();
-	private String strippedFileName;
 
     private BTextArea output;
-	private BScrollBar vscroll;
+    private BScrollBar vscroll;
     private BButton openButton;
     private BButton saveButton;
     private BButton optionsButton;
-    private String lastGraphName;
     
+    private final SystreCmdline systre = new SystreCmdline();
+    private NetParser parser;
+	private String strippedFileName;
+    private String fullFileName;
     private List bufferedNets = new LinkedList();
-
+    
+    private boolean cancel;
+    private boolean atEOF;
+    private int count;
+    
     /**
      * Constructs an instance.
      */
@@ -356,124 +360,136 @@ public class SystreGUI extends BFrame {
 		dialog.setVisible(true);
 	}
     
+    public void doNext() {
+        final PrintStream out = this.systre.getOutStream();
+        
+        PeriodicGraph G = null;
+        Exception problem = null;
+        this.cancel = false;
+
+        // --- read the next net
+        try {
+            G = this.parser.parseNet();
+        } catch (DataFormatException ex) {
+            problem = ex;
+        } catch (Exception ex) {
+            reportException(ex, "INTERNAL", "Unexpected exception", true);
+            if (this.cancel) {
+                finishFile();
+            }
+            return;
+        }
+        if (G == null) {
+            if (problem == null) {
+                this.atEOF = true;
+            } else {
+                reportException(problem, "INPUT", null, false);
+            }
+            if (this.atEOF || this.cancel) {
+                finishFile();
+            }
+            return;
+        }
+        ++this.count;
+
+        // --- some blank lines as separators
+        out.println();
+        if (this.count > 1) {
+            out.println();
+            out.println();
+        }
+
+        String lastGraphName = null;
+        try {
+            lastGraphName = this.parser.getName();
+        } catch (Exception ex) {
+            if (problem == null) {
+                problem = ex;
+            }
+        }
+        final String archiveName;
+        final String displayName;
+        if (lastGraphName == null) {
+            archiveName = this.strippedFileName + "-#" + this.count;
+            displayName = "";
+        } else {
+            archiveName = lastGraphName;
+            displayName = " - \"" + lastGraphName + "\"";
+        }
+
+        out.println("Structure #" + this.count + displayName + ".");
+        out.println();
+        boolean success = false;
+        if (problem != null) {
+            reportException(problem, "INPUT", null, false);
+        } else {
+            try {
+                this.systre.processGraph(G, archiveName, this.parser.getSpaceGroup());
+                success = true;
+            } catch (SystreException ex) {
+                reportException(ex, ex.getType().toString(), null, false);
+            } catch (Exception ex) {
+                reportException(ex, "INTERNAL", "Unexpected exception", true);
+            }
+        }
+        out.println();
+        out.println("Finished structure #" + this.count + displayName + ".");
+        if (success) {
+            final ProcessedNet net = this.systre.getLastStructure();
+            this.bufferedNets.add(net);
+        }
+        if (this.cancel) {
+            finishFile();
+        }
+    }
+    
     /**
 	 * Analyzes all nets specified in a file and prints the results.
 	 * 
 	 * @param filePath the name of the input file.
 	 */
 	public void processDataFile(final String filePath) {
-        final String skipping = "\n!!! SKIPPING REST OF FILE AS REQUESTED.";
-		final PrintStream out = this.systre.getOutStream();
-		
-	    // --- set up a parser for reading input from the given file
-	    NetParser parser = null;
-	    int count = 0;
-	    try {
-	        parser = new NetParser(new FileReader(filePath));
-	    } catch (FileNotFoundException ex) {
-	    	reportException(ex, "FILE", null, false);
-	        return;
-	    }
-	    strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
-		out.println("Data file \"" + filePath + "\".");
-	    
-        this.bufferedNets.clear();
+        openFile(filePath);
         
-	    // --- loop through the structures specied in the input file
-	    while (true) {
-	        PeriodicGraph G = null;
-	        Exception problem = null;
-	        
-	        // --- read the next net
-	        try {
-	            G = parser.parseNet();
-	        } catch (DataFormatException ex) {
-	            problem = ex;
-	        } catch (Exception ex) {
-	        	final boolean cancel = reportException(ex, "INTERNAL",
-						"Unexpected exception", true);
-	        	if (cancel) {
-	        		out.println(skipping);
-	        		break;
-	        	} else {
-	        		continue;
-	        	}
-	        }
-	        if (G == null) {
-	        	if (problem == null) {
-	        		break;
-	        	} else {
-	        		final boolean cancel = reportException(problem, "INPUT", null, false);
-		        	if (cancel) {
-		        		out.println(skipping);
-		        		break;
-		        	} else {
-		        		continue;
-		        	}
-	        	}
-	        }
-	        ++count;
-	        
-	        // --- some blank lines as separators
-	        out.println();
-	        if (count > 1) {
-	            out.println();
-	            out.println();
-	        }
-	        
-            lastGraphName = null;
-            try {
-                lastGraphName = parser.getName();
-            } catch (Exception ex) {
-                if (problem == null) {
-                    problem = ex;
-                }
-            }
-	        final String archiveName;
-	        final String displayName;
-	        if (lastGraphName == null) {
-	            archiveName = strippedFileName + "-#" + count;
-	            displayName = "";
-	        } else {
-	            archiveName = lastGraphName;
-	            displayName = " - \"" + lastGraphName + "\"";
-	        }
-	        
-	        out.println("Structure #" + count + displayName + ".");
-			out.println();
-			boolean cancel = false;
-            boolean success = false;
-			if (problem != null) {
-				cancel = reportException(problem, "INPUT", null, false);
-			} else {
-				try {
-					systre.processGraph(G, archiveName, parser.getSpaceGroup());
-                    success = true;
-                } catch (SystreException ex) {
-                    cancel = reportException(ex, ex.getType().toString(), null, false);
-				} catch (Exception ex) {
-					cancel = reportException(ex, "INTERNAL", "Unexpected exception", true);
-				}
-			}
-	        out.println();
-			out.println("Finished structure #" + count + displayName + ".");
-            if (success) {
-                final ProcessedNet net = systre.getLastStructure();
-                this.bufferedNets.add(net);
-            }
-			if (cancel) {
-        		out.println(skipping);
-				break;
-			}
-	    }
-	
-	    out.println();
-	    out.println("Finished data file \"" + filePath + "\".");
-	}
+        // --- loop through the structures specied in the input file
+        while (this.cancel == false && this.atEOF == false) {
+            doNext();
+        }
+    }
+     
+    private void openFile(final String filePath) {
+        final PrintStream out = this.systre.getOutStream();
 
-	private boolean cancel;
-	
-    private boolean reportException(final Throwable ex, final String type,
+        this.parser = null;
+        this.count = 0;
+        this.atEOF = false;
+        this.cancel = false;
+        
+        try {
+            this.parser = new NetParser(new FileReader(filePath));
+        } catch (FileNotFoundException ex) {
+            reportException(ex, "FILE", null, false);
+            return;
+        }
+        this.fullFileName = filePath;
+        this.strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
+        out.println("Data file \"" + filePath + "\".");
+
+        this.bufferedNets.clear();
+    }
+
+    private void finishFile() {
+        final PrintStream out = this.systre.getOutStream();
+        
+        if (this.cancel) {
+            out.println("\n!!! SKIPPING REST OF FILE AS REQUESTED.");
+        }
+        out.println();
+        out.println("Finished data file \"" + this.fullFileName + "\".");
+        this.parser = null;
+    }
+
+    private void reportException(final Throwable ex, final String type,
 			final String msg, final boolean details) {
 		final PrintStream out = systre.getOutStream();
 		out.println();
@@ -513,7 +529,6 @@ public class SystreGUI extends BFrame {
             } catch (final Exception ex2) {
             }
         }
-		return cancel;
 	}
     
     private void disableButtons() {
