@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.21 2006/04/19 19:38:54 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.22 2006/04/19 21:23:15 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -319,14 +319,14 @@ public class SystreGUI extends BFrame {
                 defaultInsets, null));
         column.setBackground(textColor);
         try {
-            column.add(new OptionCheckBox("Relax Node Positions", this.systre,
-                    "relaxPositions"));
             column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
                     "useBuiltinArchive"));
             column.add(new OptionCheckBox("Prefer Second Origin On Input",
                     SpaceGroupCatalogue.class, "preferSecondOrigin"));
             column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
                     SpaceGroupCatalogue.class, "preferHexagonal"));
+            column.add(new OptionCheckBox("Relax Node Positions", this.systre,
+                    "relaxPositions"));
             column.add(new OptionCheckBox("Output Full Conventional Cell", this.systre,
                     "outputFullCell"));
         } catch (final Exception ex) {
