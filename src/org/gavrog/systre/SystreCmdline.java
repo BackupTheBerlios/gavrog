@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.34 2006/04/18 22:37:27 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.35 2006/04/19 21:23:43 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -303,8 +303,9 @@ public class SystreCmdline {
         }
         if (found != null) {
             ++countMatches;
-            out.println("   Structure was found in builtin archive.");
-            out.println("       Name: " + found.getName());
+            out.println("   Structure was found in builtin archive:");
+            writeEntry(out, found);
+            out.println();
         }
         for (Iterator iter = this.name2archive.keySet().iterator(); iter.hasNext();) {
             final String arcName = (String) iter.next();
@@ -312,18 +313,21 @@ public class SystreCmdline {
             found = arc.getByKey(invariant);
             if (found != null) {
                 ++countMatches;
-                out.println("   Structure was found in archive \"" + arcName + "\"");
-                out.println("       Name: " + found.getName());
+                out.println("   Structure was found in archive \"" + arcName + "\":");
+                writeEntry(out, found);
+                out.println();
             }
         }
         found = this.internalArchive.getByKey(invariant);
         if (found != null) {
             ++countMatches;
             out.println("   Structure already seen in this run.");
-            out.println("       Name: " + found.getName());
+            writeEntry(out, found);
+            out.println();
         }
         if (countMatches == 0) {
             out.println("   Structure is new for this run.");
+            out.println();
             final Archive.Entry entry = this.internalArchive.add(G,
                     name == null ? "nameless" : name);
             if (this.outputArchive != null) {
@@ -337,7 +341,6 @@ public class SystreCmdline {
                 }
             }
         }
-        out.println();
         out.flush();
 
         for (int pass = 0; pass <= 1; ++pass) {
@@ -440,6 +443,19 @@ public class SystreCmdline {
         }
     }
 
+    private void writeEntry(final PrintStream out, final Archive.Entry entry) {
+        out.println("       Name:\t\t" + entry.getName());
+        if (entry.getDescription() != null) {
+            out.println("       Description:\t" + entry.getDescription());
+        }
+        if (entry.getReference() != null) {
+            out.println("       Reference:\t" + entry.getReference());
+        }
+        if (entry.getURL() != null) {
+            out.println("       URL:\t\t" + entry.getURL());
+        }
+    }
+    
     /**
 	 * Analyzes all nets specified in a file and prints the results.
 	 * 

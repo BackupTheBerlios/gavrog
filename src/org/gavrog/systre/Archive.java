@@ -32,7 +32,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.10 2006/04/14 02:59:19 odf Exp $
+ * @version $Id: Archive.java,v 1.11 2006/04/19 21:23:43 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -50,6 +50,9 @@ public class Archive {
         final private String key;
         final private String keyVersion;
         final private String name;
+        private String description;
+        private String reference;
+        private String url;
         
         /**
          * Constructs an entry with explicit values.
@@ -141,6 +144,21 @@ public class Archive {
             buf.append("checksum ");
             buf.append(getDigestString());
             buf.append("\n");
+            buf.append("ref      ");
+            if (reference != null) {
+                buf.append(getReference());
+            }
+            buf.append("\n");
+            buf.append("desc     ");
+            if (getDescription() != null) {
+                buf.append(getDescription());
+            }
+            buf.append("\n");
+            if (getURL() != null) {
+                buf.append("url      ");
+                buf.append(getURL());
+                buf.append("\n");
+            }
             buf.append("end\n");
             return buf.toString();
         }
@@ -186,12 +204,57 @@ public class Archive {
                         throw new DataFormatException("checksum mismatch for entry '"
 								+ name + "'.");
                     }
+                    entry.setDescription((String) fields.get("desc"));
+                    entry.setReference((String) fields.get("ref"));
+                    entry.setURL((String) fields.get("url"));
                     return entry;
                 } else {
                     fields.put(tag, arg);
                 }
             }
             return null;
+        }
+        
+        /**
+         * @return the current value of description.
+         */
+        public String getDescription() {
+            return this.description;
+        }
+        
+        /**
+         * @param description The new value for description.
+         */
+        public void setDescription(String description) {
+            this.description = description;
+        }
+        
+        /**
+         * @return the current value of reference.
+         */
+        public String getReference() {
+            return this.reference;
+        }
+        
+        /**
+         * @param reference The new value for reference.
+         */
+        public void setReference(String reference) {
+            this.reference = reference;
+        }
+        
+        /**
+         * @return the current value of url.
+         */
+        public String getURL() {
+            return this.url;
+        }
+        
+        /**
+         * @param url The new value for url.
+         */
+        public void setURL(String url) {
+            this.url = url;
         }
     }
     
