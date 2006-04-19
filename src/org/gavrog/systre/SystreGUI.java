@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.22 2006/04/19 21:23:15 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.23 2006/04/19 21:46:00 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -158,15 +158,24 @@ public class SystreGUI extends BFrame {
     
     private void captureOutput() {
         final OutputStream stream = new OutputStream() {
+            private StringBuffer buffer = new StringBuffer(128);
+
             public void write(int b) throws IOException {
-                output.append(new String(new char[] { (char) b }));
-                if ((char) b == '\n') {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            vscroll.setValue(vscroll.getMaximum());
-                        }
-                    });
+                final char c = (char) b;
+                buffer.append(c);
+                if (c == '\n' || buffer.length() > 1023) {
+                    flush();
                 }
+            }
+            
+            public void flush() {
+                output.append(buffer.toString());
+                buffer.delete(0, buffer.length());
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        vscroll.setValue(vscroll.getMaximum());
+                    }
+                });
             }
         };
 
