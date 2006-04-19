@@ -8,14 +8,15 @@ In process:
 
 For Systre 1.0:
 
-- Support "Description" and "Reference" entries in .cgd and .arc files.
 - Add "Next" and "Cancel" buttons for multi-structure files.
-- Make available I/O formats more transparent.
+- Make available input formats more transparent.
+- Add options to write the whole input file or only the last net seen.
 - Include zeolite frameworks from Atlas.
 - Report coordinates of edge centers (optional).
 - Optionally report alternate monoclinic settings where better than first setting.
 
 For later (maybe):
+- Link to online databases.
 - Support Delaney symbol import.
 - Support more output options (e.g. CrystalMaker).
 - If net is not connected, process components individually.
@@ -28,6 +29,7 @@ For later (maybe):
 
 Recently done:
 
+- Support "Description" and "Reference" entries in .cgd and .arc files.
 - Add option for writing complete unit cell data.
 - Revise cell vectors for monoclinic and triclinic nets after cell relaxation.
 - Add the "false" -z nets to the archive.
