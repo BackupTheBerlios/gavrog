@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.24 2006/04/19 22:56:57 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.25 2006/04/19 23:37:03 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -81,6 +81,7 @@ public class SystreGUI extends BFrame {
     private BTextArea output;
     private BScrollBar vscroll;
     private BButton openButton;
+    private BButton nextButton;
     private BButton saveButton;
     private BButton optionsButton;
     
@@ -114,13 +115,14 @@ public class SystreGUI extends BFrame {
 				+ "by Olaf Delgado-Friedrichs 2001-2006</html>");
 		top.add(label, BorderContainer.NORTH);
         
-        final GridContainer buttonBar = new GridContainer(3, 1);
+        final GridContainer buttonBar = new GridContainer(4, 1);
         buttonBar.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER,
                 LayoutInfo.HORIZONTAL, null, null));
         
         buttonBar.add(openButton = makeButton("Open..."), 0, 0);
-        buttonBar.add(saveButton = makeButton("Save as..."), 1, 0);
-        buttonBar.add(optionsButton = makeButton("Options..."), 2, 0);
+        buttonBar.add(nextButton = makeButton("Next"), 1, 0);
+        buttonBar.add(saveButton = makeButton("Save as..."), 2, 0);
+        buttonBar.add(optionsButton = makeButton("Options..."), 3, 0);
         
         top.add(buttonBar, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
@@ -145,10 +147,14 @@ public class SystreGUI extends BFrame {
         captureOutput();
         
         openButton.addEventLink(CommandEvent.class, this, "doOpen");
+        nextButton.addEventLink(CommandEvent.class, this, "doNext");
         saveButton.addEventLink(CommandEvent.class, this, "doSave");
         optionsButton.addEventLink(CommandEvent.class, this, "doOptions");
         okButton.addEventLink(CommandEvent.class, this, "doQuit");
         addEventLink(WindowClosingEvent.class, this, "doQuit");
+        
+        nextButton.setEnabled(false);
+        saveButton.setEnabled(false);
         
         pack();
         setVisible(true);
@@ -193,27 +199,14 @@ public class SystreGUI extends BFrame {
             final File dir = this.inFileChooser.getDirectory();
             final String path = new File(dir, filename).getAbsolutePath();
             this.output.setText("");
-            disableButtons();
+            disableMainButtons();
             
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        if (filename.endsWith(".arc")) {
-                            systre.processArchive(path);
-                        } else {
-                            processDataFile(path);
-                        }
-                    } catch (Exception ex) {
-                        reportException(ex, "INTERNAL", "Unexpected exception", true);
-                    } finally {
-                        SwingUtilities.invokeLater(new Runnable() {
-                            public void run() {
-                                enableButtons();
-                            }
-                        });
-                    }
-                }
-            }).start();
+            if (filename.endsWith(".arc")) {
+                systre.processArchive(path);
+            } else {
+                openFile(path);
+                doNext();
+            }
         }
     }
     
@@ -239,7 +232,7 @@ public class SystreGUI extends BFrame {
             } else {
                 append = false;
             }
-            disableButtons();
+            disableMainButtons();
             
             new Thread(new Runnable() {
                 public void run() {
@@ -265,7 +258,7 @@ public class SystreGUI extends BFrame {
                     } finally {
                         SwingUtilities.invokeLater(new Runnable() {
                             public void run() {
-                                enableButtons();
+                                enableMainButtons();
                             }
                         });
                     }
@@ -361,6 +354,26 @@ public class SystreGUI extends BFrame {
 	}
     
     public void doNext() {
+        disableMainButtons();
+        new Thread(new Runnable() {
+            public void run() {
+                nextNet();
+                enableMainButtons();
+                if (parser == null) {
+                    try {
+                        SwingUtilities.invokeAndWait(new Runnable() {
+                            public void run() {
+                                nextButton.setEnabled(false);
+                            }
+                        });
+                    } catch (Exception ex) {
+                    }
+                }
+            }
+        }).start();
+    }
+    
+    public void nextNet() {
         final PrintStream out = this.systre.getOutStream();
         
         PeriodicGraph G = null;
@@ -443,20 +456,6 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    /**
-	 * Analyzes all nets specified in a file and prints the results.
-	 * 
-	 * @param filePath the name of the input file.
-	 */
-	public void processDataFile(final String filePath) {
-        openFile(filePath);
-        
-        // --- loop through the structures specied in the input file
-        while (this.cancel == false && this.atEOF == false) {
-            doNext();
-        }
-    }
-     
     private void openFile(final String filePath) {
         final PrintStream out = this.systre.getOutStream();
 
@@ -531,16 +530,42 @@ public class SystreGUI extends BFrame {
         }
 	}
     
-    private void disableButtons() {
-        openButton.setEnabled(false);
-        saveButton.setEnabled(false);
-        optionsButton.setEnabled(false);
+    private void disableMainButtons() {
+        final Runnable runnable = new Runnable() {
+            public void run() {
+                openButton.setEnabled(false);
+                nextButton.setEnabled(false);
+                saveButton.setEnabled(false);
+                optionsButton.setEnabled(false);
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            runnable.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(runnable);
+            } catch (Exception ex) {
+            }
+        }
     }
 
-    private void enableButtons() {
-        openButton.setEnabled(true);
-        saveButton.setEnabled(true);
-        optionsButton.setEnabled(true);
+    private void enableMainButtons() {
+        final Runnable runnable = new Runnable() {
+            public void run() {
+                openButton.setEnabled(true);
+                nextButton.setEnabled(true);
+                saveButton.setEnabled(true);
+                optionsButton.setEnabled(true);
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            runnable.run();
+        } else {
+            try {
+                SwingUtilities.invokeLater(runnable);
+            } catch (Exception ex) {
+            }
+        }
     }
     
     public void doQuit() {
