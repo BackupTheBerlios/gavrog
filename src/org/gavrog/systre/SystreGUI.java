@@ -37,6 +37,7 @@ import javax.swing.SwingUtilities;
 
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
+import org.gavrog.box.simple.Strings;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
@@ -65,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.20 2006/04/19 19:33:19 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.21 2006/04/19 19:38:54 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -283,19 +284,6 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    /**
-     * Turn a string's first letter to upper case.
-     * @param s the source string.
-     * @return the capitalized version.
-     */
-    public static String capitalized(String s) {
-        if (s.length() > 1) {
-            return s.substring(0, 1).toUpperCase() + s.substring(1);
-        } else {
-            return s.toUpperCase();
-        }
-    }
-
     private class OptionCheckBox extends BCheckBox {
         public OptionCheckBox(final String label, final Object target, final String option)
                 throws Exception {
@@ -305,7 +293,7 @@ public class SystreGUI extends BFrame {
 
             final Class klazz = (target instanceof Class ? (Class) target : target
                     .getClass());
-            final String optionCap = capitalized(option);
+            final String optionCap = Strings.capitalized(option);
             final Method getter = klazz.getMethod("get" + optionCap, null);
             final Method setter = klazz.getMethod("set" + optionCap,
                     new Class[] { boolean.class });

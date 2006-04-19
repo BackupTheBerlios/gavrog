@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
@@ -37,7 +36,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: SpringEmbedder.java,v 1.3 2006/03/22 05:39:19 odf Exp $
+ * @version $Id: SpringEmbedder.java,v 1.4 2006/04/19 19:38:54 odf Exp $
  */
 public class SpringEmbedder extends EmbedderAdapter {
     private static final boolean DEBUG = false;
@@ -313,11 +312,9 @@ public class SpringEmbedder extends EmbedderAdapter {
             System.err.println("@@@   Gram matrix plus gradient: "
                     + gramAsString(getGramMatrix()));
         }
-        try {
-            resymmetrizeCell();
-        } catch (Exception ex) {
-            System.err.println(Misc.stackTrace(ex));
-        }
+        
+        resymmetrizeCell();
+        
         if (DEBUG) {
             System.err.println("@@@   Resymmetrized gram matrix: "
                     + gramAsString(getGramMatrix()));
