@@ -8,7 +8,6 @@ In process:
 
 For Systre 1.0:
 
-- Look ahead to see if the current input file contains more structures.
 - Make available input formats more transparent.
 - Add options to write the whole input file or only the last net seen.
 - Include zeolite frameworks from Atlas.
@@ -29,6 +28,7 @@ For later (maybe):
 
 Recently done:
 
+- Look ahead to see if the current input file contains more structures.
 - Add "Next" button for multi-structure files.
 - Support "Description" and "Reference" entries in .cgd and .arc files.
 - Add option for writing complete unit cell data.
