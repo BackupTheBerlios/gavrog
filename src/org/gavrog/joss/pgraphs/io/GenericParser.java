@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.5 2006/03/29 03:53:27 odf Exp $
+ * @version $Id: GenericParser.java,v 1.6 2006/04/20 02:18:56 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
@@ -46,6 +46,7 @@ public class GenericParser {
     private String dataType;
     private Entry dataEntries[];
     private Map entriesByKey;
+    private LinkedList bufferedLine = null;
 
     public class Entry {
         public final int lineNumber;
@@ -71,6 +72,12 @@ public class GenericParser {
     }
     
     private LinkedList nextLineChopped() {
+    	if (this.bufferedLine != null) {
+    		final LinkedList tmp = this.bufferedLine;
+    		this.bufferedLine = null;
+    		return tmp;
+    	}
+    	
         while (true) {
             final String rawLine;
             try {
@@ -333,5 +340,13 @@ public class GenericParser {
      */
     public Set getKeys() {
         return this.entriesByKey.keySet();
+    }
+    
+    /**
+     * @return true if there's nothing more to read
+     */
+    public boolean atEnd() {
+    	this.bufferedLine = nextLineChopped();
+    	return this.bufferedLine == null;
     }
 }
