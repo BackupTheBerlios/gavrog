@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.26 2006/04/20 02:19:39 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.27 2006/04/20 22:40:10 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -91,8 +91,6 @@ public class SystreGUI extends BFrame {
     private String fullFileName;
     private List bufferedNets = new LinkedList();
     
-    private boolean cancel;
-    private boolean atEOF;
     private int count;
     
     /**
@@ -256,11 +254,7 @@ public class SystreGUI extends BFrame {
                         reportException(ex, "INTERNAL",
                                 "Unexpected exception while writing " + file, true);
                     } finally {
-                        SwingUtilities.invokeLater(new Runnable() {
-                            public void run() {
-                                enableMainButtons();
-                            }
-                        });
+                        enableMainButtons();
                     }
                 }
             }).start();
@@ -374,85 +368,78 @@ public class SystreGUI extends BFrame {
     }
     
     public void nextNet() {
-        final PrintStream out = this.systre.getOutStream();
+        if (this.parser.atEnd()) {
+            finishFile();
+        }
         
+        final PrintStream out = this.systre.getOutStream();
         PeriodicGraph G = null;
         Exception problem = null;
-        this.cancel = false;
 
-        // --- read the next net
+        final class BailOut extends Throwable {}
+        
         try {
-            G = this.parser.parseNet();
-        } catch (DataFormatException ex) {
-            problem = ex;
-        } catch (Exception ex) {
-            reportException(ex, "INTERNAL", "Unexpected exception", true);
-            if (this.cancel) {
-                finishFile();
-            }
-            return;
-        }
-        if (G == null) {
-            if (problem == null) {
-                this.atEOF = true;
-            } else {
-                reportException(problem, "INPUT", null, false);
-            }
-            if (this.atEOF || this.cancel) {
-                finishFile();
-            }
-            return;
-        }
-        ++this.count;
-
-        // --- some blank lines as separators
-        out.println();
-        if (this.count > 1) {
-            out.println();
-            out.println();
-        }
-
-        String lastGraphName = null;
-        try {
-            lastGraphName = this.parser.getName();
-        } catch (Exception ex) {
-            if (problem == null) {
-                problem = ex;
-            }
-        }
-        final String archiveName;
-        final String displayName;
-        if (lastGraphName == null) {
-            archiveName = this.strippedFileName + "-#" + this.count;
-            displayName = "";
-        } else {
-            archiveName = lastGraphName;
-            displayName = " - \"" + lastGraphName + "\"";
-        }
-
-        out.println("Structure #" + this.count + displayName + ".");
-        out.println();
-        boolean success = false;
-        if (problem != null) {
-            reportException(problem, "INPUT", null, false);
-        } else {
+            // --- read the next net
             try {
-                this.systre.processGraph(G, archiveName, this.parser.getSpaceGroup());
-                success = true;
-            } catch (SystreException ex) {
-                reportException(ex, ex.getType().toString(), null, false);
+                G = this.parser.parseNet();
+            } catch (DataFormatException ex) {
+                problem = ex;
             } catch (Exception ex) {
                 reportException(ex, "INTERNAL", "Unexpected exception", true);
+                throw new BailOut();
             }
+            if (G == null) {
+                reportException(problem, "INPUT", null, false);
+                throw new BailOut();
+            }
+            ++this.count;
+            // --- some blank lines as separators
+            out.println();
+            if (this.count > 1) {
+                out.println();
+                out.println();
+            }
+            String lastGraphName = null;
+            try {
+                lastGraphName = this.parser.getName();
+            } catch (Exception ex) {
+                if (problem == null) {
+                    problem = ex;
+                }
+            }
+            final String archiveName;
+            final String displayName;
+            if (lastGraphName == null) {
+                archiveName = this.strippedFileName + "-#" + this.count;
+                displayName = "";
+            } else {
+                archiveName = lastGraphName;
+                displayName = " - \"" + lastGraphName + "\"";
+            }
+            out.println("Structure #" + this.count + displayName + ".");
+            out.println();
+            boolean success = false;
+            if (problem != null) {
+                reportException(problem, "INPUT", null, false);
+            } else {
+                try {
+                    this.systre.processGraph(G, archiveName, this.parser.getSpaceGroup());
+                    success = true;
+                } catch (SystreException ex) {
+                    reportException(ex, ex.getType().toString(), null, false);
+                } catch (Exception ex) {
+                    reportException(ex, "INTERNAL", "Unexpected exception", true);
+                }
+            }
+            out.println();
+            out.println("Finished structure #" + this.count + displayName + ".");
+            if (success) {
+                final ProcessedNet net = this.systre.getLastStructure();
+                this.bufferedNets.add(net);
+            }
+        } catch (BailOut ex) {
         }
-        out.println();
-        out.println("Finished structure #" + this.count + displayName + ".");
-        if (success) {
-            final ProcessedNet net = this.systre.getLastStructure();
-            this.bufferedNets.add(net);
-        }
-        this.atEOF = this.parser.atEnd();
-        if (this.cancel || this.atEOF) {
+        if (this.parser.atEnd()) {
             finishFile();
         }
     }
@@ -462,8 +449,6 @@ public class SystreGUI extends BFrame {
 
         this.parser = null;
         this.count = 0;
-        this.atEOF = false;
-        this.cancel = false;
         
         try {
             this.parser = new NetParser(new FileReader(filePath));
@@ -481,9 +466,6 @@ public class SystreGUI extends BFrame {
     private void finishFile() {
         final PrintStream out = this.systre.getOutStream();
         
-        if (this.cancel) {
-            out.println("\n!!! SKIPPING REST OF FILE AS REQUESTED.");
-        }
         out.println();
         out.println("Finished data file \"" + this.fullFileName + "\".");
         this.parser = null;
@@ -506,40 +488,50 @@ public class SystreGUI extends BFrame {
             out.println(ex.getMessage() + ".");
         }
         
-        final Runnable runnable = new Runnable() {
+        invokeAndWait(new Runnable() {
             public void run() {
                 final String title = "Systre: " + type + " ERROR";
                 final String msg = text + ex.getMessage() + ".";
                 final BStandardDialog dialog = new BStandardDialog(title, msg,
                         BStandardDialog.ERROR);
-                final String ok = "Continue with next structure";
-                final String skip = "Skip rest of file";
-                final String choices[] = new String[] { ok, skip };
-                final int val = dialog.showOptionDialog(SystreGUI.this, choices, ok);
-                cancel = val > 0;
+                dialog.showMessageDialog(SystreGUI.this);
             }
-        };
-        
-        cancel = false;
-        if (SwingUtilities.isEventDispatchThread()) {
-            runnable.run();
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(runnable);
-            } catch (final Exception ex2) {
-            }
-        }
+        });
 	}
     
     private void disableMainButtons() {
-        final Runnable runnable = new Runnable() {
+        invokeAndWait(new Runnable() {
             public void run() {
                 openButton.setEnabled(false);
                 nextButton.setEnabled(false);
                 saveButton.setEnabled(false);
                 optionsButton.setEnabled(false);
             }
-        };
+        });
+    }
+
+    private void enableMainButtons() {
+        invokeLater(new Runnable() {
+            public void run() {
+                openButton.setEnabled(true);
+                nextButton.setEnabled(true);
+                saveButton.setEnabled(true);
+                optionsButton.setEnabled(true);
+            }
+        });
+    }
+    
+    public void doQuit() {
+        System.exit(0);
+    }
+    
+    /**
+     * Wrapper for {@link SwingUtilities.invokeAndWait}}. If we're in the event dispatch
+     * thread, the argument is just invoked normally.
+     * 
+     * @param runnable what to invoke.
+     */
+    private void invokeAndWait(final Runnable runnable) {
         if (SwingUtilities.isEventDispatchThread()) {
             runnable.run();
         } else {
@@ -550,15 +542,13 @@ public class SystreGUI extends BFrame {
         }
     }
 
-    private void enableMainButtons() {
-        final Runnable runnable = new Runnable() {
-            public void run() {
-                openButton.setEnabled(true);
-                nextButton.setEnabled(true);
-                saveButton.setEnabled(true);
-                optionsButton.setEnabled(true);
-            }
-        };
+    /**
+     * Wrapper for {@link SwingUtilities.invokeLater}}. If we're in the event dispatch
+     * thread, the argument is just invoked normally.
+     * 
+     * @param runnable what to invoke.
+     */
+    private void invokeLater(final Runnable runnable) {
         if (SwingUtilities.isEventDispatchThread()) {
             runnable.run();
         } else {
@@ -567,10 +557,6 @@ public class SystreGUI extends BFrame {
             } catch (Exception ex) {
             }
         }
-    }
-    
-    public void doQuit() {
-        System.exit(0);
     }
     
 	public static void main(final String args[]) {
