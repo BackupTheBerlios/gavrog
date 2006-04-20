@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.25 2006/04/19 23:37:03 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.26 2006/04/20 02:19:39 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -451,7 +451,8 @@ public class SystreGUI extends BFrame {
             final ProcessedNet net = this.systre.getLastStructure();
             this.bufferedNets.add(net);
         }
-        if (this.cancel) {
+        this.atEOF = this.parser.atEnd();
+        if (this.cancel || this.atEOF) {
             finishFile();
         }
     }
