@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.27 2006/04/20 22:40:10 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.28 2006/04/21 23:11:31 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -261,11 +261,24 @@ public class SystreGUI extends BFrame {
         }
     }
     
+    private void writeAsCGD(final Writer writer, final ProcessedNet net) {
+        net.writeEmbedding(new PrintWriter(writer), true, systre.getOutputFullCell());
+    }
+    
+    private void writeAsPGR(final Writer writer, final ProcessedNet net) {
+        final PeriodicGraph graph = net.getGraph().canonical();
+        Output.writePGR(writer, graph, net.getName());
+        try {
+            writer.write("\n");
+        } catch (final Exception ex) {
+        }
+    }
+    
     private void writeBufferedAsCGD(final BufferedWriter writer) {
         for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
             final ProcessedNet net = (ProcessedNet) iter.next();
             if (net != null) {
-                net.writeEmbedding(new PrintWriter(writer), true, systre.getOutputFullCell());
+                writeAsCGD(writer, net);
             }
         }
     }
@@ -274,12 +287,7 @@ public class SystreGUI extends BFrame {
         for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
             final ProcessedNet net = (ProcessedNet) iter.next();
             if (net != null) {
-                final PeriodicGraph graph = net.getGraph().canonical();
-                Output.writePGR(writer, graph, net.getName());
-                try {
-                    writer.write("\n");
-                } catch (final Exception ex) {
-                }
+                writeAsPGR(writer, net);
             }
         }
     }
