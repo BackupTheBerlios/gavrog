@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.51 2006/04/14 18:45:43 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.52 2006/04/24 22:12:33 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1997,7 +1997,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param key the invariant as text.
      * @return the associated periodic graph.
      */
-    public static PeriodicGraph reconstructFromInvariantString(final String key) {
+    public static PeriodicGraph fromInvariantString(final String key) {
         final List numbers = new ArrayList();
         final String fields[] = key.split("\\s+");
         for (int i = 0; i < fields.length; ++i) {

@@ -113,7 +113,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.34 2006/03/22 05:39:20 odf Exp $
+ * @version $Id: NetViewer.java,v 1.35 2006/04/24 22:12:32 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -605,7 +605,7 @@ public class NetViewer extends Applet {
                     done();
                     throw new IllegalArgumentException("don't understand structure spec");
                 } else {
-                    G = PeriodicGraph.reconstructFromInvariantString(entry.getKey());
+                    G = PeriodicGraph.fromInvariantString(entry.getKey());
                 }
             }
             // --- show the graph specification
