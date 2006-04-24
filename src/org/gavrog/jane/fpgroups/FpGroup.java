@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Whole;
 
 
@@ -35,9 +36,12 @@ import org.gavrog.jane.numbers.Whole;
  * over the same alphabet.
  * 
  * @author Olaf Delgado
- * @version $Id: FpGroup.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FpGroup.java,v 1.2 2006/04/24 02:50:55 odf Exp $
  */
 public class FpGroup {
+    final static private Whole ZERO = Whole.ZERO;
+    final static private Whole ONE = Whole.ONE;
+    
     final private FiniteAlphabet alphabet;
     final private List relators;
  
@@ -192,10 +196,46 @@ public class FpGroup {
         return buf.toString();
     }
     
-    // --- some constants for use in abelianInvariants()
+    /**
+	 * Returns a 2-dimensional array with a column for each generator and a row
+	 * for each relator.
+	 * 
+	 * @return the relator array.
+	 */
+    private Whole[][] relatorMatrixAsArray() {
+        final int ngens = this.getGenerators().size();
+        final List rels = this.getRelators();
+        final int nrels = rels.size();
+
+        final Whole M[][] = new Whole[nrels][ngens];
+
+        for (int i = 0; i < nrels; ++i) {
+            final FreeWord r = (FreeWord) rels.get(i);
+            final int row[] = new int[ngens];
+            for (int j = 0; j < r.length(); ++j) {
+                final int k = r.getLetter(j) - 1;
+                if (r.getSign(j) > 0) {
+                    ++row[k];
+                } else {
+                    --row[k];
+                }
+            }
+            for (int j = 0; j < ngens; ++j) {
+                M[i][j] = new Whole(row[j]);
+            }
+        }
+        
+        return M;
+    }
     
-    final static private Whole ZERO = Whole.ZERO;
-    final static private Whole ONE = Whole.ONE;
+    /**
+     * Returns a matrix with a column for each generator and a row for each relator.
+     * 
+     * @return the relator matrix.
+     */
+    public Matrix relatorMatrix() {
+    	return new Matrix(relatorMatrixAsArray());
+    }
     
     /**
      * Returns the abelian invariants of this group as a sorted list of
@@ -211,26 +251,8 @@ public class FpGroup {
         final List res = new LinkedList();
         
         if (nrels > 0) {
-            // --- make the relator matrix
-            final Whole M[][] = new Whole[nrels][ngens];
-
-            for (int i = 0; i < nrels; ++i) {
-                final FreeWord r = (FreeWord) rels.get(i);
-                final int row[] = new int[ngens];
-                for (int j = 0; j < r.length(); ++j) {
-                    final int k = r.getLetter(j) - 1;
-                    if (r.getSign(j) > 0) {
-                        ++row[k];
-                    } else {
-                        --row[k];
-                    }
-                }
-                for (int j = 0; j < ngens; ++j) {
-                    M[i][j] = new Whole(row[j]);
-                }
-            }
-
-            // --- diagonalize the matrix
+            // --- compute and diagonalize the relator matrix
+        	final Whole M[][] = relatorMatrixAsArray();
             diagonalize(M);
 
             // --- collect the diagonal elements
