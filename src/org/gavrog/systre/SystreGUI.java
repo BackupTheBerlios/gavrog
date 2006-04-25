@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.30 2006/04/25 22:00:25 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.31 2006/04/25 22:29:44 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -118,10 +118,10 @@ public class SystreGUI extends BFrame {
         buttonBar.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER,
                 LayoutInfo.HORIZONTAL, null, null));
         
-        buttonBar.add(openButton = makeButton("Open..."), 0, 0);
-        buttonBar.add(nextButton = makeButton("Next"), 1, 0);
-        buttonBar.add(saveButton = makeButton("Save as..."), 2, 0);
-        buttonBar.add(optionsButton = makeButton("Options..."), 3, 0);
+        buttonBar.add(openButton = makeButton("Open...", this, "doOpen"), 0, 0);
+        buttonBar.add(nextButton = makeButton("Next", this, "doNext"), 1, 0);
+        buttonBar.add(saveButton = makeButton("Save as...", this, "doSave"), 2, 0);
+        buttonBar.add(optionsButton = makeButton("Options...", this, "doOptions"), 3, 0);
         
         top.add(buttonBar, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
@@ -137,7 +137,7 @@ public class SystreGUI extends BFrame {
 		scrollPane.setBackground(null);
 		main.add(scrollPane, BorderContainer.CENTER);
 		
-		final BButton okButton = makeButton("Exit");
+		final BButton okButton = makeButton("Exit", this, "doQuit");
         main.add(okButton, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.NONE, defaultInsets, null));
         
@@ -145,11 +145,6 @@ public class SystreGUI extends BFrame {
         
         captureOutput();
         
-        openButton.addEventLink(CommandEvent.class, this, "doOpen");
-        nextButton.addEventLink(CommandEvent.class, this, "doNext");
-        saveButton.addEventLink(CommandEvent.class, this, "doSave");
-        optionsButton.addEventLink(CommandEvent.class, this, "doOptions");
-        okButton.addEventLink(CommandEvent.class, this, "doQuit");
         addEventLink(WindowClosingEvent.class, this, "doQuit");
         
         nextButton.setEnabled(false);
@@ -159,9 +154,11 @@ public class SystreGUI extends BFrame {
         setVisible(true);
     }
     
-    private BButton makeButton(final String label) {
+    private BButton makeButton(final String label, final Object target,
+            final String method) {
     	final BButton button = new BButton(label);
     	button.setBackground(buttonColor);
+        button.addEventLink(CommandEvent.class, target, method);
     	return button;
     }
     
@@ -344,13 +341,12 @@ public class SystreGUI extends BFrame {
             return;
         }
         
-		final BButton okButton = makeButton("Ok");
+		final BButton okButton = makeButton("Ok", dialog, "dispose");
 		column.add(okButton, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
 				defaultInsets, null));
 
 		dialog.setContent(column);
 
-        okButton.addEventLink(CommandEvent.class, dialog, "dispose");
 		dialog.addEventLink(WindowClosingEvent.class, dialog, "dispose");
 
 		dialog.pack();
