@@ -10,6 +10,9 @@ For Systre 1.0:
 
 - Make available input formats more transparent.
 - Add options to write the whole input file or only the last net seen.
+- Find a better strategy for handling duplicate names or keys in archives.
+- Add an option to process archive files like normal input.
+- Accept Delaney symbol files as input (.ds format).
 - Include zeolite frameworks from Atlas.
 - Report coordinates of edge centers (optional).
 - Optionally report alternate monoclinic settings where better than first setting.
