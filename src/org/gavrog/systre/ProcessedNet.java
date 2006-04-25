@@ -1,6 +1,7 @@
 package org.gavrog.systre;
 
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +35,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.4 2006/04/18 22:39:54 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.5 2006/04/25 21:49:16 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -115,7 +116,9 @@ class ProcessedNet {
         this.embedder = embedder;
     }
 
-    public void writeEmbedding(final PrintWriter out, final boolean cgdFormat, boolean fullCell) {
+    public void writeEmbedding(final Writer stream, final boolean cgdFormat, boolean fullCell) {
+        final PrintWriter out = new PrintWriter(stream);
+        
         // --- extract some data from the arguments
         final int d = graph.getDimension();
         final String extendedGroupName = finder.getExtendedGroupName();
