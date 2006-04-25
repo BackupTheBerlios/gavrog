@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.29 2006/04/25 21:50:26 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.30 2006/04/25 22:00:25 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -256,14 +256,14 @@ public class SystreGUI extends BFrame {
                             }
                         }
                         writer.flush();
+                        writer.close();
                         if (writer.checkError()) {
-                            reportException(null, "FILE", "Could not write " + file,
+                            reportException(null, "FILE", "I/O error writing to " + file,
                                     false);
                         }
-                        writer.close();
                     } catch (Exception ex) {
                         reportException(ex, "INTERNAL",
-                                "Unexpected exception while writing " + file, true);
+                                "Unexpected exception while writing to " + file, true);
                     } finally {
                         enableMainButtons();
                     }
