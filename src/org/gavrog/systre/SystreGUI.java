@@ -18,7 +18,6 @@ package org.gavrog.systre;
 
 import java.awt.Color;
 import java.awt.Insets;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -35,6 +34,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.box.simple.Strings;
@@ -66,7 +66,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.28 2006/04/21 23:11:31 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.29 2006/04/25 21:50:26 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -89,6 +89,7 @@ public class SystreGUI extends BFrame {
     private NetParser parser;
 	private String strippedFileName;
     private String fullFileName;
+    private StringBuffer currentTranscript = new StringBuffer();
     private List bufferedNets = new LinkedList();
     
     private int count;
@@ -178,6 +179,7 @@ public class SystreGUI extends BFrame {
             
             public void flush() {
                 output.append(buffer.toString());
+                currentTranscript.append(buffer);
                 buffer.delete(0, buffer.length());
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
@@ -235,21 +237,30 @@ public class SystreGUI extends BFrame {
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        final BufferedWriter writer = new BufferedWriter(new FileWriter(
-                                file, append));
-                        if (filename.endsWith(".arc")) {
-                            systre.writeInternalArchive(writer);
-                        } else if (filename.endsWith(".cgd")) {
-                            writeBufferedAsCGD(writer);
-                        } else if (filename.endsWith(".pgr")) {
-                            writeBufferedAsPGR(writer);
-                        } else {
-                            writer.write(output.getText());
+                        final PrintWriter writer = new PrintWriter(new FileWriter(file,
+                                append));
+                        for (final Iterator iter = bufferedNets.iterator(); iter.hasNext();) {
+                            final Pair item = (Pair) iter.next();
+                            final ProcessedNet net = (ProcessedNet) item.getFirst();
+                            final String transcript = (String) item.getSecond();
+                            if (net != null) {
+                                if (filename.endsWith(".arc")) {
+                                    writeAsArchiveEntry(writer, net, transcript);
+                                } else if (filename.endsWith(".cgd")) {
+                                    writeAsCGD(writer, net, transcript);
+                                } else if (filename.endsWith(".pgr")) {
+                                    writeAsPGR(writer, net, transcript);
+                                } else {
+                                    writeAsTranscript(writer, net, transcript);
+                                }
+                            }
                         }
                         writer.flush();
+                        if (writer.checkError()) {
+                            reportException(null, "FILE", "Could not write " + file,
+                                    false);
+                        }
                         writer.close();
-                    } catch (IOException ex) {
-                        reportException(ex, "FILE", null, false);
                     } catch (Exception ex) {
                         reportException(ex, "INTERNAL",
                                 "Unexpected exception while writing " + file, true);
@@ -261,35 +272,26 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    private void writeAsCGD(final Writer writer, final ProcessedNet net) {
-        net.writeEmbedding(new PrintWriter(writer), true, systre.getOutputFullCell());
+    private void writeAsArchiveEntry(final Writer writer, final ProcessedNet net,
+            final String transcript) {
+        final String txt = new Archive.Entry(net.getGraph(), net.getName()).toString();
+        new PrintWriter(writer).println(txt);
     }
     
-    private void writeAsPGR(final Writer writer, final ProcessedNet net) {
-        final PeriodicGraph graph = net.getGraph().canonical();
-        Output.writePGR(writer, graph, net.getName());
-        try {
-            writer.write("\n");
-        } catch (final Exception ex) {
-        }
+    private void writeAsCGD(final Writer writer, final ProcessedNet net,
+            final String transcript) {
+        net.writeEmbedding(writer, true, systre.getOutputFullCell());
     }
     
-    private void writeBufferedAsCGD(final BufferedWriter writer) {
-        for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
-            final ProcessedNet net = (ProcessedNet) iter.next();
-            if (net != null) {
-                writeAsCGD(writer, net);
-            }
-        }
+    private void writeAsPGR(final Writer writer, final ProcessedNet net,
+            final String transcript) {
+        Output.writePGR(writer, net.getGraph().canonical(), net.getName());
+        new PrintWriter(writer).println();
     }
     
-    private void writeBufferedAsPGR(final Writer writer) {
-        for (final Iterator iter = this.bufferedNets.iterator(); iter.hasNext();) {
-            final ProcessedNet net = (ProcessedNet) iter.next();
-            if (net != null) {
-                writeAsPGR(writer, net);
-            }
-        }
+    private void writeAsTranscript(final Writer writer, final ProcessedNet net,
+            final String transcript) {
+        new PrintWriter(writer).println(transcript);
     }
     
     private class OptionCheckBox extends BCheckBox {
@@ -383,6 +385,7 @@ public class SystreGUI extends BFrame {
         final PrintStream out = this.systre.getOutStream();
         PeriodicGraph G = null;
         Exception problem = null;
+        this.currentTranscript.delete(0, this.currentTranscript.length());
 
         final class BailOut extends Throwable {}
         
@@ -443,7 +446,7 @@ public class SystreGUI extends BFrame {
             out.println("Finished structure #" + this.count + displayName + ".");
             if (success) {
                 final ProcessedNet net = this.systre.getLastStructure();
-                this.bufferedNets.add(net);
+                this.bufferedNets.add(new Pair(net, this.currentTranscript.toString()));
             }
         } catch (BailOut ex) {
         }
@@ -488,12 +491,14 @@ public class SystreGUI extends BFrame {
 		}
 		final String text = "ERROR (" + type + ") - " + (msg == null ? "" : msg + ": ");
         out.print("!!! " + text);
-        if (details) {
-            out.println();
-            out.print(Misc.stackTrace(ex));
-            out.println("==================================================");
-        } else {
-            out.println(ex.getMessage() + ".");
+        if (ex != null) {
+            if (details) {
+                out.println();
+                out.print(Misc.stackTrace(ex));
+                out.println("==================================================");
+            } else {
+                out.println(ex.getMessage() + ".");
+            }
         }
         
         invokeAndWait(new Runnable() {
