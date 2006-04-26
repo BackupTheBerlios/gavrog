@@ -27,7 +27,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
  * Extracts tilings the graphs of which have collisions.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterUnstable.java,v 1.1 2006/04/25 03:15:23 odf Exp $
+ * @version $Id: FilterUnstable.java,v 1.2 2006/04/26 22:06:49 odf Exp $
  */
 public class FilterUnstable {
 
@@ -52,6 +52,11 @@ public class FilterUnstable {
 
     private static boolean isUnstable(final DSymbol ds) {
         final DelaneySymbol cov = Covers.pseudoToroidalCover3D(ds.minimal());
-        return !new Skeleton(cov).isLocallyStable();
+        try {
+            return !new Skeleton(cov).isLocallyStable();
+        } catch (final Exception ex) {
+            System.out.println("??? " + ds);
+            return false;
+        }
     }
 }
