@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 import org.gavrog.box.collections.Pair;
@@ -66,7 +67,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.32 2006/04/25 22:31:16 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.33 2006/04/26 03:13:19 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -149,6 +150,16 @@ public class SystreGUI extends BFrame {
         
         nextButton.setEnabled(false);
         saveButton.setEnabled(false);
+        
+        final JFileChooser inchsr = (JFileChooser) inFileChooser.getComponent();
+        inchsr.addChoosableFileFilter(new ExtensionFilter("arc", "Systre Archives"));
+        inchsr.addChoosableFileFilter(new ExtensionFilter(new String[] {"cgd", "pgr" },
+        		"Systre Input Files"));
+        final JFileChooser outchsr = (JFileChooser) outFileChooser.getComponent();
+        outchsr.addChoosableFileFilter(new ExtensionFilter("arc", "Systre Archive Files"));
+        outchsr.addChoosableFileFilter(new ExtensionFilter("cgd", "Embedded Nets"));
+        outchsr.addChoosableFileFilter(new ExtensionFilter("pgr", "Abstract Topologies"));
+        outchsr.addChoosableFileFilter(new ExtensionFilter("out", "Systre Transcripts"));
         
         pack();
         setVisible(true);
