@@ -8,11 +8,13 @@ In process:
 
 For Systre 1.0:
 
-- Add options to write the whole input file or only the last net seen.
+- Instead of using "Save as...", manage a list of output files for automatic saving.
+- Make stopping after each structure optional.
 - Find a better strategy for handling duplicate names or keys in archives.
-- Add an option to process archive files like normal input.
+- Add an option for processing archive files as normal input.
 - Accept Delaney symbol files as input (.ds format).
 - Include zeolite frameworks from Atlas.
+- Keyboard shortcuts.
 - Report coordinates of edge centers (optional).
 - Optionally report alternate monoclinic settings where better than first setting.
 
