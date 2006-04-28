@@ -40,10 +40,12 @@ import java.lang.reflect.Method;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.box.simple.Strings;
 
+import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
 import buoy.event.ValueChangedEvent;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
+import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
 import buoy.widget.BLabel;
 import buoy.widget.BScrollPane;
@@ -53,25 +55,32 @@ import buoy.widget.ColumnContainer;
 import buoy.widget.LayoutInfo;
 
 public class FileOptionPane extends BorderContainer {
+    final private BFileChooser fileChooser;
 	final private BTextArea nameField;
+	final private Object target;
+	final private Method setter;
 
-	public FileOptionPane(final String labelText, final Object target, final String option)
-			throws Exception {
+	public FileOptionPane(
+			final BFileChooser.SelectionMode mode, final String labelText,
+			final Object target, final String option) throws Exception {
+		
 		super();
 		this.setBackground(null);
 
+		this.target = target;
+	    this.fileChooser = new BFileChooser(mode, labelText);
+	    
 		final Class klazz = (target instanceof Class ? (Class) target : target.getClass());
 		final String optionCap = Strings.capitalized(option);
 		final Method getter = klazz.getMethod("get" + optionCap, null);
-		final Method setter = klazz.getMethod("set" + optionCap,
-				new Class[] { File.class });
-
+		this.setter = klazz.getMethod("set" + optionCap, new Class[] { File.class });
+		
 		final BLabel label = new BLabel(labelText);
 		label.setBackground(null);
 		this.add(label, BorderContainer.NORTH, new LayoutInfo(LayoutInfo.WEST,
 				LayoutInfo.NONE, null, null));
 
-		nameField = new BTextArea(1, 20);
+		this.nameField = new BTextArea(1, 20);
 		final BScrollPane scrollPane = new BScrollPane(nameField,
 				BScrollPane.SCROLLBAR_ALWAYS, BScrollPane.SCROLLBAR_NEVER);
 		scrollPane.setForceHeight(false);
@@ -87,19 +96,32 @@ public class FileOptionPane extends BorderContainer {
 		
 		final File current = (File) getter.invoke(target, null);
 		if (current != null) {
-			nameField.setText(current.getName());
+			this.nameField.setText(current.getName());
 		} else {
-			nameField.setText("");
+			this.nameField.setText("");
 		}
 
-		nameField.addEventLink(ValueChangedEvent.class, new EventProcessor() {
-			public void handleEvent(final Object event) {
-				try {
-					setter.invoke(target, new Object[] { new File(nameField.getText()) });
-				} catch (final Exception ex) {
-				}
-			}
-		});
+		this.nameField.addEventLink(ValueChangedEvent.class, this, "doUpdate");
+		browseButton.addEventLink(CommandEvent.class, this, "doBrowse");
+	}
+	
+	public void doUpdate() {
+		final String text = this.nameField.getText();
+		try {
+			this.setter.invoke(this.target, new Object[] { new File(text) });
+		} catch (final Exception ex) {
+		}
+	}
+	
+	public void doBrowse() {
+        final boolean success = this.fileChooser.showDialog(this);
+		if (success) {
+			final String filename = this.fileChooser.getSelectedFile().getName();
+			final File dir = this.fileChooser.getDirectory();
+			final String path = new File(dir, filename).getAbsolutePath();
+			this.nameField.setText(path);
+			doUpdate();
+		}
 	}
 	
 	public static void main(final String args[]) {
@@ -120,12 +142,12 @@ public class FileOptionPane extends BorderContainer {
 		final ColumnContainer bc = new ColumnContainer();
 		
 		try {
-			bc.add(new FileOptionPane("Select File 1", target1, "file"),
-					new LayoutInfo(LayoutInfo.CENTER,
-							LayoutInfo.HORIZONTAL, new Insets(5, 5, 5, 5), null));
-			bc.add(new FileOptionPane("Select File 2", target2, "file"),
-					new LayoutInfo(LayoutInfo.CENTER,
-							LayoutInfo.HORIZONTAL, new Insets(5, 5, 5, 5), null));
+			bc.add(new FileOptionPane(BFileChooser.OPEN_FILE, "Select File 1", target1,
+					"file"), new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.HORIZONTAL,
+					new Insets(5, 5, 5, 5), null));
+			bc.add(new FileOptionPane(BFileChooser.OPEN_FILE, "Select File 2", target2,
+					"file"), new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.HORIZONTAL,
+					new Insets(5, 5, 5, 5), null));
 		} catch (final Exception ex) {
 			System.err.println(Misc.stackTrace(ex));
 			return;
