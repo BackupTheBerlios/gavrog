@@ -33,18 +33,30 @@ limitations under the License.
 
 package org.gavrog.systre;
 
+import java.awt.Insets;
 import java.io.File;
 import java.lang.reflect.Method;
 
+import org.gavrog.box.simple.Misc;
 import org.gavrog.box.simple.Strings;
 
 import buoy.event.EventProcessor;
 import buoy.event.ValueChangedEvent;
-import buoy.widget.BCheckBox;
-import buoy.widget.RowContainer;
+import buoy.event.WindowClosingEvent;
+import buoy.widget.BButton;
+import buoy.widget.BFrame;
+import buoy.widget.BLabel;
+import buoy.widget.BScrollPane;
+import buoy.widget.BTextArea;
+import buoy.widget.BorderContainer;
+import buoy.widget.ColumnContainer;
+import buoy.widget.LayoutInfo;
 
-public class FileOptionPane extends RowContainer {
-	public FileOptionPane(final Object target, final String option) throws Exception {
+public class FileOptionPane extends BorderContainer {
+	final private BTextArea nameField;
+
+	public FileOptionPane(final String labelText, final Object target, final String option)
+			throws Exception {
 		super();
 		this.setBackground(null);
 
@@ -54,15 +66,81 @@ public class FileOptionPane extends RowContainer {
 		final Method setter = klazz.getMethod("set" + optionCap,
 				new Class[] { File.class });
 
-//		this.setState(((Boolean) getter.invoke(target, null)).booleanValue());
+		final BLabel label = new BLabel(labelText);
+		label.setBackground(null);
+		this.add(label, BorderContainer.NORTH, new LayoutInfo(LayoutInfo.WEST,
+				LayoutInfo.NONE, null, null));
 
-		this.addEventLink(ValueChangedEvent.class, new EventProcessor() {
+		nameField = new BTextArea(1, 20);
+		final BScrollPane scrollPane = new BScrollPane(nameField,
+				BScrollPane.SCROLLBAR_ALWAYS, BScrollPane.SCROLLBAR_NEVER);
+		scrollPane.setForceHeight(false);
+		scrollPane.setForceWidth(true);
+		scrollPane.setBackground(null);
+		this.add(scrollPane, BorderContainer.CENTER, new LayoutInfo(LayoutInfo.CENTER,
+				LayoutInfo.HORIZONTAL, new Insets(5, 0, 0, 5), null));
+
+		final BButton browseButton = new BButton("Browse...");
+		browseButton.setBackground(null);
+		this.add(browseButton, BorderContainer.EAST, new LayoutInfo(LayoutInfo.EAST,
+				LayoutInfo.NONE, null, null));
+		
+		final File current = (File) getter.invoke(target, null);
+		if (current != null) {
+			nameField.setText(current.getName());
+		} else {
+			nameField.setText("");
+		}
+
+		nameField.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				try {
-//					setter.invoke(target, new Object[] { new Boolean(getState()) });
+					setter.invoke(target, new Object[] { new File(nameField.getText()) });
 				} catch (final Exception ex) {
 				}
 			}
 		});
+	}
+	
+	public static void main(final String args[]) {
+		class Dummy {
+			private File file = new File("");
+			public File getFile() {
+				return file;
+			}
+			public void setFile(final File file) {
+				this.file = file;
+			}
+		};
+		final Dummy target1 = new Dummy();
+		final Dummy target2 = new Dummy();
+		target1.setFile(new File(""));
+		
+		final BFrame frame = new BFrame();
+		final ColumnContainer bc = new ColumnContainer();
+		
+		try {
+			bc.add(new FileOptionPane("Select File 1", target1, "file"),
+					new LayoutInfo(LayoutInfo.CENTER,
+							LayoutInfo.HORIZONTAL, new Insets(5, 5, 5, 5), null));
+			bc.add(new FileOptionPane("Select File 2", target2, "file"),
+					new LayoutInfo(LayoutInfo.CENTER,
+							LayoutInfo.HORIZONTAL, new Insets(5, 5, 5, 5), null));
+		} catch (final Exception ex) {
+			System.err.println(Misc.stackTrace(ex));
+			return;
+		}
+		
+        frame.addEventLink(WindowClosingEvent.class, new EventProcessor() {
+			public void handleEvent(final Object event) {
+				System.out.println("File 1 = " + target1.getFile());
+				System.out.println("File 2 = " + target2.getFile());
+				System.exit(1);
+			}
+		});
+        
+		frame.setContent(bc);
+		frame.pack();
+		frame.setVisible(true);
 	}
 }
