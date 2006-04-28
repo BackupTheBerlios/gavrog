@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,18 +37,14 @@ import javax.swing.SwingUtilities;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
-import org.gavrog.box.simple.Strings;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
 
 import buoy.event.CommandEvent;
-import buoy.event.EventProcessor;
-import buoy.event.ValueChangedEvent;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
-import buoy.widget.BCheckBox;
 import buoy.widget.BDialog;
 import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
@@ -67,7 +62,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.33 2006/04/26 03:13:19 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.34 2006/04/28 01:52:11 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -302,34 +297,6 @@ public class SystreGUI extends BFrame {
         new PrintWriter(writer).println(transcript);
     }
     
-    private class OptionCheckBox extends BCheckBox {
-        public OptionCheckBox(final String label, final Object target, final String option)
-                throws Exception {
-            
-            super(label, false);
-            setBackground(null);
-
-            final Class klazz = (target instanceof Class ? (Class) target : target
-                    .getClass());
-            final String optionCap = Strings.capitalized(option);
-            final Method getter = klazz.getMethod("get" + optionCap, null);
-            final Method setter = klazz.getMethod("set" + optionCap,
-                    new Class[] { boolean.class });
-            
-            setState(((Boolean) getter.invoke(target, null)).booleanValue());
-
-            addEventLink(ValueChangedEvent.class, new EventProcessor() {
-                public void handleEvent(Object event) {
-                    try {
-                        setter.invoke(target, new Object[] { new Boolean(getState()) });
-                    } catch (Exception ex) {
-                        reportException(ex, "FATAL", "serious internal problem", true);
-                    }
-                }
-            });
-        }
-    }
-    
     public void doOptions() {
 		final BDialog dialog = new BDialog(this, "Systre - Options", true);
 		final ColumnContainer column = new ColumnContainer();
@@ -337,20 +304,20 @@ public class SystreGUI extends BFrame {
                 defaultInsets, null));
         column.setBackground(textColor);
         try {
-            column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
-                    "useBuiltinArchive"));
-            column.add(new OptionCheckBox("Prefer Second Origin On Input",
-                    SpaceGroupCatalogue.class, "preferSecondOrigin"));
-            column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
-                    SpaceGroupCatalogue.class, "preferHexagonal"));
-            column.add(new OptionCheckBox("Relax Node Positions", this.systre,
-                    "relaxPositions"));
-            column.add(new OptionCheckBox("Output Full Conventional Cell", this.systre,
-                    "outputFullCell"));
-        } catch (final Exception ex) {
-            reportException(ex, "FATAL", "serious internal problem", true);
-            return;
-        }
+			column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
+					"useBuiltinArchive"));
+			column.add(new OptionCheckBox("Prefer Second Origin On Input",
+					SpaceGroupCatalogue.class, "preferSecondOrigin"));
+			column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
+					SpaceGroupCatalogue.class, "preferHexagonal"));
+			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
+					"relaxPositions"));
+			column.add(new OptionCheckBox("Output Full Conventional Cell", this.systre,
+					"outputFullCell"));
+		} catch (final Exception ex) {
+			reportException(ex, "FATAL", "serious internal problem", true);
+			return;
+		}
         
 		final BButton okButton = makeButton("Ok", dialog, "dispose");
 		column.add(okButton, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
