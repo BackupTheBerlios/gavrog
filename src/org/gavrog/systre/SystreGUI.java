@@ -62,7 +62,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.34 2006/04/28 01:52:11 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.35 2006/04/29 01:54:38 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -198,6 +198,7 @@ public class SystreGUI extends BFrame {
     public void doOpen() {
         final boolean success = this.inFileChooser.showDialog(this);
         if (success) {
+        	this.parser = null;
             final String filename = this.inFileChooser.getSelectedFile().getName();
             final File dir = this.inFileChooser.getDirectory();
             final String path = new File(dir, filename).getAbsolutePath();
@@ -206,6 +207,7 @@ public class SystreGUI extends BFrame {
             
             if (filename.endsWith(".arc")) {
                 systre.processArchive(path);
+                enableMainButtons();
             } else {
                 openFile(path);
                 doNext();
@@ -242,21 +244,14 @@ public class SystreGUI extends BFrame {
                     try {
                         final PrintWriter writer = new PrintWriter(new FileWriter(file,
                                 append));
-                        for (final Iterator iter = bufferedNets.iterator(); iter.hasNext();) {
+                        final int n = filename.lastIndexOf('.');
+                        final String extension = filename.substring(n+1);
+                        for (final Iterator iter = bufferedNets.iterator(); iter
+								.hasNext();) {
                             final Pair item = (Pair) iter.next();
                             final ProcessedNet net = (ProcessedNet) item.getFirst();
                             final String transcript = (String) item.getSecond();
-                            if (net != null) {
-                                if (filename.endsWith(".arc")) {
-                                    writeAsArchiveEntry(writer, net, transcript);
-                                } else if (filename.endsWith(".cgd")) {
-                                    writeAsCGD(writer, net, transcript);
-                                } else if (filename.endsWith(".pgr")) {
-                                    writeAsPGR(writer, net, transcript);
-                                } else {
-                                    writeAsTranscript(writer, net, transcript);
-                                }
-                            }
+                            writeStructure(extension, writer, net, transcript);
                         }
                         writer.flush();
                         writer.close();
@@ -275,26 +270,26 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    private void writeAsArchiveEntry(final Writer writer, final ProcessedNet net,
-            final String transcript) {
-        final String txt = new Archive.Entry(net.getGraph(), net.getName()).toString();
-        new PrintWriter(writer).println(txt);
-    }
-    
-    private void writeAsCGD(final Writer writer, final ProcessedNet net,
-            final String transcript) {
-        net.writeEmbedding(writer, true, systre.getOutputFullCell());
-    }
-    
-    private void writeAsPGR(final Writer writer, final ProcessedNet net,
-            final String transcript) {
-        Output.writePGR(writer, net.getGraph().canonical(), net.getName());
-        new PrintWriter(writer).println();
-    }
-    
-    private void writeAsTranscript(final Writer writer, final ProcessedNet net,
-            final String transcript) {
-        new PrintWriter(writer).println(transcript);
+    private void writeStructure(final String extension, final Writer writer,
+			final ProcessedNet net, final String transcript) {
+        if (net != null) {
+            if ("arc".equals(extension)) {
+            	// --- write archive entry
+				final String txt = new Archive.Entry(net.getGraph(), net.getName())
+						.toString();
+				new PrintWriter(writer).println(txt);
+            } else if ("cgd".equals(extension)) {
+            	// --- write embedding structure with full symmetry
+                net.writeEmbedding(writer, true, systre.getOutputFullCell());
+            } else if ("pgr".equals(extension)) {
+            	// --- write abstract, unembedded periodic graph
+                Output.writePGR(writer, net.getGraph().canonical(), net.getName());
+				new PrintWriter(writer).println();
+            } else {
+            	// --- write the full transcript
+                new PrintWriter(writer).println(transcript);
+            }
+        }
     }
     
     public void doOptions() {
@@ -337,16 +332,6 @@ public class SystreGUI extends BFrame {
             public void run() {
                 nextNet();
                 enableMainButtons();
-                if (parser == null) {
-                    try {
-                        SwingUtilities.invokeAndWait(new Runnable() {
-                            public void run() {
-                                nextButton.setEnabled(false);
-                            }
-                        });
-                    } catch (Exception ex) {
-                    }
-                }
             }
         }).start();
     }
@@ -501,7 +486,9 @@ public class SystreGUI extends BFrame {
         invokeLater(new Runnable() {
             public void run() {
                 openButton.setEnabled(true);
-                nextButton.setEnabled(true);
+                if (parser != null) {
+                	nextButton.setEnabled(true);
+                }
                 saveButton.setEnabled(true);
                 optionsButton.setEnabled(true);
             }
