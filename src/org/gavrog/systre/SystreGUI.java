@@ -62,7 +62,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.35 2006/04/29 01:54:38 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.36 2006/04/29 02:22:07 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -86,7 +86,10 @@ public class SystreGUI extends BFrame {
 	private String strippedFileName;
     private String fullFileName;
     private StringBuffer currentTranscript = new StringBuffer();
+    private String lastFinishedTranscript = null;
     private List bufferedNets = new LinkedList();
+    
+    private boolean singleWrite = false;
     
     private int count;
     
@@ -246,15 +249,20 @@ public class SystreGUI extends BFrame {
                                 append));
                         final int n = filename.lastIndexOf('.');
                         final String extension = filename.substring(n+1);
-                        for (final Iterator iter = bufferedNets.iterator(); iter
-								.hasNext();) {
-                            final Pair item = (Pair) iter.next();
-                            final ProcessedNet net = (ProcessedNet) item.getFirst();
-                            final String transcript = (String) item.getSecond();
-                            writeStructure(extension, writer, net, transcript);
-                        }
-                        writer.flush();
-                        writer.close();
+                        if (singleWrite) {
+							writeStructure(extension, writer, systre.getLastStructure(),
+									lastFinishedTranscript);
+						} else {
+							for (final Iterator iter = bufferedNets.iterator(); iter
+									.hasNext();) {
+								final Pair item = (Pair) iter.next();
+								final ProcessedNet net = (ProcessedNet) item.getFirst();
+								final String transcript = (String) item.getSecond();
+								writeStructure(extension, writer, net, transcript);
+							}
+						}
+						writer.flush();
+						writer.close();
                         if (writer.checkError()) {
                             reportException(null, "FILE", "I/O error writing to " + file,
                                     false);
@@ -309,6 +317,8 @@ public class SystreGUI extends BFrame {
 					"relaxPositions"));
 			column.add(new OptionCheckBox("Output Full Conventional Cell", this.systre,
 					"outputFullCell"));
+			column.add(new OptionCheckBox("Save only last net finished", this,
+					"singleWrite"));
 		} catch (final Exception ex) {
 			reportException(ex, "FATAL", "serious internal problem", true);
 			return;
@@ -403,9 +413,10 @@ public class SystreGUI extends BFrame {
             }
             out.println();
             out.println("Finished structure #" + this.count + displayName + ".");
+            this.lastFinishedTranscript = this.currentTranscript.toString();
             if (success) {
                 final ProcessedNet net = this.systre.getLastStructure();
-                this.bufferedNets.add(new Pair(net, this.currentTranscript.toString()));
+                this.bufferedNets.add(new Pair(net, this.lastFinishedTranscript));
             }
         } catch (BailOut ex) {
         }
@@ -533,6 +544,14 @@ public class SystreGUI extends BFrame {
         }
     }
     
+	public boolean getSingleWrite() {
+		return singleWrite;
+	}
+
+	public void setSingleWrite(boolean singleWrite) {
+		this.singleWrite = singleWrite;
+	}
+	
 	public static void main(final String args[]) {
         new SystreGUI();
     }
