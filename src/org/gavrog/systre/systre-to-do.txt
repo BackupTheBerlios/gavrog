@@ -8,8 +8,6 @@ In process:
 
 For Systre 1.0:
 
-- Instead of using "Save as...", manage a list of output files for automatic saving.
-- Make stopping after each structure optional.
 - Find a better strategy for handling duplicate names or keys in archives.
 - Add an option for processing archive files as normal input.
 - Accept Delaney symbol files as input (.ds format).
