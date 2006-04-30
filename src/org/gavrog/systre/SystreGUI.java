@@ -62,7 +62,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.36 2006/04/29 02:22:07 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.37 2006/04/30 03:27:26 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -136,8 +136,13 @@ public class SystreGUI extends BFrame {
 		scrollPane.setBackground(null);
 		main.add(scrollPane, BorderContainer.CENTER);
 		
-		final BButton okButton = makeButton("Exit", this, "doQuit");
-        main.add(okButton, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
+		final BButton cancelButton = makeButton("Cancel", this, "doCancel");
+		final BButton exitButton = makeButton("Exit", this, "doQuit");
+		final BorderContainer bottom = new BorderContainer();
+		bottom.setBackground(null);
+		bottom.add(cancelButton, BorderContainer.WEST);
+		bottom.add(exitButton, BorderContainer.EAST);
+        main.add(bottom, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.NONE, defaultInsets, null));
         
         setContent(main);
@@ -459,7 +464,14 @@ public class SystreGUI extends BFrame {
 		if (details) {
 			out.println("==================================================");
 		}
-		final String text = "ERROR (" + type + ") - " + (msg == null ? "" : msg + ": ");
+		final boolean cancelled = ex instanceof SystreException
+				&& ((SystreException) ex).getType().equals(SystreException.CANCELLED);
+		final String text;
+		if (cancelled) {
+			text = "CANCELLING - ";
+		} else {
+			text = "ERROR (" + type + ") - " + (msg == null ? "" : msg + ": ");
+		}
         out.print("!!! " + text);
         if (ex != null) {
             if (details) {
@@ -504,6 +516,10 @@ public class SystreGUI extends BFrame {
                 optionsButton.setEnabled(true);
             }
         });
+    }
+    
+    public void doCancel() {
+        this.systre.cancel();
     }
     
     public void doQuit() {

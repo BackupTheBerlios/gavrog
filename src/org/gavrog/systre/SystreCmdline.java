@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.35 2006/04/19 21:23:43 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.36 2006/04/30 03:27:26 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -89,6 +89,9 @@ public class SystreCmdline {
     
     // --- the last file that was opened for processing
     private String lastFileNameWithoutExtension;
+    
+    // --- signals a cancel request from outside
+    private boolean cancelled = false;
     
     /**
      * Constructs an instance.
@@ -163,6 +166,8 @@ public class SystreCmdline {
             final String msg = "Structure has collisions";
             throw new SystreException(SystreException.STRUCTURE, msg);
         }
+        
+        quitIfCancelled();
 
         // --- determine a minimal repeat unit
         G = G.minimalImage();
@@ -176,6 +181,11 @@ public class SystreCmdline {
         } else {
             out.println("   Given repeat unit is accurate.");
         }
+        
+        quitIfCancelled();
+
+        // --- get and check the barycentric placement
+        
         final Map barycentric = G.barycentricPlacement();
         if (!G.isBarycentric(barycentric)) {
             final String msg = "Incorrect barycentric placement.";
@@ -190,7 +200,9 @@ public class SystreCmdline {
         }
         out.println();
         out.flush();
-
+        
+        quitIfCancelled();
+        
         // --- determine the ideal symmetries
         final List ops = G.symmetryOperators();
         if (DEBUG) {
@@ -205,6 +217,8 @@ public class SystreCmdline {
         out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of vertex.");
         out.println();
         out.flush();
+        
+        quitIfCancelled();
         
         // --- determine the coordination sequences
         out.println("   Coordination sequences:");
@@ -228,7 +242,9 @@ public class SystreCmdline {
         out.println("   TD10 = " + fmtReal4.format(((double) cum) / G.numberOfNodes()));
         out.println();
         out.flush();
-
+        
+        quitIfCancelled();
+        
         // --- bail out - for now - if not a 3d structure
         if (d != 3) {
             final String msg = "No further support yet for dimension " + d;
@@ -265,7 +281,9 @@ public class SystreCmdline {
         }
         out.println();
         out.flush();
-
+        
+        quitIfCancelled();
+        
         // --- verify the output of the spacegroup finder
         final CoordinateChange trans = SpaceGroupCatalogue
 				.transform(d, extendedGroupName);
@@ -293,6 +311,9 @@ public class SystreCmdline {
             final String msg = "Spacegroup finder messed up operators.";
             throw new RuntimeException(msg);
         }
+        
+        
+        quitIfCancelled();
         
         // --- determine the Systre key and look it up in the archives
         final String invariant = G.getSystreKey();
@@ -342,7 +363,10 @@ public class SystreCmdline {
             }
         }
         out.flush();
-
+        
+        quitIfCancelled();
+        
+        // --- compute an embedding
         for (int pass = 0; pass <= 1; ++pass) {
             // --- relax the structure from the barycentric embedding
             IEmbedder embedder = new AmoebaEmbedder(G);
@@ -360,7 +384,9 @@ public class SystreCmdline {
                 embedder.reset();
             }
             embedder.normalize();
-
+            
+            quitIfCancelled();
+            
             // --- do some checking
             final IArithmetic det = embedder.getGramMatrix().determinant();
             if (det.abs().isLessThan(new FloatingPoint(0.001))) {
@@ -393,7 +419,9 @@ public class SystreCmdline {
                     throw new SystreException(SystreException.INTERNAL, msg);
                 }
             }
-
+            
+            quitIfCancelled();
+            
             // --- write a Systre readable net description to a string buffer
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
@@ -408,6 +436,9 @@ public class SystreCmdline {
                 out.print("       reading...");
                 out.flush();
                 final PeriodicGraph test = NetParser.stringToNet(cgdString);
+                
+                quitIfCancelled();
+                
                 out.println(" OK!");
                 out.print("       comparing...");
                 out.flush();
@@ -418,6 +449,9 @@ public class SystreCmdline {
                 out.println(" OK!");
                 out.println();
                 success = true;
+                
+                quitIfCancelled();
+                
             } catch (Exception ex) {
                 out.println(" Failed!");
                 if (DEBUG) {
@@ -433,7 +467,9 @@ public class SystreCmdline {
                     throw new SystreException(SystreException.INTERNAL, msg, ex);
                 }
             }
-
+            
+            quitIfCancelled();
+            
             // --- now write the actual output
             if (success) {
                 net.writeEmbedding(new PrintWriter(out), false, getOutputFullCell());
@@ -662,34 +698,34 @@ public class SystreCmdline {
 		this.relaxPositions = relax;
 	}
 
-	/**
-     * @return the current output stream.
-     */
     protected PrintStream getOutStream() {
         return this.out;
     }
     
-    /**
-     * @param out The new value output stream.
-     */
     protected void setOutStream(final PrintStream out) {
         this.out = out;
     }
     
-    /**
-     * @return the current value of fullCellOutput.
-     */
     public boolean getOutputFullCell() {
         return this.outputFullCell;
     }
     
-    /**
-     * @param fullCellOutput The new value for fullCellOutput.
-     */
     public void setOutputFullCell(boolean fullCellOutput) {
         this.outputFullCell = fullCellOutput;
     }
     
+	public void cancel() {
+		this.cancelled = true;
+	}
+	
+	private void quitIfCancelled() {
+		if (this.cancelled) {
+			this.cancelled = false;
+			throw new SystreException(SystreException.CANCELLED,
+						"Stopping execution for this structure.");
+		}
+	}
+	
     public static void main(final String args[]) {
         new SystreCmdline().run(args);
     }
