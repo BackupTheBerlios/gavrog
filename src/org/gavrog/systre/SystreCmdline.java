@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.36 2006/04/30 03:27:26 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.37 2006/04/30 03:40:10 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -714,7 +714,7 @@ public class SystreCmdline {
         this.outputFullCell = fullCellOutput;
     }
     
-	public void cancel() {
+	public synchronized void cancel() {
 		this.cancelled = true;
 	}
 	
@@ -722,7 +722,7 @@ public class SystreCmdline {
 		if (this.cancelled) {
 			this.cancelled = false;
 			throw new SystreException(SystreException.CANCELLED,
-						"Stopping execution for this structure.");
+						"Execution stopped for this structure");
 		}
 	}
 	
