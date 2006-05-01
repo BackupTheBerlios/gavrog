@@ -8,17 +8,16 @@ In process:
 
 For Systre 1.0:
 
-- Find a better strategy for handling duplicate names or keys in archives.
 - Add an option for processing archive files as normal input.
 - Accept Delaney symbol files as input (.ds format).
+- Find a better strategy for handling duplicate names or keys in archives.
 - Include zeolite frameworks from Atlas.
-- Keyboard shortcuts.
 - Report coordinates of edge centers (optional).
-- Optionally report alternate monoclinic settings where better than first setting.
 
 For later (maybe):
+- Keyboard shortcuts.
+- Optionally report alternate monoclinic settings where better than first setting.
 - Link to online databases.
-- Support Delaney symbol import.
 - Support more output options (e.g. CrystalMaker).
 - If net is not connected, process components individually.
 - Check for edge intersections and similar problems.
