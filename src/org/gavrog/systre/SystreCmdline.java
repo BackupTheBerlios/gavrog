@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.37 2006/04/30 03:40:10 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.38 2006/05/01 06:43:19 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -139,6 +139,7 @@ public class SystreCmdline {
     
     public void processGraph(final PeriodicGraph graph, final String name,
             final String givenGroup) {
+    	this.cancelled = false;
         setLastStructure(null);
         
         PeriodicGraph G = graph;
