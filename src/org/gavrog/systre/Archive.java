@@ -32,12 +32,13 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.11 2006/04/19 21:23:43 odf Exp $
+ * @version $Id: Archive.java,v 1.12 2006/05/02 05:51:59 odf Exp $
  */
 public class Archive {
     final String keyVersion;
     final private Map byKey;
     final private Map byName;
+    private boolean errorOnOverwrite = false;
     
     /**
      * Represents an individual archive entry.
@@ -301,18 +302,22 @@ public class Archive {
         final String version = entry.getKeyVersion();
         final String key = entry.getKey();
         final String name = entry.getName();
-        if (!version.equals(getKeyVersion())) {
-            throw new IllegalArgumentException("entry '" + name + "' has key of version "
-					+ version + ", but " + getKeyVersion() + " is required.");
-        }
-        if (this.byKey.containsKey(key)) {
-			final String clashing = ((Entry) this.byKey.get(key)).getName();
-			if (!clashing.equals(name)) {
-				throw new IllegalArgumentException("identical keys for entries '"
-						+ clashing + "' and '" + name + "'");
+		if (!version.equals(getKeyVersion())) {
+			throw new IllegalArgumentException("entry '" + name
+					+ "' has key of version " + version + ", but " + getKeyVersion()
+					+ " is required.");
+		}
+        if (this.errorOnOverwrite) {
+			if (this.byKey.containsKey(key)) {
+				final String clashing = ((Entry) this.byKey.get(key)).getName();
+				if (!clashing.equals(name)) {
+					throw new IllegalArgumentException("identical keys for entries '"
+							+ clashing + "' and '" + name + "'");
+				}
+			} else if (this.byName.containsKey(name)) {
+				throw new IllegalArgumentException("multiple entries for id '" + name
+						+ "'");
 			}
-		} else if (this.byName.containsKey(name)) {
-			throw new IllegalArgumentException("multiple entries for id '" + name + "'");
 		}
         this.byKey.put(key, entry);
         this.byName.put(name, entry);
@@ -414,4 +419,12 @@ public class Archive {
     public Set keySet() {
         return this.byKey.keySet();
     }
+
+	public boolean getErrorOnOverwrite() {
+		return errorOnOverwrite;
+	}
+
+	public void setErrorOnOverwrite(boolean errorOnOverwrite) {
+		this.errorOnOverwrite = errorOnOverwrite;
+	}
 }
