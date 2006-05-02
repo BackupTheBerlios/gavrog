@@ -18,6 +18,7 @@ package org.gavrog.systre;
 
 import java.awt.Color;
 import java.awt.Insets;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,8 +26,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -62,7 +61,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.37 2006/04/30 03:27:26 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.38 2006/05/02 05:51:19 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -250,8 +249,8 @@ public class SystreGUI extends BFrame {
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        final PrintWriter writer = new PrintWriter(new FileWriter(file,
-                                append));
+                        final BufferedWriter writer = new BufferedWriter(new FileWriter(
+								file, append));
                         final int n = filename.lastIndexOf('.');
                         final String extension = filename.substring(n+1);
                         if (singleWrite) {
@@ -268,10 +267,9 @@ public class SystreGUI extends BFrame {
 						}
 						writer.flush();
 						writer.close();
-                        if (writer.checkError()) {
-                            reportException(null, "FILE", "I/O error writing to " + file,
-                                    false);
-                        }
+                    } catch (IOException ex) {
+                        reportException(null, "FILE", "I/O error writing to " + file,
+                                false);
                     } catch (Exception ex) {
                         reportException(ex, "INTERNAL",
                                 "Unexpected exception while writing to " + file, true);
@@ -283,24 +281,27 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    private void writeStructure(final String extension, final Writer writer,
-			final ProcessedNet net, final String transcript) {
+    private void writeStructure(final String extension, final BufferedWriter writer,
+			final ProcessedNet net, final String transcript) throws IOException {
         if (net != null) {
             if ("arc".equals(extension)) {
             	// --- write archive entry
 				final String txt = new Archive.Entry(net.getGraph(), net.getName())
 						.toString();
-				new PrintWriter(writer).println(txt);
+				writer.write(txt);
+				writer.write("\n");
             } else if ("cgd".equals(extension)) {
             	// --- write embedding structure with full symmetry
                 net.writeEmbedding(writer, true, systre.getOutputFullCell());
             } else if ("pgr".equals(extension)) {
             	// --- write abstract, unembedded periodic graph
                 Output.writePGR(writer, net.getGraph().canonical(), net.getName());
-				new PrintWriter(writer).println();
+				writer.write("\n");
             } else {
+            	final String lineSeparator = System.getProperty("line.separator");
             	// --- write the full transcript
-                new PrintWriter(writer).println(transcript);
+                writer.write(transcript.replaceAll(lineSeparator, "\n"));
+                writer.write("\n");
             }
         }
     }

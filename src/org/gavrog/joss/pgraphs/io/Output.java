@@ -16,7 +16,7 @@ limitations under the License.
 
 package org.gavrog.joss.pgraphs.io;
 
-import java.io.PrintWriter;
+import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,14 +30,15 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Output.java,v 1.1 2006/04/04 22:15:36 odf Exp $
+ * @version $Id: Output.java,v 1.2 2006/05/02 05:51:19 odf Exp $
  */
 public class Output {
-    public static void writePGR(final Writer writer, final PeriodicGraph G, final String name) {
-        final PrintWriter out = new PrintWriter(writer);
-        out.println("PERIODIC_GRAPH");
+    public static void writePGR(final Writer out, final PeriodicGraph G, final String name)
+			throws IOException {
+    	
+        out.write("PERIODIC_GRAPH\n");
         if (name != null) {
-            out.println("  NAME " + name);
+            out.write("  NAME " + name + "\n");
         }
         final Map node2idx = new HashMap();
         int i = 0;
@@ -46,7 +47,7 @@ public class Output {
             node2idx.put(v, new Integer(++i));
         }
         final String[] tmp = new String[G.numberOfEdges()];
-        out.println("  EDGES");
+        out.write("  EDGES\n");
         i = 0;
         for (final Iterator edges = G.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
@@ -68,8 +69,8 @@ public class Output {
         }
         Arrays.sort(tmp);
         for (i = 0; i < tmp.length; ++i) {
-            out.println(tmp[i]);
+            out.write(tmp[i] + "\n");
         }
-        out.println("END");
+        out.write("END\n");
     }
 }
