@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.38 2006/05/01 06:43:19 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.39 2006/05/02 05:53:04 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -347,20 +347,32 @@ public class SystreCmdline {
             writeEntry(out, found);
             out.println();
         }
+        final String arcName = name == null ? "nameless" : name;
         if (countMatches == 0) {
             out.println("   Structure is new for this run.");
             out.println();
-            final Archive.Entry entry = this.internalArchive.add(G,
-                    name == null ? "nameless" : name);
+			if (this.internalArchive.get(invariant) != null) {
+                final String msg = "!!! WARNING (ARCHIVE) - "
+                	+ "Overwriting previous isomorphic net.";
+                out.println(msg);
+                out.println();
+			}
+			if (this.internalArchive.get(arcName) != null) {
+                final String msg = "!!! WARNING (ARCHIVE) - "
+                	+ "Overwriting previous net with the same name";
+                out.println(msg);
+                out.println();
+			}
+            final Archive.Entry entry = this.internalArchive.add(G, arcName);
             if (this.outputArchive != null) {
                 try {
                     this.outputArchive.write(entry.toString());
                     this.outputArchive.write("\n");
-                    this.outputArchive.flush();
+				this.outputArchive.flush();
                 } catch (IOException ex) {
-                    final String msg = "Could not write to archive";
-                    throw new SystreException(SystreException.FILE, msg);
-                }
+					final String msg = "Could not write to archive";
+					throw new SystreException(SystreException.FILE, msg);
+				}
             }
         }
         out.flush();
@@ -667,8 +679,8 @@ public class SystreCmdline {
         
         if (this.outputArchive != null) {
             try {
-                this.outputArchive.flush();
-                this.outputArchive.close();
+        	this.outputArchive.flush();
+        	this.outputArchive.close();
             } catch (IOException ex) {
                 out.println("!!! ERROR (FILE) - Output archive not completely written.");
             }
