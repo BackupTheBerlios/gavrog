@@ -1,6 +1,6 @@
 =====================================================
 
-In process:
+In progress:
 
 (none)
 
@@ -8,7 +8,7 @@ In process:
 
 For Systre 1.0:
 
-- Include zeolite frameworks from Atlas.
+- Implement a status bar.
 - Show mapping of input nodes to output nodes.
 - Report coordinates of edge centers (optional).
 
@@ -27,6 +27,7 @@ For later (maybe):
 
 Recently done:
 
+- Include zeolite frameworks from Atlas.
 - Add an option for processing archive files as normal input.
 - Accept Delaney symbol files as input (.ds format).
 - Find a better strategy for handling duplicate names or keys in archives.

@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.39 2006/05/02 05:53:04 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.40 2006/05/04 23:14:27 odf Exp $
  */
 public class SystreCmdline {
     final static boolean DEBUG = false;
@@ -97,13 +97,18 @@ public class SystreCmdline {
      * Constructs an instance.
      */
     public SystreCmdline() {
-        // --- read the default archive
+        mainArchive = new Archive("1.0");
+
+        // --- read the default archives
         final Package pkg = Archive.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        final String archivePath = packagePath + "/rcsr.arc";
-        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
-        mainArchive = new Archive("1.0");
-        mainArchive.addAll(new InputStreamReader(inStream));
+        
+        final String rcsrPath = packagePath + "/rcsr.arc";
+        final InputStream rcsrStream = ClassLoader.getSystemResourceAsStream(rcsrPath);
+        mainArchive.addAll(new InputStreamReader(rcsrStream));
+        final String zeoPath = packagePath + "/zeolites.arc";
+        final InputStream zeoStream = ClassLoader.getSystemResourceAsStream(zeoPath);
+        mainArchive.addAll(new InputStreamReader(zeoStream));
     }
     
     /**
