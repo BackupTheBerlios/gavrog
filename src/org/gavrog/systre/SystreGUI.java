@@ -29,10 +29,12 @@ import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
@@ -61,7 +63,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.38 2006/05/02 05:51:19 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.39 2006/05/04 00:59:40 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -81,7 +83,7 @@ public class SystreGUI extends BFrame {
     private BButton optionsButton;
     
     private final SystreCmdline systre = new SystreCmdline();
-    private NetParser parser;
+    private Iterator netsToProcess = null;
 	private String strippedFileName;
     private String fullFileName;
     private StringBuffer currentTranscript = new StringBuffer();
@@ -205,7 +207,7 @@ public class SystreGUI extends BFrame {
     public void doOpen() {
         final boolean success = this.inFileChooser.showDialog(this);
         if (success) {
-        	this.parser = null;
+        	this.netsToProcess = null;
             final String filename = this.inFileChooser.getSelectedFile().getName();
             final File dir = this.inFileChooser.getDirectory();
             final String path = new File(dir, filename).getAbsolutePath();
@@ -352,12 +354,17 @@ public class SystreGUI extends BFrame {
         }).start();
     }
     
+    public boolean moreNets() {
+    	return this.netsToProcess != null && this.netsToProcess.hasNext();
+    }
+    
     public void nextNet() {
-        if (this.parser.atEnd()) {
+        if (!moreNets()) {
             finishFile();
         }
         
         final PrintStream out = this.systre.getOutStream();
+        InputStructure net = null;
         PeriodicGraph G = null;
         Exception problem = null;
         this.currentTranscript.delete(0, this.currentTranscript.length());
@@ -367,7 +374,8 @@ public class SystreGUI extends BFrame {
         try {
             // --- read the next net
             try {
-                G = this.parser.parseNet();
+            	net = (InputStructure) this.netsToProcess.next();
+            	G = net.getGraph();
             } catch (DataFormatException ex) {
                 problem = ex;
             } catch (Exception ex) {
@@ -385,22 +393,14 @@ public class SystreGUI extends BFrame {
                 out.println();
                 out.println();
             }
-            String lastGraphName = null;
-            try {
-                lastGraphName = this.parser.getName();
-            } catch (Exception ex) {
-                if (problem == null) {
-                    problem = ex;
-                }
-            }
             final String archiveName;
             final String displayName;
-            if (lastGraphName == null) {
+            if (net.getName() == null) {
                 archiveName = this.strippedFileName + "-#" + this.count;
                 displayName = "";
             } else {
-                archiveName = lastGraphName;
-                displayName = " - \"" + lastGraphName + "\"";
+                archiveName = net.getName();
+                displayName = " - \"" + net.getName() + "\"";
             }
             out.println("Structure #" + this.count + displayName + ".");
             out.println();
@@ -409,7 +409,7 @@ public class SystreGUI extends BFrame {
                 reportException(problem, "INPUT", null, false);
             } else {
                 try {
-                    this.systre.processGraph(G, archiveName, this.parser.getSpaceGroup());
+                    this.systre.processGraph(G, archiveName, net.getGroup());
                     success = true;
                 } catch (SystreException ex) {
                     reportException(ex, ex.getType().toString(), null, false);
@@ -421,12 +421,12 @@ public class SystreGUI extends BFrame {
             out.println("Finished structure #" + this.count + displayName + ".");
             this.lastFinishedTranscript = this.currentTranscript.toString();
             if (success) {
-                final ProcessedNet net = this.systre.getLastStructure();
-                this.bufferedNets.add(new Pair(net, this.lastFinishedTranscript));
+                final ProcessedNet tmp = this.systre.getLastStructure();
+                this.bufferedNets.add(new Pair(tmp, this.lastFinishedTranscript));
             }
         } catch (BailOut ex) {
         }
-        if (this.parser.atEnd()) {
+        if (!moreNets()) {
             finishFile();
         }
     }
@@ -434,11 +434,13 @@ public class SystreGUI extends BFrame {
     private void openFile(final String filePath) {
         final PrintStream out = this.systre.getOutStream();
 
-        this.parser = null;
+        this.netsToProcess = null;
         this.count = 0;
         
+        final NetParser parser;
+        
         try {
-            this.parser = new NetParser(new FileReader(filePath));
+            parser = new NetParser(new FileReader(filePath));
         } catch (FileNotFoundException ex) {
             reportException(ex, "FILE", null, false);
             return;
@@ -446,8 +448,18 @@ public class SystreGUI extends BFrame {
         this.fullFileName = filePath;
         this.strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
         out.println("Data file \"" + filePath + "\".");
-
         this.bufferedNets.clear();
+
+        this.netsToProcess = new IteratorAdapter() {
+			protected Object findNext() throws NoSuchElementException {
+				if (parser.atEnd()) {
+					throw new NoSuchElementException("at end");
+				} else {
+					return new InputStructure(parser.parseNet(), parser.getName(), parser
+							.getSpaceGroup());
+				}
+			}
+        };
     }
 
     private void finishFile() {
@@ -455,7 +467,7 @@ public class SystreGUI extends BFrame {
         
         out.println();
         out.println("Finished data file \"" + this.fullFileName + "\".");
-        this.parser = null;
+        this.netsToProcess = null;
     }
 
     private void reportException(final Throwable ex, final String type,
@@ -510,7 +522,7 @@ public class SystreGUI extends BFrame {
         invokeLater(new Runnable() {
             public void run() {
                 openButton.setEnabled(true);
-                if (parser != null) {
+                if (moreNets()) {
                 	nextButton.setEnabled(true);
                 }
                 saveButton.setEnabled(true);
