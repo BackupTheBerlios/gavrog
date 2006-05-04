@@ -26,6 +26,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,10 +35,14 @@ import java.util.NoSuchElementException;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
+import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
+import org.gavrog.joss.crossover.Skeleton;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.NetParser;
@@ -63,7 +68,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.39 2006/05/04 00:59:40 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.40 2006/05/04 01:46:22 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -361,6 +366,7 @@ public class SystreGUI extends BFrame {
     public void nextNet() {
         if (!moreNets()) {
             finishFile();
+            return;
         }
         
         final PrintStream out = this.systre.getOutStream();
@@ -431,36 +437,54 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    private void openFile(final String filePath) {
+    private boolean openFile(final String filePath) {
         final PrintStream out = this.systre.getOutStream();
 
         this.netsToProcess = null;
         this.count = 0;
         
-        final NetParser parser;
-        
+        final Reader reader;
         try {
-            parser = new NetParser(new FileReader(filePath));
+            reader = new FileReader(filePath);
         } catch (FileNotFoundException ex) {
             reportException(ex, "FILE", null, false);
-            return;
+            return false;
         }
         this.fullFileName = filePath;
         this.strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
+        final String extension = filePath.substring(filePath.lastIndexOf('.') + 1);
         out.println("Data file \"" + filePath + "\".");
         this.bufferedNets.clear();
 
-        this.netsToProcess = new IteratorAdapter() {
-			protected Object findNext() throws NoSuchElementException {
-				if (parser.atEnd()) {
-					throw new NoSuchElementException("at end");
-				} else {
-					return new InputStructure(parser.parseNet(), parser.getName(), parser
-							.getSpaceGroup());
+        if ("cgd".equals(extension) || "pgr".equals(extension)) {
+			final NetParser parser = new NetParser(reader);
+
+			this.netsToProcess = new IteratorAdapter() {
+				protected Object findNext() throws NoSuchElementException {
+					if (parser.atEnd()) {
+						throw new NoSuchElementException("at end");
+					} else {
+						return new InputStructure(parser.parseNet(), parser.getName(),
+								parser.getSpaceGroup());
+					}
 				}
-			}
-        };
-    }
+			};
+			return true;
+        } else if ("ds".equals(extension)) {
+        	this.netsToProcess = new FilteredIterator(new InputIterator(reader)) {
+				public Object filter(Object x) {
+					final DelaneySymbol ds = (DelaneySymbol) x;
+					final PeriodicGraph graph = new Skeleton(ds);
+					final String group = (ds.dim() == 3) ? "P1" : "p1";
+					return new InputStructure(graph, null, group);
+				}
+        	};
+        	return true;
+		} else {
+			reportException(null, "FILE", "Unrecognized extension " + extension, false);
+		}
+		return false;
+	}
 
     private void finishFile() {
         final PrintStream out = this.systre.getOutStream();
@@ -481,9 +505,9 @@ public class SystreGUI extends BFrame {
 				&& ((SystreException) ex).getType().equals(SystreException.CANCELLED);
 		final String text;
 		if (cancelled) {
-			text = "CANCELLING - ";
+			text = "CANCELLING";
 		} else {
-			text = "ERROR (" + type + ") - " + (msg == null ? "" : msg + ": ");
+			text = "ERROR (" + type + ") - " + (msg == null ? "" : msg);
 		}
         out.print("!!! " + text);
         if (ex != null) {
@@ -499,7 +523,8 @@ public class SystreGUI extends BFrame {
         invokeAndWait(new Runnable() {
             public void run() {
                 final String title = "Systre: " + type + " ERROR";
-                final String msg = text + ex.getMessage() + ".";
+                final String msg = text + (ex != null ? " - " + ex.getMessage() : "")
+						+ ".";
                 final BStandardDialog dialog = new BStandardDialog(title, msg,
                         BStandardDialog.ERROR);
                 dialog.showMessageDialog(SystreGUI.this);
