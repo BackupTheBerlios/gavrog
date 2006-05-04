@@ -18,6 +18,7 @@ package org.gavrog.systre;
 
 import java.awt.Color;
 import java.awt.Insets;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,7 +27,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,18 +68,21 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.41 2006/05/04 01:49:56 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.42 2006/05/04 02:46:17 odf Exp $
  */
 public class SystreGUI extends BFrame {
+	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
 	final private static Color buttonColor = new Color(224, 224, 240);
 	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
+	// --- file choosers
     private final BFileChooser inFileChooser = new BFileChooser(BFileChooser.OPEN_FILE,
             "Open data file");
     private final BFileChooser outFileChooser = new BFileChooser(BFileChooser.SAVE_FILE,
             "Save output");
 
+    // --- GUI elements that need to be accessed by more than one method
     private BTextArea output;
     private BScrollBar vscroll;
     private BButton openButton;
@@ -87,17 +90,21 @@ public class SystreGUI extends BFrame {
     private BButton saveButton;
     private BButton optionsButton;
     
+    // --- the object doing the actual processing
     private final SystreCmdline systre = new SystreCmdline();
+    
+    // --- fields to store some temporary information
     private Iterator netsToProcess = null;
 	private String strippedFileName;
     private String fullFileName;
     private StringBuffer currentTranscript = new StringBuffer();
     private String lastFinishedTranscript = null;
     private List bufferedNets = new LinkedList();
-    
-    private boolean singleWrite = false;
-    
     private int count;
+    
+    // --- options
+    private boolean singleWrite = false;
+    private boolean readArchivesAsInput = false;
     
     /**
      * Constructs an instance.
@@ -161,6 +168,8 @@ public class SystreGUI extends BFrame {
         saveButton.setEnabled(false);
         
         final JFileChooser inchsr = (JFileChooser) inFileChooser.getComponent();
+        inchsr.addChoosableFileFilter(new ExtensionFilter("ds",
+				"Delaney-Dress Symbol Files"));
         inchsr.addChoosableFileFilter(new ExtensionFilter("arc", "Systre Archives"));
         inchsr.addChoosableFileFilter(new ExtensionFilter(new String[] {"cgd", "pgr" },
         		"Systre Input Files"));
@@ -219,7 +228,7 @@ public class SystreGUI extends BFrame {
             this.output.setText("");
             disableMainButtons();
             
-            if (filename.endsWith(".arc")) {
+            if (!this.readArchivesAsInput && filename.endsWith(".arc")) {
                 systre.processArchive(path);
                 enableMainButtons();
             } else {
@@ -322,6 +331,8 @@ public class SystreGUI extends BFrame {
         try {
 			column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
 					"useBuiltinArchive"));
+			column.add(new OptionCheckBox("Process '.arc' files like normal input",
+					this, "readArchivesAsInput"));
 			column.add(new OptionCheckBox("Prefer Second Origin On Input",
 					SpaceGroupCatalogue.class, "preferSecondOrigin"));
 			column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
@@ -443,9 +454,9 @@ public class SystreGUI extends BFrame {
         this.netsToProcess = null;
         this.count = 0;
         
-        final Reader reader;
+        final BufferedReader reader;
         try {
-            reader = new FileReader(filePath);
+            reader = new BufferedReader(new FileReader(filePath));
         } catch (FileNotFoundException ex) {
             reportException(ex, "FILE", null, false);
             return false;
@@ -480,6 +491,19 @@ public class SystreGUI extends BFrame {
 				}
         	};
         	return true;
+        } else if ("arc".equals(extension)) {
+        	this.netsToProcess = new IteratorAdapter() {
+				protected Object findNext() throws NoSuchElementException {
+					final Archive.Entry entry = Archive.Entry.read(reader);
+					if (entry == null) {
+						throw new NoSuchElementException("at end");
+					}
+					final String key = entry.getKey();
+					final PeriodicGraph graph = PeriodicGraph.fromInvariantString(key);
+					final String group = (graph.getDimension() == 3) ? "P1" : "p1";
+					return new InputStructure(graph, entry.getName(), group);
+				}
+        	};
 		} else {
 			reportException(null, "FILE", "Unrecognized extension " + extension, false);
 		}
@@ -606,6 +630,14 @@ public class SystreGUI extends BFrame {
 		this.singleWrite = singleWrite;
 	}
 	
+	public boolean getReadArchivesAsInput() {
+		return readArchivesAsInput;
+	}
+
+	public void setReadArchivesAsInput(boolean readArchivesAsInput) {
+		this.readArchivesAsInput = readArchivesAsInput;
+	}
+
 	public static void main(final String args[]) {
         new SystreGUI();
     }
