@@ -9,7 +9,6 @@ In process:
 For Systre 1.0:
 
 - Add an option for processing archive files as normal input.
-- Accept Delaney symbol files as input (.ds format).
 - Include zeolite frameworks from Atlas.
 - Show mapping of input nodes to output nodes.
 - Report coordinates of edge centers (optional).
@@ -29,6 +28,7 @@ For later (maybe):
 
 Recently done:
 
+- Accept Delaney symbol files as input (.ds format).
 - Find a better strategy for handling duplicate names or keys in archives.
 - Make available input formats more transparent.
 - Look ahead to see if the current input file contains more structures.

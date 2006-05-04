@@ -68,7 +68,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.40 2006/05/04 01:46:22 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.41 2006/05/04 01:49:56 odf Exp $
  */
 public class SystreGUI extends BFrame {
     final private static Color textColor = new Color(255, 250, 240);
@@ -115,7 +115,7 @@ public class SystreGUI extends BFrame {
 				defaultInsets, null));
 		top.setBackground(null);
 		final BLabel label = new BLabel("<html><h1>Gavrog Systre</h1><br>"
-				+ "Version 1.0 beta 1 (2006-04-25)<br><br>"
+				+ "Version 1.0 beta 060503<br><br>"
 				+ "by Olaf Delgado-Friedrichs 2001-2006</html>");
 		top.add(label, BorderContainer.NORTH);
         
