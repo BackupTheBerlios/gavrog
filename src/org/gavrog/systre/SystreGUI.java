@@ -64,13 +64,12 @@ import buoy.widget.BorderContainer;
 import buoy.widget.ColumnContainer;
 import buoy.widget.GridContainer;
 import buoy.widget.LayoutInfo;
-import buoy.widget.Widget;
 
 /**
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.43 2006/05/05 01:23:04 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.44 2006/05/05 06:41:52 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	// --- some constants used in the GUI
@@ -91,7 +90,7 @@ public class SystreGUI extends BFrame {
     final private BButton nextButton;
     final private BButton saveButton;
     final private BButton optionsButton;
-    final private Widget statusBar;
+    final private BLabel statusBar;
     
     // --- the object doing the actual processing
     private final SystreCmdline systre = new SystreCmdline();
@@ -139,7 +138,7 @@ public class SystreGUI extends BFrame {
         top.add(buttonBar, BorderContainer.CENTER, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
 
-        statusBar = new BLabel("<html><font color=\"green\">Okay!<font></html>");
+        statusBar = new BLabel();
         final BOutline outline = BOutline.createLineBorder(statusBar, Color.BLACK, 2);
         outline.setBackground(Color.WHITE);
         top.add(outline, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.WEST,
@@ -190,8 +189,20 @@ public class SystreGUI extends BFrame {
         outchsr.addChoosableFileFilter(new ExtensionFilter("pgr", "Abstract Topologies"));
         outchsr.addChoosableFileFilter(new ExtensionFilter("out", "Systre Transcripts"));
         
+        systre.addEventLink(String.class, this, "status");
+        status("Your orders, Sir?");
+        
         pack();
         setVisible(true);
+    }
+    
+    public void status(final String text) {
+    	SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+		    	statusBar.setText("<html><font color=\"green\">" + text
+						+ "</font></html>");
+			}
+    	});
     }
     
     private BButton makeButton(final String label, final Object target,
