@@ -62,7 +62,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.41 2006/05/05 06:40:52 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.42 2006/05/05 22:12:59 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -513,6 +513,7 @@ public class SystreCmdline extends EventSource {
             	status("Writing output...");
                 net.writeEmbedding(new PrintWriter(out), false, getOutputFullCell());
                 net.setVerified(true);
+                status("Done!");
                 break;
             }
         }
@@ -719,6 +720,7 @@ public class SystreCmdline extends EventSource {
     
 	public synchronized void cancel() {
 		this.cancelled = true;
+		status("Cancel request received!");
 	}
 	
 	private void quitIfCancelled() {

@@ -69,7 +69,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.44 2006/05/05 06:41:52 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.45 2006/05/05 22:12:59 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	// --- some constants used in the GUI
@@ -190,7 +190,7 @@ public class SystreGUI extends BFrame {
         outchsr.addChoosableFileFilter(new ExtensionFilter("out", "Systre Transcripts"));
         
         systre.addEventLink(String.class, this, "status");
-        status("Your orders, Sir?");
+        status("Ready to go!");
         
         pack();
         setVisible(true);
@@ -199,7 +199,7 @@ public class SystreGUI extends BFrame {
     public void status(final String text) {
     	SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-		    	statusBar.setText("<html><font color=\"green\">" + text
+		    	statusBar.setText("<html><font color=\"green\">&nbsp;" + text
 						+ "</font></html>");
 			}
     	});
@@ -393,7 +393,14 @@ public class SystreGUI extends BFrame {
     }
     
     public boolean moreNets() {
-    	return this.netsToProcess != null && this.netsToProcess.hasNext();
+    	status("Reading next net...");
+    	final boolean more = this.netsToProcess != null && this.netsToProcess.hasNext();
+    	if (more) {
+    		status("Press \"Next\" to process next net.");
+    	} else {
+    		status("End of file reached.");
+    	}
+    	return more;
     }
     
     public void nextNet() {
@@ -407,6 +414,7 @@ public class SystreGUI extends BFrame {
         PeriodicGraph G = null;
         Exception problem = null;
         this.currentTranscript.delete(0, this.currentTranscript.length());
+        status("Reading the next net...");
 
         final class BailOut extends Throwable {}
         
@@ -534,7 +542,7 @@ public class SystreGUI extends BFrame {
 
     private void finishFile() {
         final PrintStream out = this.systre.getOutStream();
-        
+        status("End of file reached!");
         out.println();
         out.println("Finished data file \"" + this.fullFileName + "\".");
         this.netsToProcess = null;

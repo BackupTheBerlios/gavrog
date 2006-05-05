@@ -2,7 +2,7 @@
 
 In progress:
 
-- Implement a status bar.
+(none)
 
 =====================================================
 
@@ -26,6 +26,7 @@ For later (maybe):
 
 Recently done:
 
+- Implement a status bar.
 - Include zeolite frameworks from Atlas.
 - Add an option for processing archive files as normal input.
 - Accept Delaney symbol files as input (.ds format).
