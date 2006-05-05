@@ -56,13 +56,15 @@ import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.embed.IEmbedder;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
+import buoy.event.EventSource;
+
 /**
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.40 2006/05/04 23:14:27 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.41 2006/05/05 06:40:52 odf Exp $
  */
-public class SystreCmdline {
+public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
     
     static {
@@ -144,9 +146,9 @@ public class SystreCmdline {
     
     public void processGraph(final PeriodicGraph graph, final String name,
             final String givenGroup) {
+
     	this.cancelled = false;
         setLastStructure(null);
-        
         PeriodicGraph G = graph;
         final int d = G.getDimension();
         
@@ -163,35 +165,9 @@ public class SystreCmdline {
                 + m + " edge" + (m > 1 ? "s" : "") + " in repeat unit as given.");
         out.flush();
 
-        // --- test if it is Systre-compatible
-        if (!G.isConnected()) {
-            final String msg = "Structure is not connected";
-            throw new SystreException(SystreException.STRUCTURE, msg);
-        }
-        if (!G.isStable()) {
-            final String msg = "Structure has collisions";
-            throw new SystreException(SystreException.STRUCTURE, msg);
-        }
-        
-        quitIfCancelled();
-
-        // --- determine a minimal repeat unit
-        G = G.minimalImage();
-        final int r = n / G.numberOfNodes();
-        if (r > 1) {
-            out.println("   Ideal repeat unit smaller than given ("
-                    + G.numberOfEdges() + " vs " + m + " edges).");
-            if (DEBUG) {
-                out.println("\t\t@@@ minimal graph is " + G);
-            }
-        } else {
-            out.println("   Given repeat unit is accurate.");
-        }
-        
-        quitIfCancelled();
-
         // --- get and check the barycentric placement
-        
+    	status("Computing barycentric placement...");
+    	
         final Map barycentric = G.barycentricPlacement();
         if (!G.isBarycentric(barycentric)) {
             final String msg = "Incorrect barycentric placement.";
@@ -209,7 +185,38 @@ public class SystreCmdline {
         
         quitIfCancelled();
         
+        // --- test if it is Systre-compatible
+        if (!G.isConnected()) {
+            final String msg = "Structure is not connected";
+            throw new SystreException(SystreException.STRUCTURE, msg);
+        }
+        if (!G.isStable()) {
+            final String msg = "Structure has collisions";
+            throw new SystreException(SystreException.STRUCTURE, msg);
+        }
+        
+        quitIfCancelled();
+
+        // --- determine a minimal repeat unit
+    	status("Computing ideal repeat unit...");
+    	
+        G = G.minimalImage();
+        final int r = n / G.numberOfNodes();
+        if (r > 1) {
+            out.println("   Ideal repeat unit smaller than given ("
+                    + G.numberOfEdges() + " vs " + m + " edges).");
+            if (DEBUG) {
+                out.println("\t\t@@@ minimal graph is " + G);
+            }
+        } else {
+            out.println("   Given repeat unit is accurate.");
+        }
+        
+        quitIfCancelled();
+
         // --- determine the ideal symmetries
+    	status("Computing ideal symmetry group...");
+    	
         final List ops = G.symmetryOperators();
         if (DEBUG) {
             out.println("\t\t@@@ symmetry operators:");
@@ -227,6 +234,8 @@ public class SystreCmdline {
         quitIfCancelled();
         
         // --- determine the coordination sequences
+    	status("Computing coordination sequences...");
+    	
         out.println("   Coordination sequences:");
         int cum = 0;
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
@@ -258,6 +267,8 @@ public class SystreCmdline {
         }
 
         // --- find the space group name and conventional settings
+    	status("Looking up the space group and transforming to a standard setting...");
+    	
         final SpaceGroup group = new SpaceGroup(d, ops);
         final SpaceGroupFinder finder = new SpaceGroupFinder(group);
         final String groupName = finder.getGroupName();
@@ -291,6 +302,8 @@ public class SystreCmdline {
         quitIfCancelled();
         
         // --- verify the output of the spacegroup finder
+    	status("Verifying the space group setting...");
+    	
         final CoordinateChange trans = SpaceGroupCatalogue
 				.transform(d, extendedGroupName);
         if (!trans.isOne()) {
@@ -322,7 +335,12 @@ public class SystreCmdline {
         quitIfCancelled();
         
         // --- determine the Systre key and look it up in the archives
+    	status("Computing the unique invariant (a.k.a. Systre key) for this net...");
+    	
         final String invariant = G.getSystreKey();
+
+        status("Looking for isomorphic nets...");
+    	
         int countMatches = 0;
         Archive.Entry found = null;
         if (this.useBuiltinArchive) {
@@ -354,6 +372,8 @@ public class SystreCmdline {
         }
         final String arcName = name == null ? "nameless" : name;
         if (countMatches == 0) {
+        	status("Storing the Systre key for this net...");
+        	
             out.println("   Structure is new for this run.");
             out.println();
 			if (this.internalArchive.get(invariant) != null) {
@@ -386,6 +406,8 @@ public class SystreCmdline {
         
         // --- compute an embedding
         for (int pass = 0; pass <= 1; ++pass) {
+        	status("Computing an embedding...");
+        	
             // --- relax the structure from the barycentric embedding
             IEmbedder embedder = new AmoebaEmbedder(G);
             try {
@@ -406,6 +428,8 @@ public class SystreCmdline {
             quitIfCancelled();
             
             // --- do some checking
+        	status("Verifying the embedding...");
+        	
             final IArithmetic det = embedder.getGramMatrix().determinant();
             if (det.abs().isLessThan(new FloatingPoint(0.001))) {
                 out.println("==================================================");
@@ -441,6 +465,8 @@ public class SystreCmdline {
             quitIfCancelled();
             
             // --- write a Systre readable net description to a string buffer
+        	status("Preparing the output...");
+        	
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
             final ProcessedNet net = new ProcessedNet(G, name, finder, embedder);
@@ -450,28 +476,22 @@ public class SystreCmdline {
             final String cgdString = cgdStringWriter.toString();
 			boolean success = false;
             try {
-                out.println("   Consistency test:");
-                out.print("       reading...");
-                out.flush();
+            	status("Consistency test: reading output back in...");
                 final PeriodicGraph test = NetParser.stringToNet(cgdString);
                 
                 quitIfCancelled();
                 
-                out.println(" OK!");
-                out.print("       comparing...");
-                out.flush();
+            	status("Consistency test: comparing with original net...");
                 if (!test.minimalImage().equals(G)) {
                     final String msg = "Output does not match original graph.";
                     throw new RuntimeException(msg);
                 }
-                out.println(" OK!");
                 out.println();
                 success = true;
                 
                 quitIfCancelled();
                 
             } catch (Exception ex) {
-                out.println(" Failed!");
                 if (DEBUG) {
                     out.println("\t\t@@@ Failing output:");
                     out.println(cgdString);
@@ -490,6 +510,7 @@ public class SystreCmdline {
             
             // --- now write the actual output
             if (success) {
+            	status("Writing output...");
                 net.writeEmbedding(new PrintWriter(out), false, getOutputFullCell());
                 net.setVerified(true);
                 break;
@@ -692,6 +713,22 @@ public class SystreCmdline {
         }
     }
     
+    private void status(final String text) {
+    	dispatchEvent(text);
+    }
+    
+	public synchronized void cancel() {
+		this.cancelled = true;
+	}
+	
+	private void quitIfCancelled() {
+		if (this.cancelled) {
+			this.cancelled = false;
+			throw new SystreException(SystreException.CANCELLED,
+						"Execution stopped for this structure");
+		}
+	}
+	
     public ProcessedNet getLastStructure() {
         return this.lastStructure;
     }
@@ -732,18 +769,6 @@ public class SystreCmdline {
         this.outputFullCell = fullCellOutput;
     }
     
-	public synchronized void cancel() {
-		this.cancelled = true;
-	}
-	
-	private void quitIfCancelled() {
-		if (this.cancelled) {
-			this.cancelled = false;
-			throw new SystreException(SystreException.CANCELLED,
-						"Execution stopped for this structure");
-		}
-	}
-	
     public static void main(final String args[]) {
         new SystreCmdline().run(args);
     }
