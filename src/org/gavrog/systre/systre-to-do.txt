@@ -9,7 +9,6 @@ In progress:
 For Systre 1.0:
 
 - Show mapping of input nodes to output nodes.
-- Report coordinates of edge centers (optional).
 
 For later (maybe):
 - Keyboard shortcuts.
@@ -26,6 +25,7 @@ For later (maybe):
 
 Recently done:
 
+- Report coordinates of edge centers (optional).
 - Implement a status bar.
 - Include zeolite frameworks from Atlas.
 - Add an option for processing archive files as normal input.
