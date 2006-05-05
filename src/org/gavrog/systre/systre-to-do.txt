@@ -2,13 +2,12 @@
 
 In progress:
 
-(none)
+- Implement a status bar.
 
 =====================================================
 
 For Systre 1.0:
 
-- Implement a status bar.
 - Show mapping of input nodes to output nodes.
 - Report coordinates of edge centers (optional).
 

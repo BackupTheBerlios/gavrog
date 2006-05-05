@@ -55,6 +55,7 @@ import buoy.widget.BDialog;
 import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
 import buoy.widget.BLabel;
+import buoy.widget.BOutline;
 import buoy.widget.BScrollBar;
 import buoy.widget.BScrollPane;
 import buoy.widget.BStandardDialog;
@@ -63,12 +64,13 @@ import buoy.widget.BorderContainer;
 import buoy.widget.ColumnContainer;
 import buoy.widget.GridContainer;
 import buoy.widget.LayoutInfo;
+import buoy.widget.Widget;
 
 /**
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.42 2006/05/04 02:46:17 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.43 2006/05/05 01:23:04 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	// --- some constants used in the GUI
@@ -77,18 +79,19 @@ public class SystreGUI extends BFrame {
 	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
 	// --- file choosers
-    private final BFileChooser inFileChooser = new BFileChooser(BFileChooser.OPEN_FILE,
+    final private BFileChooser inFileChooser = new BFileChooser(BFileChooser.OPEN_FILE,
             "Open data file");
-    private final BFileChooser outFileChooser = new BFileChooser(BFileChooser.SAVE_FILE,
+    final private BFileChooser outFileChooser = new BFileChooser(BFileChooser.SAVE_FILE,
             "Save output");
 
     // --- GUI elements that need to be accessed by more than one method
-    private BTextArea output;
-    private BScrollBar vscroll;
-    private BButton openButton;
-    private BButton nextButton;
-    private BButton saveButton;
-    private BButton optionsButton;
+    final private BTextArea output;
+    final private BScrollBar vscroll;
+    final private BButton openButton;
+    final private BButton nextButton;
+    final private BButton saveButton;
+    final private BButton optionsButton;
+    final private Widget statusBar;
     
     // --- the object doing the actual processing
     private final SystreCmdline systre = new SystreCmdline();
@@ -122,22 +125,27 @@ public class SystreGUI extends BFrame {
 				defaultInsets, null));
 		top.setBackground(null);
 		final BLabel label = new BLabel("<html><h1>Gavrog Systre</h1><br>"
-				+ "Version 1.0 beta 060503<br><br>"
+				+ "Version 1.0 beta 060504<br><br>"
 				+ "by Olaf Delgado-Friedrichs 2001-2006</html>");
 		top.add(label, BorderContainer.NORTH);
-        
+
         final GridContainer buttonBar = new GridContainer(4, 1);
         buttonBar.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER,
                 LayoutInfo.HORIZONTAL, null, null));
-        
         buttonBar.add(openButton = makeButton("Open...", this, "doOpen"), 0, 0);
         buttonBar.add(nextButton = makeButton("Next", this, "doNext"), 1, 0);
         buttonBar.add(saveButton = makeButton("Save as...", this, "doSave"), 2, 0);
         buttonBar.add(optionsButton = makeButton("Options...", this, "doOptions"), 3, 0);
-        
-        top.add(buttonBar, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
+        top.add(buttonBar, BorderContainer.CENTER, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
-		main.add(top, BorderContainer.NORTH);
+
+        statusBar = new BLabel("<html><font color=\"green\">Okay!<font></html>");
+        final BOutline outline = BOutline.createLineBorder(statusBar, Color.BLACK, 2);
+        outline.setBackground(Color.WHITE);
+        top.add(outline, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.WEST,
+                LayoutInfo.HORIZONTAL, null, null));
+        
+        main.add(top, BorderContainer.NORTH);
 		
 		output = new BTextArea(20, 40);
 		output.setBackground(null);
@@ -152,11 +160,14 @@ public class SystreGUI extends BFrame {
 		final BButton cancelButton = makeButton("Cancel", this, "doCancel");
 		final BButton exitButton = makeButton("Exit", this, "doQuit");
 		final BorderContainer bottom = new BorderContainer();
+        bottom.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
+                defaultInsets, null));
 		bottom.setBackground(null);
 		bottom.add(cancelButton, BorderContainer.WEST);
 		bottom.add(exitButton, BorderContainer.EAST);
+
         main.add(bottom, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
-				LayoutInfo.NONE, defaultInsets, null));
+				LayoutInfo.HORIZONTAL, null, null));
         
         setContent(main);
         
