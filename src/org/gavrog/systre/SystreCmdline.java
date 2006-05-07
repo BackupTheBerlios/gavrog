@@ -62,7 +62,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.42 2006/05/05 22:12:59 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.43 2006/05/07 23:47:12 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -554,7 +554,7 @@ public class SystreCmdline extends EventSource {
         
         // --- loop through the structures specied in the input file
         while (true) {
-            PeriodicGraph G = null;
+            NetParser.Net G = null;
             Exception problem = null;
             
             // --- read the next net
@@ -589,7 +589,7 @@ public class SystreCmdline extends EventSource {
             // --- process the graph
             String name = null;
             try {
-                name = parser.getName();
+                name = G.getName();
             } catch (Exception ex) {
                 if (problem == null) {
                     problem = ex;
@@ -611,7 +611,7 @@ public class SystreCmdline extends EventSource {
                 out.println("!!! ERROR (INPUT) - " + problem.getMessage());
             } else {
                 try {
-                    processGraph(G, archiveName, parser.getSpaceGroup());
+                    processGraph(G, archiveName, G.getGivenGroup());
                 } catch (SystreException ex) {
                     out.println("!!! ERROR (" + ex.getType() + ") - " + ex.getMessage() + ".");
                 } catch (Exception ex) {

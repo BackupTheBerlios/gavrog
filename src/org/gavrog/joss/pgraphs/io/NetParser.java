@@ -55,11 +55,39 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.70 2006/04/07 06:13:42 odf Exp $
+ * @version $Id: NetParser.java,v 1.71 2006/05/07 23:47:11 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
     private final static boolean DEBUG = false;
+    
+    /**
+     * Encapsulates a net with extra information picked up by the parser.
+     */
+    public static class Net extends PeriodicGraph {
+    	final private String name;
+    	final private String givenGroup;
+    	
+    	public Net(final int dim, final String name, final String group) {
+    		super(dim);
+    		this.name = name;
+    		this.givenGroup = group;
+    	}
+
+    	public Net(final PeriodicGraph graph, final String name, final String group) {
+    		super(graph);
+    		this.name = name;
+    		this.givenGroup = group;
+    	}
+
+		public String getGivenGroup() {
+			return givenGroup;
+		}
+
+		public String getName() {
+			return name;
+		}
+    };
     
     /**
      * Helper class - encapsulates the preliminary specification of a node.
@@ -181,7 +209,7 @@ public class NetParser extends GenericParser {
      * 
      * @return the periodic net constructed from the input.
      */
-    public PeriodicGraph parseNet() {
+    public Net parseNet() {
         parseDataBlock();
         final Entry entries[] = getDataEntries();
         if (entries == null) {
@@ -204,7 +232,7 @@ public class NetParser extends GenericParser {
      * 
      * @return everything present under the "name" of "id" key.
      */
-    public String getName() {
+    private String getName() {
         return getDataEntriesAsString("name");
     }
     
@@ -213,7 +241,7 @@ public class NetParser extends GenericParser {
      * 
      * @return everything present under the "name" of "id" key.
      */
-    public String getSpaceGroup() {
+    private String getSpaceGroup() {
         final String group = getDataEntriesAsString("group");
         if (group == null) {
             return "P1";
@@ -243,8 +271,8 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private static PeriodicGraph parsePeriodicGraph(final Entry block[]) {
-        PeriodicGraph G = null;
+    private Net parsePeriodicGraph(final Entry block[]) {
+        Net G = null;
         final Map nameToNode = new HashMap();
         
         for (int i = 0; i < block.length; ++i) {
@@ -255,7 +283,7 @@ public class NetParser extends GenericParser {
                     final String msg = "not enough fields at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 } else if (G == null) {
-                    G = new PeriodicGraph(d);
+                    G = new Net(d, getName(), getSpaceGroup());
                 } else if (d != G.getDimension()) {
                     final String msg = "inconsistent shift dimensions at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -328,7 +356,7 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private static PeriodicGraph parseSymmetricNet(final Entry[] block) {
+    private Net parseSymmetricNet(final Entry[] block) {
         String groupName = null;
         int dimension = 0;
         SpaceGroup group = null;
@@ -424,7 +452,7 @@ public class NetParser extends GenericParser {
         // TODO provide better error handling in the following
         
         // --- apply group operators to generate all nodes
-        final PeriodicGraph G = new PeriodicGraph(dimension);
+        final Net G = new Net(dimension, getName(), getSpaceGroup());
         final Map addressToNode = new HashMap();
         final Map addressToShift = new HashMap();
         
@@ -521,7 +549,7 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the periodic graph constructed from the input.
      */
-    private static PeriodicGraph parseCrystal(final Entry[] block) {
+    private Net parseCrystal(final Entry[] block) {
         // TODO make this work for general dimensions
         final Set seen = new HashSet();
         
@@ -734,7 +762,7 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all nodes
-        final PeriodicGraph G = new PeriodicGraph(dim);
+        final Net G = new Net(dim, getName(), getSpaceGroup());
         final Map nodeToPosition = new HashMap();
         final Map nodeToDescriptorAddress = new HashMap();
         

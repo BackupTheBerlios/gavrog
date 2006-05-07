@@ -69,7 +69,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.46 2006/05/05 22:30:09 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.47 2006/05/07 23:47:12 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String systreVersion = "1.0 beta 060505";
@@ -201,13 +201,13 @@ public class SystreGUI extends BFrame {
     }
     
     public void status(final String text) {
-    	SwingUtilities.invokeLater(new Runnable() {
+		invokeAndWait(new Runnable() {
 			public void run() {
-		    	statusBar.setText("<html><font color=\"green\">&nbsp;" + text
+				statusBar.setText("<html><font color=\"green\">&nbsp;" + text
 						+ "</font></html>");
 			}
-    	});
-    }
+		});
+	}
     
     private BButton makeButton(final String label, final Object target,
             final String method) {
@@ -414,8 +414,7 @@ public class SystreGUI extends BFrame {
         }
         
         final PrintStream out = this.systre.getOutStream();
-        InputStructure net = null;
-        PeriodicGraph G = null;
+        NetParser.Net G = null;
         Exception problem = null;
         this.currentTranscript.delete(0, this.currentTranscript.length());
         status("Reading the next net...");
@@ -425,8 +424,7 @@ public class SystreGUI extends BFrame {
         try {
             // --- read the next net
             try {
-            	net = (InputStructure) this.netsToProcess.next();
-            	G = net.getGraph();
+            	G = (NetParser.Net) this.netsToProcess.next();
             } catch (DataFormatException ex) {
                 problem = ex;
             } catch (Exception ex) {
@@ -446,12 +444,12 @@ public class SystreGUI extends BFrame {
             }
             final String archiveName;
             final String displayName;
-            if (net.getName() == null) {
+            if (G.getName() == null) {
                 archiveName = this.strippedFileName + "-#" + this.count;
                 displayName = "";
             } else {
-                archiveName = net.getName();
-                displayName = " - \"" + net.getName() + "\"";
+                archiveName = G.getName();
+                displayName = " - \"" + G.getName() + "\"";
             }
             out.println("Structure #" + this.count + displayName + ".");
             out.println();
@@ -460,7 +458,7 @@ public class SystreGUI extends BFrame {
                 reportException(problem, "INPUT", null, false);
             } else {
                 try {
-                    this.systre.processGraph(G, archiveName, net.getGroup());
+                    this.systre.processGraph(G, archiveName, G.getGivenGroup());
                     success = true;
                 } catch (SystreException ex) {
                     reportException(ex, ex.getType().toString(), null, false);
@@ -509,8 +507,7 @@ public class SystreGUI extends BFrame {
 					if (parser.atEnd()) {
 						throw new NoSuchElementException("at end");
 					} else {
-						return new InputStructure(parser.parseNet(), parser.getName(),
-								parser.getSpaceGroup());
+						return parser.parseNet();
 					}
 				}
 			};
@@ -521,7 +518,7 @@ public class SystreGUI extends BFrame {
 					final DelaneySymbol ds = (DelaneySymbol) x;
 					final PeriodicGraph graph = new Skeleton(ds);
 					final String group = (ds.dim() == 3) ? "P1" : "p1";
-					return new InputStructure(graph, null, group);
+					return new NetParser.Net(graph, null, group);
 				}
         	};
         	return true;
@@ -535,7 +532,7 @@ public class SystreGUI extends BFrame {
 					final String key = entry.getKey();
 					final PeriodicGraph graph = PeriodicGraph.fromInvariantString(key);
 					final String group = (graph.getDimension() == 3) ? "P1" : "p1";
-					return new InputStructure(graph, entry.getName(), group);
+					return new NetParser.Net(graph, entry.getName(), group);
 				}
         	};
 		} else {

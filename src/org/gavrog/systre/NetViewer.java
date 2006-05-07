@@ -113,7 +113,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.35 2006/04/24 22:12:32 odf Exp $
+ * @version $Id: NetViewer.java,v 1.36 2006/05/07 23:47:12 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -496,7 +496,7 @@ public class NetViewer extends Applet {
             return;
         }
         busy();
-        final PeriodicGraph G;
+        final NetParser.Net G;
         try {
             G = parser.parseNet();
         } catch (Exception ex) {
@@ -508,7 +508,7 @@ public class NetViewer extends Applet {
             status.setText("Reached end of file.");
             parser = null;
         } else {
-            inputArea.setText(parser.getName());
+            inputArea.setText(G.getName());
             changeNet(G, this.defaultRadius);
         }
         done();
@@ -529,7 +529,7 @@ public class NetViewer extends Applet {
         }
 
         busy();
-        PeriodicGraph G;
+        NetParser.Net G;
         while (true) {
             try {
                 G = parser.parseNet();
@@ -558,13 +558,13 @@ public class NetViewer extends Applet {
             } else {
                 boolean match = false;
                 try {
-                    match = pattern.matcher(parser.getName()).find();
+                    match = pattern.matcher(G.getName()).find();
                 } catch (Exception ex) {
                     status.setText("Malformed pattern string: " + ex);
                     break;
                 }
                 if (match) {
-                    inputArea.setText(parser.getName());
+                    inputArea.setText(G.getName());
                     changeNet(G, this.defaultRadius);
                     break;
                 }
