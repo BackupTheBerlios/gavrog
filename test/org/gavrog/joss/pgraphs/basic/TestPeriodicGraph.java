@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.33 2006/04/06 01:13:51 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.34 2006/05/07 23:46:24 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -143,6 +143,11 @@ public class TestPeriodicGraph extends TestCase {
         cds.newEdge(w2, w4, new int[] { 0, 0, 0});
         cds.newEdge(w2, w4, new int[] { 1, 0, 0});
         return cds;
+    }
+    
+    public void testCopyConstructor() {
+    	final PeriodicGraph copy = new PeriodicGraph(cds);
+    	assertEquals(cds, copy);
     }
     
     public void testNewEdge() {
