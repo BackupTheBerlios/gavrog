@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.52 2006/04/24 22:12:33 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.53 2006/05/07 23:46:03 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -105,6 +105,26 @@ public class PeriodicGraph extends UndirectedGraph {
         this.dimension = dimension;
     }
 
+    /**
+     * Constructs a copy of a given graph.
+     * 
+     * @param src the graph to copy.
+     */
+    public PeriodicGraph(final PeriodicGraph src) {
+    	this(src.getDimension());
+    	final Map old2new = new HashMap();
+    	for (final Iterator nodes = src.nodes(); nodes.hasNext();) {
+    		final INode v = (INode) nodes.next();
+    		old2new.put(v, newNode());
+    	}
+    	for (final Iterator edges = src.edges(); edges.hasNext();) {
+    		final IEdge e = (IEdge) edges.next();
+    		final INode v = (INode) old2new.get(e.source());
+    		final INode w = (INode) old2new.get(e.target());
+    		newEdge(v, w, src.getShift(e));
+    	}
+    }
+    
     /**
      * Implements a node of the covering graph - as opposed to the representing
      * orbit graph. Each node is given as a pair consisting of a node of the
