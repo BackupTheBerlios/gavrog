@@ -55,39 +55,11 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.71 2006/05/07 23:47:11 odf Exp $
+ * @version $Id: NetParser.java,v 1.72 2006/05/13 01:40:03 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
     private final static boolean DEBUG = false;
-    
-    /**
-     * Encapsulates a net with extra information picked up by the parser.
-     */
-    public static class Net extends PeriodicGraph {
-    	final private String name;
-    	final private String givenGroup;
-    	
-    	public Net(final int dim, final String name, final String group) {
-    		super(dim);
-    		this.name = name;
-    		this.givenGroup = group;
-    	}
-
-    	public Net(final PeriodicGraph graph, final String name, final String group) {
-    		super(graph);
-    		this.name = name;
-    		this.givenGroup = group;
-    	}
-
-		public String getGivenGroup() {
-			return givenGroup;
-		}
-
-		public String getName() {
-			return name;
-		}
-    };
     
     /**
      * Helper class - encapsulates the preliminary specification of a node.
@@ -290,12 +262,12 @@ public class NetParser extends GenericParser {
                 }
                 INode v = (INode) nameToNode.get(row.get(0));
                 if (v == null) {
-                    v = G.newNode();
+                    v = G.newNode("" + row.get(0));
                     nameToNode.put(row.get(0), v);
                 }
                 INode w = (INode) nameToNode.get(row.get(1));
                 if (w == null) {
-                    w = G.newNode();
+                    w = G.newNode("" + row.get(1));
                     nameToNode.put(row.get(1), w);
                 }
                 final int s[] = new int[d];
@@ -471,7 +443,7 @@ public class NetParser extends GenericParser {
                 if (siteToNode.containsKey(imageModZ)) {
                     v = (INode) siteToNode.get(imageModZ);
                 } else {
-                    v = G.newNode();
+                    v = G.newNode("" + name);
                     siteToNode.put(imageModZ, v);
                 }
                 addressToNode.put(address, v);
@@ -789,7 +761,7 @@ public class NetParser extends GenericParser {
                     // --- compute mapped node position
                     final Point p = (Point) site.times(op);
                     // --- construct a new node
-                    final INode v = G.newNode();
+                    final INode v = G.newNode("" + desc.name);
                     // --- store some data for it
                     nodeToPosition.put(v, p);
                     nodeToDescriptorAddress.put(v, new Pair(desc, op));
