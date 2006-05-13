@@ -54,6 +54,7 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.embed.IEmbedder;
+import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 import buoy.event.EventSource;
@@ -62,7 +63,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.43 2006/05/07 23:47:12 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.44 2006/05/13 01:41:08 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -554,7 +555,7 @@ public class SystreCmdline extends EventSource {
         
         // --- loop through the structures specied in the input file
         while (true) {
-            NetParser.Net G = null;
+            Net G = null;
             Exception problem = null;
             
             // --- read the next net

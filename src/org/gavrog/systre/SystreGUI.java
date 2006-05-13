@@ -45,6 +45,7 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
 
@@ -69,7 +70,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.47 2006/05/07 23:47:12 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.48 2006/05/13 01:41:08 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String systreVersion = "1.0 beta 060505";
@@ -414,7 +415,7 @@ public class SystreGUI extends BFrame {
         }
         
         final PrintStream out = this.systre.getOutStream();
-        NetParser.Net G = null;
+        Net G = null;
         Exception problem = null;
         this.currentTranscript.delete(0, this.currentTranscript.length());
         status("Reading the next net...");
@@ -424,7 +425,7 @@ public class SystreGUI extends BFrame {
         try {
             // --- read the next net
             try {
-            	G = (NetParser.Net) this.netsToProcess.next();
+            	G = (Net) this.netsToProcess.next();
             } catch (DataFormatException ex) {
                 problem = ex;
             } catch (Exception ex) {
@@ -518,7 +519,7 @@ public class SystreGUI extends BFrame {
 					final DelaneySymbol ds = (DelaneySymbol) x;
 					final PeriodicGraph graph = new Skeleton(ds);
 					final String group = (ds.dim() == 3) ? "P1" : "p1";
-					return new NetParser.Net(graph, null, group);
+					return new Net(graph, null, group);
 				}
         	};
         	return true;
@@ -532,7 +533,7 @@ public class SystreGUI extends BFrame {
 					final String key = entry.getKey();
 					final PeriodicGraph graph = PeriodicGraph.fromInvariantString(key);
 					final String group = (graph.getDimension() == 3) ? "P1" : "p1";
-					return new NetParser.Net(graph, entry.getName(), group);
+					return new Net(graph, entry.getName(), group);
 				}
         	};
 		} else {

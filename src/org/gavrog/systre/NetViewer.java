@@ -86,6 +86,7 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.embed.IEmbedder;
+import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
 import com.sun.j3d.utils.applet.MainFrame;
@@ -113,7 +114,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.36 2006/05/07 23:47:12 odf Exp $
+ * @version $Id: NetViewer.java,v 1.37 2006/05/13 01:41:08 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -496,7 +497,7 @@ public class NetViewer extends Applet {
             return;
         }
         busy();
-        final NetParser.Net G;
+        final Net G;
         try {
             G = parser.parseNet();
         } catch (Exception ex) {
@@ -529,7 +530,7 @@ public class NetViewer extends Applet {
         }
 
         busy();
-        NetParser.Net G;
+        Net G;
         while (true) {
             try {
                 G = parser.parseNet();
