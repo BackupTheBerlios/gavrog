@@ -70,10 +70,10 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.48 2006/05/13 01:41:08 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.49 2006/05/15 01:42:48 odf Exp $
  */
 public class SystreGUI extends BFrame {
-	final static String systreVersion = "1.0 beta 060505";
+	final static String systreVersion = "1.0 beta 060514";
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
 			+ "<font color=#202060>Version " + systreVersion + "<br><br>"
