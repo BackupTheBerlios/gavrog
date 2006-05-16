@@ -12,7 +12,7 @@ from java.lang import ClassLoader
 from java.io import InputStreamReader, BufferedReader
 
 # --- Gavrog stuff
-from org.gavrog.joss.geometry import SpaceGroupFinder
+from org.gavrog.joss.geometry import SpaceGroupFinder, CrystalSystem
 from org.gavrog.joss.pgraphs.io import NetParser
 from org.gavrog.systre import Archive
 
@@ -53,7 +53,7 @@ while 1:
     count += 1
 
     # --- retrieve the net's name or make one up
-    name = parser.name
+    name = G0.name
     if name is None:
         name = "unamed-%03d" % count
     print "Net %03d (%s): " % (count, name),
@@ -127,8 +127,8 @@ while 1:
     cover_pos = cover.barycentricPlacement()
     finder = SpaceGroupFinder(spacegroup)
     system = finder.crystalSystem
-    special_angle = ((system == SpaceGroupFinder.TRIGONAL_SYSTEM)
-                    or (system == SpaceGroupFinder.HEXAGONAL_SYSTEM))
+    special_angle = ((system == CrystalSystem.TRIGONAL)
+                    or (system == CrystalSystem.HEXAGONAL))
     print "\tUnit cell parameters:"
     print "\t\t1 1 1 90 90",
     if special_angle:
