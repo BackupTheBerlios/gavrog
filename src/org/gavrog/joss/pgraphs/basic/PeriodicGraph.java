@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.53 2006/05/07 23:46:03 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.54 2006/05/16 22:45:27 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1300,19 +1300,9 @@ public class PeriodicGraph extends UndirectedGraph {
         final List basis0 = (List) bases.get(0);
         final INode v0 = ((IEdge) basis0.get(0)).source();
         final Matrix B0 = differenceMatrix(basis0);
-        final Partition P = new Partition();
         
         for (int i = 0; i < bases.size(); ++i) {
             final List b = (List) bases.get(i);
-            boolean seen = true;
-            for (int k = 0; k < d; ++k) {
-                if (!P.areEquivalent(basis0.get(k), b.get(k))) {
-                    seen = false;
-                }
-            }
-            if (seen) {
-                continue;
-            }
             final INode v = ((IEdge) b.get(0)).source();
             final Matrix B = differenceMatrix(b);
             final Matrix M = new Matrix(d+1, d+1);
@@ -1328,11 +1318,6 @@ public class PeriodicGraph extends UndirectedGraph {
                     continue;
                 }
                 generators.add(iso);
-                final List edges = allDirectedEdges();
-                for (int k = 0; k < edges.size(); ++k) {
-                    final IEdge e = (IEdge) edges.get(k);
-                    P.unite(e, iso.get(e));
-                }
             }
         }
         
