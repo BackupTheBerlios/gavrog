@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jardesc>
-<jar path="Gavrog/Gavrog.jar"/>
-<options buildIfNeeded="true" compress="true" descriptionLocation="/Gavrog/Gavrog.jardesc" exportErrors="true" exportWarnings="true" overwrite="false" saveDescription="true" useSourceFolders="false"/>
-<manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
-<sealing sealJar="false">
-<packagesToSeal/>
-<packagesToUnSeal/>
-</sealing>
-</manifest>
-<selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-<javaElement handleIdentifier="=Gavrog/src"/>
-</selectedElements>
+    <jar path="Gavrog/Gavrog.jar"/>
+    <options overwrite="false" compress="true" exportErrors="true" exportWarnings="true" saveDescription="true" descriptionLocation="/Gavrog/Gavrog.jardesc" useSourceFolders="false" buildIfNeeded="true" includeDirectoryEntries="false" storeRefactorings="false"/>
+    <storedRefactorings structuralOnly="false" deprecationInfo="true"/>
+    <selectedProjects/>
+    <manifest manifestVersion="1.0" usesManifest="true" reuseManifest="false" saveManifest="false" generateManifest="true" manifestLocation="">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportOutputFolder="false" exportJavaFiles="false">
+        <javaElement handleIdentifier="=Buoy/&lt;buoy.xml"/>
+        <javaElement handleIdentifier="=Buoy/&lt;buoy.event"/>
+        <javaElement handleIdentifier="=Buoy/&lt;buoy.internal"/>
+        <javaElement handleIdentifier="=Buoy/&lt;buoy.xml.delegate"/>
+        <javaElement handleIdentifier="=Buoy/&lt;buoy.widget"/>
+        <javaElement handleIdentifier="=Gavrog/src"/>
+    </selectedElements>
 </jardesc>
