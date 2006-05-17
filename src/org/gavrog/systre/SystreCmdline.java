@@ -63,7 +63,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.44 2006/05/13 01:41:08 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.45 2006/05/17 21:58:18 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -166,6 +166,11 @@ public class SystreCmdline extends EventSource {
                 + m + " edge" + (m > 1 ? "s" : "") + " in repeat unit as given.");
         out.flush();
 
+        // --- test if the net is connected
+        if (!G.isConnected()) {
+        	final String msg = "Structure is not connected";
+        	throw new SystreException(SystreException.STRUCTURE, msg);
+        }
         // --- get and check the barycentric placement
     	status("Computing barycentric placement...");
     	
