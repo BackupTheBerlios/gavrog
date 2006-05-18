@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.54 2006/05/16 22:45:27 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.55 2006/05/18 20:48:48 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -87,6 +87,7 @@ public class PeriodicGraph extends UndirectedGraph {
     protected static final CacheKey INVARIANT = new CacheKey();
     protected static final CacheKey CANONICAL = new CacheKey();
     protected static final CacheKey CONVENTIONAL_CELL = new CacheKey();
+    protected static final CacheKey TRANSLATIONAL_EQUIVALENCE_CLASSES = new CacheKey();
 
     private static final boolean DEBUG = false;
     
@@ -925,6 +926,11 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return an iterator over the set of equivalence classes.
      */
     public Iterator translationalEquivalenceClasses() {
+        final List cached = (List) cache.get(TRANSLATIONAL_EQUIVALENCE_CLASSES);
+        if (cached != null) {
+            return cached.iterator();
+        }
+        
         // --- check prerequisites
         if (!isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -955,7 +961,8 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
         
-        // --- return the result
+        // --- cache and return the result
+        cache.put(TRANSLATIONAL_EQUIVALENCE_CLASSES, Iterators.asList(P.classes()));
         return P.classes();
     }
     
