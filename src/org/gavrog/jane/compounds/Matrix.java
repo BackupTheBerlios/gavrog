@@ -26,9 +26,9 @@ import org.gavrog.jane.numbers.Whole;
 public class Matrix extends ArithmeticBase {
     final private static boolean DEBUG = false;
 
-    private IArithmetic[] data;
-    private int nrows;
-    private int ncols;
+    final private IArithmetic[] data;
+    final private int nrows;
+    final private int ncols;
     private boolean mutable;
 
     public Matrix(int height, int width) {
@@ -163,10 +163,10 @@ public class Matrix extends ArithmeticBase {
     }
 
     public IArithmetic get(int i, int j) {
-        if (i < 0 || i >= nrows) {
-            throw new ArrayIndexOutOfBoundsException("first index");
-        } else if (j < 0 || j >= ncols) {
-            throw new ArrayIndexOutOfBoundsException("second index");
+        if (i < 0 || i >= this.nrows) {
+            throw new ArrayIndexOutOfBoundsException("first index = " + i);
+        } else if (j < 0 || j >= this.ncols) {
+            throw new ArrayIndexOutOfBoundsException("second index = " + j);
         } else {
             return this.data[this.ncols * i + j];
         }
@@ -175,10 +175,10 @@ public class Matrix extends ArithmeticBase {
     public void set(int i, int j, IArithmetic val) {
         if (! this.mutable) {
             throw new IllegalArgumentException("Matrix is immutable");
-        } else if (i < 0 || i >= nrows) {
-            throw new ArrayIndexOutOfBoundsException("first index");
-        } else if (j < 0 || j >= ncols) {
-            throw new ArrayIndexOutOfBoundsException("second index");
+        } else if (i < 0 || i >= this.nrows) {
+            throw new ArrayIndexOutOfBoundsException("first index = " + i);
+        } else if (j < 0 || j >= this.ncols) {
+            throw new ArrayIndexOutOfBoundsException("second index = " + j);
         } else {
             this.data[this.ncols * i + j] = val;
         }
