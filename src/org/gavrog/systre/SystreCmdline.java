@@ -63,7 +63,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.45 2006/05/17 21:58:18 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.46 2006/05/18 22:22:21 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -423,8 +423,8 @@ public class SystreCmdline extends EventSource {
                 embedder.go(1000);
             } catch (Exception ex) {
                 out.println("==================================================");
-                final String msg = "!!! WARNING (INTERNAL) - Could not relax: " + ex;
-                out.println(msg);
+                final String msg = "!!! WARNING (INTERNAL) - Could not relax - ";
+                out.println(msg + ex.getMessage());
                 out.println(Misc.stackTrace(ex));
                 out.println("==================================================");
                 embedder.reset();
@@ -439,7 +439,8 @@ public class SystreCmdline extends EventSource {
             final IArithmetic det = embedder.getGramMatrix().determinant();
             if (det.abs().isLessThan(new FloatingPoint(0.001))) {
                 out.println("==================================================");
-                final String msg = "!!! WARNING (INTERNAL) - Unit cell degenerated in relaxation.";
+                final String msg = "!!! WARNING (INTERNAL) - "
+						+ "Unit cell degenerated in relaxation.";
                 out.println(msg);
                 out.println("==================================================");
                 embedder.reset();
@@ -570,7 +571,8 @@ public class SystreCmdline extends EventSource {
                 problem = ex;
             } catch (Exception ex) {
                 out.println("==================================================");
-                out.println("!!! ERROR (INTERNAL) - Unexpected exception:");
+                out.println("!!! ERROR (INTERNAL) - Unexpected exception - "
+						+ ex.getMessage());
                 out.println(Misc.stackTrace(ex));
                 out.println("==================================================");
                 continue;
@@ -622,7 +624,8 @@ public class SystreCmdline extends EventSource {
                     out.println("!!! ERROR (" + ex.getType() + ") - " + ex.getMessage() + ".");
                 } catch (Exception ex) {
                     out.println("==================================================");
-                    out.println("!!! ERROR (INTERNAL) - Unexpected exception:");
+                    out.println("!!! ERROR (INTERNAL) - Unexpected exception: "
+    						+ ex.getMessage());
                     out.println(Misc.stackTrace(ex));
                     out.println("==================================================");
                 }
