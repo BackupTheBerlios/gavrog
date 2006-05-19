@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.56 2006/05/19 05:07:26 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.57 2006/05/19 21:04:42 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -87,7 +87,7 @@ public class PeriodicGraph extends UndirectedGraph {
     protected static final CacheKey INVARIANT = new CacheKey();
     protected static final CacheKey CONVENTIONAL_CELL = new CacheKey();
     protected static final CacheKey TRANSLATIONAL_EQUIVALENCE_CLASSES = new CacheKey();
-    protected static final CacheKey MINIMAL_IMAGE = new CacheKey();
+    protected static final CacheKey MINIMAL_IMAGE_MAP = new CacheKey();
 
     private static final boolean DEBUG = false;
     
@@ -977,17 +977,17 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-     * Returns a minimal image of the representation graph. This corresponds to
-     * a maximal extension of the translation group of the periodic graph
-     * consisting of topological translations of infinite order.
-     * 
-     * Currently, this only works for graphs with no nontrivial translations of
-     * finite order.
-     * 
-     * @return a minimal image.
-     */
-    public PeriodicGraph minimalImage() {
-        final PeriodicGraph cached = (PeriodicGraph) cache.get(MINIMAL_IMAGE);
+	 * Computes a minimal image of the representation graph. This corresponds to
+	 * a maximal extension of the translation group of the periodic graph
+	 * consisting of topological translations of infinite order.
+	 * 
+	 * Currently, this only works for graphs with no nontrivial translations of
+	 * finite order.
+	 * 
+	 * @return a morphism from the original graph to its minimal image.
+	 */
+    public Morphism minimalImageMap() {
+        final Morphism cached = (Morphism) cache.get(MINIMAL_IMAGE_MAP);
         if (cached != null) {
             return cached;
         }
@@ -1000,8 +1000,10 @@ public class PeriodicGraph extends UndirectedGraph {
         final List classes = Iterators.asList(translationalEquivalenceClasses());
         if (classes.size() == 0) {
             // --- no extra translations, graph is minimal
-        	cache.put(MINIMAL_IMAGE, this);
-            return this;
+        	final INode v0 = (INode) nodes().next();
+        	final Morphism result = new Morphism(v0, v0, Operator.identity(d));
+        	cache.put(MINIMAL_IMAGE_MAP, result);
+            return result;
         }
         
         // --- collect the translation vectors
@@ -1077,8 +1079,25 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- return the new graph
-        cache.put(MINIMAL_IMAGE, G);
-        return G;
+        final INode v0 = (INode) nodes().next();
+        final INode w0 = (INode) old2new.get(v0);
+        final Morphism result = new Morphism(v0, w0, basisChange.getOperator());
+        cache.put(MINIMAL_IMAGE_MAP, result);
+        return result;
+    }
+    
+    /**
+	 * Computes a minimal image of the representation graph. This corresponds to
+	 * a maximal extension of the translation group of the periodic graph
+	 * consisting of topological translations of infinite order.
+	 * 
+	 * Currently, this only works for graphs with no nontrivial translations of
+	 * finite order.
+	 * 
+	 * @return the minimal image.
+	 */
+    public PeriodicGraph minimalImage() {
+    	return minimalImageMap().getImageGraph();
     }
     
     /**
