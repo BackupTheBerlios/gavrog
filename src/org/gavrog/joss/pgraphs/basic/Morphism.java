@@ -45,13 +45,15 @@ import org.gavrog.joss.geometry.Vector;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.7 2006/01/25 02:41:06 odf Exp $
+ * @version $Id: Morphism.java,v 1.8 2006/05/19 21:03:26 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;
     final private Map img2src;
     final private Operator operator;
     final private boolean injective;
+    final private PeriodicGraph sourceGraph;
+    final private PeriodicGraph imageGraph;
 
     /**
      * Exception to be thrown if no morphism exists with a given specification.
@@ -168,6 +170,8 @@ public class Morphism implements Map {
         this.img2src = img2src;
         this.operator = M;
         this.injective = injective;
+        this.sourceGraph = G1;
+        this.imageGraph = G2;
     }
     
     /**
@@ -232,6 +236,10 @@ public class Morphism implements Map {
         this.img2src = img2src;
         this.operator = operator;
         this.injective = injective;
+        final IGraphElement x = (IGraphElement) src2img.keySet().iterator().next();
+        final IGraphElement y = (IGraphElement) img2src.keySet().iterator().next();
+        this.sourceGraph = (PeriodicGraph) x.owner();
+        this.imageGraph = (PeriodicGraph) y.owner();
     }
     
     /**
@@ -454,4 +462,12 @@ public class Morphism implements Map {
     public int hashCode() {
         return this.src2img.hashCode();
     }
+
+	public PeriodicGraph getImageGraph() {
+		return imageGraph;
+	}
+
+	public PeriodicGraph getSourceGraph() {
+		return sourceGraph;
+	}
 }
