@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.55 2006/05/18 20:48:48 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.56 2006/05/19 05:07:26 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -85,9 +85,9 @@ public class PeriodicGraph extends UndirectedGraph {
     protected static final CacheKey CHARACTERISTIC_BASES = new CacheKey();
     protected static final CacheKey SYMMETRIES = new CacheKey();
     protected static final CacheKey INVARIANT = new CacheKey();
-    protected static final CacheKey CANONICAL = new CacheKey();
     protected static final CacheKey CONVENTIONAL_CELL = new CacheKey();
     protected static final CacheKey TRANSLATIONAL_EQUIVALENCE_CLASSES = new CacheKey();
+    protected static final CacheKey MINIMAL_IMAGE = new CacheKey();
 
     private static final boolean DEBUG = false;
     
@@ -987,6 +987,11 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return a minimal image.
      */
     public PeriodicGraph minimalImage() {
+        final PeriodicGraph cached = (PeriodicGraph) cache.get(MINIMAL_IMAGE);
+        if (cached != null) {
+            return cached;
+        }
+        
         // --- some preparations
         final int d = getDimension();
         final Map pos = barycentricPlacement();
@@ -995,6 +1000,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final List classes = Iterators.asList(translationalEquivalenceClasses());
         if (classes.size() == 0) {
             // --- no extra translations, graph is minimal
+        	cache.put(MINIMAL_IMAGE, this);
             return this;
         }
         
@@ -1025,8 +1031,8 @@ public class PeriodicGraph extends UndirectedGraph {
         for (final Iterator iter = classes.iterator(); iter.hasNext();) {
             final Set cl = (Set) iter.next();
             final INode vNew = G.newNode();
-            for (final Iterator nodes = cl.iterator(); nodes.hasNext();) {
-                final INode vOld = (INode) nodes.next();
+            for (final Iterator inClass = cl.iterator(); inClass.hasNext();) {
+                final INode vOld = (INode) inClass.next();
                 old2new.put(vOld, vNew);
                 if (!new2old.containsKey(vNew)) {
                     new2old.put(vNew, vOld);
@@ -1071,6 +1077,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- return the new graph
+        cache.put(MINIMAL_IMAGE, G);
         return G;
     }
     
@@ -1931,8 +1938,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
 
         // --- cache the results
-        cache.put(CANONICAL, canonical);
-        cache.put(INVARIANT, new NiceIntList(invariant));
+        this.cache.put(INVARIANT, new NiceIntList(invariant));
         
         return new NiceIntList(invariant);
     }
@@ -1964,8 +1970,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the canonical form.
      */
     public PeriodicGraph canonical() {
-        invariant();
-        return (PeriodicGraph) cache.get(CANONICAL);
+    	return fromInvariantString(getSystreKey());
     }
     
     /* (non-Javadoc)

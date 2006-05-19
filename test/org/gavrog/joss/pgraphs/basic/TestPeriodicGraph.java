@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.35 2006/05/18 20:48:48 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.36 2006/05/19 05:07:26 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -404,19 +404,21 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testMinimalImage() {
-        final PeriodicGraph cds1 = cds.minimalImage();
-        assertEquals(3, cds1.getDimension());
-        assertEquals(2, cds1.numberOfNodes());
-        assertEquals(4, cds1.numberOfEdges());
-        assertTrue(cds1.isConnected());
-        assertTrue(cds1.isStable());
-        final Iterator nodes = cds1.nodes();
-        final INode w1 = (INode) nodes.next();
-        final INode w2 = (INode) nodes.next();
-        final List loops1 = Iterators.asList(cds1.directedEdges(w1, w1));
-        final List loops2 = Iterators.asList(cds1.directedEdges(w2, w2));
-        assertEquals(1, loops1.size());
-        assertEquals(1, loops2.size());
+    	for (int i = 0; i < 3; ++i) {
+			final PeriodicGraph cds1 = cds.minimalImage();
+			assertEquals(3, cds1.getDimension());
+			assertEquals(2, cds1.numberOfNodes());
+			assertEquals(4, cds1.numberOfEdges());
+			assertTrue(cds1.isConnected());
+			assertTrue(cds1.isStable());
+			final Iterator nodes = cds1.nodes();
+			final INode w1 = (INode) nodes.next();
+			final INode w2 = (INode) nodes.next();
+			final List loops1 = Iterators.asList(cds1.directedEdges(w1, w1));
+			final List loops2 = Iterators.asList(cds1.directedEdges(w2, w2));
+			assertEquals(1, loops1.size());
+			assertEquals(1, loops2.size());
+		}
         
         try {
             doubleHexGrid().minimalImage();
