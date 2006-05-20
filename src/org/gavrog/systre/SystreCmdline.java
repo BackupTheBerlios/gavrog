@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -64,7 +65,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.47 2006/05/20 02:05:36 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.48 2006/05/20 05:06:42 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -255,7 +256,7 @@ public class SystreCmdline extends EventSource {
         final Map orbit2name = new HashMap();
         final Map name2orbit = new HashMap();
         final Map node2name = new HashMap();
-        final Map mergedNames = new HashMap();
+        final List mergedNames = new LinkedList();
         final Net G0 = (Net) M.getSourceGraph();
         for (final Iterator nodes = G0.nodes(); nodes.hasNext();) {
         	final INode v = (INode) nodes.next();
@@ -263,7 +264,7 @@ public class SystreCmdline extends EventSource {
         	final INode w = (INode) M.get(v);
         	final Set orbit = (Set) node2orbit.get(w);
         	if (orbit2name.containsKey(orbit)) {
-        		mergedNames.put(nodeName, orbit2name.get(orbit));
+        		mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
         	} else {
         		orbit2name.put(orbit, nodeName);
             	for (final Iterator inOrbit = orbit.iterator(); inOrbit.hasNext();) {
@@ -278,7 +279,16 @@ public class SystreCmdline extends EventSource {
 			}
 		}
         
-        // TODO do something with those names
+        if (mergedNames.size() > 0) {
+        	out.println("   Equivalences for non-unique nodes:");
+			for (final Iterator items = mergedNames.iterator(); items.hasNext();) {
+				final Pair item = (Pair) items.next();
+				final String old = (String) item.getFirst();
+				final String nu = (String) item.getSecond();
+				out.println("      \"" + old + "\" <--> \"" + nu + "\"");
+			}
+			out.println();
+		}
         
         quitIfCancelled();
         
@@ -290,7 +300,7 @@ public class SystreCmdline extends EventSource {
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
-            out.print("      ");
+            out.print("      Node \"" + node2name.get(v) + "\":   ");
             final Iterator cs = G.coordinationSequence(v);
             cs.next();
             int sum = 1;
