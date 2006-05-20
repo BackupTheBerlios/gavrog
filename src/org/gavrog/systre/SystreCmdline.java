@@ -51,6 +51,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
 import org.gavrog.joss.pgraphs.embed.IEmbedder;
@@ -63,7 +64,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.46 2006/05/18 22:22:21 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.47 2006/05/20 02:05:36 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -206,7 +207,8 @@ public class SystreCmdline extends EventSource {
         // --- determine a minimal repeat unit
     	status("Computing ideal repeat unit...");
     	
-        G = G.minimalImage();
+    	final Morphism M = G.minimalImageMap();
+        G = M.getImageGraph();
         final int r = n / G.numberOfNodes();
         if (r > 1) {
             out.println("   Ideal repeat unit smaller than given ("
@@ -236,6 +238,47 @@ public class SystreCmdline extends EventSource {
         out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of vertex.");
         out.println();
         out.flush();
+        
+        quitIfCancelled();
+        
+        // --- name node orbits according to input names
+        status("Mapping node names...");
+        
+        final Map node2orbit = new HashMap();
+        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+        	final Set orbit = (Set) orbits.next();
+        	for (final Iterator inOrbit = orbit.iterator(); inOrbit.hasNext();) {
+        		node2orbit.put(inOrbit.next(), orbit);
+        	}
+        }
+        
+        final Map orbit2name = new HashMap();
+        final Map name2orbit = new HashMap();
+        final Map node2name = new HashMap();
+        final Map mergedNames = new HashMap();
+        final Net G0 = (Net) M.getSourceGraph();
+        for (final Iterator nodes = G0.nodes(); nodes.hasNext();) {
+        	final INode v = (INode) nodes.next();
+        	final String nodeName = G0.getNodeName(v);
+        	final INode w = (INode) M.get(v);
+        	final Set orbit = (Set) node2orbit.get(w);
+        	if (orbit2name.containsKey(orbit)) {
+        		mergedNames.put(nodeName, orbit2name.get(orbit));
+        	} else {
+        		orbit2name.put(orbit, nodeName);
+            	for (final Iterator inOrbit = orbit.iterator(); inOrbit.hasNext();) {
+            		node2name.put(inOrbit.next(), nodeName);
+            	}
+        	}
+        	if (!name2orbit.containsKey(nodeName)) {
+				name2orbit.put(nodeName, orbit);
+			} else if (name2orbit.get(nodeName) != orbit) {
+				final String msg = "Some input symmetries were lost";
+				throw new SystreException(SystreException.INTERNAL, msg);
+			}
+		}
+        
+        // TODO do something with those names
         
         quitIfCancelled();
         
