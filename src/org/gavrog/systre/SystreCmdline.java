@@ -65,7 +65,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.48 2006/05/20 05:06:42 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.49 2006/05/20 06:12:39 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -267,10 +267,8 @@ public class SystreCmdline extends EventSource {
         		mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
         	} else {
         		orbit2name.put(orbit, nodeName);
-            	for (final Iterator inOrbit = orbit.iterator(); inOrbit.hasNext();) {
-            		node2name.put(inOrbit.next(), nodeName);
-            	}
         	}
+    		node2name.put(w, orbit2name.get(orbit));
         	if (!name2orbit.containsKey(nodeName)) {
 				name2orbit.put(nodeName, orbit);
 			} else if (name2orbit.get(nodeName) != orbit) {
@@ -529,7 +527,8 @@ public class SystreCmdline extends EventSource {
         	
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
-            final ProcessedNet net = new ProcessedNet(G, name, finder, embedder);
+            final ProcessedNet net = new ProcessedNet(G, name, node2name, finder,
+					embedder);
             setLastStructure(net);
             net.writeEmbedding(cgd, true, getOutputFullCell());
 

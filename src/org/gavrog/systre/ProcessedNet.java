@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.6 2006/05/05 23:02:36 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.7 2006/05/20 06:12:39 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -105,13 +105,16 @@ class ProcessedNet {
     private boolean verified = false;
     private final PeriodicGraph graph;
     private final String name;
+    private final Map node2name;
     private final SpaceGroupFinder finder;
     private final IEmbedder embedder;
 
-    public ProcessedNet(final PeriodicGraph G, final String name,
-            final SpaceGroupFinder finder, final IEmbedder embedder) {
+    public ProcessedNet(
+			final PeriodicGraph G, final String name, final Map node2name,
+			final SpaceGroupFinder finder, final IEmbedder embedder) {
         this.graph = G;
         this.name = name;
+        this.node2name = node2name;
         this.finder = finder;
         this.embedder = embedder;
     }
@@ -198,7 +201,7 @@ class ProcessedNet {
         
         // --- print the atom positions
         if (!cgdFormat) {
-            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " atom positions:");
+            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " positions:");
         }
         final boolean allNodes = fullCell;
         final Map reps = nodeReps(cov, lifted, allNodes);
@@ -206,12 +209,14 @@ class ProcessedNet {
             // --- extract the next node and its position
             final INode v = (INode) iter.next();
             final Point p = (Point) reps.get(v);
+            final String name = (String) this.node2name.get(cov.image(v));
             
             // --- print them
             if (cgdFormat) {
-                out.print("  NODE " + v.id() + " " + cov.new CoverNode(v).degree() + " ");
+                out.print("  NODE \"" + name + "\" " + cov.new CoverNode(v).degree()
+						+ " ");
             } else {
-                out.print("     ");
+                out.print("      Node \"" + name + "\":   ");
             }
             for (int i = 0; i < d; ++i) {
                 out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
