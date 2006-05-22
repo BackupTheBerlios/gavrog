@@ -20,7 +20,7 @@ package org.gavrog.box.simple;
  * Contains some simple utilities for strings.
  * 
  * @author Olaf Delgado
- * @version $Id: Strings.java,v 1.1 2005/09/15 18:33:19 odf Exp $
+ * @version $Id: Strings.java,v 1.2 2006/05/22 22:27:47 odf Exp $
  */
 
 public class Strings {
@@ -37,4 +37,67 @@ public class Strings {
             return s.toUpperCase();
         }
     }
+    
+    /**
+	 * Converts the given string to a format that can be safely parsed. If
+	 * double quotes or white space is present or the parameter
+	 * <code>forceQuotes</code> is true, the string is enclosed in double
+	 * quotes and problematic characters (currently double quotes and
+	 * backslashes) are preceded by backslashes. Any stretch of white space is
+	 * converted to a single blank and leading or trailing white space is
+	 * removed. Also, any control characters are removes.
+	 * 
+	 * @param s
+	 *            the input string.
+	 * @param forceQuotes
+	 *            if true, enclose output in double quotes.
+	 * @return the modified string to print out.
+	 */
+	public static String parsable(final String s, final boolean forceQuotes) {
+		boolean needsQuoting = forceQuotes;
+		if (!needsQuoting) {
+			for (int i = 0; i < s.length(); ++i) {
+				final char c = s.charAt(i);
+				if (c == '"' || Character.isWhitespace(c)) {
+					needsQuoting = true;
+					break;
+				}
+			}
+		}
+		final StringBuffer buf = new StringBuffer(2 * s.length());
+		if (needsQuoting) {
+			buf.append('"');
+		}
+		boolean inWhite = false;
+		for (int i = 0; i < s.length(); ++i) {
+			final char c = s.charAt(i);
+			if (Character.isWhitespace(c)) {
+				if (!inWhite) {
+					buf.append(' ');
+					inWhite = true;
+				}
+				continue;
+			} else if (!Character.isIdentifierIgnorable(c)) {
+				inWhite = false;
+				if (c == '"' || (needsQuoting && c == '\\')) {
+					buf.append('\\');
+				}
+				buf.append(c);
+			}
+		}
+		if (needsQuoting) {
+			buf.append('"');
+		}
+		if (buf.length() > 1 && buf.charAt(1) == ' ') {
+			buf.deleteCharAt(1);
+		}
+		if (buf.length() > 1 && buf.charAt(buf.length() - 2) == ' ') {
+			buf.deleteCharAt(buf.length() - 2);
+		}
+		if (buf.length() == 0) {
+			buf.append("\"\"");
+		}
+		
+		return buf.toString();
+	}
 }
