@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.simple.Strings;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
@@ -35,7 +36,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.7 2006/05/20 06:12:39 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.8 2006/05/22 23:02:13 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -133,7 +134,7 @@ class ProcessedNet {
         // --- print a header if necessary
         if (cgdFormat) {
             out.println("CRYSTAL");
-            out.println("  NAME " + name);
+            out.println("  NAME " + Strings.parsable(name, false));
             if (fullCell) {
                 out.println("  GROUP P1");
             } else {
@@ -209,14 +210,14 @@ class ProcessedNet {
             // --- extract the next node and its position
             final INode v = (INode) iter.next();
             final Point p = (Point) reps.get(v);
-            final String name = (String) this.node2name.get(cov.image(v));
+            final String name = Strings.parsable((String) this.node2name
+					.get(cov.image(v)), false);
             
             // --- print them
             if (cgdFormat) {
-                out.print("  NODE \"" + name + "\" " + cov.new CoverNode(v).degree()
-						+ " ");
+                out.print("  NODE " + name + " " + cov.new CoverNode(v).degree() + " ");
             } else {
-                out.print("      Node \"" + name + "\":   ");
+                out.print("      Node " + name + ":   ");
             }
             for (int i = 0; i < d; ++i) {
                 out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));

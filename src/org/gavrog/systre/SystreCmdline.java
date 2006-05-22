@@ -31,6 +31,7 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -41,6 +42,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
+import org.gavrog.box.simple.Strings;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
@@ -65,7 +67,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.49 2006/05/20 06:12:39 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.50 2006/05/22 23:02:13 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -164,8 +166,8 @@ public class SystreCmdline extends EventSource {
         out.flush();
         final int n = G.numberOfNodes();
         final int m = G.numberOfEdges();
-        out.println("   " + n + " vert" + (n > 1 ? "ices" : "ex") + " and "
-                + m + " edge" + (m > 1 ? "s" : "") + " in repeat unit as given.");
+        out.println("   " + n + " node" + (n > 1 ? "s" : "") + " and " + m
+				+ " edge" + (m > 1 ? "s" : "") + " in repeat unit as given.");
         out.flush();
 
         // --- test if the net is connected
@@ -236,7 +238,7 @@ public class SystreCmdline extends EventSource {
         out.println("   Point group has " + ops.size() + " elements.");
         out.flush();
         final int k = Iterators.size(G.nodeOrbits());
-        out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of vertex.");
+        out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of node.");
         out.println();
         out.flush();
         
@@ -256,16 +258,16 @@ public class SystreCmdline extends EventSource {
         final Map orbit2name = new HashMap();
         final Map name2orbit = new HashMap();
         final Map node2name = new HashMap();
-        final List mergedNames = new LinkedList();
+        final Set mergedNames = new LinkedHashSet();
         final Net G0 = (Net) M.getSourceGraph();
         for (final Iterator nodes = G0.nodes(); nodes.hasNext();) {
         	final INode v = (INode) nodes.next();
         	final String nodeName = G0.getNodeName(v);
         	final INode w = (INode) M.get(v);
         	final Set orbit = (Set) node2orbit.get(w);
-        	if (orbit2name.containsKey(orbit)) {
-        		mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
-        	} else {
+        	if (orbit2name.containsKey(orbit) && !nodeName.equals(orbit2name.get(orbit))) {
+				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
+			} else {
         		orbit2name.put(orbit, nodeName);
         	}
     		node2name.put(w, orbit2name.get(orbit));
@@ -278,12 +280,12 @@ public class SystreCmdline extends EventSource {
 		}
         
         if (mergedNames.size() > 0) {
-        	out.println("   Equivalences for non-unique nodes:");
+			out.println("   Equivalences for non-unique nodes:");
 			for (final Iterator items = mergedNames.iterator(); items.hasNext();) {
 				final Pair item = (Pair) items.next();
-				final String old = (String) item.getFirst();
-				final String nu = (String) item.getSecond();
-				out.println("      \"" + old + "\" <--> \"" + nu + "\"");
+				final String old = Strings.parsable((String) item.getFirst(), false);
+				final String nu = Strings.parsable((String) item.getSecond(), false);
+				out.println("      " + old + " --> " + nu);
 			}
 			out.println();
 		}
@@ -298,7 +300,8 @@ public class SystreCmdline extends EventSource {
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
-            out.print("      Node \"" + node2name.get(v) + "\":   ");
+            out.print("      Node " + Strings.parsable((String) node2name.get(v), false)
+					+ ":   ");
             final Iterator cs = G.coordinationSequence(v);
             cs.next();
             int sum = 1;
