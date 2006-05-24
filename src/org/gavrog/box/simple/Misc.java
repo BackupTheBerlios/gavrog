@@ -21,7 +21,7 @@ import java.io.StringWriter;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Misc.java,v 1.1 2006/02/16 06:56:07 odf Exp $
+ * @version $Id: Misc.java,v 1.2 2006/05/24 22:44:30 odf Exp $
  */
 public class Misc {
     /**
@@ -30,13 +30,25 @@ public class Misc {
      * @param throwable the throwable.
      * @return the string representation.
      */
-    public static String stackTrace(final Throwable throwable) {
-        StringBuffer sb = new StringBuffer();
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+    public static String stackTrace(final Throwable throwable, final String prefix) {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
         throwable.printStackTrace(pw);
         pw.close();
-        sb.append(sw.toString());
-        return sb.toString();
+        String s = sw.toString();
+        if (prefix != null) {
+        	s = s.replaceAll("(?m)^", prefix);
+        }
+        return s;
+    }
+
+    /**
+     * Returns the stack trace of a throwable as a string.
+     * 
+     * @param throwable the throwable.
+     * @return the string representation.
+     */
+    public static String stackTrace(final Throwable throwable) {
+    	return stackTrace(throwable, null);
     }
 }

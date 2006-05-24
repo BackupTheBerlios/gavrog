@@ -67,7 +67,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.50 2006/05/22 23:02:13 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.51 2006/05/24 22:44:30 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -99,6 +99,9 @@ public class SystreCmdline extends EventSource {
     
     // --- signals a cancel request from outside
     private boolean cancelled = false;
+
+    // --- text of the last status reported
+	private String lastStatus;
     
     /**
      * Constructs an instance.
@@ -152,6 +155,13 @@ public class SystreCmdline extends EventSource {
     public void processGraph(final PeriodicGraph graph, final String name,
             final String givenGroup) {
 
+    	status("Initializing...");
+    	
+    	// enable this code to test error handling
+//    	if (graph != null) {
+//    		throw new RuntimeException("this is not a love song");
+//    	}
+    	
     	this.cancelled = false;
         setLastStructure(null);
         PeriodicGraph G = graph;
@@ -614,30 +624,21 @@ public class SystreCmdline extends EventSource {
                 "\\..*$", "");
         out.println("Data file \"" + filePath + "\".");
         
-        // --- loop through the structures specied in the input file
+        // --- loop through the structures specified in the input file
         while (true) {
             Net G = null;
             Exception problem = null;
             
             // --- read the next net
+            status("Reading...");
             try {
                 G = parser.parseNet();
-            } catch (DataFormatException ex) {
-                problem = ex;
             } catch (Exception ex) {
-                out.println("==================================================");
-                out.println("!!! ERROR (INTERNAL) - Unexpected exception - "
-						+ ex.getMessage());
-                out.println(Misc.stackTrace(ex));
-                out.println("==================================================");
-                continue;
+                problem = ex;
             }
             if (G == null) {
             	if (problem == null) {
             		break;
-            	} else {
-                    out.println("!!! ERROR (INPUT) - " + problem.getMessage());
-            		continue;
             	}
             }
             ++count;
@@ -652,7 +653,7 @@ public class SystreCmdline extends EventSource {
             // --- process the graph
             String name = null;
             try {
-                name = G.getName();
+                name = parser.getName();
             } catch (Exception ex) {
                 if (problem == null) {
                     problem = ex;
@@ -665,32 +666,61 @@ public class SystreCmdline extends EventSource {
                 displayName = "";
             } else {
                 archiveName = name;
-                displayName = " - \"" + name + "\"";
+                displayName = Strings.parsable(name, true);
             }
             
-            out.println("Structure #" + count + displayName + ".");
+            out.println("Structure #" + count + " - " + displayName + ".");
             out.println();
             if (problem != null) {
-                out.println("!!! ERROR (INPUT) - " + problem.getMessage());
+            	if (problem instanceof DataFormatException) {
+                    out.println("==================================================");
+            		out.println("!!! ERROR (INPUT) - " + problem.getMessage());
+            		reportErrorLocation(count, displayName);
+                    out.println("==================================================");
+            	} else {
+            		reportError(problem, count, displayName);
+            	}
             } else {
                 try {
                     processGraph(G, archiveName, G.getGivenGroup());
                 } catch (SystreException ex) {
-                    out.println("!!! ERROR (" + ex.getType() + ") - " + ex.getMessage() + ".");
+                    out.println("==================================================");
+                    out.println("!!! ERROR (" + ex.getType() + ") - " + ex.getMessage()
+							+ ".");
+            		reportErrorLocation(count, displayName);
+                    out.println("==================================================");
                 } catch (Exception ex) {
-                    out.println("==================================================");
-                    out.println("!!! ERROR (INTERNAL) - Unexpected exception: "
-    						+ ex.getMessage());
-                    out.println(Misc.stackTrace(ex));
-                    out.println("==================================================");
+                	reportError(ex, count, displayName);
                 }
             }
             out.println();
-			out.println("Finished structure #" + count + displayName + ".");
+			out.println("Finished structure #" + count + " - " + displayName + ".");
         }
 
         out.println();
         out.println("Finished data file \"" + filePath + "\".");
+    }
+    
+    /**
+     * Reports an error that occurred during the reading or processing of a graph.
+     * 
+     * @param ex the exception thrown.
+     * @param count the running number of the graph in the current file.
+     * @param name the name of the graph.
+     */
+    private void reportError(final Throwable ex, final int count, final String name) {
+        out.println("==================================================");
+        out.println("!!! ERROR (INTERNAL) - Unexpected " + ex.getClass().getName() + ": "
+				+ ex.getMessage());
+        reportErrorLocation(count, name);
+        out.println("!!!    Stack trace:");
+        out.print(Misc.stackTrace(ex, "!!!       "));
+        out.println("==================================================");
+    }
+    
+    private void reportErrorLocation(final int count, final String name) {
+        out.println("!!!    In structure #" + count + " - " + name + ".");
+        out.println("!!!    Last status: " + this.lastStatus);
     }
     
     /**
@@ -779,6 +809,7 @@ public class SystreCmdline extends EventSource {
     }
     
     private void status(final String text) {
+    	this.lastStatus = text;
     	dispatchEvent(text);
     }
     
