@@ -55,7 +55,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.73 2006/05/24 22:44:29 odf Exp $
+ * @version $Id: NetParser.java,v 1.74 2006/06/06 22:13:40 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -653,6 +653,51 @@ public class NetParser extends GenericParser {
             seen.add(key);
         }
         
+        // --- use reasonable default for missing data
+        if (group == null) {
+            groupName = "P1";
+            group = parseSpaceGroupName(groupName);
+            dim = group.getDimension();
+            ops.addAll(group.getOperators());
+        }
+        if (cellGram == null) {
+        	if (dim == 2) {
+        		final char c = groupName.charAt(1);
+        		if (c == '3' || c == '6') {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0, -0.5 },
+        					{ -0.5,  1.0 }
+        			});
+        		} else {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0,  0.0 },
+        					{  0.0,  1.0 }
+        			});
+        		}
+        	} else if (dim == 3) {
+        		final char c;
+        		if (groupName.charAt(1) == '_') {
+        			c = groupName.charAt(2);
+        		} else {
+        			c = groupName.charAt(1);
+        		}
+        		if (c == '3' || c == '6') {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0, -0.5,  0.0 },
+        					{ -0.5,  1.0,  0.0 },
+        					{  0.0,  0.0,  1.0 },
+        			});
+        		} else {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0,  0.0,  0.0 },
+        					{  0.0,  1.0,  0.0 },
+        					{  0.0,  0.0,  1.0 },
+        			});
+        		}
+        	}
+        }
+        
+        // --- output some of the basic data
         if (DEBUG) {
             System.err.println();
             System.err.println("Group name: " + groupName);
