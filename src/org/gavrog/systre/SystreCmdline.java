@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +68,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.51 2006/05/24 22:44:30 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.52 2006/06/09 19:34:21 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -84,7 +85,7 @@ public class SystreCmdline extends EventSource {
     private PrintStream out = System.out;
     
     // --- the various archives
-    private final Archive mainArchive;
+    private final Archive builtinArchive;
     private final Map name2archive = new HashMap();
     private final Archive internalArchive = new Archive("1.0");
     
@@ -107,7 +108,7 @@ public class SystreCmdline extends EventSource {
      * Constructs an instance.
      */
     public SystreCmdline() {
-        mainArchive = new Archive("1.0");
+        builtinArchive = new Archive("1.0");
 
         // --- read the default archives
         final Package pkg = Archive.class.getPackage();
@@ -115,10 +116,10 @@ public class SystreCmdline extends EventSource {
         
         final String rcsrPath = packagePath + "/rcsr.arc";
         final InputStream rcsrStream = ClassLoader.getSystemResourceAsStream(rcsrPath);
-        mainArchive.addAll(new InputStreamReader(rcsrStream));
+        builtinArchive.addAll(new InputStreamReader(rcsrStream));
         final String zeoPath = packagePath + "/zeolites.arc";
         final InputStream zeoStream = ClassLoader.getSystemResourceAsStream(zeoPath);
-        mainArchive.addAll(new InputStreamReader(zeoStream));
+        builtinArchive.addAll(new InputStreamReader(zeoStream));
     }
     
     /**
@@ -414,7 +415,7 @@ public class SystreCmdline extends EventSource {
         int countMatches = 0;
         Archive.Entry found = null;
         if (this.useBuiltinArchive) {
-            found = mainArchive.getByKey(invariant);
+            found = builtinArchive.getByKey(invariant);
         }
         if (found != null) {
             ++countMatches;
@@ -729,15 +730,30 @@ public class SystreCmdline extends EventSource {
      * @param writer represents the output stream.
      * @throws IOException if writing to the stream did not work.
      */
-    public void writeInternalArchive(final BufferedWriter writer) throws IOException {
-        for (Iterator iter = this.internalArchive.keySet().iterator(); iter.hasNext();) {
+    public int writeInternalArchive(final Writer writer) throws IOException {
+    	return writeArchive(writer, this.internalArchive);
+    }
+    
+    /**
+     * Writes all the entries from Systre's builtin archive onto a stream.
+     * 
+     * @param writer represents the output stream.
+     * @throws IOException if writing to the stream did not work.
+     */
+    public int writeBuiltinArchive(final Writer writer) throws IOException {
+    	return writeArchive(writer, this.builtinArchive);
+    }
+    
+    private int writeArchive(final Writer writer, final Archive archive)
+			throws IOException {
+		int count = 0;
+        for (Iterator iter = archive.keySet().iterator(); iter.hasNext();) {
             final String key = (String) iter.next();
-            final Archive.Entry entry = this.internalArchive.getByKey(key);
+            final Archive.Entry entry = archive.getByKey(key);
             writer.write(entry.toString());
+            ++count;
         }
-        final int n = this.internalArchive.size();
-        out.println("Wrote " + n + " entr" + (n == 1 ? "y" : "ies")
-                    + " to output archive.");
+        return count;
     }
     
     /**
