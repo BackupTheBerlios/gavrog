@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.Real;
  * Various methods related to lattices and lattice bases.
  * 
  * @author Olaf Delgado
- * @version $Id: Lattices.java,v 1.4 2006/04/12 03:31:49 odf Exp $
+ * @version $Id: Lattices.java,v 1.5 2006/06/30 23:12:47 odf Exp $
  */
 public class Lattices {
 
@@ -232,7 +232,7 @@ public class Lattices {
 	    final int dim = pos.getDimension();
 	    final Real half = new Fraction(1, 2);
 	    final Real minusHalf = new Fraction(-1, 2);
-	    final double eps = 1e-8;
+	    final double eps = 1e-2;
 	    final Vector posAsVector = (Vector) pos.minus(Point.origin(dim));
 	    Vector shift = Vector.zero(dim);
 	    
