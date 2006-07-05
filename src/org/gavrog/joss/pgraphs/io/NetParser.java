@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -55,11 +56,20 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.75 2006/07/05 19:58:50 odf Exp $
+ * @version $Id: NetParser.java,v 1.76 2006/07/05 22:04:17 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
     private final static boolean DEBUG = false;
+    
+    // --- define some key constants for data associated to nodes
+    public static class InfoType extends NamedConstant {
+        private InfoType(final String name) {
+            super(name);
+        }
+    }
+    public static InfoType COORDINATION_SEQUENCE = new InfoType("Coordination-Sequence");
+    public static InfoType POSITION = new InfoType("Position");
     
     /**
      * Helper class - encapsulates the preliminary specification of a node.
@@ -162,6 +172,10 @@ public class NetParser extends GenericParser {
         result.put("edgecenters", "edge_center");
         result.put("edgecentre", "edge_center");
         result.put("edgecentres", "edge_center");
+        result.put("coordination_sequences", "coordination_sequence");
+        result.put("coordinationsequence", "coordination_sequence");
+        result.put("coordinationsequences", "coordination_sequence");
+        result.put("cs", "coordination_sequence");
         return Collections.unmodifiableMap(result);
     }
     
@@ -188,15 +202,18 @@ public class NetParser extends GenericParser {
             return null;
         }
         final String type = getDataType().toLowerCase();
+        final Net result;
         if (type.equals("periodic_graph")) {
-            return parsePeriodicGraph(entries);
+            result = parsePeriodicGraph(entries);
         } else if (type.equals("crystal")) {
-            return parseCrystal(entries);
+            result = parseCrystal(entries);
         } else if (type.equals("net")) {
-            return parseSymmetricNet(entries);
+            result = parseSymmetricNet(entries);
         } else {
             throw new DataFormatException("type " + type + " not supported");
         }
+        
+        return result;
     }
     
     /**
@@ -538,6 +555,7 @@ public class NetParser extends GenericParser {
         final List nodeDescriptors = new LinkedList();
         final Map nameToDesc = new HashMap();
         final List edgeDescriptors = new LinkedList();
+        final List coordinationSeqs = new LinkedList();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -647,11 +665,20 @@ public class NetParser extends GenericParser {
                 }
                 final EdgeDescriptor edge = new EdgeDescriptor(source, target, null);
                 edgeDescriptors.add(edge);
+            } else if (key.equals("coordination_sequence")) {
+            	coordinationSeqs.add(row);
             } else {
                 // TODO store additional entrys
             }
             seen.add(key);
         }
+        
+        // --- assign coordination sequences to node names
+        final Map name2cs = new HashMap();
+        for (int i = 0; i < coordinationSeqs.size(); ++i) {
+        	final Object nodeName = ((NodeDescriptor) nodeDescriptors.get(i)).name;
+			name2cs.put(nodeName, coordinationSeqs.get(i));
+		}
         
         // --- use reasonable default for missing data
         if (group == null) {
@@ -807,9 +834,13 @@ public class NetParser extends GenericParser {
                     final Point p = (Point) site.times(op);
                     // --- construct a new node
                     final INode v = G.newNode("" + desc.name);
-                    // --- store some data for it
+                    // --- store some temporary data for it
                     nodeToPosition.put(v, p);
                     nodeToDescriptorAddress.put(v, new Pair(desc, op));
+                    // --- also store some permanent information
+                    G.setNodeInfo(v, COORDINATION_SEQUENCE, name2cs.get(desc.name));
+                    G.setNodeInfo(v, POSITION, p);
+                    // --- mark operators that should not be used anymore
                     for (final Iterator iter = stabilizer.iterator(); iter.hasNext();) {
                         final Operator a = (Operator) ((Operator) iter.next()).times(op);
                         final Operator aModZ = a.modZ();
