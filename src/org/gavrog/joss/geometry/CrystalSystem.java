@@ -16,15 +16,17 @@ limitations under the License.
 
 package org.gavrog.joss.geometry;
 
+import org.gavrog.box.simple.NamedConstant;
+
 
 /**
  * Represents a 3-dimensional crystal system. Currently, this is just a wrapper for the
  * strings representing the names of the systems.
  * 
  * @author Olaf Delgado
- * @version $Id: CrystalSystem.java,v 1.1 2006/04/10 23:08:17 odf Exp $
+ * @version $Id: CrystalSystem.java,v 1.2 2006/07/05 22:02:16 odf Exp $
  */
-public class CrystalSystem {
+public class CrystalSystem extends NamedConstant {
     final public static CrystalSystem CUBIC = new CrystalSystem("Cubic");
     final public static CrystalSystem ORTHORHOMBIC = new CrystalSystem("Orthorhombic");
     final public static CrystalSystem HEXAGONAL = new CrystalSystem("Hexagonal");
@@ -33,19 +35,7 @@ public class CrystalSystem {
     final public static CrystalSystem MONOCLINIC = new CrystalSystem("Monoclinic");
     final public static CrystalSystem TRICLINIC = new CrystalSystem("Triclinic");
     
-    private final String name;
-
-    /**
-     * Making the constructor private makes sure that no other instances than the above
-     * are created.
-     * 
-     * @param name the name of the crystal system.
-     */
     private CrystalSystem(final String name) {
-        this.name = name;
-    }
-    
-    public String toString() {
-        return this.name;
+        super(name);
     }
 }
