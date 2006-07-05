@@ -55,7 +55,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.74 2006/06/06 22:13:40 odf Exp $
+ * @version $Id: NetParser.java,v 1.75 2006/07/05 19:58:50 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -976,10 +976,14 @@ public class NetParser extends GenericParser {
 
             Collections.sort(distances);
             
+            final Pair address = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor desc = (NodeDescriptor) address.getFirst();
+            final int connectivity = desc.connectivity;
+            
             if (DEBUG) {
                 System.err.println();
-                System.err.println("Neighbors for " + v + " at " + nodeToPosition.get(v)
-                                   + ":");
+                System.err.println("Neighbors for " + v + " (degree " + connectivity
+						+ ") at " + nodeToPosition.get(v) + ":");
                 for (int i = 0; i < 6 && i < distances.size(); ++i) {
                     final Pair entry = (Pair) distances.get(i);
                     final Object dist = entry.getFirst();
@@ -989,16 +993,12 @@ public class NetParser extends GenericParser {
                 }
             }
 
-            final Pair address = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor desc = (NodeDescriptor) address.getFirst();
-            final int connectivity = desc.connectivity;
-            int neighbors = 0;
-            
             for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
                 if (v.degree() >= connectivity) {
                     if (v.degree() > connectivity) {
-                        final String msg = "Too many neighbors found for node ";
-                        throw new DataFormatException(msg + v);
+                        final String msg = "Too many neighbors found for node "
+                        	+ v + " (should be " + connectivity + ")";
+                        throw new DataFormatException(msg);
                     }
                     break;
                 }
@@ -1017,10 +1017,6 @@ public class NetParser extends GenericParser {
                 }
                 if (G.getEdge(v, w, s) == null) {
                     G.newEdge(v, w, s);
-                }
-                ++neighbors;
-                if (w.equals(v)) {
-                    ++neighbors;
                 }
             }
         }
