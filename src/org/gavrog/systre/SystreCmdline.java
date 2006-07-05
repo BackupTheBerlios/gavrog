@@ -47,6 +47,7 @@ import org.gavrog.box.simple.Strings;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
@@ -68,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.52 2006/06/09 19:34:21 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.53 2006/07/05 22:04:58 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -153,8 +154,7 @@ public class SystreCmdline extends EventSource {
         }
     }
     
-    public void processGraph(final PeriodicGraph graph, final String name,
-            final String givenGroup) {
+    public void processGraph(final Net graph, final String name, final String givenGroup) {
 
     	status("Initializing...");
     	
@@ -267,6 +267,7 @@ public class SystreCmdline extends EventSource {
         }
         
         final Map orbit2name = new HashMap();
+        final Map orbit2cs = new HashMap();
         final Map name2orbit = new HashMap();
         final Map node2name = new HashMap();
         final Set mergedNames = new LinkedHashSet();
@@ -280,6 +281,7 @@ public class SystreCmdline extends EventSource {
 				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
 			} else {
         		orbit2name.put(orbit, nodeName);
+        		orbit2cs.put(orbit, G0.getNodeInfo(v, NetParser.COORDINATION_SEQUENCE));
         	}
     		node2name.put(w, orbit2name.get(orbit));
         	if (!name2orbit.containsKey(nodeName)) {
@@ -313,16 +315,28 @@ public class SystreCmdline extends EventSource {
             final INode v = (INode) orbit.iterator().next();
             out.print("      Node " + Strings.parsable((String) node2name.get(v), false)
 					+ ":   ");
+            final List givenCS = (List) orbit2cs.get(orbit);
             final Iterator cs = G.coordinationSequence(v);
             cs.next();
             int sum = 1;
+            boolean mismatch = false;
             for (int i = 0; i < 10; ++i) {
             	final int x = ((Integer) cs.next()).intValue();
                 out.print(" " + x);
                 sum += x;
+                if (givenCS != null && i < givenCS.size()) {
+                	final int y = ((Whole) givenCS.get(i)).intValue();
+                	if (x != y) {
+                		mismatch = true;
+                	}
+                }
             }
             out.println();
             cum += orbit.size() * sum;
+            if (mismatch) {
+        		final String msg = "Computed CS does not match input CS";
+				throw new SystreException(SystreException.INPUT, msg);
+            }
         }
         out.println();
         out.println("   TD10 = " + fmtReal4.format(((double) cum) / G.numberOfNodes()));
