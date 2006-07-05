@@ -69,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.53 2006/07/05 22:04:58 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.54 2006/07/05 22:31:14 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -94,6 +94,7 @@ public class SystreCmdline extends EventSource {
     private boolean relaxPositions = true;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
+    private boolean duplicateIsError = false;
     private BufferedWriter outputArchive = null;
     
     // --- the last file that was opened for processing
@@ -450,6 +451,11 @@ public class SystreCmdline extends EventSource {
         }
         found = this.internalArchive.getByKey(invariant);
         if (found != null) {
+            if (this.duplicateIsError) {
+				final String msg = "Duplicates structure "
+						+ Strings.parsable(found.getName(), true);
+				throw new SystreException(SystreException.INPUT, msg);
+			}
             ++countMatches;
             out.println("   Structure already seen in this run.");
             writeEntry(out, found);
@@ -784,6 +790,8 @@ public class SystreCmdline extends EventSource {
             final String s = args[i];
             if (s.equals("-b")) {
                 setRelaxPositions(false);
+            } else if (s.equals("-d")) {
+            	setDuplicateIsError(true);
             } else if (s.equals("-a")) {
                 if (i == args.length - 1) {
                     out.println("!!! WARNING (USAGE) - Argument missing for \"-a\".");
@@ -880,6 +888,14 @@ public class SystreCmdline extends EventSource {
 		this.relaxPositions = relax;
 	}
 
+	public boolean getDuplicateIsError() {
+		return duplicateIsError;
+	}
+
+	public void setDuplicateIsError(boolean duplicateIsError) {
+		this.duplicateIsError = duplicateIsError;
+	}
+	
     protected PrintStream getOutStream() {
         return this.out;
     }
