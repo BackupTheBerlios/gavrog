@@ -57,7 +57,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.78 2006/07/10 21:40:37 odf Exp $
+ * @version $Id: NetParser.java,v 1.79 2006/07/10 22:00:27 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -551,7 +551,6 @@ public class NetParser extends GenericParser {
         
         double precision = 0.001;
         double minEdgeLength = 0.1;
-        double maxEdgeLength = 3.0;
         
         final List nodeDescriptors = new LinkedList();
         final Map nameToDesc = new HashMap();
@@ -914,6 +913,8 @@ public class NetParser extends GenericParser {
             		"connected.");
         }
         
+        // TODO if explicit edges are given, use only those 
+        
         // --- construct a Dirichlet domain for the translation group
         final Vector basis[] = Vector.rowVectors(Matrix.one(group.getDimension()));
         if (DEBUG) {
@@ -988,12 +989,13 @@ public class NetParser extends GenericParser {
                                + " nodes in extended Dirichlet domain.");
         }
         
-        // --- compute all potential edges
+        // --- compute potential edges
         final List edges = new ArrayList();
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Pair adr0 = new Pair(v, zero);
             final Point pv = (Point) nodeToPosition.get(v);
+            final List distances = new ArrayList();
             for (int i = 0; i < extended.size(); ++i) {
                 final Pair adr = (Pair) extended.get(i);
                 if (adr.equals(adr0)) {
@@ -1003,11 +1005,17 @@ public class NetParser extends GenericParser {
                 final Vector diff0 = (Vector) pos.minus(pv);
                 final Matrix diff = diff0.getCoordinates();
                 final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
-                if (((Real) dist).doubleValue() > maxEdgeLength) {
-                	continue;
-                }
-                final Pair entry = new Pair(dist, new Pair(v, new Integer(i)));
-                edges.add(entry);
+                distances.add(new Pair(dist, new Integer(i)));
+            }
+            Collections.sort(distances);
+            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
+            
+            for (int i = 0; i < descV.connectivity; ++i) {
+            	final Pair entry = (Pair) distances.get(i);
+            	final IArithmetic dist = (IArithmetic) entry.getFirst();
+            	final Integer k = (Integer) entry.getSecond();
+                edges.add(new Pair(dist, new Pair(v, k)));
             }
         }
 
@@ -1061,6 +1069,8 @@ public class NetParser extends GenericParser {
 				throw new DataFormatException(msg);
 			}
         }
+        
+        // TODO check to see if all nodes have the right number of neighbors
         
         // --- remove nodes that are really meant to be edge centers
         final Set bogus = new HashSet();
