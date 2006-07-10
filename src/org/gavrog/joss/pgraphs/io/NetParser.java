@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,7 +57,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.76 2006/07/05 22:04:17 odf Exp $
+ * @version $Id: NetParser.java,v 1.77 2006/07/10 03:06:19 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -987,12 +988,12 @@ public class NetParser extends GenericParser {
                                + " nodes in extended Dirichlet domain.");
         }
         
-        // --- compute the edges using nearest neighbors
+        // --- compute all potential edges
+        final List edges = new ArrayList();
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
             final Pair adr0 = new Pair(v, zero);
             final Point pv = (Point) nodeToPosition.get(v);
-            final List distances = new ArrayList();
             for (int i = 0; i < extended.size(); ++i) {
                 final Pair adr = (Pair) extended.get(i);
                 if (adr.equals(adr0)) {
@@ -1002,57 +1003,66 @@ public class NetParser extends GenericParser {
                 final Vector diff0 = (Vector) pos.minus(pv);
                 final Matrix diff = diff0.getCoordinates();
                 final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
-                distances.add(new Pair(dist, new Integer(i)));
-            }
-
-            Collections.sort(distances);
-            
-            final Pair address = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor desc = (NodeDescriptor) address.getFirst();
-            final int connectivity = desc.connectivity;
-            
-            if (DEBUG) {
-                System.err.println();
-                System.err.println("Neighbors for " + v + " (degree " + connectivity
-						+ ") at " + nodeToPosition.get(v) + ":");
-                for (int i = 0; i < 6 && i < distances.size(); ++i) {
-                    final Pair entry = (Pair) distances.get(i);
-                    final Object dist = entry.getFirst();
-                    final int index = ((Integer) entry.getSecond()).intValue();
-                    final Pair adr = (Pair) extended.get(index);
-                    System.err.println("  " + new Pair(dist, adr));
-                }
-            }
-
-            for (final Iterator it2 = distances.iterator(); it2.hasNext();) {
-                if (v.degree() >= connectivity) {
-                    if (v.degree() > connectivity) {
-                        final String msg = "Too many neighbors found for node "
-                        	+ v + " (should be " + connectivity + ")";
-                        throw new DataFormatException(msg);
-                    }
-                    break;
-                }
-                final Pair entry = (Pair) it2.next();
-                final double dist = ((Real) entry.getFirst()).doubleValue();
-                final int index = ((Integer) entry.getSecond()).intValue();
-                final Pair adr = (Pair) extended.get(index);
-                final INode w = (INode) adr.getFirst();
-                final Vector s = (Vector) adr.getSecond();
-                if (dist < minEdgeLength) {
-                    final String msg = "Found points closer than minimal edge length of ";
-                    throw new DataFormatException(msg + minEdgeLength);
-                } else if (dist > maxEdgeLength) {
-                    final String msg = "Not enough neighbors found for node ";
-                    throw new DataFormatException(msg + v);
-                }
-                if (G.getEdge(v, w, s) == null) {
-                    G.newEdge(v, w, s);
-                }
+                final Pair entry = new Pair(dist, new Pair(v, new Integer(i)));
+                edges.add(entry);
             }
         }
+
+        // --- sort potential edges by length
+        Collections.sort(edges, new Comparator() {
+			public int compare(final Object o1, final Object o2) {
+				final IArithmetic d1 = (IArithmetic) ((Pair) o1).getFirst();
+				final IArithmetic d2 = (IArithmetic) ((Pair) o2).getFirst();
+				return d1.compareTo(d2);
+			}
+        });
         
-        // --- cleanup phase: remove nodes that are really meant to be edge centers
+        // --- add eges shortest to longest until all nodes are saturated
+        for (final Iterator iter = edges.iterator(); iter.hasNext();) {
+        	final Pair edge = (Pair) iter.next();
+        	final double dist = ((Real) edge.getFirst()).doubleValue();
+        	final Pair ends = (Pair) edge.getSecond();
+        	final INode v = (INode) ends.getFirst();
+        	final int index = ((Integer) ends.getSecond()).intValue();
+			final Pair adr = (Pair) extended.get(index);
+			final INode w = (INode) adr.getFirst();
+			final Vector s = (Vector) adr.getSecond();
+			
+            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
+            final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
+            final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+            
+            if (descV.isEdgeCenter && descW.isEdgeCenter) {
+            	continue;
+            }
+            
+            if (v.degree() >= descV.connectivity || w.degree() >= descW.connectivity) {
+				continue;
+			}
+			if (dist < minEdgeLength) {
+				final String msg = "Found points closer than minimal edge length of ";
+				throw new DataFormatException(msg + minEdgeLength);
+			} else if (dist > maxEdgeLength) {
+				final String msg = "Not enough neighbors found for node ";
+				throw new DataFormatException(msg + v);
+			}
+			if (G.getEdge(v, w, s) == null) {
+				G.newEdge(v, w, s);
+			}
+			if (v.degree() > descV.connectivity) {
+				final String msg = "Too many neighbors found for node " + v
+						+ " (should be " + descV.connectivity + ")";
+				throw new DataFormatException(msg);
+			}
+			if (w.degree() > descW.connectivity) {
+				final String msg = "Too many neighbors found for node " + w
+						+ " (should be " + descW.connectivity + ")";
+				throw new DataFormatException(msg);
+			}
+        }
+        
+        // --- remove nodes that are really meant to be edge centers
         final Set bogus = new HashSet();
         for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
