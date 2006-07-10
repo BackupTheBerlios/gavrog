@@ -57,7 +57,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.77 2006/07/10 03:06:19 odf Exp $
+ * @version $Id: NetParser.java,v 1.78 2006/07/10 21:40:37 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -551,7 +551,7 @@ public class NetParser extends GenericParser {
         
         double precision = 0.001;
         double minEdgeLength = 0.1;
-        double maxEdgeLength = Double.MAX_VALUE;
+        double maxEdgeLength = 3.0;
         
         final List nodeDescriptors = new LinkedList();
         final Map nameToDesc = new HashMap();
@@ -1003,6 +1003,9 @@ public class NetParser extends GenericParser {
                 final Vector diff0 = (Vector) pos.minus(pv);
                 final Matrix diff = diff0.getCoordinates();
                 final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
+                if (((Real) dist).doubleValue() > maxEdgeLength) {
+                	continue;
+                }
                 final Pair entry = new Pair(dist, new Pair(v, new Integer(i)));
                 edges.add(entry);
             }
@@ -1043,9 +1046,6 @@ public class NetParser extends GenericParser {
 			if (dist < minEdgeLength) {
 				final String msg = "Found points closer than minimal edge length of ";
 				throw new DataFormatException(msg + minEdgeLength);
-			} else if (dist > maxEdgeLength) {
-				final String msg = "Not enough neighbors found for node ";
-				throw new DataFormatException(msg + v);
 			}
 			if (G.getEdge(v, w, s) == null) {
 				G.newEdge(v, w, s);
