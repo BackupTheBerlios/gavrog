@@ -57,7 +57,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.79 2006/07/10 22:00:27 odf Exp $
+ * @version $Id: NetParser.java,v 1.80 2006/07/11 22:44:36 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -993,6 +993,8 @@ public class NetParser extends GenericParser {
         final List edges = new ArrayList();
         for (final Iterator iter = G.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
+            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
             final Pair adr0 = new Pair(v, zero);
             final Point pv = (Point) nodeToPosition.get(v);
             final List distances = new ArrayList();
@@ -1001,6 +1003,13 @@ public class NetParser extends GenericParser {
                 if (adr.equals(adr0)) {
                     continue;
                 }
+    			final INode w = (INode) adr.getFirst();
+                final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
+                final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+                if (descV.isEdgeCenter && descW.isEdgeCenter) {
+                	continue;
+                }
+                
                 final Point pos = (Point) addressToPosition.get(adr);
                 final Vector diff0 = (Vector) pos.minus(pv);
                 final Matrix diff = diff0.getCoordinates();
@@ -1008,8 +1017,6 @@ public class NetParser extends GenericParser {
                 distances.add(new Pair(dist, new Integer(i)));
             }
             Collections.sort(distances);
-            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
             
             for (int i = 0; i < descV.connectivity; ++i) {
             	final Pair entry = (Pair) distances.get(i);
@@ -1043,10 +1050,6 @@ public class NetParser extends GenericParser {
             final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
             final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
             final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
-            
-            if (descV.isEdgeCenter && descW.isEdgeCenter) {
-            	continue;
-            }
             
             if (v.degree() >= descV.connectivity || w.degree() >= descW.connectivity) {
 				continue;
