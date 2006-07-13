@@ -17,11 +17,15 @@ limitations under the License.
 package org.gavrog.systre;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,7 +36,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.12 2006/05/02 05:51:59 odf Exp $
+ * @version $Id: Archive.java,v 1.13 2006/07/13 21:45:17 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -266,7 +270,7 @@ public class Archive {
      */
     public Archive(final String keyVersion) {
         this.keyVersion = keyVersion;
-        this.byKey = new HashMap();
+        this.byKey = new LinkedHashMap();
         this.byName = new HashMap();
     }
     
@@ -426,5 +430,60 @@ public class Archive {
 
 	public void setErrorOnOverwrite(boolean errorOnOverwrite) {
 		this.errorOnOverwrite = errorOnOverwrite;
+	}
+	
+	public static void main(final String args[]) {
+		if (args.length < 2) {
+			System.err.println("Usage: Archive command file arguments");
+			return;
+		}
+		final String cmd = args[0];
+		final String filename = args[1];
+		final Archive arc = new Archive("1.0");
+		if ("check".equalsIgnoreCase(cmd)) {
+			arc.setErrorOnOverwrite(true);
+		}
+		
+		try {
+			arc.addAll(new FileReader(filename));
+		} catch (FileNotFoundException ex) {
+			System.err.println("Could not find file \"" + filename + "\".");
+			return;
+		} catch (Exception ex) {
+			System.err.println(ex.getMessage() + " - in archive \"" + filename + "\".");
+			return;
+		}
+		
+		final int n = arc.size();
+		System.err.println("Read " + n + " entr" + (n == 1 ? "y" : "ies")
+				+ " from archive " + filename + ".");
+		
+		if ("rename".equalsIgnoreCase(cmd)) {
+			if (args.length < 4) {
+				System.err.println("Usage: Archive rename file old1 new1 ...");
+				return;
+			}
+			for (int i = 2; i < args.length; i += 2) {
+				final String oldid = args[i];
+				final String newid = args[i+1];
+				final Entry e = arc.getByName(oldid);
+				if (e == null) {
+					System.err.println("Warning: could not find entry \"" + oldid + "\".");
+				} else {
+					final Entry f = new Entry(e.key, e.keyVersion, newid);
+					arc.delete(e);
+					arc.add(f);
+				}
+			}
+			int count = 0;
+			for (Iterator iter = arc.keySet().iterator(); iter.hasNext();) {
+				final String key = (String) iter.next();
+				final Archive.Entry entry = arc.getByKey(key);
+				System.out.println(entry.toString());
+				++count;
+			}
+			System.err.println("Wrote " + count + " entr" + (count == 1 ? "y" : "ies")
+					+ " to standard output.");
+		}
 	}
 }
