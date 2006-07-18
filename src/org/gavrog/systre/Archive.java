@@ -26,9 +26,12 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
@@ -36,7 +39,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.13 2006/07/13 21:45:17 odf Exp $
+ * @version $Id: Archive.java,v 1.14 2006/07/18 01:19:51 odf Exp $
  */
 public class Archive {
     final String keyVersion;
@@ -484,6 +487,69 @@ public class Archive {
 			}
 			System.err.println("Wrote " + count + " entr" + (count == 1 ? "y" : "ies")
 					+ " to standard output.");
+		} else if ("compare".equalsIgnoreCase(cmd)){
+			if (args.length < 3) {
+				System.err.println("Usage: Archive compare oldfile newfile");
+				return;
+			}
+			final Archive newArc = new Archive("1.0");
+			final String newName = args[2];
+			try {
+				newArc.addAll(new FileReader(newName));
+			} catch (FileNotFoundException ex) {
+				System.err.println("Could not find file \"" + newName + "\".");
+				return;
+			} catch (Exception ex) {
+				System.err.println(ex.getMessage() + " - in archive \"" + newName + "\".");
+				return;
+			}
+			final int m = newArc.size();
+			System.err.println("Read " + m + " entr" + (m == 1 ? "y" : "ies")
+					+ " from archive " + newName + ".");
+			
+			final List deleted = new LinkedList();
+			final List renamed = new LinkedList();
+			final List added = new LinkedList();
+			final List changed = new LinkedList();
+			
+			for (Iterator iter = arc.keySet().iterator(); iter.hasNext();) {
+				final String key = (String) iter.next();
+				final Archive.Entry oldEntry = arc.getByKey(key);
+				final Archive.Entry newEntry = newArc.getByKey(key);
+				final String name = oldEntry.name;
+				if (newEntry == null) {
+					deleted.add(name);
+				} else if (!newEntry.name.equals(name)) {
+					renamed.add(new Pair(name, newEntry.name));
+				}
+				final Archive.Entry sameName = newArc.getByName(name);
+				if (sameName != null && !sameName.key.equals(key)) {
+					changed.add(name);
+				}
+			}			
+			for (Iterator iter = newArc.keySet().iterator(); iter.hasNext();) {
+				final String key = (String) iter.next();
+				final Archive.Entry oldEntry = arc.getByKey(key);
+				final Archive.Entry newEntry = newArc.getByKey(key);
+				if (oldEntry == null) {
+					added.add(newEntry.name);
+				}
+			}
+			
+			printList(changed, "Changed");
+			printList(renamed, "Renamed");
+			printList(deleted, "Deleted");
+			printList(added, "Added");
 		}
+	}
+	
+	private static void printList(final List list, final String heading) {
+		if (list.size() > 0) {
+			System.err.print(heading + ": ");
+			for (final Iterator iter = list.iterator(); iter.hasNext();) {
+				System.err.print(" " + iter.next());
+			}
+		}
+		System.err.println();
 	}
 }
