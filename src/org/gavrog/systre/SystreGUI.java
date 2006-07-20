@@ -70,13 +70,12 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.50 2006/05/22 23:02:13 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.51 2006/07/20 05:28:15 odf Exp $
  */
 public class SystreGUI extends BFrame {
-	final static String systreVersion = "1.0 beta 060522";
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
-			+ "<font color=#202060>Version " + systreVersion + "<br><br>"
+			+ "<font color=#202060>Version " + Version.full + "<br><br>"
 			+ "by Olaf Delgado-Friedrichs 2001-2006<br></font></html>";
 	
 	// --- some constants used in the GUI
@@ -119,7 +118,7 @@ public class SystreGUI extends BFrame {
      * Constructs an instance.
      */
     public SystreGUI() {
-		super("Systre 1.0 beta");
+		super("Systre " + Version.full);
         
 		final BorderContainer main = new BorderContainer();
 		main.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH, null,
