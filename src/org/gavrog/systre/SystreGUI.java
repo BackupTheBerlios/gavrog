@@ -70,7 +70,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.51 2006/07/20 05:28:15 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.52 2006/07/24 03:24:22 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -103,6 +103,7 @@ public class SystreGUI extends BFrame {
     
     // --- fields to store some temporary information
     private Iterator netsToProcess = null;
+	private Exception inputException = null;
 	private String strippedFileName;
     private String fullFileName;
     private StringBuffer currentTranscript = new StringBuffer();
@@ -113,6 +114,7 @@ public class SystreGUI extends BFrame {
     // --- options
     private boolean singleWrite = false;
     private boolean readArchivesAsInput = false;
+
     
     /**
      * Constructs an instance.
@@ -396,15 +398,31 @@ public class SystreGUI extends BFrame {
         }).start();
     }
     
-    public boolean moreNets() {
+    private boolean moreNets() {
     	status("Reading next net...");
-    	final boolean more = this.netsToProcess != null && this.netsToProcess.hasNext();
+    	boolean more;
+    	try {
+    		more = this.netsToProcess != null && this.netsToProcess.hasNext();
+    	} catch (final Exception ex) {
+    		this.inputException = ex;
+    		more = true;
+    	}
     	if (more) {
     		status("Press \"Next\" to process next net.");
     	} else {
     		status("End of file reached.");
     	}
     	return more;
+    }
+    
+    private Net getNextNet() throws Exception {
+    	if (this.inputException != null) {
+    		final Exception ex = this.inputException;
+    		this.inputException = null;
+    		throw ex;
+    	} else {
+    		return (Net) this.netsToProcess.next();
+    	}
     }
     
     public void nextNet() {
@@ -424,7 +442,7 @@ public class SystreGUI extends BFrame {
         try {
             // --- read the next net
             try {
-            	G = (Net) this.netsToProcess.next();
+            	G = getNextNet();
             } catch (DataFormatException ex) {
                 problem = ex;
             } catch (Exception ex) {
@@ -547,6 +565,7 @@ public class SystreGUI extends BFrame {
         out.println();
         out.println("Finished data file \"" + this.fullFileName + "\".");
         this.netsToProcess = null;
+        this.inputException = null;
     }
 
     private void reportException(final Throwable ex, final String type,
