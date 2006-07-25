@@ -70,7 +70,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.52 2006/07/24 03:24:22 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.53 2006/07/25 23:44:43 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -516,6 +516,7 @@ public class SystreGUI extends BFrame {
         final String extension = filePath.substring(filePath.lastIndexOf('.') + 1);
         out.println("Data file \"" + filePath + "\".");
         this.bufferedNets.clear();
+        this.inputException = null;
 
         if ("cgd".equals(extension) || "pgr".equals(extension)) {
 			final NetParser parser = new NetParser(reader);
