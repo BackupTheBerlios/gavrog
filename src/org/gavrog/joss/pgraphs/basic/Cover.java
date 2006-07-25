@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
@@ -36,7 +37,7 @@ import org.gavrog.joss.geometry.Vector;
  * Represents a cover of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: Cover.java,v 1.2 2006/04/06 01:12:51 odf Exp $
+ * @version $Id: Cover.java,v 1.3 2006/07/25 05:32:37 odf Exp $
  */
 public class Cover extends PeriodicGraph {
     final private Morphism coverMorphism;
@@ -202,6 +203,18 @@ public class Cover extends PeriodicGraph {
     }
     
     /**
+     * Get the image of an edge under the cover morphism.
+     * 
+     * CAVEAT: this maps only oriented edges.
+     * 
+     * @param e the original edge.
+     * @return the image.
+     */
+    public IEdge image(final IEdge e) {
+        return (IEdge) getCoverMorphism().get(e);
+    }
+    
+    /**
      * Computes the position of a node with respect to the cover's coordinate system
      * given the position of it's image under the cover morphism in the image's coordinate
      * system.
@@ -230,5 +243,73 @@ public class Cover extends PeriodicGraph {
      */
     public Point liftedPosition(final INode v, final Map pos) {
         return liftedPosition(v, (Point) pos.get(image(v)));
+    }
+    
+    /**
+     * Returns the orbits of the set of nodes under the full combinatorial
+     * symmetry group.
+     * 
+     * @return an iterator over the set of orbits.
+     */
+    public Iterator nodeOrbits() {
+    	// --- determine node orbit representatives of the image graph
+    	final PeriodicGraph img = getImage();
+        final Partition P = new Partition();
+        for (final Iterator syms = img.symmetries().iterator(); syms.hasNext();) {
+            final Morphism a = (Morphism) syms.next();
+            for (final Iterator nodes = img.nodes(); nodes.hasNext();) {
+                final INode v = (INode) nodes.next();
+                P.unite(v, a.get(v));
+            }
+        }
+        final Map imageToRep = P.representativeMap();
+        
+        // --- determine sets of preimages for each node orbit of the image graph
+    	final Map preImages = new HashMap();
+    	for (final Iterator nodes = nodes(); nodes.hasNext();) {
+    		final INode v = (INode) nodes.next();
+    		final INode w = (INode) imageToRep.get(image(v));
+    		if (!preImages.containsKey(w)) {
+    			preImages.put(w, new HashSet());
+    		}
+    		((Set) preImages.get(w)).add(v);
+    	}
+    	
+        return preImages.values().iterator();
+    }
+    
+    /**
+     * Returns the orbits of the set of edges under the full combinatorial
+     * symmetry group.
+     * 
+     * @return an iterator over the set of orbits.
+     */
+    public Iterator edgeOrbits() {
+    	// --- determine edge orbit representatives of the image graph
+    	final PeriodicGraph img = getImage();
+        final Partition P = new Partition();
+        for (final Iterator syms = img.symmetries().iterator(); syms.hasNext();) {
+            final Morphism a = (Morphism) syms.next();
+            for (final Iterator edges = img.edges(); edges.hasNext();) {
+                final IEdge e = (IEdge) edges.next();
+                final IEdge ae = ((IEdge) a.get(e.oriented())).unoriented();
+                P.unite(e, ae);
+            }
+        }
+        final Map imageToRep = P.representativeMap();
+
+        // --- determine sets of preimages for each edge orbit of the image graph
+    	final Map preImages = new HashMap();
+    	for (final Iterator edges = edges(); edges.hasNext();) {
+    		final IEdge e = (IEdge) edges.next();
+    		final IEdge e1 = ((IEdge) image(e.oriented())).unoriented();
+    		final IEdge f = (IEdge) imageToRep.get(e1);
+    		if (!preImages.containsKey(f)) {
+    			preImages.put(f, new HashSet());
+    		}
+    		((Set) preImages.get(f)).add(e);
+    	}
+    	
+        return preImages.values().iterator();
     }
 }
