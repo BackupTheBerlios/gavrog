@@ -36,11 +36,13 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.8 2006/05/22 23:02:13 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.9 2006/07/25 05:34:11 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
     private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
+    
+    final static boolean DEBUG = false;
     
     /*
      * Auxiliary type.
@@ -124,6 +126,10 @@ class ProcessedNet {
         final PrintWriter out = new PrintWriter(stream);
         
         // --- extract some data from the arguments
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ In writeEmbedding(): preliminaries...");
+        }
+        
         final int d = graph.getDimension();
         final String extendedGroupName = finder.getExtendedGroupName();
         final CoordinateChange toStd = finder.getToStd();
@@ -132,6 +138,10 @@ class ProcessedNet {
         final boolean posRelaxed = embedder.positionsRelaxed();
         
         // --- print a header if necessary
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Writing header...");
+        }
+        
         if (cgdFormat) {
             out.println("CRYSTAL");
             out.println("  NAME " + Strings.parsable(name, false));
@@ -143,6 +153,10 @@ class ProcessedNet {
         }
         
         // --- get the relaxed Gram matrix
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing cell parameters...");
+        }
+        
         final Matrix gram = embedder.getGramMatrix();
         
         // --- the cell vectors in the coordinate system used be the embedder
@@ -171,6 +185,10 @@ class ProcessedNet {
                 / (a * b)) * f;
 
         // --- print the cell parameters
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Writing cell parameters...");
+        }
+        
         if (cgdFormat) {
             out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b) + " "
                     + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
@@ -187,9 +205,17 @@ class ProcessedNet {
         }
         
         // --- compute graph representation with respect to a conventional unit cell
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing full unit cell...");
+        }
+        
         final Cover cov = graph.conventionalCellCover();
 
         // --- compute the relaxed node positions in to the conventional unit cell
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing full list of node positions...");
+        }
+        
         final Map pos = embedder.getPositions();
         final INode v0 = (INode) cov.nodes().next();
         final Vector shift = (Vector) ((Point) pos.get(cov.image(v0))).times(toStd)
@@ -200,12 +226,19 @@ class ProcessedNet {
             lifted.put(v, cov.liftedPosition(v, pos).plus(shift).times(correction));
         }
         
-        // --- print the atom positions
+        // --- print the node positions
         if (!cgdFormat) {
             out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " positions:");
         }
         final boolean allNodes = fullCell;
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing node representatives...");
+        }
+        
         final Map reps = nodeReps(cov, lifted, allNodes);
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Printing node positions...");
+        }
         for (final Iterator iter = reps.keySet().iterator(); iter.hasNext();) {
             // --- extract the next node and its position
             final INode v = (INode) iter.next();
@@ -226,6 +259,10 @@ class ProcessedNet {
         }
         
         // --- print the edges
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Printing edges...");
+        }
+        
         if (!cgdFormat) {
             out.println("   Edges:");
         }
@@ -255,7 +292,11 @@ class ProcessedNet {
             out.println();
         }
         
-        // --- print the edges
+        // --- print the edge centers
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Printing edge centers...");
+        }
+        
         if (!cgdFormat) {
             out.println("   Edge centers:");
         }
@@ -283,6 +324,10 @@ class ProcessedNet {
             out.println("END");
             out.println();
         } else {
+            if (DEBUG) {
+            	System.out.println("\t\t@@@ Printing statistics...");
+            }
+            
             // --- write edge statistics
             final String min = fmtReal5.format(embedder.minimalEdgeLength());
             final String max = fmtReal5.format(embedder.maximalEdgeLength());
@@ -343,6 +388,10 @@ class ProcessedNet {
             }
         }
         out.flush();
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ In writeEmbedding(): done!");
+        }
+        
     }
 
     private Map nodeReps(final PeriodicGraph cov, final Map lifted, boolean allNodes) {
