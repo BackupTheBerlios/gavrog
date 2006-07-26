@@ -36,7 +36,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.9 2006/07/25 05:34:11 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.10 2006/07/26 02:12:32 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -239,12 +239,17 @@ class ProcessedNet {
         if (DEBUG) {
         	System.out.println("\t\t@@@ Printing node positions...");
         }
+        int last = 0;
         for (final Iterator iter = reps.keySet().iterator(); iter.hasNext();) {
             // --- extract the next node and its position
             final INode v = (INode) iter.next();
             final Point p = (Point) reps.get(v);
-            final String name = Strings.parsable((String) this.node2name
-					.get(cov.image(v)), false);
+            final String name;
+            if (allNodes) {
+				name = "" + (++last);
+			} else {
+				name = Strings.parsable((String) this.node2name.get(cov.image(v)), false);
+			}
             
             // --- print them
             if (cgdFormat) {
