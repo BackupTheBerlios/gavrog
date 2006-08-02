@@ -70,13 +70,15 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.53 2006/07/25 23:44:43 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.54 2006/08/02 01:13:07 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
-			+ "<font color=#202060>Version " + Version.full + "<br><br>"
-			+ "by Olaf Delgado-Friedrichs 2001-2006<br></font></html>";
+			+ "<font color=#202060>Version " + Version.full
+			+ " by Olaf Delgado-Friedrichs 2001-2006<br><br>"
+			+ "Licensed under the Apache License, Version 2.0<br>"
+			+ "(http://www.apache.org/licenses/LICENSE-2.0)</font></html>";
 	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
@@ -367,8 +369,8 @@ public class SystreGUI extends BFrame {
 					SpaceGroupCatalogue.class, "preferHexagonal"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
 					"relaxPositions"));
-			column.add(new OptionCheckBox("Output Full Conventional Cell", this.systre,
-					"outputFullCell"));
+			column.add(new OptionCheckBox("Output Complete Unit Cell Contents",
+					this.systre, "outputFullCell"));
 			column.add(new OptionCheckBox("Save only last net finished", this,
 					"singleWrite"));
 		} catch (final Exception ex) {

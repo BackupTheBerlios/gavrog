@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.14 2006/04/10 23:08:17 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.15 2006/08/02 01:13:09 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
@@ -85,6 +85,21 @@ public class SpaceGroupCatalogue {
     }
     
     private static Map lookup = new HashMap();
+    
+    /**
+     * Represents the result of a table lookup.
+     */
+    private static class Entry {
+    	final public String key;
+    	final public List ops;
+    	final public CoordinateChange transform;
+    	
+    	public Entry(final String key, final List ops, final CoordinateChange transform) {
+    		this.key = key;
+    		this.ops = ops;
+    		this.transform = transform;
+    	}
+    }
     
     /**
      * Parses space group settings from a file and stores them statically. Each setting is
@@ -217,17 +232,16 @@ public class SpaceGroupCatalogue {
     }
     
     /**
-     * Retrieves information about a given space group setting. The setting is identified
-     * by its name. Depending on the value of the <code>getOps</code> parameter, either
-     * the operator list for that setting or the transformation used to obtain it from the
-     * canonical setting is returned.
-     * 
-     * @param dim the dimension of the group.
-     * @param getOps if true, return the operator list, otherwise, the transformation.
-     * @param name the name of the group setting to retrieve.
-     * @return the data requested for the given space group setting.
-     */
-    private static Object retrieve(int dim, final boolean getOps, final String name) {
+	 * Retrieves information about a given space group setting as identified by
+	 * its name. The return value contains the name under which the setting was
+	 * found (including suffices likes ":1" etc), the operator list and the
+	 * transformation used to obtain that setting from the canonical one.
+	 * 
+	 * @param dim the dimension of the group.
+	 * @param name the name of the group setting to retrieve.
+	 * @return the data for the given space group setting.
+	 */
+    private static Entry retrieve(int dim, final String name) {
         if (groupTables[dim] == null) {
             parseGroups(tablePath);
         }
@@ -259,30 +273,36 @@ public class SpaceGroupCatalogue {
         }
         
         for (int i = 0; i < candidates.length; ++i) {
-            final String key = candidates[i];
-            if (getOps) {
-                if (table.nameToOps.containsKey(key)) {
-                    return table.nameToOps.get(key);
-                }
-            } else {
-                if (table.nameToTransform.containsKey(key)) {
-                    return table.nameToTransform.get(key);
-                }
-            }
-        }
+			final String key = candidates[i];
+			if (table.nameToOps.containsKey(key)) {
+				return new Entry(key, (List) table.nameToOps.get(key),
+						(CoordinateChange) table.nameToTransform.get(key));
+			}
+		}
     
         return null;
     }
 
     /**
-     * Retrieves the list of operators for a given space group setting.
-     * 
-     * @param dim the dimension of the group.
-     * @param name the name of the group setting.
-     * @return the list of operators.
-     */
+	 * Retrieves the name under which a space group setting is listed.
+	 * 
+	 * @param dim the dimension of the group.
+	 * @param name the name of the group setting.
+	 * @return the listed.
+	 */
+    public static String listedName(final int dim, final String name) {
+        return retrieve(dim, name).key;
+    }
+
+    /**
+	 * Retrieves the list of operators for a given space group setting.
+	 * 
+	 * @param dim the dimension of the group.
+	 * @param name the name of the group setting.
+	 * @return the list of operators.
+	 */
     public static List operators(final int dim, final String name) {
-        return (List) retrieve(dim, true, name);
+        return retrieve(dim, name).ops;
     }
 
     /**
@@ -294,7 +314,7 @@ public class SpaceGroupCatalogue {
      * @return the transformation operator.
      */
     public static CoordinateChange transform(final int dim, final String name) {
-        return (CoordinateChange) retrieve(dim, false, name);
+        return retrieve(dim, name).transform;
     }
 
     /**
