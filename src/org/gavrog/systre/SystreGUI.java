@@ -25,6 +25,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Iterator;
@@ -50,9 +52,11 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
 
 import buoy.event.CommandEvent;
+import buoy.event.DocumentLinkEvent;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
 import buoy.widget.BDialog;
+import buoy.widget.BDocumentViewer;
 import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
 import buoy.widget.BLabel;
@@ -70,7 +74,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.54 2006/08/02 01:13:07 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.55 2006/08/07 05:44:18 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -98,6 +102,7 @@ public class SystreGUI extends BFrame {
     final private BButton nextButton;
     final private BButton saveButton;
     final private BButton optionsButton;
+    final private BButton helpButton;
     final private BLabel statusBar;
     
     // --- the object doing the actual processing
@@ -136,13 +141,14 @@ public class SystreGUI extends BFrame {
 		final BLabel label = new BLabel(mainLabel);
 		top.add(label, BorderContainer.NORTH);
 
-        final GridContainer buttonBar = new GridContainer(4, 1);
+        final GridContainer buttonBar = new GridContainer(5, 1);
         buttonBar.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER,
                 LayoutInfo.HORIZONTAL, null, null));
         buttonBar.add(openButton = makeButton("Open...", this, "doOpen"), 0, 0);
         buttonBar.add(nextButton = makeButton("Next", this, "doNext"), 1, 0);
         buttonBar.add(saveButton = makeButton("Save as...", this, "doSave"), 2, 0);
         buttonBar.add(optionsButton = makeButton("Options...", this, "doOptions"), 3, 0);
+        buttonBar.add(helpButton = makeButton("Help", this, "doHelp"), 4, 0);
         top.add(buttonBar, BorderContainer.CENTER, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
 
@@ -631,6 +637,52 @@ public class SystreGUI extends BFrame {
                 optionsButton.setEnabled(true);
             }
         });
+    }
+    
+    public void doHelp() {
+		final BDialog dialog = new BDialog(this, "Systre - Help", true);
+		final BorderContainer content = new BorderContainer();
+		content.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH,
+                defaultInsets, null));
+        content.setBackground(textColor);
+		final BDocumentViewer viewer = new BDocumentViewer();
+		viewer.setBackground(null);
+		final BScrollPane scrollPane = new BScrollPane(viewer,
+				BScrollPane.SCROLLBAR_ALWAYS, BScrollPane.SCROLLBAR_ALWAYS);
+		scrollPane.setForceHeight(true);
+		scrollPane.setForceWidth(true);
+		scrollPane.setBackground(null);
+		content.add(scrollPane, BorderContainer.CENTER);
+		dialog.setContent(content);
+
+		dialog.addEventLink(WindowClosingEvent.class, dialog, "dispose");
+
+        // --- read the default archives
+        final Package pkg = this.getClass().getPackage();
+        final String packagePath = pkg.getName().replaceAll("\\.", "/");
+        
+        final String textPath = packagePath + "/Systre-Help.html";
+		final InputStream textStream = ClassLoader.getSystemResourceAsStream(textPath);
+		final BufferedReader textReader = new BufferedReader(new InputStreamReader(
+				textStream));
+		final StringBuffer buf = new StringBuffer(10000);
+        while (true) {
+        	final String line;
+        	try {
+				line = textReader.readLine();
+			} catch (final IOException ex) {
+				break;
+			}
+			if (line == null) {
+				break;
+			}
+			buf.append(line);
+        }
+        viewer.setDocument(buf.toString(), "text/html");
+        viewer.addEventLink(DocumentLinkEvent.class, viewer, "processLinkEvent");
+        
+		dialog.pack();
+		dialog.setVisible(true);
     }
     
     public void doCancel() {
