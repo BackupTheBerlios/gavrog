@@ -74,7 +74,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.55 2006/08/07 05:44:18 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.56 2006/08/07 05:50:36 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -640,6 +640,7 @@ public class SystreGUI extends BFrame {
     }
     
     public void doHelp() {
+    	//TODO make references within the help text work.
 		final BDialog dialog = new BDialog(this, "Systre - Help", true);
 		final BorderContainer content = new BorderContainer();
 		content.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH,
