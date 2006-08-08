@@ -36,6 +36,7 @@ import java.util.NoSuchElementException;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.gavrog.box.collections.FilteredIterator;
@@ -75,7 +76,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.58 2006/08/08 01:24:33 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.59 2006/08/08 01:32:16 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -698,6 +699,9 @@ public class SystreGUI extends BFrame {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						frame.pack();
+						final JFrame jf = (JFrame) frame.getComponent();
+						jf.setSize(jf.getWidth(), 600);
+						jf.validate();
 						frame.setVisible(true);
 					}
 				});
