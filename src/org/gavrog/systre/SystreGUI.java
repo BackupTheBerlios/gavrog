@@ -75,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.57 2006/08/08 00:08:32 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.58 2006/08/08 01:24:33 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -640,7 +640,7 @@ public class SystreGUI extends BFrame {
     }
     
     public void doHelp() {
-		final BFrame dialog = new BFrame("Systre - Help");
+		final BFrame frame = new BFrame("Systre - Help");
 		final BorderContainer content = new BorderContainer();
 		content.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH,
                 defaultInsets, null));
@@ -658,41 +658,51 @@ public class SystreGUI extends BFrame {
 		};
 		viewer.setBackground(null);
 		final BScrollPane scrollPane = new BScrollPane(viewer,
-				BScrollPane.SCROLLBAR_ALWAYS, BScrollPane.SCROLLBAR_ALWAYS);
+				BScrollPane.SCROLLBAR_AS_NEEDED, BScrollPane.SCROLLBAR_ALWAYS);
+		scrollPane.setBackground(null);
 		scrollPane.setForceHeight(true);
 		scrollPane.setForceWidth(true);
-		scrollPane.setBackground(null);
 		content.add(scrollPane, BorderContainer.CENTER);
-		dialog.setContent(content);
+		frame.setContent(content);
 
-		dialog.addEventLink(WindowClosingEvent.class, dialog, "dispose");
+		frame.addEventLink(WindowClosingEvent.class, frame, "dispose");
+		viewer.addEventLink(DocumentLinkEvent.class, viewer, "processLinkEvent");
+		
+        new Thread(new Runnable() {
+			public void run() {
+				final Package pkg = this.getClass().getPackage();
+				final String packagePath = pkg.getName().replaceAll("\\.", "/");
 
-        // --- read the default archives
-        final Package pkg = this.getClass().getPackage();
-        final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        
-        final String textPath = packagePath + "/Systre-Help.html";
-		final InputStream textStream = ClassLoader.getSystemResourceAsStream(textPath);
-		final BufferedReader textReader = new BufferedReader(new InputStreamReader(
-				textStream));
-		final StringBuffer buf = new StringBuffer(10000);
-        while (true) {
-        	final String line;
-        	try {
-				line = textReader.readLine();
-			} catch (final IOException ex) {
-				break;
+				final String textPath = packagePath + "/Systre-Help.html";
+				final InputStream textStream = ClassLoader
+						.getSystemResourceAsStream(textPath);
+				final BufferedReader textReader = new BufferedReader(
+						new InputStreamReader(textStream));
+				final StringBuffer buf = new StringBuffer(10000);
+				while (true) {
+					final String line;
+					try {
+						line = textReader.readLine();
+					} catch (final IOException ex) {
+						break;
+					}
+					if (line == null) {
+						break;
+					}
+					buf.append(line);
+					buf.append("\n");
+				}
+				viewer.setDocument(buf.toString(), "text/html");
+				scrollPane.getVerticalScrollBar().setValue(0);
+
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						frame.pack();
+						frame.setVisible(true);
+					}
+				});
 			}
-			if (line == null) {
-				break;
-			}
-			buf.append(line);
-        }
-        viewer.setDocument(buf.toString(), "text/html");
-        viewer.addEventLink(DocumentLinkEvent.class, viewer, "processLinkEvent");
-        
-		dialog.pack();
-		dialog.setVisible(true);
+		}).start();
     }
     
     public void doCancel() {
