@@ -76,7 +76,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.59 2006/08/08 01:32:16 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.60 2006/08/08 05:48:52 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -208,6 +208,9 @@ public class SystreGUI extends BFrame {
         status("Ready to go!");
         
         pack();
+		final JFrame jf = (JFrame) getComponent();
+		jf.setSize(700, 600);
+		jf.validate();
         setVisible(true);
     }
     
@@ -700,7 +703,7 @@ public class SystreGUI extends BFrame {
 					public void run() {
 						frame.pack();
 						final JFrame jf = (JFrame) frame.getComponent();
-						jf.setSize(jf.getWidth(), 600);
+						jf.setSize(700, 600);
 						jf.validate();
 						frame.setVisible(true);
 					}
