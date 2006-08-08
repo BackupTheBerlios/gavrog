@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
@@ -74,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.56 2006/08/07 05:50:36 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.57 2006/08/08 00:08:32 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -102,7 +103,6 @@ public class SystreGUI extends BFrame {
     final private BButton nextButton;
     final private BButton saveButton;
     final private BButton optionsButton;
-    final private BButton helpButton;
     final private BLabel statusBar;
     
     // --- the object doing the actual processing
@@ -148,7 +148,7 @@ public class SystreGUI extends BFrame {
         buttonBar.add(nextButton = makeButton("Next", this, "doNext"), 1, 0);
         buttonBar.add(saveButton = makeButton("Save as...", this, "doSave"), 2, 0);
         buttonBar.add(optionsButton = makeButton("Options...", this, "doOptions"), 3, 0);
-        buttonBar.add(helpButton = makeButton("Help", this, "doHelp"), 4, 0);
+        buttonBar.add(makeButton("Help", this, "doHelp"), 4, 0);
         top.add(buttonBar, BorderContainer.CENTER, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
 
@@ -640,13 +640,22 @@ public class SystreGUI extends BFrame {
     }
     
     public void doHelp() {
-    	//TODO make references within the help text work.
-		final BDialog dialog = new BDialog(this, "Systre - Help", true);
+		final BFrame dialog = new BFrame("Systre - Help");
 		final BorderContainer content = new BorderContainer();
 		content.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH,
                 defaultInsets, null));
         content.setBackground(textColor);
-		final BDocumentViewer viewer = new BDocumentViewer();
+		final BDocumentViewer viewer = new BDocumentViewer() {
+			public void processLinkEvent(final DocumentLinkEvent event)
+					throws IOException {
+				if (event.getURL() == null) {
+					final String ref = event.getDescription();
+					if (ref.startsWith("#")) {
+						((JEditorPane) component).scrollToReference(ref.substring(1));
+					}
+				}
+			}
+		};
 		viewer.setBackground(null);
 		final BScrollPane scrollPane = new BScrollPane(viewer,
 				BScrollPane.SCROLLBAR_ALWAYS, BScrollPane.SCROLLBAR_ALWAYS);
