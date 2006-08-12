@@ -198,12 +198,42 @@ END
 <h2><a name="troubleshooting">Troubleshooting</a></h2>
 
 <p>
-There are some quirks and limitations that you should be aware of when
-using S<small>YSTRE</small>.
+If you encounter any problems, please check your input thoroughly.
+There are many opportunities for typos and S<small>YSTRE</small> is
+very sensitive for input errors, especially when edges are not given
+explicitly.
+</p>
+
+<p>
+There are some quirks and limitations, though, that you should be
+aware of when using S<small>YSTRE</small>.
 </p>
 
 <dl>
+
+<dt><b>Nets that don't work (yet)</b></dt>
+
+<dd>
+<p>
+S<small>YSTRE</small> identifies nodes by their barycentric positions,
+which is the key to its efficitent algorithms. If different nodes
+<em>collide</em>, i.e., if they have identical barycentric positions,
+this method fails. The present version of S<small>YSTRE</small> is not
+able to handle nets with collisions and will thus produce an error
+message.  This seems to be a fairly rare case, though, especially in
+nets that come from actual crystal structures.
+</p>
+
+<p>
+Furthermore, the present version of S<small>YSTRE</small> cannot
+handle nets of any other dimension than 3 (including plane nets) or
+non-connected nets.
+</p>
+
+</dd>
+
 <dt><b>Origin choice</b></dt>
+
 <dd>
 <p>
 If you specify a crystal as in the second example above,
@@ -223,6 +253,7 @@ in Example 4 above.
 </dd>
 
 <dt><b>Rhombohedral groups</b></dt>
+
 <dd>
 <p>
 Hexagonal versus rhombohedral settings for rhombohedral groups are
@@ -230,6 +261,36 @@ handled analogously to the above(append <tt>:H</tt> or <tt>:R</tt>,
 respectively).
 </p>
 </dd>
+
+<dt><b>Java problems</b></dt>
+
+<dd>
+<p>
+The Java virtual machine by Sun does not seem to be completely stable.
+There are occasional, non-reproducible program crashes or
+miscalculations.  S<small>YSTRE</small> checks its own results very
+carefully, though, so that erroneous results are highly unlikely to go
+undetected.  Much more likely, the program will terminate for no
+apparent reason or produce an "<tt>INTERNAL ERROR</tt>" message. In
+those cases, the best strategy is to restart S<small>YSTRE</small> or
+just to rerun the net that produced the problem.
+</p>
+</dd>
+
+<dt><b>Reporting bugs</b></dt>
+
+<dd>
+<p>
+For the moment, please report bugs to
+<tt>odf@sourceforge.net</tt>.  Make sure that your input is correct
+and that the problem is reproducible.  Enclose your input file and any
+output that S<small>YSTRE</small> produced, or else describe the
+problem and any messages that you may have seen as detailed as
+possible. Tell me which operating system and which version of Java you
+were using.
+</p>
+</dd>
+
 </dl>
 
 <br>
@@ -450,6 +511,25 @@ END OF TERMS AND CONDITIONS
 
 <br>
 <h2><a name="acknowledgements">Acknowledgements</a></h2>
+
+<p>
+If I am the father of S<small>YSTRE</small>, Michael O'Keeffe is its
+godfather.  He first made me aware of the problems that
+S<small>YSTRE</small> aims to solve, has supported and guided me over
+many years and even came up with the name.
+</p>
+
+<p>
+Micheal Treacy, Davide Proserpio, Martin Foster, Martijn Zwijnenburg,
+Stuart Ramsden, Vladislav Blatov and Stephen Hyde have helped me a lot
+by testing, criticizing and discussing S<small>YSTRE</small>.
+</p>
+
+<p>
+My work on S<small>YSTRE</small> was partially supported by grants
+from the Petroleum Research Foundation and the National Science
+Foundation.
+</p>
 
 </body>
 </html>
