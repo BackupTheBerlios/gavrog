@@ -37,27 +37,50 @@
 <br>
 <h2><a name="introduction">Introduction</a></h2>
 
+<p>
+The program S<small>YSTRE</small> is designed to
+analyze periodic nets as they arise in the study of (extended or
+non-molecular) crystal structures. The acronym stands for Symmetry,
+Structure and Refinement. SYSTRE uses a method called barycentric
+placement to determine the ideal (i.e., maximal embeddable) symmetry
+of a crystal net and to analyze its topological structure. It then
+generates a unique key for the topological type of the given net and
+uses this key to look up the structure in its built-in database. Users
+can also create their own databases.
+</p>
+
+<p>
+S<small>YSTRE</small> also computes a refined
+embedding (geometric conformation) of the given net using a method
+based on simulated (physically incorrect) forces. The targeted
+embedding is one that minimizes the edge length variance (normalized
+to unit length) and maximizes the unit cell volume.
+</p>
+
 <br>
 <h2><a name="installation">Installation</a></h2>
 
 <p>
-Systre needs a Java runtime environment (JRE) of version 1.4.2 or
-higher to run. The most straightforward way to get a JRE is to
-download it from java.sun.com. You might already have a useable Java
-installation on your computer, though, because many programs use it.
+S<small>YSTRE</small> needs a Java runtime
+environment (JRE) of version 1.4.2 or higher to run. The most
+straightforward way to get a JRE is to download it from
+java.sun.com. You might already have a useable Java installation on
+your computer, though, because many programs use it.
 </p>
 
 <p>
-Installing Systre itself is very easy. Just download the file
-Systre.jar and put it anywhere you like, for example on your desktop.
+Installing S<small>YSTRE</small> itself is very
+easy. Just download the file <tt>Systre.jar</tt> and put it anywhere
+you like, for example on your desktop.
 </p>
 
 <br>
 <h2><a name="usage">Usage</a></h2>
 
 <p>
-The simplest way to start Systre is to double-click on its icon. If
-that does not work, open a console window and type the command
+The simplest way to start S<small>YSTRE</small> is
+to double-click on its icon. If that does not work, open a console
+window and type the command
 </p>
 
 <pre>
@@ -65,23 +88,25 @@ that does not work, open a console window and type the command
 </pre>
 
 <p>
-from the same folder that you put Systre.jar in.
+from the same folder that you put <tt>Systre.jar</tt> in.
 </p>
 
 <br>
 <h2><a name="file_formats">File Formats</a></h2>
 
 <p>
-Here are some examples of legal input for Systre. The conventional
-suffix for Systre files is '.cgd'. You can cut and paste any of the
-following examples (or all of them) in a '.cgd' file using your
-favorite text editor (e.g. Notepad on Windows) and open it from
-Systre.
+Here are some examples of legal input for
+S<small>YSTRE</small>. The conventional suffix for
+S<small>YSTRE</small> files is <tt>.cgd</tt>. You
+can cut and paste any of the following examples (or all of them) in a
+<tt>.cgd</tt> file using your favorite text editor (e.g. Notepad on
+Windows) and open it from S<small>YSTRE</small>.
 </p>
 
 <p>
-The Systre format allows comments, which start with a '#' character and
-continue until the end of the current line.
+The S<small>YSTRE</small> format allows comments,
+which start with a <tt>#</tt> character and continue until the end of
+the current line.
 </p>
 
 <br>
@@ -100,7 +125,7 @@ CRYSTAL
   # Atom specification: name coordination x y z
   #   (decimal numbers or fractions can be used for coordinates)
   ATOM  1  4   5/8 5/8 5/8
-# This ends the structure description:
+# This ends the structure description
 END
 </pre>
 
@@ -148,8 +173,9 @@ END
 
 <br>
 <p><b>Example 4</b>: This example describes a more complicated graph
-and will take Systre significantly longer to complete. It shows two
-situations in which quotes are required.
+and will take S<small>YSTRE</small> significantly
+longer to complete. It shows two situations in which quotes are
+required.
 
 <pre>
 CRYSTAL
@@ -171,12 +197,46 @@ END
 <br>
 <h2><a name="troubleshooting">Troubleshooting</a></h2>
 
+<p>
+There are some quirks and limitations that you should be aware of when
+using S<small>YSTRE</small>.
+</p>
+
+<dl>
+<dt><b>Origin choice</b></dt>
+<dd>
+<p>
+If you specify a crystal as in the second example above,
+S<small>YSTRE</small> needs to compute edges based on nearest
+neighbors. This does not only depend on the correct cell parameters,
+but also on the origin choice. For those groups that have two
+conventional choices as according to the international tables,
+S<small>YSTRE</small> by default uses the second one. This can be
+changed in the 'Options' dialog.
+</p>
+
+<p>
+Another way to make sure that the correct origin choice is used is to
+append <tt>:1</tt> or <tt>:2</tt>, respectively, to the group name as
+in Example 4 above.
+</p>
+</dd>
+
+<dt><b>Rhombohedral groups</b></dt>
+<dd>
+<p>
+Hexagonal versus rhombohedral settings for rhombohedral groups are
+handled analogously to the above(append <tt>:H</tt> or <tt>:R</tt>,
+respectively).
+</p>
+</dd>
+</dl>
+
 <br>
 <h2><a name="license">License</a></h2>
 
-Systre is released under the Apache License, Version 2.0, as
-below.<br>
-<br>
+S<small>YSTRE</small> is released under the Apache
+License, Version 2.0, as below.<br> <br>
 
 <hr>
 <p align="center">
