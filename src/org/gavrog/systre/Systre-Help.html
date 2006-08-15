@@ -38,23 +38,24 @@
 <h2><a name="introduction">Introduction</a></h2>
 
 <p>
-The program S<small>YSTRE</small> is designed to
-analyze periodic nets as they arise in the study of (extended or
-non-molecular) crystal structures. The acronym stands for Symmetry,
-Structure and Refinement. SYSTRE uses a method called barycentric
-placement to determine the ideal (i.e., maximal embeddable) symmetry
-of a crystal net and to analyze its topological structure. It then
-generates a unique key for the topological type of the given net and
-uses this key to look up the structure in its built-in database. Users
-can also create their own databases.
+The program S<small>YSTRE</small> is designed to analyze periodic nets
+as they arise in the study of extended crystal structures (as opposed
+to molecular crystals). The acronym stands for <em>Symmetry, Structure
+and Refinement</em>. S<small>YSTRE</small> uses a method called
+<em>barycentric placement</em> to determine the ideal (i.e., maximal
+embeddable) symmetry of a crystal net and to analyze its topological
+structure. It then generates a unique key for the topological type of
+the given net and uses that to look up the structure in its
+built-in database. Users can also create their own databases.
 </p>
 
 <p>
-S<small>YSTRE</small> also computes a refined
-embedding (geometric conformation) of the given net using a method
-based on simulated (physically incorrect) forces. The targeted
-embedding is one that minimizes the edge length variance (normalized
-to unit length) and maximizes the unit cell volume.
+S<small>YSTRE</small> also computes a refined embedding of the given
+net using a method based on simulated forces. The targeted embedding
+is one that minimizes the edge length variance (normalized to unit
+length) and maximizes the unit cell volume. The force models used are
+not physically realistic, but should in most cases produce viable
+input for molecular modeling software.
 </p>
 
 <br>
@@ -64,8 +65,9 @@ to unit length) and maximizes the unit cell volume.
 S<small>YSTRE</small> needs a Java runtime
 environment (JRE) of version 1.4.2 or higher to run. The most
 straightforward way to get a JRE is to download it from
-java.sun.com. You might already have a useable Java installation on
-your computer, though, because many programs use it.
+<tt>java.sun.com</tt> and follow the installation instructions given
+there. Java might already be installed on your system as a
+prerequisite for other programs, such as web browsers.
 </p>
 
 <p>
@@ -88,7 +90,20 @@ window and type the command
 </pre>
 
 <p>
-from the same folder that you put <tt>Systre.jar</tt> in.
+from the same folder that you put <tt>Systre.jar</tt>
+in. Alternatively, add the appropriate path. For example, if you
+downloaded <tt>Systre.jar</tt> to a folder named
+<tt>C:\Programs\Systre</tt> (on a Windows system), change the above to
+</p>
+
+<pre>
+    java -jar C:\Programs\Systre\Systre.jar
+</pre>
+
+<p>
+To make things easier, you can create a batch file (a.k.a. shell
+script) containing the command. Please refer to your operating system
+manual on how to create and execute such files.
 </p>
 
 <br>
@@ -111,14 +126,17 @@ the current line.
 
 <br>
 <p><b>Example 1</b>: Diamond, specified by space group, unit cell and
-positions.</p>
+positions. S<small>YSTRE</small> computes edges by finding nearest
+neighbors. Edge lengths are assumed to be close to unity. If this is
+not true for your data and S<small>YSTRE</small> reports a problem,
+you should try scaling the unit cell parameters accordingly.</p>
             
 <pre>
 # The type of data to expect
 CRYSTAL
-  # Structure id (optional, NAME is equivalent to ID)
+  # Structure id (optional; ID and NAME both work)
   ID    diamond
-  # The space group by name
+  # The space group
   GROUP Fd-3m
   # Cell parameters: a b c alpha beta gamma
   CELL         2.3094 2.3094 2.3094  90.00000   90.00000   90.00000
@@ -130,7 +148,14 @@ END
 </pre>
 
 <br>
-<p><b>Example 2</b>: Diamond, specified as a periodic graph.</p>
+<p><b>Example 2</b>: Diamond, specified as a periodic graph. Here,
+only translational symmetries are assumed, and no coordinates are
+needed. Edges are given explicitly in the form <em>u v x y z</em>,
+where <em>u</em> and <em>v</em> are node numbers and <em>x y z</em>
+specifies the "address" of the unit cell to connect to as an integer
+vector. For example, the line <tt>1 1  0 1 0</tt> defines an edge
+between node 1 and its copy shifted one unit along the y axis.
+</p>
 
 <pre>
 PERIODIC_GRAPH
@@ -144,7 +169,8 @@ END
 </pre>
 
 <br>
-<p><b>Example 3:</b> Edges can be given explicitly.</p>
+<p><b>Example 3:</b> For <tt>CRYSTAL</tt> input, edges can be given
+explicitly, as well.</p>
 
 <pre>
 CRYSTAL
@@ -155,7 +181,7 @@ CRYSTAL
   ATOM  1 4  0.0000  0.6657  0.7306
   # Edges can be specified by giving the names of the endpoints
   EDGE  1 2
-  # or by giving a number for one and coordinates for the other. 
+  # or by giving a number for the first and coordinates for the second. 
   EDGE  1    0.0000  0.1416  0.2500
   # or by giving coordinates for both
   EDGE  0.0000  0.6657  0.7306    0.0000  1.1416  1.2500
@@ -216,10 +242,10 @@ aware of when using S<small>YSTRE</small>.
 <dd>
 <p>
 S<small>YSTRE</small> identifies nodes by their barycentric positions,
-which is the key to its efficitent algorithms. If different nodes
+which is the key to its efficient algorithms. If different nodes
 <em>collide</em>, i.e., if they have identical barycentric positions,
 this method fails. The present version of S<small>YSTRE</small> is not
-able to handle nets with collisions and will thus produce an error
+able to handle nets with collisions and will produce an error
 message.  This seems to be a fairly rare case, though, especially in
 nets that come from actual crystal structures.
 </p>
@@ -236,13 +262,13 @@ non-connected nets.
 
 <dd>
 <p>
-If you specify a crystal as in the second example above,
-S<small>YSTRE</small> needs to compute edges based on nearest
-neighbors. This does not only depend on the correct cell parameters,
-but also on the origin choice. For those groups that have two
-conventional choices as according to the international tables,
-S<small>YSTRE</small> by default uses the second one. This can be
-changed in the 'Options' dialog.
+If you specify a crystal without explicit edges as in the first and
+fourth example above, S<small>YSTRE</small> needs to compute edges
+based on nearest neighbors. This does not only depend on the correct
+cell parameters, but also on the origin choice. For those groups that
+have two conventional choices as according to the international
+tables, S<small>YSTRE</small> by default uses the second one. This can
+be changed in the 'Options' dialog.
 </p>
 
 <p>
@@ -257,8 +283,8 @@ in Example 4 above.
 <dd>
 <p>
 Hexagonal versus rhombohedral settings for rhombohedral groups are
-handled analogously to the above(append <tt>:H</tt> or <tt>:R</tt>,
-respectively).
+handled analogously to the above. In this case, append <tt>:H</tt>
+(the default) or <tt>:R</tt>, accordingly.
 </p>
 </dd>
 
@@ -268,9 +294,9 @@ respectively).
 <p>
 The Java virtual machine by Sun does not seem to be completely stable.
 There are occasional, non-reproducible program crashes or
-miscalculations.  S<small>YSTRE</small> checks its own results very
-carefully, though, so that erroneous results are highly unlikely to go
-undetected.  Much more likely, the program will terminate for no
+miscalculations.  S<small>YSTRE</small> double-checks its computations
+very carefully, though, so that erroneous results are highly unlikely
+to go undetected.  Much more likely, the program will terminate for no
 apparent reason or produce an "<tt>INTERNAL ERROR</tt>" message. In
 those cases, the best strategy is to restart S<small>YSTRE</small> or
 just to rerun the net that produced the problem.
@@ -281,11 +307,11 @@ just to rerun the net that produced the problem.
 
 <dd>
 <p>
-For the moment, please report bugs to
-<tt>odf@sourceforge.net</tt>.  Make sure that your input is correct
-and that the problem is reproducible.  Enclose your input file and any
-output that S<small>YSTRE</small> produced, or else describe the
-problem and any messages that you may have seen as detailed as
+For the moment, please report bugs to <tt>odf@sourceforge.net</tt>.
+Make sure that your input is correct and that the problem is
+reproducible.  Enclose your input file and any output that
+S<small>YSTRE</small> produced, or, if that is not possible, describe
+the problem and any messages that you may have seen as detailed as
 possible. Tell me which operating system and which version of Java you
 were using.
 </p>
@@ -515,8 +541,8 @@ END OF TERMS AND CONDITIONS
 <p>
 If I am the father of S<small>YSTRE</small>, Michael O'Keeffe is its
 godfather.  He first made me aware of the problems that
-S<small>YSTRE</small> aims to solve, has supported and guided me over
-many years and even came up with the name.
+S<small>YSTRE</small> aims to solve, has supported and guided its
+development over many years and even came up with the name.
 </p>
 
 <p>
