@@ -31,6 +31,7 @@
 <li><a href="#file_formats">File Formats</a>
 <li><a href="#troubleshooting">Troubleshooting</a>
 <li><a href="#license">License</a>
+<li><a href="#publications">Publications</a>
 <li><a href="#acknowledgements">Acknowledgements</a>
 </ul>
 
@@ -44,9 +45,10 @@ to molecular crystals). The acronym stands for <em>Symmetry, Structure
 and Refinement</em>. S<small>YSTRE</small> uses a method called
 <em>barycentric placement</em> to determine the ideal (i.e., maximal
 embeddable) symmetry of a crystal net and to analyze its topological
-structure. It then generates a unique key for the topological type of
-the given net and uses that to look up the structure in its
-built-in database. Users can also create their own databases.
+structure. It then generates a unique "fingerprint" for the
+topological type of the given net and uses that to look up the
+structure in its built-in database. Users can also create their own
+databases.
 </p>
 
 <p>
@@ -56,6 +58,11 @@ is one that minimizes the edge length variance (normalized to unit
 length) and maximizes the unit cell volume. The force models used are
 not physically realistic, but should in most cases produce viable
 input for molecular modeling software.
+</p>
+
+<p>
+S<small>YSTRE</small> is part of <a href="http://www.gavrog.org">The
+Gavrog Project</a>.
 </p>
 
 <br>
@@ -106,16 +113,67 @@ script) containing the command. Please refer to your operating system
 manual on how to create and execute such files.
 </p>
 
+<p>
+Using S<small>YSTRE</small> is very simple. Run S<small>YSTRE</small>,
+then use the [<tt>Open...</tt>] button to read in a file of net
+descriptions. S<small>YSTRE</small> will process the first net in the
+file and describes the results in an informal way. If there are more
+nets, use the [<tt>Next</tt>] button to step through them. When you
+are finished with a file, you can store the results in one of several
+formats using the [<tt>Save as...</tt>] button. The [<tt>Help</tt>]
+button displays the text you are currently reading, and, finally, the
+[<tt>Options...</tt>] button lets you modify some of
+S<small>YSTRE</small>'s internal workings.
+</p>
+
 <br>
 <h2><a name="file_formats">File Formats</a></h2>
 
 <p>
-Here are some examples of legal input for
-S<small>YSTRE</small>. The conventional suffix for
-S<small>YSTRE</small> files is <tt>.cgd</tt>. You
+S<small>YSTRE</small> uses three basic file types:
+</p>
+
+<ul>
+<li>Input files (containing definitions of nets) with the extension
+<tt>.cgd</tt></li>
+<li>Archive files (containing fingerprints for nets) with the
+extension <tt>.arc</tt></li>
+<li>Protocol files (to save S<small>YSTRE</small>'s onscreen output)
+with the extension <tt>.out</tt></li>
+</ul>
+
+<p>
+If you read or write a file from within S<small>YSTRE</small>, the
+extension will determine the format of the file and the extend of
+information in it. Typically, you would read an input file and save
+the output in a protocol file. But you might also want to produce a
+<tt>.cgd</tt> file with the new symmetry group and node positions
+as determined by S<small>YSTRE</small>.
+</p>
+
+<p>
+If you are dealing with a large number of nets that
+S<small>YSTRE</small> does not know of, you might want to read and
+write your own archive files. These contain fingerprints of nets
+processed by S<small>YSTRE</small>. If you read in an archive file
+after starting S<small>YSTRE</small>, it will temporarily add those
+fingerprints to its list of "known" nets and thus recognize
+them. There is of yet no sophisticated way of managing user
+archives. If you write an output file with the extension
+<tt>.arc</tt>, it will contain fingerprints of all the "new" nets so
+far encountered in the current file. Each block of lines in which the
+first line starts with the word <tt>key</tt> and the last line read
+<tt>end</tt> constitutes one fingerprint. You can use a standard text
+editor to cut and paste those blocks and thus maintain your own
+private archives of nets.
+</p>
+
+<br>
+<p>
+Below are some examples of legal input for S<small>YSTRE</small>. You
 can cut and paste any of the following examples (or all of them) in a
 <tt>.cgd</tt> file using your favorite text editor (e.g. Notepad on
-Windows) and open it from S<small>YSTRE</small>.
+Windows) and open it from within S<small>YSTRE</small>.
 </p>
 
 <p>
@@ -536,6 +594,28 @@ END OF TERMS AND CONDITIONS
 <hr>
 
 <br>
+<h2><a name="publications">Publications</a></h2>
+<ul>
+
+<li><b>O. Delgado-Friedrichs, M. O'Keeffe.</b> Identification of and
+symmetry computation for crystal nets. <em>Acta Crystallogr.</em>
+<b>A59,</b> 351-360 (2003).</li>
+
+<li><b>O. Delgado-Friedrichs.</b> Barycentric drawings of periodic
+graphs. <em>Lecture Notes Comp. Sci.</em> <b>2912,</b> 178-189
+(2004).</li>
+
+<li><b>O. Delgado-Friedrichs, M. O'Keeffe.</b> Crystal nets as graphs:
+terminology and definitions. <em>J. Solid State Chem.</em> <b>178,</b>
+2480-2485 (2005).</li>
+
+<li><b>O. Delgado-Friedrichs.</b> Equilibrium placement of periodic
+graphs and convexity of plane tilings. <em>Discr. Comput. Geom.</em>
+<b>33,</b> 67-81 (2005).
+
+</ul>
+
+<br>
 <h2><a name="acknowledgements">Acknowledgements</a></h2>
 
 <p>
@@ -552,9 +632,9 @@ by testing, criticizing and discussing S<small>YSTRE</small>.
 </p>
 
 <p>
-My work on S<small>YSTRE</small> was partially supported by grants
-from the Petroleum Research Foundation and the National Science
-Foundation.
+My work on S<small>YSTRE</small> and its theoretical background was
+partially supported by grants from the Petroleum Research Foundation
+and the National Science Foundation.
 </p>
 
 </body>
