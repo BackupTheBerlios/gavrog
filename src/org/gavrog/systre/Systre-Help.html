@@ -55,9 +55,9 @@ databases.
 S<small>YSTRE</small> also computes a refined embedding of the given
 net using a method based on simulated forces. The targeted embedding
 is one that minimizes the edge length variance (normalized to unit
-length) and maximizes the unit cell volume. The force models used are
-not physically realistic, but should in most cases produce viable
-input for molecular modeling software.
+length) and maximizes the unit cell volume. The forces modeled are not
+physically realistic, but should in most cases result in viable input
+for molecular modeling software.
 </p>
 
 <p>
@@ -69,12 +69,12 @@ Gavrog Project</a>.
 <h2><a name="installation">Installation</a></h2>
 
 <p>
-S<small>YSTRE</small> needs a Java runtime
-environment (JRE) of version 1.4.2 or higher to run. The most
-straightforward way to get a JRE is to download it from
-<tt>java.sun.com</tt> and follow the installation instructions given
-there. Java might already be installed on your system as a
-prerequisite for other programs, such as web browsers.
+S<small>YSTRE</small> requires a Java runtime environment (JRE) of
+version 1.4.2 or higher. The most straightforward way to get a
+JRE is to download it from <tt>java.sun.com</tt> and follow the
+installation instructions given there. Java might already be installed
+on your system as a prerequisite for other programs, such as a web
+browser.
 </p>
 
 <p>
@@ -87,9 +87,10 @@ you like, for example on your desktop.
 <h2><a name="usage">Usage</a></h2>
 
 <p>
-The simplest way to start S<small>YSTRE</small> is
-to double-click on its icon. If that does not work, open a console
-window and type the command
+The simplest way to start S<small>YSTRE</small> is to double-click on
+its icon. If that does not work, and you are sure that Java is
+correctly installed and all path variables set correctly, open a
+console window and type the command
 </p>
 
 <pre>
@@ -117,13 +118,13 @@ manual on how to create and execute such files.
 Using S<small>YSTRE</small> is very simple. Run S<small>YSTRE</small>,
 then use the [<tt>Open...</tt>] button to read in a file of net
 descriptions. S<small>YSTRE</small> will process the first net in the
-file and describes the results in an informal way. If there are more
+file and describe the results in an informal way. If there are more
 nets, use the [<tt>Next</tt>] button to step through them. When you
 are finished with a file, you can store the results in one of several
 formats using the [<tt>Save as...</tt>] button. The [<tt>Help</tt>]
-button displays the text you are currently reading, and, finally, the
-[<tt>Options...</tt>] button lets you modify some of
-S<small>YSTRE</small>'s internal workings.
+button displays this text and, finally, the [<tt>Options...</tt>]
+button lets you modify some of S<small>YSTRE</small>'s internal
+workings.
 </p>
 
 <br>
@@ -162,7 +163,7 @@ them. There is of yet no sophisticated way of managing user
 archives. If you write an output file with the extension
 <tt>.arc</tt>, it will contain fingerprints of all the "new" nets so
 far encountered in the current file. Each block of lines in which the
-first line starts with the word <tt>key</tt> and the last line read
+first line starts with the word <tt>key</tt> and the last line reads
 <tt>end</tt> constitutes one fingerprint. You can use a standard text
 editor to cut and paste those blocks and thus maintain your own
 private archives of nets.
@@ -187,7 +188,9 @@ the current line.
 positions. S<small>YSTRE</small> computes edges by finding nearest
 neighbors. Edge lengths are assumed to be close to unity. If this is
 not true for your data and S<small>YSTRE</small> reports a problem,
-you should try scaling the unit cell parameters accordingly.</p>
+you should try scaling the unit cell parameters accordingly. The
+keywords <tt>NODE</tt> and <tt>ATOM</tt> are equivalent, as are the
+keywords <tt>ID</tt> and <tt>NAME</tt>.</p>
             
 <pre>
 # The type of data to expect
@@ -305,7 +308,7 @@ which is the key to its efficient algorithms. If different nodes
 this method fails. The present version of S<small>YSTRE</small> is not
 able to handle nets with collisions and will produce an error
 message.  This seems to be a fairly rare case, though, especially in
-nets that come from actual crystal structures.
+nets that emerge from actual crystal structures.
 </p>
 
 <p>
@@ -323,10 +326,10 @@ non-connected nets.
 If you specify a crystal without explicit edges as in the first and
 fourth example above, S<small>YSTRE</small> needs to compute edges
 based on nearest neighbors. This does not only depend on the correct
-cell parameters, but also on the origin choice. For those groups that
-have two conventional choices as according to the international
-tables, S<small>YSTRE</small> by default uses the second one. This can
-be changed in the 'Options' dialog.
+cell parameters, but also on the origin choice. For groups that have
+two conventional choices as according to the international tables,
+S<small>YSTRE</small> uses the second one by default. This can be
+changed in the 'Options' dialog.
 </p>
 
 <p>
@@ -351,9 +354,9 @@ handled analogously to the above. In this case, append <tt>:H</tt>
 <dd>
 <p>
 The Java virtual machine by Sun does not seem to be completely stable.
-There are occasional, non-reproducible program crashes or
+In rare cases, there are non-reproducible program crashes or
 miscalculations.  S<small>YSTRE</small> double-checks its computations
-very carefully, though, so that erroneous results are highly unlikely
+very thoroughly, though, so that erroneous results are highly unlikely
 to go undetected.  Much more likely, the program will terminate for no
 apparent reason or produce an "<tt>INTERNAL ERROR</tt>" message. In
 those cases, the best strategy is to restart S<small>YSTRE</small> or
@@ -626,8 +629,8 @@ development over many years and even came up with the name.
 </p>
 
 <p>
-Micheal Treacy, Davide Proserpio, Martin Foster, Martijn Zwijnenburg,
-Stuart Ramsden, Vladislav Blatov and Stephen Hyde have helped me a lot
+Michael Treacy, Davide Proserpio, Martin Foster, Martijn Zwijnenburg,
+Stuart Ramsden, Vladislav Blatov, Stephen Hyde and others helped a lot
 by testing, criticizing and discussing S<small>YSTRE</small>.
 </p>
 
