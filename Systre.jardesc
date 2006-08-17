@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jardesc>
-    <jar path="Gavrog/Systre.jar"/>
-    <options overwrite="false" compress="true" exportErrors="true" exportWarnings="true" saveDescription="true" descriptionLocation="/Gavrog/Systre.jardesc" useSourceFolders="false" buildIfNeeded="true" includeDirectoryEntries="false" storeRefactorings="false"/>
-    <storedRefactorings structuralOnly="false" deprecationInfo="true"/>
-    <selectedProjects/>
-    <manifest manifestVersion="1.0" usesManifest="true" reuseManifest="false" saveManifest="false" generateManifest="true" manifestLocation="" mainClassHandleIdentifier="=Gavrog/src&lt;org.gavrog.systre{SystreGUI.java[SystreGUI">
-        <sealing sealJar="true">
-            <packagesToSeal/>
-            <packagesToUnSeal/>
-        </sealing>
-    </manifest>
-    <selectedElements exportClassFiles="true" exportOutputFolder="false" exportJavaFiles="false">
-        <file path="/Gavrog/.project"/>
-        <javaElement handleIdentifier="=Buoy/&lt;buoy.event"/>
-        <file path="/Gavrog/.cvsignore"/>
-        <javaElement handleIdentifier="=Buoy/&lt;buoy.xml"/>
-        <javaElement handleIdentifier="=Buoy/&lt;buoy.internal"/>
-        <javaElement handleIdentifier="=Buoy/&lt;buoy.widget"/>
-        <javaElement handleIdentifier="=Buoy/&lt;buoy.xml.delegate"/>
-        <file path="/Gavrog/.classpath"/>
-        <javaElement handleIdentifier="=Gavrog/src"/>
-    </selectedElements>
+<jar path="Gavrog/Systre.jar"/>
+<options buildIfNeeded="true" compress="true" descriptionLocation="/Gavrog/Systre.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" useSourceFolders="false"/>
+<manifest generateManifest="true" mainClassHandleIdentifier="=Gavrog/src&lt;org.gavrog.systre{SystreGUI.java[SystreGUI" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+<sealing sealJar="true">
+<packagesToSeal/>
+<packagesToUnSeal/>
+</sealing>
+</manifest>
+<selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+<file path="/Gavrog/.project"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.event"/>
+<file path="/Gavrog/.cvsignore"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.xml"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.internal"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.widget"/>
+<javaElement handleIdentifier="=Buoy/&lt;buoy.xml.delegate"/>
+<file path="/Gavrog/.classpath"/>
+<javaElement handleIdentifier="=Gavrog/src"/>
+</selectedElements>
 </jardesc>

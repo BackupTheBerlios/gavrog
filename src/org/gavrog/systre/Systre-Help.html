@@ -70,17 +70,22 @@ Gavrog Project</a>.
 
 <p>
 S<small>YSTRE</small> requires a Java runtime environment (JRE) of
-version 1.4.2 or higher. The most straightforward way to get a
-JRE is to download it from <tt>java.sun.com</tt> and follow the
-installation instructions given there. Java might already be installed
-on your system as a prerequisite for other programs, such as a web
-browser.
+version 1.4.2 or higher. Java is now a standard part of Mac OS X. On
+other systems, Java might already be installed as a prerequisite for
+other programs, such as a web browser. Otherwise, the most
+straightforward way to get a JRE is to download it from
+<tt>java.sun.com</tt> and follow the installation instructions given
+there. Set all path variables correctly for your system as instructed
+(this should be done automatically if you use a Windows installer), so
+that the <tt>java</tt> command can be recognized. If supported by your
+system, make sure that the file extension <tt>.jar</tt> is associated
+with the Java executable.
 </p>
 
 <p>
-Installing S<small>YSTRE</small> itself is very
-easy. Just download the file <tt>Systre.jar</tt> and put it anywhere
-you like, for example on your desktop.
+Installing S<small>YSTRE</small> itself is very easy.  Just download
+the file <tt>Systre.jar</tt> and put it anywhere you like, for example
+on your desktop.
 </p>
 
 <br>
@@ -186,11 +191,11 @@ the current line.
 <br>
 <p><b>Example 1</b>: Diamond, specified by space group, unit cell and
 positions. S<small>YSTRE</small> computes edges by finding nearest
-neighbors. Edge lengths are assumed to be close to unity. If this is
-not true for your data and S<small>YSTRE</small> reports a problem,
-you should try scaling the unit cell parameters accordingly. The
-keywords <tt>NODE</tt> and <tt>ATOM</tt> are equivalent, as are the
-keywords <tt>ID</tt> and <tt>NAME</tt>.</p>
+neighbors. Edge lengths have to be larger than 0.1. If any pair of
+nodes is closer than that, an error is reported. If this is the case
+for your data, you should try scaling the unit cell parameters
+accordingly. The keywords <tt>NODE</tt> and <tt>ATOM</tt> are
+equivalent, as are the keywords <tt>ID</tt> and <tt>NAME</tt>.</p>
             
 <pre>
 # The type of data to expect
@@ -317,6 +322,18 @@ handle nets of any other dimension than 3 (including plane nets) or
 non-connected nets.
 </p>
 
+</dd>
+
+<dt><b>Space Group Symbol</b></dt>
+
+<dd>
+<p>
+Enter the space group symbol as it appears in the International Tables
+except N overbar is written as -N and subscripts written as regular
+numbers. Examples: <tt>Fd-3m</tt>, <tt>I41/amd</tt>,
+<tt>P212121</tt>. Only the standard settings of the International
+tables are known at this time.
+</p>
 </dd>
 
 <dt><b>Origin choice</b></dt>
