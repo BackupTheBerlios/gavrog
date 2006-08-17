@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.15 2006/08/02 01:13:09 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.16 2006/08/17 03:53:56 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
@@ -291,7 +291,12 @@ public class SpaceGroupCatalogue {
 	 * @return the listed.
 	 */
     public static String listedName(final int dim, final String name) {
-        return retrieve(dim, name).key;
+    	final Entry result = retrieve(dim, name);
+    	if (result == null) {
+    		return null;
+    	} else {
+    		return result.key;
+    	}
     }
 
     /**
@@ -302,7 +307,12 @@ public class SpaceGroupCatalogue {
 	 * @return the list of operators.
 	 */
     public static List operators(final int dim, final String name) {
-        return retrieve(dim, name).ops;
+    	final Entry result = retrieve(dim, name);
+    	if (result == null) {
+    		return null;
+    	} else {
+    		return result.ops;
+    	}
     }
 
     /**
@@ -314,7 +324,12 @@ public class SpaceGroupCatalogue {
      * @return the transformation operator.
      */
     public static CoordinateChange transform(final int dim, final String name) {
-        return retrieve(dim, name).transform;
+    	final Entry result = retrieve(dim, name);
+    	if (result == null) {
+    		return null;
+    	} else {
+    		return result.transform;
+    	}
     }
 
     /**
