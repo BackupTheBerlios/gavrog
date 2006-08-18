@@ -1,0 +1,119 @@
+INSTALLING SYSTRE FROM ITS JAVA SOURCE CODE
+===========================================
+
+The file describes the compilation and installation of Systre from its
+Java sources. If all you need is a running copy of Systre's most
+recent release, this is most definitely not what you want to do.
+Instead, you should go to http://www.gavrog.org and download the
+binary distribution, which comes as a single, convenient JAR file.
+
+
+There are, however, a few good reasons to compile Systre from scratch:
+
+- You want to study and modify the source code.
+
+- You need cutting edge features that are not yet included in the
+  official distribution.
+
+- You want to use a top notch optimizing Java compiler or have other
+  reasons why the binary distribution, which was made with Sun's
+  official compiler, does not work for you.
+
+
+The following instructions are for Unix-like system. On Windows, a
+few small adjustments have to be made, like changing slashes to
+backslashes in paths, using a different syntax to access shell
+variables, and so on.
+
+
+0) Using Eclipse
+   =============
+
+Systre (and the whole Gavrog project of which Systre is a part) is
+developed using Eclipse. If you know how to use Eclipse, you can just
+download and extract Systre as described below, import it into
+Eclipse as a new project and skip the rest of the instructions.
+
+
+1) Downloading Systre and Buoy
+   ===========================
+
+Systre uses Buoy, which is a simple GUI toolkit built on top of Swing.
+You can download Buoy from http://buoy.sourceforge.net. In the
+following, we will assume that you downloaded and extracted Buoy and
+set the shell variable BUOY to point to the top directory thus
+created.
+
+Systre itself can be downloaded from http://gavrog.org.
+
+
+
+2) Extracting the sources
+   ======================
+
+Extract all files from the ZIP file that you downloaded. Use
+
+	unzip Systre-1.0.0-src.zip
+
+or something equivalent. This creates a directory named Gavrog.
+
+
+3) Compiling Systre
+   ================
+
+Change into the directory that you just created:
+
+	cd Gavrog
+
+Copy the file Buoy.jar here for easier access:
+
+	cp $BUOY/Buoy.jar .
+
+Create a subdirectory for the compiler to place binaries in:
+
+	mkdir bin
+
+Compile:
+
+	javac -source 1.4 -classpath Buoy.jar:src \
+	      -d bin src/org/gavrog/systre/SystreGUI.java
+
+
+4) Copying resource files
+   ======================
+
+Copy text and data files used by Systre from the source tree into the
+binary tree:
+
+	cp src/org/gavrog/systre/*.arc bin/org/gavrog/systre/
+	cp src/org/gavrog/systre/*.html bin/org/gavrog/systre/
+	cp src/org/gavrog/joss/geometry/sgtable.data \
+	   bin/org/gavrog/joss/geometry/
+
+
+5) Running Systre
+   ==============
+
+Here we assume that you run Systre from the Gavrog directory.
+
+	java -cp Buoy.jar:bin org.gavrog.systre.SystreGUI &
+
+
+6) Creating an executable JAR file (optional)
+   ==========================================
+
+Change to the directory that holds the binaries:
+
+	cd bin
+
+Extract the class files for the Buoy toolkit:
+
+	jar xf ../Buoy.jar buoy
+
+Create the new JAR file:
+
+	jar cmf ../SYSTRE.MF Systre.jar *
+
+Run it:
+
+	java -jar Systre.jar &
