@@ -25,6 +25,9 @@ few small adjustments have to be made, like changing slashes to
 backslashes in paths, using a different syntax to access shell
 variables, and so on.
 
+You will need a Java Development Kit (JDK) of version 1.4.2 or higher.
+Gavrog is developed using Sun's original JDK (see java.sun.org).
+
 
 0) Using Eclipse
    =============
