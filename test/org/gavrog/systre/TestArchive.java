@@ -29,7 +29,7 @@ import org.gavrog.systre.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.5 2006/04/14 02:59:19 odf Exp $
+ * @version $Id: TestArchive.java,v 1.6 2006/08/18 20:56:14 odf Exp $
  */
 public class TestArchive extends TestCase {
     final PeriodicGraph srs = NetParser.stringToNet(""
@@ -51,6 +51,8 @@ public class TestArchive extends TestCase {
         + "version  " + keyVersion + "\n"
         + "id       " + srs_name + "\n"
         + "checksum " + srs_digest + "\n"
+        + "ref      " + "\n"
+        + "desc     " + "\n"
         + "end\n";
     
     public void testEntryChecksum() {
