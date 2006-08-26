@@ -16,39 +16,67 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import org.gavrog.box.simple.NamedConstant;
+
 /**
  * Base class for move objects in generators.
  * 
  * @author Olaf Delgado
- * @version $Id: Move.java,v 1.1 2006/08/25 02:59:55 odf Exp $
+ * @version $Id: Move.java,v 1.2 2006/08/26 02:46:48 odf Exp $
  */
 public class Move {
-	final private boolean deduction;
+	public static class Type extends NamedConstant {
+		// --- no actual move, just indicates a choice to be made
+		final public static Type CHOICE = new Type("Choice");
+		
+		// --- a decision made upon a choice
+		final public static Type DECISION = new Type("Decision");
+		
+		// --- a consequence of previous decisions
+		final public static Type DEDUCTION = new Type("Deduction");
+		
+		private Type(final String name) {
+			super(name);
+		}
+	}
+	
+	// --- the type of move
+	final private Type type;
 	
 	/**
 	 * Creates a new instance.
 	 * 
-	 * @param deduction true is this move is forced.
+	 * @param choice false is this move is forced.
 	 */
-	public Move(final boolean deduction) {
-		this.deduction = deduction;
+	public Move(final Type type) {
+		this.type = type;
 	}
 
+	/**
+	 * @return true if this is no actual move but indicates a choice to be made.
+	 */
+	public boolean isChoice() {
+		return this.type == Type.CHOICE;
+	}
+	
+	/**
+	 * @return true if this move is a decision made upon a choice.
+	 */
+	public boolean isDecision() {
+		return this.type == Type.DECISION;
+	}
+	
+	/**
+	 * @return true if this move is a consequence of previous decisions.
+	 */
+	public boolean isDeduction() {
+		return this.type == Type.DEDUCTION;
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
-		if (isDeduction()) {
-			return "<deduction>";
-		} else {
-			return "<choice>";
-		}
-	}
-	
-	/**
-	 * @return true if this move is forced by previous ones.
-	 */
-	public boolean isDeduction() {
-		return this.deduction;
+		return "<" + this.type + ">";
 	}
 }

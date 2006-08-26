@@ -26,7 +26,7 @@ import org.gavrog.joss.dsyms.generators.ExtendTo3d.Move;
  * Abstract base class for generators, defining the basic branch-and-cut strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate.java,v 1.1 2006/08/25 02:59:55 odf Exp $
+ * @version $Id: Generate.java,v 1.2 2006/08/26 02:46:48 odf Exp $
  */
 public abstract class Generate extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -55,16 +55,16 @@ public abstract class Generate extends IteratorAdapter {
 	protected Object findNext() throws NoSuchElementException {
         log("entering findNext(): stack size = " + this.stack.size());
         while (true) {
-            final Move choice = undoLastChoice();
-            if (choice == null) {
-            	log("leaving findNext(): no more choices to undo");
+            final Move decision = undoLastDecision();
+            if (decision == null) {
+            	log("leaving findNext(): no more decisions to undo");
                 throw new NoSuchElementException();
             } else {
-            	log("  last choice was " + choice);
+            	log("  last decision was " + decision);
             	log("  current state:\n" + this.current);
             }
 			
-            final Move move = nextMove(choice);
+            final Move move = nextDecision(decision);
             if (move == null) {
                 log("  no potential move");
                 continue;
@@ -91,19 +91,19 @@ public abstract class Generate extends IteratorAdapter {
         }
 	}
 
-	protected boolean performMove(Move move) {
+	protected boolean performMove(final Move initial) {
 		//TODO implement this
 		return false;
 	}
 
-	protected Move undoLastChoice() {
+	protected Move undoLastDecision() {
 		//TODO implement this
 		return null;
 	}
 	
 	abstract protected Object nextChoice();
 
-	abstract protected Move nextMove(Move choice);
+	abstract protected Move nextDecision(final Move previous);
 
 	abstract protected Object makeResult();
 
