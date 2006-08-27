@@ -28,7 +28,7 @@ import org.gavrog.box.simple.NamedConstant;
  * Abstract base class for generators, defining the basic branch-and-cut strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate.java,v 1.3 2006/08/27 02:44:57 odf Exp $
+ * @version $Id: Generate.java,v 1.4 2006/08/27 02:49:32 odf Exp $
  */
 public abstract class Generate extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -48,6 +48,9 @@ public abstract class Generate extends IteratorAdapter {
 			super(name);
 		}
 	}
+
+	// --- flag set when generation is done
+	private boolean done = false;
 	
 	// --- the generation history
 	final private LinkedList stack = new LinkedList();
@@ -67,11 +70,21 @@ public abstract class Generate extends IteratorAdapter {
 	 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 	 */
 	protected Object findNext() throws NoSuchElementException {
+		if (done) {
+            throw new NoSuchElementException();
+		}
+		
         log("entering findNext(): stack size = " + this.stack.size());
+
+        if (stack.size() == 0) {
+            this.stack.addLast(nextChoice());
+        }
+        
         while (true) {
             final Move decision = undoLastDecision();
             if (decision == null) {
             	log("leaving findNext(): no more decisions to undo");
+            	this.done = true;
                 throw new NoSuchElementException();
             } else {
             	log("  last decision was " + decision);
