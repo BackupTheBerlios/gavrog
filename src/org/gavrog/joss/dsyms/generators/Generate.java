@@ -28,7 +28,7 @@ import org.gavrog.box.simple.NamedConstant;
  * Abstract base class for generators, defining the basic branch-and-cut strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate.java,v 1.4 2006/08/27 02:49:32 odf Exp $
+ * @version $Id: Generate.java,v 1.5 2006/08/27 23:03:00 odf Exp $
  */
 public abstract class Generate extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -100,12 +100,13 @@ public abstract class Generate extends IteratorAdapter {
             
             if (performMoveAndDeductions(move)) {
                 if (isCanonical()) {
-                    if (isComplete()) {
+                    this.stack.addLast(nextChoice());
+                    final Object result = makeResult();
+                    if (result != null) {
                     	log("leaving findNext(): result is complete");
-                    	return makeResult();
+                    	return result;
                     } else {
                         log("  result is incomplete");
-                        this.stack.addLast(nextChoice());
                     }
                 } else {
                     log("  result is not canonical");
@@ -175,8 +176,6 @@ public abstract class Generate extends IteratorAdapter {
 	abstract protected void undoMove(final Move move);
 
 	abstract protected List deductions(final Move move);
-
-	abstract protected boolean isComplete();
 
 	abstract protected boolean isCanonical();
 
