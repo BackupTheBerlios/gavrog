@@ -16,24 +16,38 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.IteratorAdapter;
-import org.gavrog.joss.dsyms.generators.ExtendTo3d.Move;
+import org.gavrog.box.simple.NamedConstant;
 
 /**
  * Abstract base class for generators, defining the basic branch-and-cut strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate.java,v 1.2 2006/08/26 02:46:48 odf Exp $
+ * @version $Id: Generate.java,v 1.3 2006/08/27 02:44:57 odf Exp $
  */
 public abstract class Generate extends IteratorAdapter {
 	// --- set to true to enable logging
 	final private static boolean LOGGING = false;
 	
-	// --- the current partial generation result
-	final private Object current = null;
+	public static class Status extends NamedConstant {
+		// --- move was performed okay
+		final public static Status OK = new Status("ok");
+		
+		// --- void move; changes nothing
+		final public static Status VOID = new Status("void");
+		
+		// --- move contradicts current state
+		final public static Status ILLEGAL = new Status("illegal");
+		
+		private Status(final String name) {
+			super(name);
+		}
+	}
 	
 	// --- the generation history
 	final private LinkedList stack = new LinkedList();
@@ -61,7 +75,6 @@ public abstract class Generate extends IteratorAdapter {
                 throw new NoSuchElementException();
             } else {
             	log("  last decision was " + decision);
-            	log("  current state:\n" + this.current);
             }
 			
             final Move move = nextDecision(decision);
@@ -72,8 +85,7 @@ public abstract class Generate extends IteratorAdapter {
             	log("  found potential move " + move);
             }
             
-            if (performMove(move)) {
-                log("  result of move:\n" + this.current);
+            if (performMoveAndDeductions(move)) {
                 if (isCanonical()) {
                     if (isComplete()) {
                     	log("leaving findNext(): result is complete");
@@ -91,23 +103,69 @@ public abstract class Generate extends IteratorAdapter {
         }
 	}
 
-	protected boolean performMove(final Move initial) {
-		//TODO implement this
-		return false;
+	private boolean performMoveAndDeductions(final Move initial) {
+        // --- we maintain a queue of deductions, starting with the initial move
+        final LinkedList queue = new LinkedList();
+        queue.addLast(initial);
+
+        while (queue.size() > 0) {
+            // --- get the next move from the queue
+            final Move move = (Move) queue.removeFirst();
+
+            // --- perform the move if possible
+            final Status status = performMove(move);
+
+            // --- a void move has no consequences
+            if (status == Status.VOID) {
+            	continue;
+            }
+            
+            // --- if the move was illegal, return immediately
+            if (status == Status.ILLEGAL) {
+				log("move " + move + " is impossible; backtracking");
+				return false;
+			}
+            
+            // --- record the move
+        	this.stack.addLast(move);
+            
+            // --- finally, find and enqueue deductions
+            final List deductions = deductions(move);
+            for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
+            	queue.addLast(iter.next());
+            }
+        }
+        
+		return true;
 	}
 
-	protected Move undoLastDecision() {
-		//TODO implement this
-		return null;
+	private Move undoLastDecision() {
+        while (stack.size() > 0) {
+            final Move last = (Move) this.stack.removeLast();
+            
+            log("Undoing " + last);
+            undoMove(last);
+
+            if (!last.isDeduction()) {
+            	return last;
+            }
+        }
+        return null;
 	}
 	
-	abstract protected Object nextChoice();
+	abstract protected Move nextChoice();
 
 	abstract protected Move nextDecision(final Move previous);
 
-	abstract protected Object makeResult();
+	abstract protected Status performMove(final Move move);
+
+	abstract protected void undoMove(final Move move);
+
+	abstract protected List deductions(final Move move);
 
 	abstract protected boolean isComplete();
 
 	abstract protected boolean isCanonical();
+
+	abstract protected Object makeResult();
 }
