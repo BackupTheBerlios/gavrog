@@ -22,13 +22,13 @@ import java.util.List;
 
 /**
  * Generates all permutation of a given (small) degree. A first sample
- * application for the abstract {@link Generate} class. Does not use deductions
+ * application for the abstract {@link Generator} class. Does not use deductions
  * or canonicity, so is much too simplistic for a real test.
  * 
  * @author Olaf Delgado
- * @version $Id: Permutations.java,v 1.1 2006/08/28 02:17:00 odf Exp $
+ * @version $Id: Permutations.java,v 1.2 2006/08/28 19:29:25 odf Exp $
  */
-public class Permutations extends Generate {
+public class Permutations extends Generator {
 	final int degree;
 	final int map[];
 	final int inv[];
