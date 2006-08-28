@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.1 2006/08/28 19:42:51 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.2 2006/08/28 20:58:53 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -102,7 +102,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 			}
 
 			if (performMoveAndDeductions(move)) {
-				if (isCanonical()) {
+				if (isWellFormed()) {
 					this.stack.addLast(nextChoice(move));
 					final Object result = makeResult();
 					if (result != null) {
@@ -224,11 +224,15 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	abstract protected List deductions(final Move move);
 
 	/**
-	 * Determines if the current state describes a canonical form.
+	 * Implements a final test of the current state after a decision move and a
+	 * possible series of deductions. This might, for example, check if the
+	 * current state describes a partial result in canonical form, or implement
+	 * any other tests that would be too costly to be performed after every
+	 * elementary move.
 	 * 
-	 * @return true if the current state is canonical.
+	 * @return true if the current state is well-formed.
 	 */
-	abstract protected boolean isCanonical();
+	abstract protected boolean isWellFormed();
 
 	/**
 	 * Constructs an output object based on the current state or <code>null</code> if
