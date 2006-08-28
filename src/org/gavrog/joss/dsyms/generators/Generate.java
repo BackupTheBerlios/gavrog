@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate.java,v 1.6 2006/08/28 01:06:39 odf Exp $
+ * @version $Id: Generate.java,v 1.7 2006/08/28 02:16:49 odf Exp $
  */
 public abstract class Generate extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -80,7 +80,7 @@ public abstract class Generate extends IteratorAdapter {
 		log("entering findNext(): stack size = " + this.stack.size());
 
 		if (stack.size() == 0) {
-			this.stack.addLast(nextChoice());
+			this.stack.addLast(nextChoice(null));
 		}
 
 		while (true) {
@@ -103,7 +103,7 @@ public abstract class Generate extends IteratorAdapter {
 
 			if (performMoveAndDeductions(move)) {
 				if (isCanonical()) {
-					this.stack.addLast(nextChoice());
+					this.stack.addLast(nextChoice(move));
 					final Object result = makeResult();
 					if (result != null) {
 						log("leaving findNext(): result is complete");
@@ -148,8 +148,10 @@ public abstract class Generate extends IteratorAdapter {
 
 			// --- finally, find and enqueue deductions
 			final List deductions = deductions(move);
-			for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
-				queue.addLast(iter.next());
+			if (deductions != null) {
+				for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
+					queue.addLast(iter.next());
+				}
 			}
 		}
 
@@ -159,6 +161,9 @@ public abstract class Generate extends IteratorAdapter {
 	private Move undoLastDecision() {
 		while (stack.size() > 0) {
 			final Move last = (Move) this.stack.removeLast();
+			if (last == null) {
+				continue;
+			}
 
 			log("Undoing " + last);
 			undoMove(last);
@@ -176,9 +181,10 @@ public abstract class Generate extends IteratorAdapter {
 	 * Constructs a {@link Move} object which describes the next choice to make
 	 * given the current state.
 	 * 
+	 * @param previous the last decision made (<code>null</code> at start).
 	 * @return the next choice to make.
 	 */
-	abstract protected Move nextChoice();
+	abstract protected Move nextChoice(final Move previous);
 
 	/**
 	 * Constructs a {@link Move} object which describes the next possible way to
