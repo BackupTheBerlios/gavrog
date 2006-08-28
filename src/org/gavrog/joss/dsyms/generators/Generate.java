@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2005 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,25 +25,26 @@ import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.simple.NamedConstant;
 
 /**
- * Abstract base class for generators, defining the basic branch-and-cut strategy.
+ * Abstract base class for generators, defining the basic branch-and-cut
+ * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate.java,v 1.5 2006/08/27 23:03:00 odf Exp $
+ * @version $Id: Generate.java,v 1.6 2006/08/28 01:06:39 odf Exp $
  */
 public abstract class Generate extends IteratorAdapter {
 	// --- set to true to enable logging
 	final private static boolean LOGGING = false;
-	
+
 	public static class Status extends NamedConstant {
 		// --- move was performed okay
 		final public static Status OK = new Status("ok");
-		
+
 		// --- void move; changes nothing
 		final public static Status VOID = new Status("void");
-		
+
 		// --- move contradicts current state
 		final public static Status ILLEGAL = new Status("illegal");
-		
+
 		private Status(final String name) {
 			super(name);
 		}
@@ -51,10 +52,10 @@ public abstract class Generate extends IteratorAdapter {
 
 	// --- flag set when generation is done
 	private boolean done = false;
-	
+
 	// --- the generation history
 	final private LinkedList stack = new LinkedList();
-	
+
 	/**
 	 * If logging is enabled, print a message to the standard error stream.
 	 * 
@@ -65,119 +66,169 @@ public abstract class Generate extends IteratorAdapter {
 			System.err.println(text);
 		}
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 	 */
 	protected Object findNext() throws NoSuchElementException {
 		if (done) {
-            throw new NoSuchElementException();
+			throw new NoSuchElementException();
 		}
-		
-        log("entering findNext(): stack size = " + this.stack.size());
 
-        if (stack.size() == 0) {
-            this.stack.addLast(nextChoice());
-        }
-        
-        while (true) {
-            final Move decision = undoLastDecision();
-            if (decision == null) {
-            	log("leaving findNext(): no more decisions to undo");
-            	this.done = true;
-                throw new NoSuchElementException();
-            } else {
-            	log("  last decision was " + decision);
-            }
-			
-            final Move move = nextDecision(decision);
-            if (move == null) {
-                log("  no potential move");
-                continue;
-            } else {
-            	log("  found potential move " + move);
-            }
-            
-            if (performMoveAndDeductions(move)) {
-                if (isCanonical()) {
-                    this.stack.addLast(nextChoice());
-                    final Object result = makeResult();
-                    if (result != null) {
-                    	log("leaving findNext(): result is complete");
-                    	return result;
-                    } else {
-                        log("  result is incomplete");
-                    }
-                } else {
-                    log("  result is not canonical");
-                }
-            } else {
-                log("  move was rejected");
-            }
-        }
+		log("entering findNext(): stack size = " + this.stack.size());
+
+		if (stack.size() == 0) {
+			this.stack.addLast(nextChoice());
+		}
+
+		while (true) {
+			final Move decision = undoLastDecision();
+			if (decision == null) {
+				log("leaving findNext(): no more decisions to undo");
+				this.done = true;
+				throw new NoSuchElementException();
+			} else {
+				log("  last decision was " + decision);
+			}
+
+			final Move move = nextDecision(decision);
+			if (move == null) {
+				log("  no potential move");
+				continue;
+			} else {
+				log("  found potential move " + move);
+			}
+
+			if (performMoveAndDeductions(move)) {
+				if (isCanonical()) {
+					this.stack.addLast(nextChoice());
+					final Object result = makeResult();
+					if (result != null) {
+						log("leaving findNext(): result is complete");
+						return result;
+					} else {
+						log("  result is incomplete");
+					}
+				} else {
+					log("  result is not canonical");
+				}
+			} else {
+				log("  move was rejected");
+			}
+		}
 	}
 
 	private boolean performMoveAndDeductions(final Move initial) {
-        // --- we maintain a queue of deductions, starting with the initial move
-        final LinkedList queue = new LinkedList();
-        queue.addLast(initial);
+		// --- we maintain a queue of deductions, starting with the initial move
+		final LinkedList queue = new LinkedList();
+		queue.addLast(initial);
 
-        while (queue.size() > 0) {
-            // --- get the next move from the queue
-            final Move move = (Move) queue.removeFirst();
+		while (queue.size() > 0) {
+			// --- get the next move from the queue
+			final Move move = (Move) queue.removeFirst();
 
-            // --- perform the move if possible
-            final Status status = performMove(move);
+			// --- perform the move if possible
+			final Status status = performMove(move);
 
-            // --- a void move has no consequences
-            if (status == Status.VOID) {
-            	continue;
-            }
-            
-            // --- if the move was illegal, return immediately
-            if (status == Status.ILLEGAL) {
+			// --- a void move has no consequences
+			if (status == Status.VOID) {
+				continue;
+			}
+
+			// --- if the move was illegal, return immediately
+			if (status == Status.ILLEGAL) {
 				log("move " + move + " is impossible; backtracking");
 				return false;
 			}
-            
-            // --- record the move
-        	this.stack.addLast(move);
-            
-            // --- finally, find and enqueue deductions
-            final List deductions = deductions(move);
-            for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
-            	queue.addLast(iter.next());
-            }
-        }
-        
+
+			// --- record the move
+			this.stack.addLast(move);
+
+			// --- finally, find and enqueue deductions
+			final List deductions = deductions(move);
+			for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
+				queue.addLast(iter.next());
+			}
+		}
+
 		return true;
 	}
 
 	private Move undoLastDecision() {
-        while (stack.size() > 0) {
-            final Move last = (Move) this.stack.removeLast();
-            
-            log("Undoing " + last);
-            undoMove(last);
+		while (stack.size() > 0) {
+			final Move last = (Move) this.stack.removeLast();
 
-            if (!last.isDeduction()) {
-            	return last;
-            }
-        }
-        return null;
+			log("Undoing " + last);
+			undoMove(last);
+
+			if (!last.isDeduction()) {
+				return last;
+			}
+		}
+		return null;
 	}
-	
+
+	// --- The following methods have to implemented by every derived class:
+
+	/**
+	 * Constructs a {@link Move} object which describes the next choice to make
+	 * given the current state.
+	 * 
+	 * @return the next choice to make.
+	 */
 	abstract protected Move nextChoice();
 
+	/**
+	 * Constructs a {@link Move} object which describes the next possible way to
+	 * decide upon the given choice.
+	 * 
+	 * @param previous the current choice or the last decision regarding that choice.
+	 * @return the next decision for the given choice.
+	 */
 	abstract protected Move nextDecision(final Move previous);
 
+	/**
+	 * Performs the given move. Returns the status of the move: OK if the move
+	 * was performed as requested, VOID if the move would not change the current
+	 * state, and ILLEGAL if the move conflicts with the current state and was
+	 * thus rejected.
+	 * 
+	 * @param move the move to perform.
+	 * @return the status of the move (OK, VOID or ILLEGAL).
+	 */
 	abstract protected Status performMove(final Move move);
 
+	/**
+	 * Undo the given move under the assumption that it was the last move
+	 * performed on the path to the current state.
+	 * 
+	 * @param move the move to undo.
+	 */
 	abstract protected void undoMove(final Move move);
 
+	/**
+	 * Determine forced moves (deductions) based on the current state and the
+	 * last move performed to reach it.
+	 * 
+	 * @param move the last move performed.
+	 * @return the list of forced moves.
+	 */
 	abstract protected List deductions(final Move move);
 
+	/**
+	 * Determines if the current state describes a canonical form.
+	 * 
+	 * @return true if the current state is canonical.
+	 */
 	abstract protected boolean isCanonical();
 
+	/**
+	 * Constructs an output object based on the current state or <code>null</code> if
+	 * the current state does not describe a complete result.
+	 * 
+	 * @return the result of the current state.
+	 */
 	abstract protected Object makeResult();
 }
