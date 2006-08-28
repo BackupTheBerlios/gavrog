@@ -29,9 +29,9 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: Generator.java,v 1.1 2006/08/28 19:29:25 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.1 2006/08/28 19:42:51 odf Exp $
  */
-public abstract class Generator extends IteratorAdapter {
+public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
 	final private static boolean LOGGING = false;
 
