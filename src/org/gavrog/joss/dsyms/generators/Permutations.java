@@ -26,7 +26,7 @@ import java.util.List;
  * or canonicity, so is much too simplistic for a real test.
  * 
  * @author Olaf Delgado
- * @version $Id: Permutations.java,v 1.2 2006/08/28 19:29:25 odf Exp $
+ * @version $Id: Permutations.java,v 1.3 2006/08/28 19:37:53 odf Exp $
  */
 public class Permutations extends Generator {
 	final int degree;
@@ -128,9 +128,18 @@ public class Permutations extends Generator {
 	}
 	
 	public static void main(final String args[]) {
-		final Iterator gen = new Permutations(4);
+		final int n;
+		if (args.length == 0) {
+			n = 4;
+		} else {
+			n = Integer.parseInt(args[0]);
+		}
+		final Iterator gen = new Permutations(n);
+		int count = 0;
 		while (gen.hasNext()) {
 			System.out.println(gen.next());
+			++count;
 		}
+		System.err.println("Generated " + count + " permutations.");
 	}
 }
