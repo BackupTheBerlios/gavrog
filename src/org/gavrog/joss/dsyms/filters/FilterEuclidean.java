@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.chosen;
+package org.gavrog.joss.dsyms.filters;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,7 +28,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.1 2006/08/29 03:47:21 odf Exp $
  */
 public class FilterEuclidean {
 

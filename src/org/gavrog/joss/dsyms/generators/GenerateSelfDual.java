@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.chosen;
+package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,15 +31,13 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
-import org.gavrog.joss.dsyms.generators.DefineBranching;
-import org.gavrog.joss.dsyms.generators.Utils;
 
 
 /**
  * Generates all minimal, self-dual euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateSelfDual.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: GenerateSelfDual.java,v 1.1 2006/08/29 03:47:20 odf Exp $
  */
 public class GenerateSelfDual {
     /*

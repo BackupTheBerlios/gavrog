@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.generators;
+package org.gavrog.joss.algorithms;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.2 2006/08/28 20:58:53 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.1 2006/08/29 03:47:22 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging

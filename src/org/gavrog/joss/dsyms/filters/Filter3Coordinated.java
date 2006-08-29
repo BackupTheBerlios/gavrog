@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.chosen;
+package org.gavrog.joss.dsyms.filters;
 
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
  * avoid duplicates, unless a tiling is self-dual.
  * 
  * @author Olaf Delgado
- * @version $Id: Filter3Coordinated.java,v 1.1 2005/08/15 17:39:10 odf Exp $
+ * @version $Id: Filter3Coordinated.java,v 1.1 2006/08/29 03:47:20 odf Exp $
  */
 public class Filter3Coordinated {
 

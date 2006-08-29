@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.generators;
+package org.gavrog.joss.algorithms;
 
 import org.gavrog.box.simple.NamedConstant;
 
@@ -22,7 +22,7 @@ import org.gavrog.box.simple.NamedConstant;
  * Base class for move objects in generators.
  * 
  * @author Olaf Delgado
- * @version $Id: Move.java,v 1.2 2006/08/26 02:46:48 odf Exp $
+ * @version $Id: Move.java,v 1.1 2006/08/29 03:47:22 odf Exp $
  */
 public class Move {
 	public static class Type extends NamedConstant {

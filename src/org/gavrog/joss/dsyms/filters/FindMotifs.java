@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.chosen;
+package org.gavrog.joss.dsyms.filters;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Patterns;
@@ -23,7 +23,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FindMotifs.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: FindMotifs.java,v 1.1 2006/08/29 03:47:21 odf Exp $
  */
 public class FindMotifs {
 

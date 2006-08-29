@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.generators;
+package org.gavrog.joss.algorithms;
 
 import java.util.Iterator;
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.List;
  * or canonicity, so is much too simplistic for a real test.
  * 
  * @author Olaf Delgado
- * @version $Id: Permutations.java,v 1.5 2006/08/28 20:58:53 odf Exp $
+ * @version $Id: Permutations.java,v 1.1 2006/08/29 03:47:22 odf Exp $
  */
 public class Permutations extends BranchAndCut {
 	final int degree;

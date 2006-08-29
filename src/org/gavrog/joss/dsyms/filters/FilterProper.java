@@ -14,22 +14,22 @@
    limitations under the License.
 */
 
-package org.gavrog.chosen;
+package org.gavrog.joss.dsyms.filters;
 
 import org.gavrog.joss.crossover.Skeleton;
 import org.gavrog.joss.dsyms.basic.DSymbol;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.generators.InputIterator;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 
 /**
- * Extracts tilings the graphs of which have collisions.
+ * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterUnstable.java,v 1.2 2006/04/26 22:06:49 odf Exp $
+ * @version $Id: FilterProper.java,v 1.1 2006/08/29 03:47:21 odf Exp $
  */
-public class FilterUnstable {
+public class FilterProper {
 
     public static void main(String[] args) {
         final String filename = args[0];
@@ -40,20 +40,22 @@ public class FilterUnstable {
         for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
             final DSymbol ds = (DSymbol) input.next();
             ++inCount;
-            if (isUnstable(ds)) {
+            if (isProper(ds)) {
                 ++outCount;
                 System.out.println(ds);
             }
         }
 
         System.err.println("Read " + inCount + " symbols, " + outCount
-				+ " of which had unstable graphs.");
+                           + " of which were proper and had stable graphs.");
     }
 
-    private static boolean isUnstable(final DSymbol ds) {
-        final DelaneySymbol cov = Covers.pseudoToroidalCover3D(ds.minimal());
+    private static boolean isProper(final DSymbol ds) {
+        final DSymbol min = new DSymbol(ds.minimal());
+        final DSymbol cov = new DSymbol(Covers.pseudoToroidalCover3D(min));
         try {
-            return !new Skeleton(cov).isLocallyStable();
+            final PeriodicGraph gr = new Skeleton(cov);
+            return gr.isMinimal() && gr.symmetries().size() == cov.size() / min.size();
         } catch (final Exception ex) {
             System.out.println("??? " + ds);
             return false;
