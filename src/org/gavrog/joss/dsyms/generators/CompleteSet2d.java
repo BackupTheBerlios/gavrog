@@ -18,13 +18,11 @@ package org.gavrog.joss.dsyms.generators;
 
 import java.util.List;
 
-import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.algorithms.BranchAndCut;
 import org.gavrog.joss.algorithms.Move;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.IndexList;
 
 public class CompleteSet2d extends BranchAndCut {
 	// --- the current symbol
