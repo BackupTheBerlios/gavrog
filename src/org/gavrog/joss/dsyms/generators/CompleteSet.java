@@ -24,7 +24,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 
-public class CompleteSet2d extends BranchAndCut {
+public class CompleteSet extends BranchAndCut {
 	// --- the current symbol
 	final private DynamicDSymbol current;
 	
@@ -46,7 +46,7 @@ public class CompleteSet2d extends BranchAndCut {
 		}
 	}
 	
-	public CompleteSet2d(final DelaneySymbol ds) {
+	public CompleteSet(final DelaneySymbol ds) {
 		this.current = new DynamicDSymbol(new DSymbol(ds.canonical()));
 	}
 	
