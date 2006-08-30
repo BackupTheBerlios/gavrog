@@ -16,8 +16,10 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.util.LinkedList;
 import java.util.List;
 
+import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.algorithms.BranchAndCut;
 import org.gavrog.joss.algorithms.Move;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -100,9 +102,31 @@ public class CompleteSet extends BranchAndCut {
 		} else {
 			ds.redefineOp(i, D, E);
 			
-			//TODO test 0,2 orbits
-			if (i == 0 || i == 2) {
-				
+			// --- test special orbits
+			for (int j = 0; j <= ds.dim(); ++j) {
+				if (j < i-1 || j > i+1) {
+					Object D1 = D;
+					int k = i;
+					int n = 0;
+					boolean complete = true;
+					boolean chain = false;
+					do {
+						final Object D2 = ds.op(k, D1);
+						if (D2 == null) {
+							complete = false;
+						} else if (D2 == D1){
+							chain = true;
+						} else {
+							D1 = D2;
+						}
+						k = (i + j) - k;
+						++n;
+					} while (k != i || !D1.equals(D));
+					if (n > 4 || (!(complete || chain) && n > 8)) {
+						ds.undefineOp(i, D);
+						return Status.ILLEGAL;
+					}
+				}
 			}
 			
 			return Status.OK;
@@ -121,10 +145,50 @@ public class CompleteSet extends BranchAndCut {
 		final DynamicDSymbol ds = this.current;
 		final int i = ((CMove) move).idx;
 		final Integer D = new Integer(((CMove) move).from);
-		final Integer E = new Integer(((CMove) move).to);
 		
-		//TODO finish
-		return null;
+		final List result = new LinkedList();
+		
+		// --- test special orbits
+		for (int j = 0; j <= ds.dim(); ++j) {
+			if (j < i-1 || j > i+1) {
+				Object D1 = D;
+				int k = i;
+				int n = 0;
+				boolean complete = true;
+				boolean chain = false;
+				final List ends = new LinkedList();
+				do {
+					final Object D2 = ds.op(k, D1);
+					if (D2 == null) {
+						complete = false;
+						ends.add(new Pair(new Integer(k), D1));
+					} else if (D2 == D1){
+						chain = true;
+					} else {
+						D1 = D2;
+					}
+					k = (i + j) - k;
+					++n;
+				} while (k != i || !D1.equals(D));
+				if (!complete) {
+					if (chain && n == 4) {
+						final Pair end = (Pair) ends.get(0);
+						final int nu = ((Integer) end.getFirst()).intValue();
+						final int F = ((Integer) end.getSecond()).intValue();
+						result.add(new CMove(nu, F, F, Move.Type.DEDUCTION));
+					} else if (!chain && n == 8) {
+						final Pair end1 = (Pair) ends.get(0);
+						final int nu = ((Integer) end1.getFirst()).intValue();
+						final int F = ((Integer) end1.getSecond()).intValue();
+						final Pair end2 = (Pair) ends.get(1);
+						final int G = ((Integer) end2.getSecond()).intValue();
+						result.add(new CMove(nu, F, G, Move.Type.DEDUCTION));
+					}
+				}
+			}
+		}
+
+		return result;
 	}
 
 	protected boolean isWellFormed() {
