@@ -26,7 +26,7 @@ import java.util.List;
  * or canonicity, so is much too simplistic for a real test.
  * 
  * @author Olaf Delgado
- * @version $Id: Permutations.java,v 1.1 2006/08/29 03:47:22 odf Exp $
+ * @version $Id: Permutations.java,v 1.2 2006/08/30 06:42:26 odf Exp $
  */
 public class Permutations extends BranchAndCut {
 	final int degree;
@@ -44,7 +44,7 @@ public class Permutations extends BranchAndCut {
 		}
 		
 		public String toString() {
-			return super.toString().replaceFirst("<", "(" + from + "->" + to + ")>");
+			return super.toString().replaceFirst(">", "(" + from + "->" + to + ")>");
 		}
 	}
 	
