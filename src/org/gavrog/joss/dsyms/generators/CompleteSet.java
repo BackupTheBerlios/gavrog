@@ -43,8 +43,8 @@ public class CompleteSet extends BranchAndCut {
 		}
 		
 		public String toString() {
-			return super.toString().replaceFirst("<",
-					"(" + from + "-" + idx + "->" + to + ")>");
+			return super.toString().replaceFirst(">",
+					"(" + idx + ":" + from + "<->" + to + ")>");
 		}
 	}
 	
@@ -58,15 +58,19 @@ public class CompleteSet extends BranchAndCut {
 		int D = 1;
 		if (previous != null) {
 			i = ((CMove) previous).idx;
-			D = ((CMove) previous).from;
-			while (i <= ds.dim()) {
-				while (D <= ds.size() && ds.definesOp(i, new Integer(D))) {
-					++D;
-				}
-				++i;
-				D = 1;
-			}
+			D = ((CMove) previous).from + 1;
 		}
+		while (i <= ds.dim()) {
+			while (D <= ds.size() && ds.definesOp(i, new Integer(D))) {
+				++D;
+			}
+			if (D <= ds.size()) {
+				break;
+			}
+			++i;
+			D = 1;
+		}
+
 		if (i > ds.dim()) {
 			return null;
 		} else {
@@ -75,10 +79,11 @@ public class CompleteSet extends BranchAndCut {
 	}
 
 	protected Move nextDecision(final Move previous) {
+		final CMove move = (CMove) previous;
 		final DynamicDSymbol ds = this.current;
-		final int i = ((CMove) previous).idx;
-		final int D = ((CMove) previous).from;
-		int E = D;
+		final int i = move.idx;
+		final int D = move.from;
+		int E = move.to + 1;
 		while (E <= ds.size() && ds.definesOp(i, new Integer(E))) {
 			++E;
 		}
@@ -95,7 +100,7 @@ public class CompleteSet extends BranchAndCut {
 		final Integer D = new Integer(((CMove) move).from);
 		final Integer E = new Integer(((CMove) move).to);
 		
-		if (ds.op(i, D).equals(E)) {
+		if (E.equals(ds.op(i, D))) {
 			return Status.VOID;
 		} else if (ds.definesOp(i, D) || ds.definesOp(i, E)) {
 			return Status.ILLEGAL;
@@ -114,7 +119,7 @@ public class CompleteSet extends BranchAndCut {
 						final Object D2 = ds.op(k, D1);
 						if (D2 == null) {
 							complete = false;
-						} else if (D2 == D1){
+						} else if (D2.equals(D1)){
 							chain = true;
 						} else {
 							D1 = D2;
@@ -122,7 +127,16 @@ public class CompleteSet extends BranchAndCut {
 						k = (i + j) - k;
 						++n;
 					} while (k != i || !D1.equals(D));
-					if (n > 4 || (!(complete || chain) && n > 8)) {
+					
+					final boolean bad;
+					if (complete) {
+						bad = (n > 4 || n == 3);
+					} else if (chain) {
+						bad = (n > 4);
+					} else {
+						bad = (n > 8);
+					}
+					if (bad) {
 						ds.undefineOp(i, D);
 						return Status.ILLEGAL;
 					}
@@ -162,7 +176,7 @@ public class CompleteSet extends BranchAndCut {
 					if (D2 == null) {
 						complete = false;
 						ends.add(new Pair(new Integer(k), D1));
-					} else if (D2 == D1){
+					} else if (!D2.equals(D1)){
 						chain = true;
 					} else {
 						D1 = D2;
@@ -212,4 +226,13 @@ public class CompleteSet extends BranchAndCut {
 		return new DSymbol(this.current);
 	}
 
+    public static void main(final String[] args) {
+        final DSymbol ds = new DSymbol(args[0]);
+        final CompleteSet iter = new CompleteSet(ds);
+
+        while (iter.hasNext()) {
+        	final DSymbol out = (DSymbol) iter.next();
+        	System.out.println(out);
+        }
+    }
 }

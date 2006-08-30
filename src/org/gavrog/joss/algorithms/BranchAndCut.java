@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.1 2006/08/29 03:47:22 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.2 2006/08/30 06:42:40 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -77,10 +77,12 @@ public abstract class BranchAndCut extends IteratorAdapter {
 			throw new NoSuchElementException();
 		}
 
-		log("entering findNext(): stack size = " + this.stack.size());
+		log("\nentering findNext(): stack size = " + this.stack.size());
 
 		if (stack.size() == 0) {
-			this.stack.addLast(nextChoice(null));
+			final Move choice = nextChoice(null);
+			log("  adding initial choice " + choice);
+			this.stack.addLast(choice);
 		}
 
 		while (true) {
@@ -103,18 +105,21 @@ public abstract class BranchAndCut extends IteratorAdapter {
 
 			if (performMoveAndDeductions(move)) {
 				if (isWellFormed()) {
-					this.stack.addLast(nextChoice(move));
 					final Object result = makeResult();
 					if (result != null) {
-						log("leaving findNext(): result is complete");
+						log("leaving findNext() with result " + result);
 						return result;
 					} else {
 						log("  result is incomplete");
 					}
+					final Move choice = nextChoice(move);
+					log("  adding choice " + choice);
+					this.stack.addLast(choice);
 				} else {
 					log("  result is not canonical");
 				}
 			} else {
+				stack.addLast(move);
 				log("  move was rejected");
 			}
 		}
@@ -139,7 +144,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 
 			// --- if the move was illegal, return immediately
 			if (status == Status.ILLEGAL) {
-				log("move " + move + " is impossible; backtracking");
+				log("    move " + move + " is impossible; backtracking");
 				return false;
 			}
 
@@ -165,7 +170,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 				continue;
 			}
 
-			log("Undoing " + last);
+			log("  undoing " + last);
 			undoMove(last);
 
 			if (!last.isDeduction()) {
