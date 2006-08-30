@@ -25,7 +25,7 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.2 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: DSymbol.java,v 1.3 2006/08/30 06:41:54 odf Exp $
  */
 public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
     
@@ -142,7 +142,7 @@ public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
         }
 
         if (buf.length() > 0) {
-            buf.insert(0, "Consistency check failed");
+            buf.insert(0, "Consistency check failed for " + toString());
             throw new RuntimeException(buf.toString());
         }
     }
