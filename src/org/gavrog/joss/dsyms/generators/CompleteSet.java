@@ -230,9 +230,19 @@ public class CompleteSet extends BranchAndCut {
         final DSymbol ds = new DSymbol(args[0]);
         final CompleteSet iter = new CompleteSet(ds);
 
+        int countAll = 0;
+        int countGood = 0;
         while (iter.hasNext()) {
         	final DSymbol out = (DSymbol) iter.next();
-        	System.out.println(out);
+        	++ countAll;
+        	out.setVDefaultToOne(true);
+        	if (out.curvature2D().isNonNegative()) {
+        		++countGood;
+        		System.out.println(out);
+        	}
         }
+        System.out.flush();
+        System.out.println("# Generated " + countAll + " sets, of which " + countGood
+				+ " are potentially nonhyperbolic.");
     }
 }
