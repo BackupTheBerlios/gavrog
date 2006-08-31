@@ -53,7 +53,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching.java,v 1.3 2005/11/08 21:45:14 odf Exp $
+ * @version $Id: DefineBranching.java,v 1.4 2006/08/31 05:07:59 odf Exp $
  */
 public class DefineBranching extends IteratorAdapter {
     // --- set to true to enable logging
@@ -153,7 +153,7 @@ public class DefineBranching extends IteratorAdapter {
         this.current = new DynamicDSymbol(new DSymbol(this.input.canonical()));
 
         // --- compute more auxiliary data
-        this.inputAutomorphisms = automorphisms(this.current);
+        this.inputAutomorphisms = Morphism.automorphisms(this.current);
         
         // --- compute intitial deductions
         if (LOGGING) {
@@ -561,33 +561,6 @@ public class DefineBranching extends IteratorAdapter {
             }
         }
         return 0;
-    }
-    
-    /**
-     * Computes all the automorphisms of a given Delaney Symbol.
-     * 
-     * @param ds the input symbol.
-     * @return the list of all automorphisms of ds.
-     */
-    public static List automorphisms(final DelaneySymbol ds) {
-        final List result = new LinkedList();
-        final Iterator elms = ds.elements();
-        
-        if (elms.hasNext()) {
-            final Object first = elms.next();
-            result.add(new Morphism(ds, ds, first, first));
-            
-            while (elms.hasNext()) {
-                final Object D = elms.next();
-                try {
-                    result.add(new Morphism(ds, ds, first, D));
-                } catch (IllegalArgumentException ex) {
-                    continue;
-                }
-            }
-        }
-        
-        return result;
     }
     
     /**
