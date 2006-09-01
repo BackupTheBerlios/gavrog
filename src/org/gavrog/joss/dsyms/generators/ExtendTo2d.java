@@ -33,8 +33,10 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Takes a connected 1-dimensional Delany symbol and extends it to a 2d symbol
  * in all possible ways.
  * 
+ * TODO simplify using the fact we're now restricted to a very special case
+ * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo2d.java,v 1.1 2006/09/01 21:32:31 odf Exp $
+ * @version $Id: ExtendTo2d.java,v 1.2 2006/09/01 21:39:11 odf Exp $
  * 
  */
 public class ExtendTo2d extends BranchAndCut {
