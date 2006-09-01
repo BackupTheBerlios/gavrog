@@ -26,6 +26,15 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 
+/**
+ * Takes an incomplete Delaney set and completes it in all possible ways.
+ * 
+ * CAVEAT: As is, this does not work correctly in general cases.
+ * 
+ * @author Olaf Delgado
+ * @version $Id: CompleteSet.java,v 1.5 2006/09/01 05:35:12 odf Exp $
+ *
+ */
 public class CompleteSet extends BranchAndCut {
 	// --- the current symbol
 	final private DynamicDSymbol current;
@@ -48,7 +57,7 @@ public class CompleteSet extends BranchAndCut {
 		}
 	}
 	
-	public CompleteSet(final DelaneySymbol ds) {
+	private CompleteSet(final DelaneySymbol ds) {
 		this.current = new DynamicDSymbol(new DSymbol(ds.canonical()));
 	}
 	
@@ -205,7 +214,7 @@ public class CompleteSet extends BranchAndCut {
 		return result;
 	}
 
-	protected boolean isWellFormed() {
+	protected boolean isValid() {
         final DSymbol flat = new DSymbol(this.current);
         return flat.getMapToCanonical().get(new Integer(1)).equals(new Integer(1));
 	}
@@ -227,7 +236,18 @@ public class CompleteSet extends BranchAndCut {
 	}
 
     public static void main(final String[] args) {
-        final DSymbol ds = new DSymbol(args[0]);
+    	final int n = Integer.parseInt(args[0]);
+    	final DynamicDSymbol ds = new DynamicDSymbol(2);
+    	ds.grow(2 * n);
+    	for (int D = 1; D < 2*n + 1; D += 2) {
+    		ds.redefineOp(0, new Integer(D), new Integer(D+1));
+    		if (D > 1) {
+    			ds.redefineOp(1, new Integer(D), new Integer(D-1));
+    		}
+    	}
+    	ds.redefineOp(1, new Integer(1), new Integer(2*n));
+    	ds.redefineV(0, 1, new Integer(1), 1);
+    	
         final CompleteSet iter = new CompleteSet(ds);
 
         int countAll = 0;

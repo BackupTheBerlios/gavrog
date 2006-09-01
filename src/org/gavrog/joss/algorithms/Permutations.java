@@ -26,7 +26,7 @@ import java.util.List;
  * or canonicity, so is much too simplistic for a real test.
  * 
  * @author Olaf Delgado
- * @version $Id: Permutations.java,v 1.2 2006/08/30 06:42:26 odf Exp $
+ * @version $Id: Permutations.java,v 1.3 2006/09/01 05:35:11 odf Exp $
  */
 public class Permutations extends BranchAndCut {
 	final int degree;
@@ -110,7 +110,7 @@ public class Permutations extends BranchAndCut {
 		return null;
 	}
 
-	protected boolean isWellFormed() {
+	protected boolean isValid() {
 		return true;
 	}
 

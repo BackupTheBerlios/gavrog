@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.2 2006/08/30 06:42:40 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.3 2006/09/01 05:35:11 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -104,7 +104,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 			}
 
 			if (performMoveAndDeductions(move)) {
-				if (isWellFormed()) {
+				if (isValid()) {
 					final Object result = makeResult();
 					if (result != null) {
 						log("leaving findNext() with result " + result);
@@ -237,7 +237,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	 * 
 	 * @return true if the current state is well-formed.
 	 */
-	abstract protected boolean isWellFormed();
+	abstract protected boolean isValid();
 
 	/**
 	 * Constructs an output object based on the current state or <code>null</code> if
