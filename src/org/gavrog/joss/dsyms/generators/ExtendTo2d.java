@@ -16,26 +16,28 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.algorithms.BranchAndCut;
 import org.gavrog.joss.algorithms.Move;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
- * Takes an incomplete Delaney set and completes it in all possible ways.
- * 
- * CAVEAT: As is, this does not work correctly in general cases.
+ * Takes a connected 1-dimensional Delany symbol and extends it to a 2d symbol
+ * in all possible ways.
  * 
  * @author Olaf Delgado
- * @version $Id: CompleteSet.java,v 1.5 2006/09/01 05:35:12 odf Exp $
- *
+ * @version $Id: ExtendTo2d.java,v 1.1 2006/09/01 21:32:31 odf Exp $
+ * 
  */
-public class CompleteSet extends BranchAndCut {
+public class ExtendTo2d extends BranchAndCut {
 	// --- the current symbol
 	final private DynamicDSymbol current;
 	
@@ -57,8 +59,13 @@ public class CompleteSet extends BranchAndCut {
 		}
 	}
 	
-	private CompleteSet(final DelaneySymbol ds) {
-		this.current = new DynamicDSymbol(new DSymbol(ds.canonical()));
+	public ExtendTo2d(final DelaneySymbol ds) {
+		assert ds.dim() == 1 : "Symbol must be one-dimensional";
+		assert ds.isConnected() : "Symbol must be connected";
+		assert ds.isComplete() : "Symbol must be complete";
+
+		final DynamicDSymbol sym = this.current = new DynamicDSymbol(2);
+		sym.append(new DSymbol(ds));
 	}
 	
 	protected Move nextChoice(final Move previous) {
@@ -237,7 +244,7 @@ public class CompleteSet extends BranchAndCut {
 
     public static void main(final String[] args) {
     	final int n = Integer.parseInt(args[0]);
-    	final DynamicDSymbol ds = new DynamicDSymbol(2);
+    	final DynamicDSymbol ds = new DynamicDSymbol(1);
     	ds.grow(2 * n);
     	for (int D = 1; D < 2*n + 1; D += 2) {
     		ds.redefineOp(0, new Integer(D), new Integer(D+1));
@@ -248,21 +255,39 @@ public class CompleteSet extends BranchAndCut {
     	ds.redefineOp(1, new Integer(1), new Integer(2*n));
     	ds.redefineV(0, 1, new Integer(1), 1);
     	
-        final CompleteSet iter = new CompleteSet(ds);
+        final ExtendTo2d iter = new ExtendTo2d(ds);
 
         int countAll = 0;
         int countGood = 0;
+        int countPlus = 0;
         while (iter.hasNext()) {
         	final DSymbol out = (DSymbol) iter.next();
         	++ countAll;
         	out.setVDefaultToOne(true);
-        	if (out.curvature2D().isNonNegative()) {
-        		++countGood;
-        		System.out.println(out);
+        	final Rational curv = out.curvature2D();
+        	out.setVDefaultToOne(false);
+        	if (curv.isNonNegative()) {
+        		boolean good = true;
+            	if (curv.isPositive()) {
+            		++countPlus;
+            	} else {
+            		final List idcs = new IndexList(1, 2);
+            		for (Iterator reps = out.orbitRepresentatives(idcs); reps.hasNext();) {
+            			final Object D = reps.next();
+            			if (out.r(1, 2, D) == 1) {
+            				good = false;
+            				break;
+            			}
+					}
+            	}
+            	if (good) {
+            		++countGood;
+            		System.out.println(out + " # curvature = " + curv);
+            	}
         	}
         }
         System.out.flush();
         System.out.println("# Generated " + countAll + " sets, of which " + countGood
-				+ " are potentially nonhyperbolic.");
+				+ " are potentially extensible and " + countPlus + " need extension.");
     }
 }
