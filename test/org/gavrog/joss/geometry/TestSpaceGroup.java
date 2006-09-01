@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
  * Unit tests for the class SpaceGroup.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroup.java,v 1.13 2005/10/02 23:26:46 odf Exp $
+ * @version $Id: TestSpaceGroup.java,v 1.14 2006/09/01 01:21:05 odf Exp $
  */
 public class TestSpaceGroup extends TestCase {
     private SpaceGroup Fddd;
@@ -52,10 +52,10 @@ public class TestSpaceGroup extends TestCase {
     
     public void testSpaceGroupByName() {
         // --- read all IT settings without structural tests
-        for (final Iterator iter = SpaceGroupCatalogue.settingNames(3); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroupCatalogue.allKnownSettings(3); iter.hasNext();) {
             new SpaceGroup(3, (String) iter.next());
         }
-        for (final Iterator iter = SpaceGroupCatalogue.settingNames(2); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroupCatalogue.allKnownSettings(2); iter.hasNext();) {
             new SpaceGroup(2, (String) iter.next());
         }
     }

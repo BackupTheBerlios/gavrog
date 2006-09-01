@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.19 2006/04/10 23:08:17 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.20 2006/09/01 01:21:06 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     public void setUp() {
@@ -85,7 +85,7 @@ public class TestSpaceGroupFinder extends TestCase {
         int countFailed = 0;
         String canonicalName = null;
         Set canonicalOps = null;
-        for (final Iterator iter = SpaceGroupCatalogue.settingNames(3); iter.hasNext();) {
+        for (final Iterator iter = SpaceGroupCatalogue.allKnownSettings(3); iter.hasNext();) {
             final String name = (String) iter.next();
             final List ops = SpaceGroupCatalogue.operators(3, name);
             final CoordinateChange trans = SpaceGroupCatalogue.transform(3, name);

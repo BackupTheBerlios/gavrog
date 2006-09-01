@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.16 2006/08/17 03:53:56 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.17 2006/09/01 01:21:07 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
@@ -208,7 +208,7 @@ public class SpaceGroupCatalogue {
      * @param dimension the common dimension of the space groups.
      * @return an iterator over the names of space group settings.
      */
-    public static Iterator settingNames(final int dimension) {
+    public static Iterator allKnownSettings(final int dimension) {
         if (groupTables[dimension] == null) {
             parseGroups(tablePath);
         }
