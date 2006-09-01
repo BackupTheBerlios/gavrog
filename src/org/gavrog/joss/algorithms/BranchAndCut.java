@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.3 2006/09/01 05:35:11 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.4 2006/09/01 05:36:01 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -116,7 +116,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 					log("  adding choice " + choice);
 					this.stack.addLast(choice);
 				} else {
-					log("  result is not canonical");
+					log("  result or move is not valid");
 				}
 			} else {
 				stack.addLast(move);
