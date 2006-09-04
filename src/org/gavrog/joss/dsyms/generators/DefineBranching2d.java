@@ -39,7 +39,10 @@ import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.algorithms.BranchAndCut;
 import org.gavrog.joss.algorithms.Move;
 import org.gavrog.joss.algorithms.Move.Type;
+import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
+import org.gavrog.joss.dsyms.derived.Morphism;
 
 /**
  * An iterator that takes a 3-dimensional Delaney symbol with some undefined
@@ -50,13 +53,16 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.1 2006/09/04 01:40:45 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.2 2006/09/04 02:25:37 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
 
 	private int minEdgeDeg;
 	private Rational minCurv;
+	private DynamicDSymbol current;
+	private List inputAutomorphisms;
+	private Rational curvature;
 
     /**
 	 * The instances of this class represent individual moves of setting branch
@@ -90,6 +96,17 @@ public class DefineBranching2d extends BranchAndCut {
 		super();
 		this.minEdgeDeg = minEdgeDeg;
 		this.minCurv = minCurv;
+		
+		// --- create a canonical dynamic symbol isomorphic to the input one
+        this.current = new DynamicDSymbol(new DSymbol(ds.canonical()));
+        
+        // --- compute the maximal curvature
+        this.current.setVDefaultToOne(true);
+        this.curvature = this.current.curvature2D();
+        this.current.setVDefaultToOne(false);
+        
+        // --- compute automorphisms for later use in {@link #isValid}.
+        this.inputAutomorphisms = Morphism.automorphisms(this.current);
 	}
 
 	/* (non-Javadoc)
