@@ -14,23 +14,6 @@
    limitations under the License.
 */
 
-/*
-Copyright 2005 Olaf Delgado-Friedrichs
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-
 package org.gavrog.joss.dsyms.generators;
 
 import java.io.BufferedReader;
@@ -59,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.3 2006/09/04 05:29:34 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.4 2006/09/04 05:50:08 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
@@ -270,15 +253,16 @@ public class DefineBranching2d extends BranchAndCut {
 	 * 
 	 * @throws FileNotFoundException if an input file was not found.
 	 */
-	public static void main(final String[] args) throws FileNotFoundException {
+	public static void main(final String[] args) {
         String filename = null;
         int i = 0;
         while (i < args.length && args[i].startsWith("-")) {
         	if (args[i].equals("-i")) {
         		++i;
         		filename = args[i];
+        	} else {
+        		System.err.println("Unknown option '" + args[i] + "'");
         	}
-        	System.err.println("Unknown option '" + args[i] + "'");
             ++i;
         }
         
@@ -287,7 +271,12 @@ public class DefineBranching2d extends BranchAndCut {
             final DSymbol ds = new DSymbol(args[i]);
             syms = Iterators.singleton(ds);
         } else if (filename != null) {
-        	syms = new InputIterator(new BufferedReader(new FileReader(filename)));
+        	try {
+				syms = new InputIterator(new BufferedReader(new FileReader(filename)));
+			} catch (final FileNotFoundException ex) {
+				ex.printStackTrace(System.err);
+				return;
+			}
         } else {
             syms = new InputIterator(new BufferedReader(new InputStreamReader(System.in)));
         }
@@ -297,8 +286,8 @@ public class DefineBranching2d extends BranchAndCut {
         
         while (syms.hasNext()) {
             final DSymbol ds = (DSymbol) syms.next();
-            final Iterator iter = new DefineBranching2d(ds, 2, Whole.ZERO);
             ++inCount;
+            final Iterator iter = new DefineBranching2d(ds, 2, Whole.ZERO);
 
             try {
                 while (iter.hasNext()) {
@@ -312,7 +301,7 @@ public class DefineBranching2d extends BranchAndCut {
                 ex.printStackTrace(System.err);
             }
         }
-        System.err.println("Processed " + inCount + " input symbols.");
-        System.err.println("Produced " + outCount + " output symbols.");
+        System.out.println("# Processed " + inCount + " input symbols.");
+        System.out.println("# Produced " + outCount + " output symbols.");
 	}
 }
