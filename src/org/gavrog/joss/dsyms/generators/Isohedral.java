@@ -30,7 +30,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * Generates all minimal, locally euclidean, isohedral tilings by a given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: Isohedral.java,v 1.3 2005/10/11 04:28:33 odf Exp $
+ * @version $Id: Isohedral.java,v 1.4 2006/09/04 00:09:26 odf Exp $
  */
 public class Isohedral extends IteratorAdapter {
     private final int verbosityLevel;
@@ -80,7 +80,7 @@ public class Isohedral extends IteratorAdapter {
                 if (this.verbosityLevel >= 2) {
                     System.err.println("    " + withoutV23(ds));
                 }
-                symbols = new DefineBranching(ds);
+                symbols = new DefineBranching3d(ds);
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++count3dSymbols;

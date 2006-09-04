@@ -53,9 +53,9 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching.java,v 1.4 2006/08/31 05:07:59 odf Exp $
+ * @version $Id: DefineBranching3d.java,v 1.1 2006/09/04 00:09:26 odf Exp $
  */
-public class DefineBranching extends IteratorAdapter {
+public class DefineBranching3d extends IteratorAdapter {
     // --- set to true to enable logging
     final private static boolean LOGGING = false;
     
@@ -116,14 +116,14 @@ public class DefineBranching extends IteratorAdapter {
     /**
      * Constructs an instance with the standard set of accepted branch values.
      */
-    public DefineBranching(final DelaneySymbol ds) {
+    public DefineBranching3d(final DelaneySymbol ds) {
         this(ds, standardValues);
     }
     
     /**
      * Constructs an instance.
      */
-    public DefineBranching(final DelaneySymbol ds, final List acceptedValues) {
+    public DefineBranching3d(final DelaneySymbol ds, final List acceptedValues) {
         // --- check the argument
         check(ds, acceptedValues);
         
@@ -726,7 +726,7 @@ public class DefineBranching extends IteratorAdapter {
         
         while (syms.hasNext()) {
             final DSymbol ds = (DSymbol) syms.next();
-            final Iterator iter = new DefineBranching(ds);
+            final Iterator iter = new DefineBranching3d(ds);
             ++inCount;
 
             try {

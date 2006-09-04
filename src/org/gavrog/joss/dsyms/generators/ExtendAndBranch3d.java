@@ -27,9 +27,9 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: ExtendAndBranch.java,v 1.1 2005/10/19 23:09:08 odf Exp $
+ * @version $Id: ExtendAndBranch3d.java,v 1.1 2006/09/04 00:09:26 odf Exp $
  */
-public class ExtendAndBranch extends IteratorAdapter {
+public class ExtendAndBranch3d extends IteratorAdapter {
     private final boolean verbose;
     
     private Iterator extended;
@@ -44,7 +44,7 @@ public class ExtendAndBranch extends IteratorAdapter {
      * @param tiles the tile to use in the tilings.
      * @param verbose if true, some logging information is produced.
      */
-    public ExtendAndBranch(final DSymbol tiles, final boolean verbose) {
+    public ExtendAndBranch3d(final DSymbol tiles, final boolean verbose) {
         this.verbose = verbose;
         
         this.extended = new ExtendTo3d(tiles);
@@ -88,7 +88,7 @@ public class ExtendAndBranch extends IteratorAdapter {
      * @return an iterator over all admissible extensions of ds with complete branching.
      */
     protected Iterator defineBranching(final DelaneySymbol ds) {
-        return new DefineBranching(ds);
+        return new DefineBranching3d(ds);
     }
     
     /**
@@ -135,7 +135,7 @@ public class ExtendAndBranch extends IteratorAdapter {
         }
         
         final DSymbol ds = new DSymbol(args[i]);
-        final ExtendAndBranch iter = new ExtendAndBranch(ds, verbose);
+        final ExtendAndBranch3d iter = new ExtendAndBranch3d(ds, verbose);
         int countGood = 0;
         int countAmbiguous = 0;
 

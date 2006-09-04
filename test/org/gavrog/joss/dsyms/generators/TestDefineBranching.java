@@ -19,13 +19,13 @@ package org.gavrog.joss.dsyms.generators;
 import java.util.Iterator;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
-import org.gavrog.joss.dsyms.generators.DefineBranching;
+import org.gavrog.joss.dsyms.generators.DefineBranching3d;
 
 import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestDefineBranching.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestDefineBranching.java,v 1.2 2006/09/04 00:09:27 odf Exp $
  */
 public class TestDefineBranching extends TestCase {
     public void test1() {
@@ -51,7 +51,7 @@ public class TestDefineBranching extends TestCase {
     }
     
     public void doTest(final DSymbol ds, final int xCount) {
-        final Iterator iter = new DefineBranching(ds);
+        final Iterator iter = new DefineBranching3d(ds);
         int count = 0;
         while (iter.hasNext()) {
             final DSymbol out = (DSymbol) iter.next();

@@ -34,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.5 2005/10/11 23:51:26 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.6 2006/09/04 00:09:26 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
@@ -114,7 +114,7 @@ public class TileKTransitive extends IteratorAdapter {
      * @return an iterator over all admissible extensions of ds with complete branching.
      */
     protected Iterator defineBranching(final DelaneySymbol ds) {
-        return new DefineBranching(ds);
+        return new DefineBranching3d(ds);
     }
     
     /**
