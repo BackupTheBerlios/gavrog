@@ -33,12 +33,18 @@ limitations under the License.
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.util.Iterator;
 import java.util.List;
 
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.algorithms.BranchAndCut;
 import org.gavrog.joss.algorithms.Move;
-import org.gavrog.joss.algorithms.Move.Type;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -53,16 +59,15 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.2 2006/09/04 02:25:37 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.3 2006/09/04 05:29:34 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
 
-	private int minEdgeDeg;
+	private int minVertDeg;
 	private Rational minCurv;
 	private DynamicDSymbol current;
 	private List inputAutomorphisms;
-	private Rational curvature;
 
     /**
 	 * The instances of this class represent individual moves of setting branch
@@ -71,11 +76,10 @@ public class DefineBranching2d extends BranchAndCut {
 	private class BMove extends Move {
 		final public int index;
 		final public int element;
-		final public Integer value;
+		final public int value;
 
 		public BMove(
-				final int index, final int element, final Integer value,
-				final Move.Type type) {
+				final int index, final int element, final int value, final Move.Type type) {
 			super(type);
 			this.index = index;
 			this.element = element;
@@ -92,9 +96,9 @@ public class DefineBranching2d extends BranchAndCut {
 	 * Constructs a new instance.
 	 */
 	public DefineBranching2d(
-			final DelaneySymbol ds, final int minEdgeDeg, final Rational minCurv) {
+			final DelaneySymbol ds, final int minVertDeg, final Rational minCurv) {
 		super();
-		this.minEdgeDeg = minEdgeDeg;
+		this.minVertDeg = minVertDeg;
 		this.minCurv = minCurv;
 		
 		// --- create a canonical dynamic symbol isomorphic to the input one
@@ -102,7 +106,6 @@ public class DefineBranching2d extends BranchAndCut {
         
         // --- compute the maximal curvature
         this.current.setVDefaultToOne(true);
-        this.curvature = this.current.curvature2D();
         this.current.setVDefaultToOne(false);
         
         // --- compute automorphisms for later use in {@link #isValid}.
@@ -112,40 +115,81 @@ public class DefineBranching2d extends BranchAndCut {
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#nextChoice(org.gavrog.joss.algorithms.Move)
 	 */
-	protected Move nextChoice(Move previous) {
-		// TODO Auto-generated method stub
-		return null;
+	protected Move nextChoice(final Move previous) {
+		final DynamicDSymbol ds = this.current;
+		int i = 0;
+		int D = 1;
+		if (previous != null) {
+			i = ((BMove) previous).index;
+			D = ((BMove) previous).element + 1;
+		}
+		while (i < ds.dim()) {
+			while (D <= ds.size() && ds.definesV(i, i+1, new Integer(D))) {
+				++D;
+			}
+			if (D <= ds.size()) {
+				break;
+			}
+			++i;
+			D = 1;
+		}
+
+		if (i > ds.dim()) {
+			return null;
+		} else {
+			return new BMove(i, D, 0, Move.Type.CHOICE);
+		}
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#nextDecision(org.gavrog.joss.algorithms.Move)
 	 */
-	protected Move nextDecision(Move previous) {
-		// TODO Auto-generated method stub
-		return null;
+	protected Move nextDecision(final Move previous) {
+		final BMove move = (BMove) previous;
+		final int v = move.value;
+		final int next;
+		
+		if (v < 4) {
+			next = v + 1;
+		} else if (v == 4) {
+			next = 6;
+		} else {
+			return null;
+		}
+		
+		return new BMove(move.index, move.element, next, Move.Type.DECISION);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#performMove(org.gavrog.joss.algorithms.Move)
 	 */
-	protected Status performMove(Move move) {
-		// TODO Auto-generated method stub
-		return null;
+	protected Status performMove(final Move move) {
+		final DynamicDSymbol ds = this.current;
+		final int idx = ((BMove) move).index;
+		final Integer D = new Integer(((BMove) move).element);
+		final int val = ((BMove) move).value;
+		
+		if (idx == 1 && ds.r(idx, idx+1, D) * val < this.minVertDeg) {
+			return Status.ILLEGAL;
+		}
+		ds.redefineV(idx, idx+1, D, val);
+		return Status.OK;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#undoMove(org.gavrog.joss.algorithms.Move)
 	 */
 	protected void undoMove(Move move) {
-		// TODO Auto-generated method stub
-
+		final int idx = ((BMove) move).index;
+		final int elm = ((BMove) move).element;
+		
+		this.current.undefineV(idx, idx+1, new Integer(elm));
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#deductions(org.gavrog.joss.algorithms.Move)
 	 */
 	protected List deductions(Move move) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -153,23 +197,122 @@ public class DefineBranching2d extends BranchAndCut {
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#isValid()
 	 */
 	protected boolean isValid() {
-		// TODO Auto-generated method stub
-		return false;
+		final DynamicDSymbol ds = this.current;
+		ds.setVDefaultToOne(true);
+		final Rational curv = ds.curvature2D();
+		ds.setVDefaultToOne(false);
+		if (curv.isLessThan(this.minCurv)) {
+			return false;
+		}
+        for (final Iterator iter = this.inputAutomorphisms.iterator(); iter.hasNext();) {
+            final Morphism map = (Morphism) iter.next();
+            if (compareWithPermuted(this.current, map) > 0) {
+                return false;
+            }
+        }
+        return true;
 	}
 
+    /**
+     * Lexicographically compares the sequence of v-values of a Delaney symbol
+     * with the sequence as permuted by an automorphism of the symbol. If both
+     * sequences are equal, 0 is returned. If the unpermuted one is smaller, a
+     * negative value, and if the permuted one is smaller, a positive value is
+     * returned. An undefined v-value is considered larger than any defined
+     * v-value.
+     * 
+     * @param ds the input symbol.
+     * @param map the automorphism.
+     * @return an integer indicating if the result.
+     */
+    private static int compareWithPermuted(final DelaneySymbol ds, final Morphism map) {
+        for (final Iterator elms = ds.elements(); elms.hasNext();) {
+            final Object D1 = elms.next();
+            final Object D2 = map.getASource(D1);
+            for (int i = 0; i < ds.dim(); ++i) {
+                final int v1 = ds.definesV(i, i + 1, D1) ? ds.v(i, i + 1, D1) : 0;
+                final int v2 = ds.definesV(i, i + 1, D2) ? ds.v(i, i + 1, D2) : 0;
+                if (v1 != v2) {
+                    if (v1 == 0) {
+                        return 1;
+                    } else if (v2 == 0) {
+                        return -1;
+                    } else {
+                        return v1 - v2;
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+    
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#makeResult()
 	 */
 	protected Object makeResult() {
-		// TODO Auto-generated method stub
-		return null;
+		final DynamicDSymbol ds = this.current;
+		
+		// --- check for completeness
+		for (int i = 0; i < ds.dim(); ++i) {
+			for (int D = 1; D <= ds.size(); ++D) {
+				if (!ds.definesV(i, i+1, new Integer(D))) {
+					return null;
+				}
+			}
+		}
+		
+		// --- return the result as a flat symbol.
+		return new DSymbol(this.current);
 	}
 
 	/**
-	 * @param args
+	 * Example main method, generates euclidean symbols.
+	 * 
+	 * @throws FileNotFoundException if an input file was not found.
 	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	public static void main(final String[] args) throws FileNotFoundException {
+        String filename = null;
+        int i = 0;
+        while (i < args.length && args[i].startsWith("-")) {
+        	if (args[i].equals("-i")) {
+        		++i;
+        		filename = args[i];
+        	}
+        	System.err.println("Unknown option '" + args[i] + "'");
+            ++i;
+        }
+        
+        final Iterator syms;
+        if (args.length > i) {
+            final DSymbol ds = new DSymbol(args[i]);
+            syms = Iterators.singleton(ds);
+        } else if (filename != null) {
+        	syms = new InputIterator(new BufferedReader(new FileReader(filename)));
+        } else {
+            syms = new InputIterator(new BufferedReader(new InputStreamReader(System.in)));
+        }
+        
+        int inCount = 0;
+        int outCount = 0;
+        
+        while (syms.hasNext()) {
+            final DSymbol ds = (DSymbol) syms.next();
+            final Iterator iter = new DefineBranching2d(ds, 2, Whole.ZERO);
+            ++inCount;
 
+            try {
+                while (iter.hasNext()) {
+                    final DSymbol out = (DSymbol) iter.next();
+                    if (out.curvature2D().isZero()) {
+                    	++outCount;
+                    	System.out.println(out);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace(System.err);
+            }
+        }
+        System.err.println("Processed " + inCount + " input symbols.");
+        System.err.println("Produced " + outCount + " output symbols.");
 	}
 }
