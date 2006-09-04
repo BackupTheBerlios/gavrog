@@ -31,7 +31,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
  * An iterator that reads Delaney symbols from an input stream.
  * 
  * @author Olaf Delgado
- * @version $Id: InputIterator.java,v 1.3 2006/05/04 01:45:34 odf Exp $
+ * @version $Id: InputIterator.java,v 1.4 2006/09/04 05:46:08 odf Exp $
  */
 public class InputIterator extends IteratorAdapter {
     final private BufferedReader reader;
@@ -80,8 +80,8 @@ public class InputIterator extends IteratorAdapter {
             }
             buffer.append(' ');
             buffer.append(line.substring(0, i));
-            if (line.trim().endsWith(">")) {
-                final DSymbol ds = new DSymbol(buffer.toString());
+            if (buffer.toString().trim().endsWith(">")) {
+                final DSymbol ds = new DSymbol(buffer.toString().trim());
                 buffer.delete(0, buffer.length());
                 return ds;
             }

@@ -25,7 +25,7 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.3 2006/08/30 06:41:54 odf Exp $
+ * @version $Id: DSymbol.java,v 1.4 2006/09/04 05:46:08 odf Exp $
  */
 public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
     
@@ -165,6 +165,7 @@ public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
      * @param code the text specifying the symbol.
      */
     public DSymbol(String code) {
+    	code = code.trim();
         int start = 0;
         int end = code.length();
         if (code.startsWith("<")) {
