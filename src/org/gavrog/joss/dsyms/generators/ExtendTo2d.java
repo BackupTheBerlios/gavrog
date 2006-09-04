@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * TODO simplify using the fact we're now restricted to a very special case
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo2d.java,v 1.2 2006/09/01 21:39:11 odf Exp $
+ * @version $Id: ExtendTo2d.java,v 1.3 2006/09/04 05:29:11 odf Exp $
  * 
  */
 public class ExtendTo2d extends BranchAndCut {
@@ -244,6 +244,9 @@ public class ExtendTo2d extends BranchAndCut {
 		return new DSymbol(this.current);
 	}
 
+	/**
+	 * Example main method, generates potentially euclidean symbols.
+	 */
     public static void main(final String[] args) {
     	final int n = Integer.parseInt(args[0]);
     	final DynamicDSymbol ds = new DynamicDSymbol(1);
