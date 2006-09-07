@@ -18,13 +18,14 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
-import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -39,7 +40,7 @@ public class Azulenoids extends IteratorAdapter {
 	private DefineBranching2d syms;
 	private int pos;
 	private DSymbol ds;
-	private Map seenInvariants;
+	private Set seenInvariants;
 
 	private static DSymbol template = new DSymbol("1.1:60:"
 			+ "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 "
@@ -70,7 +71,7 @@ public class Azulenoids extends IteratorAdapter {
         this.sets = new ExtendTo2d(ds);
         this.syms = null;
         this.pos = 0;
-        this.seenInvariants = new HashMap();
+        this.seenInvariants = new HashSet();
 	}
 
 	/* (non-Javadoc)
@@ -79,7 +80,7 @@ public class Azulenoids extends IteratorAdapter {
 	protected Object findNext() throws NoSuchElementException {
 		while (true) {
 			// --- if necessary, find the next octagon tiling to subdivide
-			if (this.pos < 1 || this.pos > 8) {
+			if (this.pos < 1 || this.pos > 16) {
 				while (this.syms == null || !this.syms.hasNext()) {
 	                if (this.sets.hasNext()) {
 	                    final DSymbol ds = (DSymbol) this.sets.next();
@@ -98,9 +99,9 @@ public class Azulenoids extends IteratorAdapter {
 			this.pos += 2;
 			final List idcs = new IndexList(1, 2);
 			boolean good = true;
-			for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+			for (final Iterator reps = this.ds.orbitRepresentatives(idcs); reps.hasNext();) {
 				final Object D = reps.next();
-				if (ds.m(1, 2, D) <= 3) {
+				if (this.ds.m(1, 2, D) <= 3) {
 					int deg = 0;
 					Object E = D;
 					do {
@@ -109,7 +110,7 @@ public class Azulenoids extends IteratorAdapter {
 						} else {
 							deg += 2;
 						}
-						E = ds.op(2, ds.op(1, E));
+						E = this.ds.op(2, this.ds.op(1, E));
 					} while (!D.equals(E));
 					if (deg == 5 || deg == 7) {
 						good = false;
@@ -120,8 +121,48 @@ public class Azulenoids extends IteratorAdapter {
 			
 			// --- perform the subdivision if it is legal
 			if (good) {
-				//TODO subdivide instead of returning labelled octagon tiling
-				return new Pair(ds, A);
+				final DynamicDSymbol tmp = new DynamicDSymbol(template);
+				
+				// --- map template chambers to octagon chambers
+				final Map tmp2oct = new HashMap();
+				final Map oct2tmp = new HashMap();
+				final Object E0 = new Integer(1);
+				Object  E = E0;
+				int k = (3 - pos + 16) % 16 + 1;
+				do {
+					tmp2oct.put(E, new Integer(k));
+					oct2tmp.put(new Integer(k), E);
+					E = tmp.op(0, E);
+					k = k % 16 + 1;
+					tmp2oct.put(E, new Integer(k));
+					oct2tmp.put(new Integer(k), E);
+					E = tmp.op(1, tmp.op(2, tmp.op(1, E)));
+					if  (tmp.definesOp(2, E)) {
+						E = tmp.op(1, tmp.op(2, E));
+					}
+					k = k % 16 + 1;
+				} while (!E0.equals(E));
+				
+				// --- complete the template based on the octagon tiling
+				for (final Iterator iter = tmp.elements(); iter.hasNext();) {
+					final Object D = iter.next();
+					if (!tmp.definesOp(2, D)) {
+						tmp.redefineOp(2, D, oct2tmp.get(this.ds.op(2, tmp2oct.get(D))));
+					}
+				}
+				for (final Iterator iter = tmp2oct.keySet().iterator(); iter.hasNext();) {
+					final Object D = iter.next();
+					if (!tmp.definesV(1, 2, D)) {
+						tmp.redefineV(1, 2, D, this.ds.v(1, 2, tmp2oct.get(D)));
+					}
+				}
+				
+				final DSymbol result = new DSymbol(tmp);
+				final List key = result.invariant();
+				if (!this.seenInvariants.contains(key)) {
+					this.seenInvariants.add(key);
+					return result.canonical();
+				}
 			}
 		}
 	}
@@ -135,6 +176,6 @@ public class Azulenoids extends IteratorAdapter {
 			System.out.println(azul.next());
 			++count;
 		}
-		System.out.println("Generated " + count + " marked symbols.");
+		System.out.println("#Generated " + count + " symbols.");
 	}
 }
