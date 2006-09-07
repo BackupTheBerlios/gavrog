@@ -104,34 +104,6 @@ public class Azulenoids extends IteratorAdapter {
 			final int p = this.pos;
 			this.pos += 2;
 			
-			// --- check if the next subdivision creates no penta- or heptagons
-//			boolean good = true;
-//			final Integer A = new Integer(p);
-//			final Integer B = new Integer(p + 6);
-//			final List idcs = new IndexList(1, 2);
-//			for (final Iterator reps = this.ds.orbitRepresentatives(idcs); reps.hasNext();) {
-//				final Object D = reps.next();
-//				if (this.ds.m(1, 2, D) <= 3) {
-//					int deg = 0;
-//					Object E = D;
-//					do {
-//						if (E.equals(A) || E.equals(B)) {
-//							deg += 3;
-//						} else {
-//							deg += 2;
-//						}
-//						E = this.ds.op(2, this.ds.op(1, E));
-//					} while (!D.equals(E));
-//					if (deg == 5 || deg == 7) {
-//						good = false;
-//						break;
-//					}
-//				}
-//			}
-//			if (!good) {
-//				continue
-//			}
-			
 			// --- perform the subdivision if it is legal
 			final DynamicDSymbol tmp = new DynamicDSymbol(template);
 
