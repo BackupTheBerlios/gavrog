@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -83,6 +84,12 @@ public class Azulenoids extends IteratorAdapter {
 				while (this.syms == null || !this.syms.hasNext()) {
 	                if (this.sets.hasNext()) {
 	                    final DSymbol ds = (DSymbol) this.sets.next();
+	                    ds.setVDefaultToOne(true);
+	                    final Rational curv = ds.curvature2D();
+	                    ds.setVDefaultToOne(false);
+	                    if (curv.isNegative()) {
+	                    	continue;
+	                    }
 	                    this.syms = new DefineBranching2d(ds, 2, Whole.ZERO);
 	                } else {
 	                    throw new NoSuchElementException("At end");
@@ -166,7 +173,7 @@ public class Azulenoids extends IteratorAdapter {
 			final List key = result.invariant();
 			if (!this.seenInvariants.contains(key)) {
 				this.seenInvariants.add(key);
-				return result.canonical();
+				return result.dual().canonical();
 			}
 		}
 	}
