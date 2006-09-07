@@ -89,6 +89,9 @@ public class Azulenoids extends IteratorAdapter {
 	                }
 				}
 				this.ds = (DSymbol) syms.next();
+				if (!this.ds.curvature2D().isZero()) {
+					continue;
+				}
 				this.pos = 1;
 			}
 			final int p = this.pos;
