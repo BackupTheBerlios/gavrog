@@ -37,9 +37,9 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * Generates all minimal, self-dual euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: GenerateSelfDual.java,v 1.2 2006/09/04 00:09:26 odf Exp $
+ * @version $Id: SelfDual.java,v 1.1 2006/09/09 05:17:35 odf Exp $
  */
-public class GenerateSelfDual {
+public class SelfDual {
     /*
      * A subclass of DefineBranching which forbids certain degeneracies.
      */
