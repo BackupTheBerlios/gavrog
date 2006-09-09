@@ -142,10 +142,10 @@ public class Azulenoids extends IteratorAdapter {
 			}
 
 			final DSymbol result = new DSymbol(tmp);
-			final List key = result.invariant();
+			final List key = result.minimal().invariant();
 			if (!this.seenInvariants.contains(key)) {
 				this.seenInvariants.add(key);
-				return result.dual().canonical();
+				return result.dual().minimal().canonical();
 			}
 		}
 	}
