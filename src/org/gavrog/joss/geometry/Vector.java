@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.28 2006/03/19 05:16:29 odf Exp $
+ * @version $Id: Vector.java,v 1.29 2006/09/12 23:00:44 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -271,6 +271,25 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      */
     public static IArithmetic volume3D(final Vector u, final Vector v, final Vector w) {
         return dot(u, crossProduct3D(v, w));
+    }
+    
+    /**
+     * Computes the oriented area of the parallelogram spanned by two
+     * 2-dimensional vectors with respect to the usual metric.
+     * 
+     * @param u the first vector.
+     * @param v the second vector.
+     * @return the area.
+     */
+    public static IArithmetic area2D(final Vector v, final Vector w) {
+        if (v.getDimension() != 2 || w.getDimension() != 2) {
+            throw new IllegalArgumentException("both vectors must be 2-dimensional");
+        }
+        final IArithmetic v0 = v.get(0);
+        final IArithmetic v1 = v.get(1);
+        final IArithmetic w0 = w.get(0);
+        final IArithmetic w1 = w.get(1);
+        return v0.times(w1).minus(v1.times(w0));
     }
     
     /**
