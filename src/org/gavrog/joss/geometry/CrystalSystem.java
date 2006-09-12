@@ -24,12 +24,17 @@ import org.gavrog.box.simple.NamedConstant;
  * strings representing the names of the systems.
  * 
  * @author Olaf Delgado
- * @version $Id: CrystalSystem.java,v 1.2 2006/07/05 22:02:16 odf Exp $
+ * @version $Id: CrystalSystem.java,v 1.3 2006/09/12 23:01:35 odf Exp $
  */
 public class CrystalSystem extends NamedConstant {
+	final public static CrystalSystem OBLIQUE = new CrystalSystem("Oblique");
+	final public static CrystalSystem RECTANGULAR = new CrystalSystem("Rectangular");
+	final public static CrystalSystem SQUARE = new CrystalSystem("Square");
+    final public static CrystalSystem HEXAGONAL_2D = new CrystalSystem("Hexagonal");
+	
     final public static CrystalSystem CUBIC = new CrystalSystem("Cubic");
     final public static CrystalSystem ORTHORHOMBIC = new CrystalSystem("Orthorhombic");
-    final public static CrystalSystem HEXAGONAL = new CrystalSystem("Hexagonal");
+    final public static CrystalSystem HEXAGONAL_3D = new CrystalSystem("Hexagonal");
     final public static CrystalSystem TETRAGONAL = new CrystalSystem("Tetragonal");
     final public static CrystalSystem TRIGONAL = new CrystalSystem("Trigonal");
     final public static CrystalSystem MONOCLINIC = new CrystalSystem("Monoclinic");
