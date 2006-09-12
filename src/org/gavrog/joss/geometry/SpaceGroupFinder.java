@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2006 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.49 2006/04/10 23:08:17 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.50 2006/09/12 23:03:55 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -62,9 +62,14 @@ public class SpaceGroupFinder {
         final int d = G.getDimension();
         this.G = G;
         
-        if (d == 3) {
+        if (d == 3 || d == 2) {
             // --- first step of analysis
-            Object res[] = analyzePointGroup3D();
+            Object res[];
+            if (d == 2) {
+            	res = analyzePointGroup2D();
+            } else {
+            	res = analyzePointGroup3D();            	
+            }
             this.crystalSystem = (CrystalSystem) res[0];
             final Matrix preliminaryBasis = (Matrix) res[1];
             
@@ -140,9 +145,6 @@ public class SpaceGroupFinder {
                 }
                 this.toStd = (CoordinateChange) toNormalized.times(c);
             }
-            
-        } else if (d ==2) {
-            throw new UnsupportedOperationException("dimension 2 not yet supported");
         } else {
             final String msg = "group dimension is " + d + ", must be 2 or 3";
             throw new UnsupportedOperationException(msg);
@@ -212,6 +214,76 @@ public class SpaceGroupFinder {
      * 
      * @return an array containing the crystal system, basis and set of generators.
      */
+    private Object[] analyzePointGroup2D() {
+        // --- categorize the group operators by their point actions
+        final Map type2ops = G.primitiveOperatorsByType();
+        final Set threeFold = (Set) type2ops.get(new OperatorType(2, true, 3, true));
+        final Set fourFold = (Set) type2ops.get(new OperatorType(2, true, 4, true));
+        final Set sixFold = (Set) type2ops.get(new OperatorType(2, true, 6, true));
+        
+        final Set mirrors = (Set) type2ops.get(new OperatorType(2, false, 2, false));
+        
+        final Operator R;
+        final CrystalSystem crystalSystem;
+        if (sixFold.size() > 0) {
+        	crystalSystem = CrystalSystem.HEXAGONAL_3D;
+            final Operator A = (Operator) sixFold.iterator().next();
+            R = (Operator) A.times(A);
+        } else if (fourFold.size() > 0) {
+        	crystalSystem = CrystalSystem.SQUARE;
+            R = (Operator) fourFold.iterator().next();
+        } else if (fourFold.size() > 0) {
+        	crystalSystem = CrystalSystem.HEXAGONAL_3D;
+            R = (Operator) threeFold.iterator().next();
+        } else if (mirrors.size() > 0) {
+        	crystalSystem = CrystalSystem.RECTANGULAR;
+        	R = null;
+        } else {
+        	crystalSystem = CrystalSystem.OBLIQUE;
+        	R = null;
+        }
+        
+        final Vector x;
+        final Vector y;
+        if (mirrors.size() > 0) {
+        	x = ((Operator) mirrors.iterator().next()).linearAxis();
+        } else {
+        	x = new Vector(1, 0);
+        }
+        if (R == null) {
+        	if (mirrors.size() > 1) {
+        		final Iterator iter = mirrors.iterator();
+        		iter.next();
+        		y = ((Operator) iter.next()).linearAxis();
+        	} else if (mirrors.size() > 0) {
+        		final Operator M = (Operator) mirrors.iterator().next();
+        		y = (Vector) x.minus(x.times(M));
+        	} else {
+        		y = new Vector(0, 1);
+        	}
+        } else {
+        	y = (Vector) x.times(R);
+        }
+        
+        final Matrix M;
+        
+        // --- make sure the new basis is oriented like the old one
+        if (Vector.area2D(x, y).isNegative()) {
+            M = Vector.toMatrix(new Vector[] { x, (Vector) y.negative() });
+        } else {
+            M = Vector.toMatrix(new Vector[] { x, y });
+        }
+        
+        // --- return the results
+        return new Object[] { crystalSystem, M };
+    }
+        
+    /**
+     * Analyzes the point group to determine the crystal system and find an
+     * appropriate set of generators and a preliminary basis based on it.
+     * 
+     * @return an array containing the crystal system, basis and set of generators.
+     */
     private Object[] analyzePointGroup3D() {
         // --- categorize the group operators by their point actions
         final Map type2ops = G.primitiveOperatorsByType();
@@ -244,7 +316,7 @@ public class SpaceGroupFinder {
         
         if (sixFold.size() > 0) {
             // --- there is a six-fold axis
-            crystalSystem = CrystalSystem.HEXAGONAL;
+            crystalSystem = CrystalSystem.HEXAGONAL_3D;
             final Operator A = (Operator) sixFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) A.times(A);
@@ -366,8 +438,8 @@ public class SpaceGroupFinder {
         final CrystalSystem system = this.crystalSystem;
         if (CrystalSystem.CUBIC.equals(system)) {
             res = normalizedBasisCubic(reduced);
-        } else if (CrystalSystem.HEXAGONAL.equals(system)) {
-            res = normalizedBasisHexagonal(reduced);
+        } else if (CrystalSystem.HEXAGONAL_3D.equals(system)) {
+            res = normalizedBasisHexagonal3D(reduced);
         } else if (CrystalSystem.TRIGONAL.equals(system)) {
             res = normalizedBasisTrigonal(reduced);
         } else if (CrystalSystem.TETRAGONAL.equals(system)) {
@@ -436,7 +508,7 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the normalized basis and centering.
      */
-    private Object[] normalizedBasisHexagonal(final Vector[] b) {
+    private Object[] normalizedBasisHexagonal3D(final Vector[] b) {
         final Vector v[];
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(b[0])) {

@@ -69,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.54 2006/07/05 22:31:14 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.55 2006/09/12 23:04:13 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -347,10 +347,10 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- bail out - for now - if not a 3d structure
-        if (d != 3) {
-            final String msg = "No further support yet for dimension " + d;
-            throw new SystreException(SystreException.STRUCTURE, msg);
-        }
+//        if (d != 3) {
+//            final String msg = "No further support yet for dimension " + d;
+//            throw new SystreException(SystreException.STRUCTURE, msg);
+//        }
 
         // --- find the space group name and conventional settings
     	status("Looking up the space group and transforming to a standard setting...");
