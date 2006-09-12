@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Unit test for {@link org.gavrog.joss.geometry.SpaceGroupFinder}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestSpaceGroupFinder.java,v 1.20 2006/09/01 01:21:06 odf Exp $
+ * @version $Id: TestSpaceGroupFinder.java,v 1.21 2006/09/12 23:02:24 odf Exp $
  */
 public class TestSpaceGroupFinder extends TestCase {
     public void setUp() {
@@ -67,9 +67,9 @@ public class TestSpaceGroupFinder extends TestCase {
         assertEquals(CrystalSystem.TRIGONAL, new SpaceGroupFinder(
                 new SpaceGroup(3, "R-3")).getCrystalSystem());
 
-        assertEquals(CrystalSystem.HEXAGONAL, new SpaceGroupFinder(
+        assertEquals(CrystalSystem.HEXAGONAL_3D, new SpaceGroupFinder(
                 new SpaceGroup(3, "P6")).getCrystalSystem());
-        assertEquals(CrystalSystem.HEXAGONAL, new SpaceGroupFinder(new SpaceGroup(3,
+        assertEquals(CrystalSystem.HEXAGONAL_3D, new SpaceGroupFinder(new SpaceGroup(3,
                 "P-62c")).getCrystalSystem());
 
         assertEquals(CrystalSystem.CUBIC, new SpaceGroupFinder(new SpaceGroup(3, "P23"))

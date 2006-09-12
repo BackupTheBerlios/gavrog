@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.17 2006/09/01 01:21:07 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.18 2006/09/12 23:02:38 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
@@ -159,7 +159,7 @@ public class SpaceGroupCatalogue {
                     } else if (fields[2].equals("tetragonal")) {
                         system = CrystalSystem.TETRAGONAL;
                     } else if (fields[2].equals("hexagonal")) {
-                        system = CrystalSystem.HEXAGONAL;
+                        system = CrystalSystem.HEXAGONAL_3D;
                     } else if (fields[2].equals("cubic")) {
                         system = CrystalSystem.CUBIC;
                     } else {
