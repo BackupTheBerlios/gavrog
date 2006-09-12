@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.50 2006/09/12 23:03:55 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.51 2006/09/12 23:31:09 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -436,7 +436,15 @@ public class SpaceGroupFinder {
         
         // --- call the appropriate method for the group's crystal system
         final CrystalSystem system = this.crystalSystem;
-        if (CrystalSystem.CUBIC.equals(system)) {
+        if (CrystalSystem.OBLIQUE.equals(system)) {
+			res = normalizedBasisOblique(reduced);
+		} else if (CrystalSystem.RECTANGULAR.equals(system)) {
+			res = normalizedBasisRectangular(reduced);
+		} else if (CrystalSystem.SQUARE.equals(system)) {
+			res = normalizedBasisSquare(reduced);
+		} else if (CrystalSystem.HEXAGONAL_2D.equals(system)) {
+			res = normalizedBasisHexagonal2D(reduced);
+		} else if (CrystalSystem.CUBIC.equals(system)) {
             res = normalizedBasisCubic(reduced);
         } else if (CrystalSystem.HEXAGONAL_3D.equals(system)) {
             res = normalizedBasisHexagonal3D(reduced);
@@ -455,13 +463,68 @@ public class SpaceGroupFinder {
         }
         
         final Vector L[] = (Vector[]) res[0];
-        if (Vector.volume3D(L[0], L[1], L[2]).isNegative()) {
-            L[2] = (Vector) L[2].negative();
-        }
+		if (L.length == 3) {
+			if (Vector.volume3D(L[0], L[1], L[2]).isNegative()) {
+				L[2] = (Vector) L[2].negative();
+			}
+		} else {
+			if (Vector.area2D(L[0], L[1]).isNegative()) {
+				L[2] = (Vector) L[1].negative();
+			}
+
+		}
         return new Object[] { Vector.toMatrix(L), res[1] };
     }
 
-    /**
+	/**
+	 * Takes a reduced lattice basis and produces a normalized basis and
+	 * centering with respect to the oblique crystal system.
+	 * 
+	 * @param v
+	 *            the reduced lattice basis.
+	 * @return the normalized basis and centering.
+	 */
+    private Object[] normalizedBasisOblique(final Vector[] b) {
+        return new Object[] { b, new Character('P') };
+	}
+
+	/**
+     * Takes a reduced lattice basis and produces a normalized basis and
+     * centering with respect to the rectangular crystal system.
+     * 
+     * @param v the reduced lattice basis.
+     * @return the normalized basis and centering.
+     */
+	private Object[] normalizedBasisRectangular(final Vector[] b) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+     * Takes a reduced lattice basis and produces a normalized basis and
+     * centering with respect to the square crystal system.
+     * 
+     * @param v the reduced lattice basis.
+     * @return the normalized basis and centering.
+     */
+	private Object[] normalizedBasisSquare(final Vector[] b) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+     * Takes a reduced lattice basis and produces a normalized basis and
+     * centering with respect to the hexagonal crystal system.
+     * 
+     * @param v the reduced lattice basis.
+     * @return the normalized basis and centering.
+     */
+	private Object[] normalizedBasisHexagonal2D(final Vector[] b) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
      * Takes a reduced lattice basis and produces a normalized basis and
      * centering with respect to the cubic crystal system.
      * 
