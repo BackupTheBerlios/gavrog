@@ -16,6 +16,9 @@
 
 package org.gavrog.joss.crossover;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,19 +30,22 @@ import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.FreeWord;
+import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
+import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.io.Output;
 
 /**
  * Represents a periodic graph derived as the 1-skeleton of a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Skeleton.java,v 1.2 2006/04/24 22:13:21 odf Exp $
+ * @version $Id: Skeleton.java,v 1.3 2006/09/12 21:50:37 odf Exp $
  */
 public class Skeleton extends PeriodicGraph {
     final private Map edgeToWord;
@@ -156,4 +162,22 @@ public class Skeleton extends PeriodicGraph {
         }
         return s;
     }
+    
+    public static void main(String[] args) {
+		try {
+			final String infilename = args[0];
+			final Writer out = new FileWriter(args[1]);
+
+			int count = 0;
+
+			for (final Iterator input = new InputIterator(infilename); input.hasNext();) {
+				final DSymbol ds = (DSymbol) input.next();
+				++count;
+				final PeriodicGraph G = new Skeleton(ds);
+				Output.writePGR(out, G, "T" + count);
+			}
+		} catch (final IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 }
