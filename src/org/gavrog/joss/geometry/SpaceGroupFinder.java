@@ -40,10 +40,10 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.54 2006/09/13 21:55:43 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.55 2006/09/13 21:56:56 odf Exp $
  */
 public class SpaceGroupFinder {
-    final private static int DEBUG = 1;
+    final private static int DEBUG = 0;
     
     final private SpaceGroup G;
     final private CrystalSystem crystalSystem;
