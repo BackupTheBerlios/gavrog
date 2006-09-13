@@ -45,7 +45,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * Represents a periodic graph derived as the 1-skeleton of a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Skeleton.java,v 1.3 2006/09/12 21:50:37 odf Exp $
+ * @version $Id: Skeleton.java,v 1.4 2006/09/13 22:41:55 odf Exp $
  */
 public class Skeleton extends PeriodicGraph {
     final private Map edgeToWord;
@@ -175,6 +175,7 @@ public class Skeleton extends PeriodicGraph {
 				++count;
 				final PeriodicGraph G = new Skeleton(ds);
 				Output.writePGR(out, G, "T" + count);
+				out.flush();
 			}
 		} catch (final IOException ex) {
 			ex.printStackTrace();
