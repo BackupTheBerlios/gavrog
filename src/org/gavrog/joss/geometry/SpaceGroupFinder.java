@@ -40,10 +40,10 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.53 2006/09/13 20:37:26 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.54 2006/09/13 21:55:43 odf Exp $
  */
 public class SpaceGroupFinder {
-    final private static int DEBUG = 0;
+    final private static int DEBUG = 1;
     
     final private SpaceGroup G;
     final private CrystalSystem crystalSystem;
@@ -101,7 +101,8 @@ public class SpaceGroupFinder {
             final List ops = toNormalized.applyTo(G.primitiveOperators());
             
             // --- determine the coordinate variations the matching process needs to consider
-            final CoordinateChange variations[] = makeVariations(this.crystalSystem, centering);
+            final CoordinateChange variations[] = makeVariations(this.dimension,
+					this.crystalSystem, centering);
             
             // --- convert primitive cell vectors to normalized basis
             for (int i = 0; i < primitiveCell.length; ++i) {
@@ -168,12 +169,14 @@ public class SpaceGroupFinder {
     /**
      * Generates an array of coordinate changes which the matching of normalized operator
      * lists needs to consider for a given crystal system and centering.
-     * 
+     * @param dim the dimension of the operators.
      * @param system the crystal system.
      * @param centering the lattice centering.
+     * 
      * @return the list of coordinate changes.
      */
-    private static CoordinateChange[] makeVariations(final CrystalSystem system, final char centering) {
+    private static CoordinateChange[] makeVariations(int dim, final CrystalSystem system,
+			final char centering) {
         final String codes[];
         if (CrystalSystem.MONOCLINIC.equals(system)) {
             if (centering == 'A') {
@@ -196,8 +199,12 @@ public class SpaceGroupFinder {
             }
         } else if (CrystalSystem.CUBIC.equals(system)) {
             codes = new String[] { "x,y,z", "-y,x,z" };
-        } else {
+        } else if (CrystalSystem.RECTANGULAR.equals(system)) {
+        	codes = new String[] { "x,y", "y,-x" };
+        } else if (dim == 3) {
             codes = new String[] { "x,y,z" };
+        } else {
+            codes = new String[] { "x,y" };
         }
         
         final CoordinateChange res[] = new CoordinateChange[codes.length];

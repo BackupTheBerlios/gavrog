@@ -36,7 +36,7 @@ import org.gavrog.box.simple.Strings;
  * here is static and the input files are hardwired.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupCatalogue.java,v 1.18 2006/09/12 23:02:38 odf Exp $
+ * @version $Id: SpaceGroupCatalogue.java,v 1.19 2006/09/13 21:55:43 odf Exp $
  */
 public class SpaceGroupCatalogue {
 	private static boolean preferSecondOrigin = true;
@@ -147,8 +147,17 @@ public class SpaceGroupCatalogue {
                     aliases.put(fields[1], fields[2]);
                 } else if (fields[0].equalsIgnoreCase("lookup")) {
                     final String name = fields[1];
+                    final char centering = fields[3].charAt(0);
+                    final CoordinateChange fromStd = new CoordinateChange(new Operator(fields[4]));
+                    final int d = fromStd.getDimension();
                     final CrystalSystem system;
-                    if (fields[2].equals("monoclinic")) {
+                    if (fields[2].equals("oblique")) {
+                        system = CrystalSystem.OBLIQUE;
+                    } else if (fields[2].equals("rectangular")) {
+                        system = CrystalSystem.RECTANGULAR;
+                    } else if (fields[2].equals("square")) {
+                        system = CrystalSystem.SQUARE;
+                    } else if (fields[2].equals("monoclinic")) {
                         system = CrystalSystem.MONOCLINIC;
                     } else if (fields[2].equals("triclinic")) {
                         system = CrystalSystem.TRICLINIC;
@@ -159,14 +168,16 @@ public class SpaceGroupCatalogue {
                     } else if (fields[2].equals("tetragonal")) {
                         system = CrystalSystem.TETRAGONAL;
                     } else if (fields[2].equals("hexagonal")) {
-                        system = CrystalSystem.HEXAGONAL_3D;
+                    	if (d == 2) {
+                    		system = CrystalSystem.HEXAGONAL_2D;
+                    	} else {
+                    		system = CrystalSystem.HEXAGONAL_3D;
+                    	}
                     } else if (fields[2].equals("cubic")) {
                         system = CrystalSystem.CUBIC;
                     } else {
                         throw new RuntimeException(fields[2] + " system unknown");
                     }
-                    final char centering = fields[3].charAt(0);
-                    final CoordinateChange fromStd = new CoordinateChange(new Operator(fields[4]));
                     lookup.put(name, new Lookup(name, system, centering, fromStd));
                 } else {
                     currentName = fields[0];

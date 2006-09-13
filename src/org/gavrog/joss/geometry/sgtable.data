@@ -8060,6 +8060,24 @@ alias C2/c C12/c1
 
 # Lookup settings for use by the SpaceGroupFinder class.
 
+lookup p1 oblique p x,y
+lookup p2 oblique p x,y
+lookup pm rectangular p x,y
+lookup pg rectangular p x,y
+lookup cm rectangular c x,y
+lookup p2mm rectangular p x,y
+lookup p2mg rectangular p x,y
+lookup p2gg rectangular p x,y
+lookup c2mm rectangular c x,y
+lookup p4 square p x,y
+lookup p4mm square p x,y
+lookup p4gm square p x,y
+lookup p3 hexagonal p x,y
+lookup p3m1 hexagonal p x,y
+lookup p31m hexagonal p x,y
+lookup p6 hexagonal p x,y
+lookup p6mm hexagonal p x,y
+
 lookup P-43n cubic P x-1/4,y+1/4,z-1/4
 lookup P42cm tetragonal P x,y,z
 lookup I41cd tetragonal I x,y,z
