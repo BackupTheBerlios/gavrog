@@ -22,6 +22,7 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.CrystalSystem;
 import org.gavrog.joss.geometry.Lattices;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
@@ -36,7 +37,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.10 2006/07/26 02:12:32 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.11 2006/09/13 22:41:17 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -158,60 +159,104 @@ class ProcessedNet {
         }
         
         final Matrix gram = embedder.getGramMatrix();
+        final CoordinateChange correction;
         
-        // --- the cell vectors in the coordinate system used be the embedder
-        Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
-        Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
-        Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
-    
-        // --- correct to a reduced cell for monoclinic and triclinic groups
-        final CoordinateChange correction = cell_correction(finder, gram, x, y, z);
-        final CoordinateChange ctmp = (CoordinateChange) correction.inverse().times(
-                fromStd);
-        x = (Vector) Vector.unit(3, 0).times(ctmp);
-        y = (Vector) Vector.unit(3, 1).times(ctmp);
-        z = (Vector) Vector.unit(3, 2).times(ctmp);
-        
-        // --- compute the cell parameters
-        final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
-        final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
-        final double c = Math.sqrt(((Real) Vector.dot(z, z, gram)).doubleValue());
-        final double f = 180.0 / Math.PI;
-        final double alpha = Math.acos(((Real) Vector.dot(y, z, gram)).doubleValue()
-                / (b * c)) * f;
-        final double beta = Math.acos(((Real) Vector.dot(x, z, gram)).doubleValue()
-                / (a * c)) * f;
-        final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
-                / (a * b)) * f;
+        if (d == 3) {
+			// --- the cell vectors in the embedder's coordinate system
+			Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
+			Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
+			Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
 
-        // --- print the cell parameters
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Writing cell parameters...");
-        }
+			// --- correct to a reduced cell for monoclinic and triclinic groups
+			correction = cell_correction(finder, gram, x, y, z);
+			final CoordinateChange ctmp = (CoordinateChange) correction.inverse().times(
+					fromStd);
+			x = (Vector) Vector.unit(3, 0).times(ctmp);
+			y = (Vector) Vector.unit(3, 1).times(ctmp);
+			z = (Vector) Vector.unit(3, 2).times(ctmp);
+
+			// --- compute the cell parameters
+			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
+			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
+			final double c = Math.sqrt(((Real) Vector.dot(z, z, gram)).doubleValue());
+			final double f = 180.0 / Math.PI;
+			final double alpha = Math.acos(((Real) Vector.dot(y, z, gram)).doubleValue()
+					/ (b * c))
+					* f;
+			final double beta = Math.acos(((Real) Vector.dot(x, z, gram)).doubleValue()
+					/ (a * c))
+					* f;
+			final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
+					/ (a * b))
+					* f;
+
+			// --- print the cell parameters
+			if (DEBUG) {
+				System.out.println("\t\t@@@ Writing cell parameters...");
+			}
+
+			if (cgdFormat) {
+				out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b)
+						+ " " + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
+						+ fmtReal4.format(beta) + " " + fmtReal4.format(gamma));
+			} else {
+				if (fullCell) {
+					out.println("   Coordinates below are given for a full conventional cell.");
+				}
+				out.println("   " + (cellRelaxed ? "R" : "Unr")
+						+ "elaxed cell parameters:");
+				out.println("       a = " + fmtReal5.format(a) + ", b = "
+						+ fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
+				out.println("       alpha = " + fmtReal4.format(alpha) + ", beta = "
+						+ fmtReal4.format(beta) + ", gamma = " + fmtReal4.format(gamma));
+			}
+		} else if (d == 2){
+			// --- the cell vectors in the embedder's coordinate system
+			Vector x = (Vector) Vector.unit(2, 0).times(fromStd);
+			Vector y = (Vector) Vector.unit(2, 1).times(fromStd);
+
+			// --- correct to a reduced cell for monoclinic and triclinic groups
+			correction = new CoordinateChange(Operator.identity(d));
+
+			// --- compute the cell parameters
+			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
+			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
+			final double f = 180.0 / Math.PI;
+			final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
+					/ (a * b))
+					* f;
+
+			// --- print the cell parameters
+			if (DEBUG) {
+				System.out.println("\t\t@@@ Writing cell parameters...");
+			}
+
+			if (cgdFormat) {
+				out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b)
+						+ " " + fmtReal4.format(gamma));
+			} else {
+				if (fullCell) {
+					out.println("   Coordinates below are given for a full conventional cell.");
+				}
+				out.println("   " + (cellRelaxed ? "R" : "Unr")
+						+ "elaxed cell parameters:");
+				out.println("       a = " + fmtReal5.format(a) + ", b = "
+						+ fmtReal5.format(b) + ", gamma = " + fmtReal4.format(gamma));
+			}
+		} else {
+			throw new RuntimeException("dimension must be 2 or 3");
+		}
         
-        if (cgdFormat) {
-            out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b) + " "
-                    + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
-                    + fmtReal4.format(beta) + " " + fmtReal4.format(gamma));
-        } else {
-            if (fullCell) {
-                out.println("   Coordinates below are given for a full conventional cell.");
-            }
-            out.println("   " + (cellRelaxed ? "R" : "Unr") + "elaxed cell parameters:");
-            out.println("       a = " + fmtReal5.format(a) + ", b = "
-                    + fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
-            out.println("       alpha = " + fmtReal4.format(alpha) + ", beta = "
-                    + fmtReal4.format(beta) + ", gamma = " + fmtReal4.format(gamma));
-        }
-        
-        // --- compute graph representation with respect to a conventional unit cell
+        // --- compute graph representation with respect to a conventional unit
+		// cell
         if (DEBUG) {
         	System.out.println("\t\t@@@ Computing full unit cell...");
         }
         
         final Cover cov = graph.conventionalCellCover();
 
-        // --- compute the relaxed node positions in to the conventional unit cell
+        // --- compute the relaxed node positions in to the conventional unit
+		// cell
         if (DEBUG) {
         	System.out.println("\t\t@@@ Computing full list of node positions...");
         }
