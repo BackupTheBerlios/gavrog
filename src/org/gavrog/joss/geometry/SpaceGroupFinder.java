@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.52 2006/09/13 04:51:50 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.53 2006/09/13 20:37:26 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -50,8 +50,7 @@ public class SpaceGroupFinder {
     final private CoordinateChange toStd;
     final private String groupName;
     final private String extension;
-    
-    final private CoordinateChange variations[];
+    final private int dimension;
     
     /**
      * Constructs a new instance.
@@ -59,7 +58,7 @@ public class SpaceGroupFinder {
      * @param G the group to identify.
      */
     public SpaceGroupFinder(final SpaceGroup G) {
-        final int d = G.getDimension();
+        final int d = this.dimension = G.getDimension();
         this.G = G;
         
         if (d == 3 || d == 2) {
@@ -102,7 +101,7 @@ public class SpaceGroupFinder {
             final List ops = toNormalized.applyTo(G.primitiveOperators());
             
             // --- determine the coordinate variations the matching process needs to consider
-            this.variations = makeVariations(this.crystalSystem, centering);
+            final CoordinateChange variations[] = makeVariations(this.crystalSystem, centering);
             
             // --- convert primitive cell vectors to normalized basis
             for (int i = 0; i < primitiveCell.length; ++i) {
@@ -124,7 +123,7 @@ public class SpaceGroupFinder {
             }
             
             // --- compare with lookup setting for all the 3d space groups
-            final Pair match = matchOperators(ops, C, centering);
+            final Pair match = matchOperators(ops, C, centering, variations);
             
             // --- postprocess the output of the lookup
             if (match == null) {
@@ -226,14 +225,14 @@ public class SpaceGroupFinder {
         final Operator R;
         final CrystalSystem crystalSystem;
         if (sixFold.size() > 0) {
-        	crystalSystem = CrystalSystem.HEXAGONAL_3D;
+        	crystalSystem = CrystalSystem.HEXAGONAL_2D;
             final Operator A = (Operator) sixFold.iterator().next();
             R = (Operator) A.times(A);
         } else if (fourFold.size() > 0) {
         	crystalSystem = CrystalSystem.SQUARE;
             R = (Operator) fourFold.iterator().next();
         } else if (fourFold.size() > 0) {
-        	crystalSystem = CrystalSystem.HEXAGONAL_3D;
+        	crystalSystem = CrystalSystem.HEXAGONAL_2D;
             R = (Operator) threeFold.iterator().next();
         } else if (mirrors.size() > 0) {
         	crystalSystem = CrystalSystem.RECTANGULAR;
@@ -430,8 +429,10 @@ public class SpaceGroupFinder {
      * @return the normalized basis and centering.
      */
     private Object[] normalizedBasis(final Vector lattice[]) {
+    	int d = this.dimension;
+    	
         // --- compute a lattice basis of smallest Dirichlet vectors
-        final Vector reduced[] = Lattices.reducedLatticeBasis(lattice, Matrix.one(3));
+        final Vector reduced[] = Lattices.reducedLatticeBasis(lattice, Matrix.one(d));
         final Object res[];
         
         // --- call the appropriate method for the group's crystal system
@@ -463,7 +464,7 @@ public class SpaceGroupFinder {
         }
         
         final Vector L[] = (Vector[]) res[0];
-		if (L.length == 3) {
+		if (d == 3) {
 			if (Vector.volume3D(L[0], L[1], L[2]).isNegative()) {
 				L[2] = (Vector) L[2].negative();
 			}
@@ -946,10 +947,11 @@ public class SpaceGroupFinder {
      * @param ops a primitive set of normalized ops for the group.
      * @param toPrimitive changes coordinates to primitive basis.
      * @param centering the preliminary centering.
+     * @param variations variations of the normalized setting that need to be checked
      * @return a pair containing the name found and the required basis change.
      */
     private Pair matchOperators(final List ops, final CoordinateChange toPrimitive,
-            final char centering) {
+            final char centering, final CoordinateChange[] variations) {
         if (DEBUG > 0) {
             System.err.println("\nStarting lookup process...");
             System.err.println("  centering = " + centering + ", system = "
@@ -989,9 +991,9 @@ public class SpaceGroupFinder {
             }
             
             // --- loop through the necessary coordinate system variations for this group
-            for (int i = 0; i < this.variations.length; ++i) {
+            for (int i = 0; i < variations.length; ++i) {
                 // --- convert the operators to this coordinate system and sort
-                final List probes = this.variations[i].applyTo(ops);
+                final List probes = variations[i].applyTo(ops);
                 sortOps(probes);
 
                 // --- check if linear parts are still equal
@@ -1041,7 +1043,7 @@ public class SpaceGroupFinder {
                     continue;
                 } else {
                     final Point origin = (Point) new Point(S).times(toPrimitive.inverse());
-                    final CoordinateChange c1 = this.variations[i];
+                    final CoordinateChange c1 = variations[i];
                     final CoordinateChange c2 = new CoordinateChange(I, origin);
                     final CoordinateChange c3 = (CoordinateChange) info.fromStd.inverse();
                     final Pair res = new Pair(info.name, c1.times(c2).times(c3));
