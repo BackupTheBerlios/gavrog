@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.51 2006/09/12 23:31:09 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.52 2006/09/13 04:51:50 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -469,9 +469,8 @@ public class SpaceGroupFinder {
 			}
 		} else {
 			if (Vector.area2D(L[0], L[1]).isNegative()) {
-				L[2] = (Vector) L[1].negative();
+				throw new RuntimeException("this should not happen");
 			}
-
 		}
         return new Object[] { Vector.toMatrix(L), res[1] };
     }
@@ -480,12 +479,11 @@ public class SpaceGroupFinder {
 	 * Takes a reduced lattice basis and produces a normalized basis and
 	 * centering with respect to the oblique crystal system.
 	 * 
-	 * @param v
-	 *            the reduced lattice basis.
+	 * @param v the reduced lattice basis.
 	 * @return the normalized basis and centering.
 	 */
     private Object[] normalizedBasisOblique(final Vector[] b) {
-        return new Object[] { b, new Character('P') };
+        return new Object[] { b, new Character('p') };
 	}
 
 	/**
@@ -496,8 +494,29 @@ public class SpaceGroupFinder {
      * @return the normalized basis and centering.
      */
 	private Object[] normalizedBasisRectangular(final Vector[] b) {
-		// TODO Auto-generated method stub
-		return null;
+		final Vector y = new Vector(0, 1);
+		final Vector v[];
+		final char centering;
+		
+		if (b[0].isCollinearTo(y) || b[1].isOrthogonalTo(y)) {
+			v = new Vector[] { b[1], b[0] };
+		} else {
+			v = new Vector[] { b[0], b[1] };
+		}
+		
+		if (v[0].isOrthogonalTo(y)) {
+			if (v[1].isCollinearTo(y)) {
+				centering = 'p';
+			} else {
+				centering = 'c';
+				v[1] = (Vector) v[1].times(new Operator("0, 2y"));
+			}
+		} else {
+			centering = 'c';
+			v[0] = (Vector) v[0].times(new Operator("2x, 0"));
+		}
+		
+		return new Object[] { v, new Character(centering) };
 	}
 
 	/**
@@ -508,8 +527,11 @@ public class SpaceGroupFinder {
      * @return the normalized basis and centering.
      */
 	private Object[] normalizedBasisSquare(final Vector[] b) {
-		// TODO Auto-generated method stub
-		return null;
+		final Vector v[] = { b[0], b[1] };
+        v[1] = (Vector) v[0].times(new Operator("-y, x"));
+        
+
+        return new Object[] { v, new Character('p') };
 	}
 
 	/**
@@ -520,8 +542,10 @@ public class SpaceGroupFinder {
      * @return the normalized basis and centering.
      */
 	private Object[] normalizedBasisHexagonal2D(final Vector[] b) {
-		// TODO Auto-generated method stub
-		return null;
+		final Vector v[] = { b[0], b[1] };
+		v[1] = (Vector) v[0].times(new Operator("-y, x-y"));
+
+        return new Object[] { v, new Character('p') };
 	}
 
 	/**
