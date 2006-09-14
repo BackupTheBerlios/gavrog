@@ -70,7 +70,7 @@ p4mm x,y
     x,-y
     y,x
     -y,-x
-p4mg x,y
+p4gm x,y
     x,y
     -x,-y
     -y,x

@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.55 2006/09/13 21:56:56 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.56 2006/09/14 23:50:48 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -261,11 +261,14 @@ public class SpaceGroupFinder {
         		final Iterator iter = mirrors.iterator();
         		iter.next();
         		y = ((Operator) iter.next()).linearAxis();
-        	} else if (mirrors.size() > 0) {
-        		final Operator M = (Operator) mirrors.iterator().next();
-        		y = (Vector) x.minus(x.times(M));
         	} else {
-        		y = new Vector(0, 1);
+        		final Vector tmp = new Vector(0, 1);
+        		if (mirrors.size() > 0) {
+        			final Operator op = (Operator) mirrors.iterator().next();
+        			y = (Vector) tmp.minus(tmp.times(op));
+        		} else {
+        			y = tmp;
+        		}
         	}
         } else {
         	y = (Vector) x.times(R);
@@ -278,6 +281,14 @@ public class SpaceGroupFinder {
             M = Vector.toMatrix(new Vector[] { x, (Vector) y.negative() });
         } else {
             M = Vector.toMatrix(new Vector[] { x, y });
+        }
+        
+        if (DEBUG > 1) {
+        	System.err.println("Original operators:");
+        	for (final Iterator iter = G.getOperators().iterator(); iter.hasNext();) {
+        		System.err.println("    " + iter.next());
+        	}
+        	System.err.println(crystalSystem + " system.");
         }
         
         // --- return the results
@@ -477,7 +488,7 @@ public class SpaceGroupFinder {
 			}
 		} else {
 			if (Vector.area2D(L[0], L[1]).isNegative()) {
-				throw new RuntimeException("this should not happen");
+				L[1] = (Vector) L[1].negative();
 			}
 		}
         return new Object[] { Vector.toMatrix(L), res[1] };
@@ -502,26 +513,27 @@ public class SpaceGroupFinder {
      * @return the normalized basis and centering.
      */
 	private Object[] normalizedBasisRectangular(final Vector[] b) {
-		final Vector y = new Vector(0, 1);
 		final Vector v[];
 		final char centering;
-		
-		if (b[0].isCollinearTo(y) || b[1].isOrthogonalTo(y)) {
-			v = new Vector[] { b[1], b[0] };
-		} else {
-			v = new Vector[] { b[0], b[1] };
-		}
-		
-		if (v[0].isOrthogonalTo(y)) {
-			if (v[1].isCollinearTo(y)) {
-				centering = 'p';
-			} else {
-				centering = 'c';
-				v[1] = (Vector) v[1].times(new Operator("0, 2y"));
-			}
-		} else {
+
+		if (!b[0].get(0).isZero() && !b[0].get(1).isZero()) {
 			centering = 'c';
-			v[0] = (Vector) v[0].times(new Operator("2x, 0"));
+			v = new Vector[] {
+					(Vector) b[0].times(new Operator("0, 2y")),
+					(Vector) b[0].times(new Operator("2x, 0"))
+					};
+		} else if (!b[1].get(0).isZero() && !b[1].get(1).isZero()) {
+			centering = 'c';
+			v = new Vector[] {
+					(Vector) b[1].times(new Operator("0, 2y")),
+					(Vector) b[1].times(new Operator("2x, 0"))
+					};
+		} else if (b[0].get(1).isZero()) {
+			centering = 'p';
+			v = new Vector[] { b[1], (Vector) b[0].negative() };
+		} else {
+			centering = 'p';
+			v = new Vector[] { b[0], b[1] };
 		}
 		
 		return new Object[] { v, new Character(centering) };
