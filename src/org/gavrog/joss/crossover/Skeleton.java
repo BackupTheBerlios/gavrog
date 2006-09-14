@@ -16,8 +16,12 @@
 
 package org.gavrog.joss.crossover;
 
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,7 +49,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * Represents a periodic graph derived as the 1-skeleton of a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Skeleton.java,v 1.4 2006/09/13 22:41:55 odf Exp $
+ * @version $Id: Skeleton.java,v 1.5 2006/09/14 22:24:12 odf Exp $
  */
 public class Skeleton extends PeriodicGraph {
     final private Map edgeToWord;
@@ -165,12 +169,22 @@ public class Skeleton extends PeriodicGraph {
     
     public static void main(String[] args) {
 		try {
-			final String infilename = args[0];
-			final Writer out = new FileWriter(args[1]);
+			final Reader in;
+			final Writer out;
+			if (args.length > 0) {
+				in = new FileReader(args[0]);
+			} else {
+				in = new InputStreamReader(System.in);
+			}
+			if (args.length > 1) {
+				out = new FileWriter(args[1]);
+			} else {
+				out = new OutputStreamWriter(System.out);
+			}
 
 			int count = 0;
 
-			for (final Iterator input = new InputIterator(infilename); input.hasNext();) {
+			for (final Iterator input = new InputIterator(in); input.hasNext();) {
 				final DSymbol ds = (DSymbol) input.next();
 				++count;
 				final PeriodicGraph G = new Skeleton(ds);
