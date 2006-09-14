@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: Covers.java,v 1.3 2006/09/14 03:41:42 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;
@@ -246,14 +246,16 @@ public class Covers {
         
         final List idcs = new IndexList(ds);
         int deg = 1;
-        for (int k = 0; k < ds.dim(); ++k) {
-            final int i = ((Integer) idcs.get(k)).intValue();
-            final int j = ((Integer) idcs.get(k+1)).intValue();
-            final Iterator reps = ds.orbitRepresentatives(new IndexList(i, j));
-            while (reps.hasNext()) {
-                deg = Math.max(deg, ds.v(i, j, reps.next()));
-            }
-        }
+		for (int k = 0; k < ds.dim(); ++k) {
+			final int i = ((Integer) idcs.get(k)).intValue();
+			for (int l = k + 1; l <= ds.dim(); ++l) {
+				final int j = ((Integer) idcs.get(l)).intValue();
+				final Iterator reps = ds.orbitRepresentatives(new IndexList(i, j));
+				while (reps.hasNext()) {
+					deg = Math.max(deg, ds.v(i, j, reps.next()));
+				}
+			}
+		}
         
         final DelaneySymbol dso = ds.orientedCover().flat();
         final FundamentalGroup G = new FundamentalGroup(dso);
