@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.56 2006/09/14 23:50:48 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.57 2006/09/15 06:17:17 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -71,12 +71,12 @@ public class SpaceGroupFinder {
             }
             this.crystalSystem = (CrystalSystem) res[0];
             final Matrix preliminaryBasis = (Matrix) res[1];
+            if (DEBUG > 0) {
+                System.err.println("preliminary basis: " + preliminaryBasis);
+            }
             
             // --- compute the coordinate change to the preliminary basis
             final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis);
-            if (DEBUG > 0) {
-                System.err.println("to preliminary basis: " + toPreliminary);
-            }
             
             // --- get primitive cell vectors and convert to preliminary basis
             final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
@@ -238,7 +238,7 @@ public class SpaceGroupFinder {
         } else if (fourFold.size() > 0) {
         	crystalSystem = CrystalSystem.SQUARE;
             R = (Operator) fourFold.iterator().next();
-        } else if (fourFold.size() > 0) {
+        } else if (threeFold.size() > 0) {
         	crystalSystem = CrystalSystem.HEXAGONAL_2D;
             R = (Operator) threeFold.iterator().next();
         } else if (mirrors.size() > 0) {
@@ -262,7 +262,10 @@ public class SpaceGroupFinder {
         		iter.next();
         		y = ((Operator) iter.next()).linearAxis();
         	} else {
-        		final Vector tmp = new Vector(0, 1);
+        		Vector tmp = new Vector(0, 1);
+        		if (tmp.isCollinearTo(x)) {
+        			tmp = new Vector(1, 0);
+        		}
         		if (mirrors.size() > 0) {
         			final Operator op = (Operator) mirrors.iterator().next();
         			y = (Vector) tmp.minus(tmp.times(op));
