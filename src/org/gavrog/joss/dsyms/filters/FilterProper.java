@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2006 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package org.gavrog.joss.dsyms.filters;
 
-import org.gavrog.joss.crossover.Skeleton;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
+import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
@@ -27,7 +27,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.1 2006/08/29 03:47:21 odf Exp $
+ * @version $Id: FilterProper.java,v 1.2 2006/09/18 21:07:56 odf Exp $
  */
 public class FilterProper {
 

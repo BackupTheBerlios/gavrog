@@ -44,8 +44,8 @@ import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
-import org.gavrog.joss.crossover.Skeleton;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -76,7 +76,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.61 2006/08/15 21:13:09 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.62 2006/09/18 21:07:57 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""

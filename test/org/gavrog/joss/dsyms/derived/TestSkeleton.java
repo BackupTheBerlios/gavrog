@@ -14,16 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.joss.crossover;
+package org.gavrog.joss.dsyms.derived;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestSkeleton.java,v 1.1 2006/04/24 22:12:51 odf Exp $
+ * @version $Id: TestSkeleton.java,v 1.1 2006/09/18 21:07:56 odf Exp $
  */
 public class TestSkeleton extends TestCase {
     final private DSymbol ds1 = new DSymbol("1 3:1,1,1,1:4,3,4");

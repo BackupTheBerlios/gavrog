@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.crossover;
+package org.gavrog.joss.dsyms.derived;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -37,8 +37,6 @@ import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
-import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -49,7 +47,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * Represents a periodic graph derived as the 1-skeleton of a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Skeleton.java,v 1.5 2006/09/14 22:24:12 odf Exp $
+ * @version $Id: Skeleton.java,v 1.1 2006/09/18 21:07:56 odf Exp $
  */
 public class Skeleton extends PeriodicGraph {
     final private Map edgeToWord;
