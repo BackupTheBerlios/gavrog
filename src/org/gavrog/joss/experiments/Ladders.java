@@ -16,6 +16,13 @@
 
 package org.gavrog.joss.experiments;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -26,9 +33,12 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.io.Net;
+import org.gavrog.joss.pgraphs.io.NetParser;
+import org.gavrog.joss.pgraphs.io.Output;
 
 public class Ladders {
-    public Iterator ladderEquivalenceClasses(final PeriodicGraph G) {
+    public static Partition ladderEquivalence(final PeriodicGraph G) {
         // --- check prerequisites
         if (!G.isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -60,12 +70,60 @@ public class Ladders {
 			} catch (Morphism.NoSuchMorphismException ex) {
 				continue;
 			}
+			boolean hasFixedPoints = false;
+			for (final Iterator it = G.nodes(); it.hasNext();) {
+				final INode w = (INode) it.next();
+				final INode u = (INode) iso.get(w);
+				if (w.equals(u)) {
+					hasFixedPoints = true;
+					break;
+				}
+			}
+			if (hasFixedPoints) {
+				continue;
+			}
 			for (final Iterator it = G.nodes(); it.hasNext();) {
 				final INode w = (INode) it.next();
 				P.unite(w, iso.get(w));
 			}
 		}
 
-		return P.classes();
+		return P;
+	}
+
+    public static void main(final String args[]) {
+		try {
+			final Reader r;
+			final Writer w;
+			if (args.length > 0) {
+				r = new FileReader(args[0]);
+			} else {
+				r = new InputStreamReader(System.in);
+			}
+			if (args.length > 1) {
+				w = new FileWriter(args[1]);
+			} else {
+				w = new OutputStreamWriter(System.out);
+			}
+
+			final NetParser parser = new NetParser(r);
+
+			while (true) {
+				final Net net = parser.parseNet();
+				if (net == null) {
+					return;
+				} else {
+					final PeriodicGraph G = net.canonical();
+					Output.writePGR(w, G, net.getName());
+					w.write('\n');
+					w.write(String.valueOf((ladderEquivalence(G))));
+					w.write("\n\n");
+					w.flush();
+				}
+			}
+		} catch (final IOException ex) {
+			System.err.print(ex);
+			System.exit(1);
+		}
 	}
 }
