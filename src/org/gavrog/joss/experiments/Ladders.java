@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
 
 public class Ladders {
-    public static Partition ladderEquivalence(final PeriodicGraph G) {
+    public static Partition rungPartition(final PeriodicGraph G) {
         // --- check prerequisites
         if (!G.isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -116,7 +116,7 @@ public class Ladders {
 					final PeriodicGraph G = net.canonical();
 					Output.writePGR(w, G, net.getName());
 					w.write('\n');
-					w.write(String.valueOf((ladderEquivalence(G))));
+					w.write(String.valueOf((rungPartition(G))));
 					w.write("\n\n");
 					w.flush();
 				}
