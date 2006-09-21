@@ -24,6 +24,8 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.Partition;
@@ -37,8 +39,12 @@ import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
 
-public class Ladders {
-    public static Partition rungPartition(final PeriodicGraph G) {
+public class Ladder {
+	private final PeriodicGraph graph;
+	private final Partition rungPartition;
+	private final List layerAutomorphisms;
+	
+    public Ladder(final PeriodicGraph G) {
         // --- check prerequisites
         if (!G.isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -54,6 +60,7 @@ public class Ladders {
         final INode start = (INode) iter.next();
         final Map pos = G.barycentricPlacement();
         final Point pos0 = (Point) pos.get(start);
+        final List maps = new LinkedList();
         
         while (iter.hasNext()) {
 			final INode v = (INode) iter.next();
@@ -70,6 +77,7 @@ public class Ladders {
 			} catch (Morphism.NoSuchMorphismException ex) {
 				continue;
 			}
+			maps.add(iso);
 			boolean hasFixedPoints = false;
 			for (final Iterator it = G.nodes(); it.hasNext();) {
 				final INode w = (INode) it.next();
@@ -87,11 +95,34 @@ public class Ladders {
 				P.unite(w, iso.get(w));
 			}
 		}
-
-		return P;
+        
+        this.layerAutomorphisms = maps;
+        this.rungPartition = P;
+        this.graph = G;
 	}
 
-    public static void main(final String args[]) {
+    /**
+	 * @return the graph
+	 */
+	public PeriodicGraph getGraph() {
+		return graph;
+	}
+
+	/**
+	 * @return the layerAutomorphisms
+	 */
+	public List getLayerAutomorphisms() {
+		return layerAutomorphisms;
+	}
+
+	/**
+	 * @return the rungPartition
+	 */
+	public Partition getRungPartition() {
+		return rungPartition;
+	}
+
+	public static void main(final String args[]) {
 		try {
 			final Reader r;
 			final Writer w;
@@ -116,7 +147,7 @@ public class Ladders {
 					final PeriodicGraph G = net.canonical();
 					Output.writePGR(w, G, net.getName());
 					w.write('\n');
-					w.write(String.valueOf((rungPartition(G))));
+					w.write(String.valueOf((new Ladder(G).getRungPartition())));
 					w.write("\n\n");
 					w.flush();
 				}
