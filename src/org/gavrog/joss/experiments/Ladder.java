@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.geometry.Operator;
@@ -53,6 +54,9 @@ public class Ladder {
             throw new UnsupportedOperationException("graph must be locally stable");
         }
         
+        // --- remember the graph given
+        this.graph = G;
+        
         // --- find equivalence classes w.r.t. ladder translations
         final Operator I = Operator.identity(G.getDimension());
         final Partition P = new Partition();
@@ -60,7 +64,6 @@ public class Ladder {
         final INode start = (INode) iter.next();
         final Map pos = G.barycentricPlacement();
         final Point pos0 = (Point) pos.get(start);
-        final List maps = new LinkedList();
         
         while (iter.hasNext()) {
 			final INode v = (INode) iter.next();
@@ -77,7 +80,6 @@ public class Ladder {
 			} catch (Morphism.NoSuchMorphismException ex) {
 				continue;
 			}
-			maps.add(iso);
 			boolean hasFixedPoints = false;
 			for (final Iterator it = G.nodes(); it.hasNext();) {
 				final INode w = (INode) it.next();
@@ -95,10 +97,21 @@ public class Ladder {
 				P.unite(w, iso.get(w));
 			}
 		}
-        
-        this.stileMaps = maps;
         this.rungPartition = P;
-        this.graph = G;
+        
+        // --- collect morphisms from the start node to each node in its rung
+		final List maps = new LinkedList();
+        for (final Iterator classes = P.classes(); classes.hasNext();) {
+        	final Set A = (Set) classes.next();
+        	if (A.contains(start)) {
+        		for (final Iterator nodes = A.iterator(); nodes.hasNext();) {
+        			final INode v = (INode) nodes.next();
+        			maps.add(new Morphism(start, v, I));
+        		}
+    			break;
+        	}
+		}
+		this.stileMaps = maps;
 	}
 
     /**
@@ -145,9 +158,12 @@ public class Ladder {
 					return;
 				} else {
 					final PeriodicGraph G = net.canonical();
+					final Ladder ladder = new Ladder(G);
 					Output.writePGR(w, G, net.getName());
 					w.write('\n');
-					w.write(String.valueOf((new Ladder(G).getRungPartition())));
+					w.write(String.valueOf(ladder.getRungPartition()));
+					w.write('\n');
+					w.write(String.valueOf(ladder.getStileMaps()));
 					w.write("\n\n");
 					w.flush();
 				}
