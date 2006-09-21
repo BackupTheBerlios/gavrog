@@ -42,7 +42,7 @@ import org.gavrog.joss.pgraphs.io.Output;
 public class Ladder {
 	private final PeriodicGraph graph;
 	private final Partition rungPartition;
-	private final List layerAutomorphisms;
+	private final List stileMaps;
 	
     public Ladder(final PeriodicGraph G) {
         // --- check prerequisites
@@ -96,7 +96,7 @@ public class Ladder {
 			}
 		}
         
-        this.layerAutomorphisms = maps;
+        this.stileMaps = maps;
         this.rungPartition = P;
         this.graph = G;
 	}
@@ -109,10 +109,10 @@ public class Ladder {
 	}
 
 	/**
-	 * @return the layerAutomorphisms
+	 * @return the stileMaps
 	 */
-	public List getLayerAutomorphisms() {
-		return layerAutomorphisms;
+	public List getStileMaps() {
+		return stileMaps;
 	}
 
 	/**
