@@ -42,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.5 2006/09/26 22:25:56 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.6 2006/09/26 22:45:19 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
@@ -237,21 +237,28 @@ public class DefineBranching2d extends BranchAndCut {
         return 0;
     }
     
-	/* (non-Javadoc)
-	 * @see org.gavrog.joss.algorithms.BranchAndCut#makeResult()
-	 */
-	protected Object makeResult() {
+    /* (non-Javadoc)
+     * @see org.gavrog.joss.algorithms.BranchAndCut#isComplete()
+     */
+    protected boolean isComplete() {
 		final DynamicDSymbol ds = this.current;
 		
 		// --- check for completeness
 		for (int i = 0; i < ds.dim(); ++i) {
 			for (int D = 1; D <= ds.size(); ++D) {
 				if (!ds.definesV(i, i+1, new Integer(D))) {
-					return null;
+					return false;
 				}
 			}
 		}
 		
+		return true;
+    }
+    
+	/* (non-Javadoc)
+	 * @see org.gavrog.joss.algorithms.BranchAndCut#makeResult()
+	 */
+	protected Object makeResult() {
 		// --- return the result as a flat symbol.
 		return new DSymbol(this.current);
 	}

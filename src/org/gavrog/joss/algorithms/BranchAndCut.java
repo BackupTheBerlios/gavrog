@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.5 2006/09/26 22:25:56 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.6 2006/09/26 22:45:19 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -105,8 +105,9 @@ public abstract class BranchAndCut extends IteratorAdapter {
 
 			if (performMoveAndDeductions(move)) {
 				if (isValid()) {
-					final Object result = makeResult();
-					if (result != null) {
+					//TODO what happens if final results can be extended?
+					if (isComplete()) {
+						final Object result = makeResult();
 						log("leaving findNext() with result " + result);
 						return result;
 					} else {
@@ -248,8 +249,16 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	abstract protected boolean isValid();
 
 	/**
-	 * Constructs an output object based on the current state or <code>null</code> if
-	 * the current state does not describe a complete result.
+	 * Checks if the current state describes a complete result.
+	 * 
+	 * @return true if a complete result can be constructed.
+	 */
+	abstract protected boolean isComplete();
+
+	/**
+	 * Constructs an output object based on the current state. It is supposed
+	 * that the current state describes a complete result, as verified by
+	 * calling {@link #isComplete()}.
 	 * 
 	 * @return the result of the current state.
 	 */

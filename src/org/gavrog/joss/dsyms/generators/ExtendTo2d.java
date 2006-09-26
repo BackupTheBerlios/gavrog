@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * TODO simplify using the fact we're now restricted to a very special case
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo2d.java,v 1.4 2006/09/26 22:25:56 odf Exp $
+ * @version $Id: ExtendTo2d.java,v 1.5 2006/09/26 22:45:20 odf Exp $
  * 
  */
 public class ExtendTo2d extends BranchAndCut {
@@ -237,18 +237,21 @@ public class ExtendTo2d extends BranchAndCut {
         return flat.getMapToCanonical().get(new Integer(1)).equals(new Integer(1));
 	}
 
-	protected Object makeResult() {
+	protected boolean isComplete() {
 		final DynamicDSymbol ds = this.current;
 		
 		// --- check for completeness
 		for (int i = 0; i <= ds.dim(); ++i) {
 			for (int D = 1; D <= ds.size(); ++D) {
 				if (!ds.definesOp(i, new Integer(D))) {
-					return null;
+					return false;
 				}
 			}
 		}
-		
+		return true;
+	}
+	
+	protected Object makeResult() {
 		// --- return the result as a flat symbol.
 		return new DSymbol(this.current);
 	}
