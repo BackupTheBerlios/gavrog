@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.4 2006/09/01 05:36:01 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.5 2006/09/26 22:25:56 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -134,8 +134,8 @@ public abstract class BranchAndCut extends IteratorAdapter {
 			// --- get the next move from the queue
 			final Move move = (Move) queue.removeFirst();
 
-			// --- perform the move if possible
-			final Status status = performMove(move);
+			// --- see if the move can be performed
+			final Status status = checkMove(move);
 
 			// --- a void move has no consequences
 			if (status == Status.VOID) {
@@ -148,7 +148,8 @@ public abstract class BranchAndCut extends IteratorAdapter {
 				return false;
 			}
 
-			// --- record the move
+			// --- perform and record the move
+			performMove(move);
 			this.stack.addLast(move);
 
 			// --- finally, find and enqueue deductions
@@ -201,21 +202,28 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	abstract protected Move nextDecision(final Move previous);
 
 	/**
-	 * Performs the given move. Returns the status of the move: OK if the move
-	 * was performed as requested, VOID if the move would not change the current
-	 * state, and ILLEGAL if the move conflicts with the current state and was
-	 * thus rejected.
+	 * Returns the status of the given move: OK if it can be performed as
+	 * requested, VOID if it would not change the current state, and ILLEGAL if
+	 * it conflicts with the current state.
 	 * 
-	 * @param move the move to perform.
 	 * @return the status of the move (OK, VOID or ILLEGAL).
 	 */
-	abstract protected Status performMove(final Move move);
+	abstract protected Status checkMove(final Move move);
+
+	/**
+	 * Performs the given move which must have been established as legal and
+	 * non-void by calling {@link #checkMove(Move)}.
+	 * 
+	 * @param move the move to perform.
+	 */
+	abstract protected void performMove(final Move move);
 
 	/**
 	 * Undo the given move under the assumption that it was the last move
 	 * performed on the path to the current state.
 	 * 
-	 * @param move the move to undo.
+	 * @param move
+	 *            the move to undo.
 	 */
 	abstract protected void undoMove(final Move move);
 

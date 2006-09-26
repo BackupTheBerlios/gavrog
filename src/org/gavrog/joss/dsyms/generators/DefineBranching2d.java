@@ -42,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.4 2006/09/04 05:50:08 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.5 2006/09/26 22:25:56 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
@@ -144,19 +144,27 @@ public class DefineBranching2d extends BranchAndCut {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.gavrog.joss.algorithms.BranchAndCut#performMove(org.gavrog.joss.algorithms.Move)
+	 * @see org.gavrog.joss.algorithms.BranchAndCut#checkMove(org.gavrog.joss.algorithms.Move)
 	 */
-	protected Status performMove(final Move move) {
-		final DynamicDSymbol ds = this.current;
+	protected Status checkMove(final Move move) {
 		final int idx = ((BMove) move).index;
 		final Integer D = new Integer(((BMove) move).element);
 		final int val = ((BMove) move).value;
 		
-		if (idx == 1 && ds.r(idx, idx+1, D) * val < this.minVertDeg) {
+		if (idx == 1 && this.current.r(idx, idx+1, D) * val < this.minVertDeg) {
 			return Status.ILLEGAL;
 		}
-		ds.redefineV(idx, idx+1, D, val);
 		return Status.OK;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.gavrog.joss.algorithms.BranchAndCut#performMove(org.gavrog.joss.algorithms.Move)
+	 */
+	protected void performMove(final Move move) {
+		final int idx = ((BMove) move).index;
+		final Integer D = new Integer(((BMove) move).element);
+		
+		this.current.redefineV(idx, idx+1, D, ((BMove) move).value);
 	}
 
 	/* (non-Javadoc)

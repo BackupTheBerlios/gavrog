@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * TODO simplify using the fact we're now restricted to a very special case
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo2d.java,v 1.3 2006/09/04 05:29:11 odf Exp $
+ * @version $Id: ExtendTo2d.java,v 1.4 2006/09/26 22:25:56 odf Exp $
  * 
  */
 public class ExtendTo2d extends BranchAndCut {
@@ -112,7 +112,7 @@ public class ExtendTo2d extends BranchAndCut {
 		}
 	}
 
-	protected Status performMove(final Move move) {
+	protected Status checkMove(final Move move) {
 		final DynamicDSymbol ds = this.current;
 		final int i = ((CMove) move).idx;
 		final Integer D = new Integer(((CMove) move).from);
@@ -123,6 +123,7 @@ public class ExtendTo2d extends BranchAndCut {
 		} else if (ds.definesOp(i, D) || ds.definesOp(i, E)) {
 			return Status.ILLEGAL;
 		} else {
+			Status status = Status.OK;
 			ds.redefineOp(i, D, E);
 			
 			// --- test special orbits
@@ -155,22 +156,30 @@ public class ExtendTo2d extends BranchAndCut {
 						bad = (n > 8);
 					}
 					if (bad) {
-						ds.undefineOp(i, D);
-						return Status.ILLEGAL;
+						status = Status.ILLEGAL;
+						break;
 					}
 				}
 			}
 			
-			return Status.OK;
+			ds.undefineOp(i, D);
+			return status;
 		}
 	}
 
+	protected void performMove(final Move move) {
+		final int i = ((CMove) move).idx;
+		final Integer D = new Integer(((CMove) move).from);
+		final Integer E = new Integer(((CMove) move).to);
+		
+		this.current.redefineOp(i, D, E);
+	}
+	
 	protected void undoMove(final Move move) {
-		final DynamicDSymbol ds = this.current;
 		final int i = ((CMove) move).idx;
 		final Integer D = new Integer(((CMove) move).from);
 		
-		ds.undefineOp(i, D);
+		this.current.undefineOp(i, D);
 	}
 
 	protected List deductions(final Move move) {

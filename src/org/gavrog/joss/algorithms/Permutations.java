@@ -26,7 +26,7 @@ import java.util.List;
  * or canonicity, so is much too simplistic for a real test.
  * 
  * @author Olaf Delgado
- * @version $Id: Permutations.java,v 1.3 2006/09/01 05:35:11 odf Exp $
+ * @version $Id: Permutations.java,v 1.4 2006/09/26 22:25:56 odf Exp $
  */
 public class Permutations extends BranchAndCut {
 	final int degree;
@@ -85,7 +85,7 @@ public class Permutations extends BranchAndCut {
 		}
 	}
 
-	protected Status performMove(final Move move) {
+	protected Status checkMove(final Move move) {
 		final int from = ((PMove) move).from;
 		final int to = ((PMove) move).to;
 		if (map[from] == to) {
@@ -93,10 +93,15 @@ public class Permutations extends BranchAndCut {
 		} else if (map[from] != 0 || inv[to] != 0) {
 			return Status.ILLEGAL;
 		} else {
-			this.map[from] = to;
-			this.inv[to] = from;
 			return Status.OK;
 		}
+	}
+
+	protected void performMove(final Move move) {
+		final int from = ((PMove) move).from;
+		final int to = ((PMove) move).to;
+		this.map[from] = to;
+		this.inv[to] = from;
 	}
 
 	protected void undoMove(final Move move) {
