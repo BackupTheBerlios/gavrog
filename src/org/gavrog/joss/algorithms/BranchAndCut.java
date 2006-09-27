@@ -29,7 +29,7 @@ import org.gavrog.box.simple.NamedConstant;
  * strategy.
  * 
  * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.6 2006/09/26 22:45:19 odf Exp $
+ * @version $Id: BranchAndCut.java,v 1.7 2006/09/27 22:04:27 odf Exp $
  */
 public abstract class BranchAndCut extends IteratorAdapter {
 	// --- set to true to enable logging
@@ -105,17 +105,23 @@ public abstract class BranchAndCut extends IteratorAdapter {
 
 			if (performMoveAndDeductions(move)) {
 				if (isValid()) {
-					//TODO what happens if final results can be extended?
-					if (isComplete()) {
-						final Object result = makeResult();
+					final boolean complete = isComplete();
+					final Object result;
+					if (complete) {
+						result = makeResult();
 						log("leaving findNext() with result " + result);
-						return result;
 					} else {
+						result = null;
 						log("  result is incomplete");
 					}
 					final Move choice = nextChoice(move);
-					log("  adding choice " + choice);
-					this.stack.addLast(choice);
+					if (choice != null) {
+						log("  adding choice " + choice);
+						this.stack.addLast(choice);
+					}
+					if (complete) {
+						return result;
+					}
 				} else {
 					log("  result or move is not valid");
 				}
