@@ -42,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.6 2006/09/26 22:45:19 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.7 2006/09/27 22:03:12 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
@@ -117,7 +117,7 @@ public class DefineBranching2d extends BranchAndCut {
 			D = 1;
 		}
 
-		if (i > ds.dim()) {
+		if (i >= ds.dim()) {
 			return null;
 		} else {
 			return new BMove(i, D, 0, Move.Type.CHOICE);
