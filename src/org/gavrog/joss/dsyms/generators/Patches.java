@@ -39,8 +39,10 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * a disjoint set of tiles. Patches are returned as sets of elements of the
  * original symbol.
  * 
+ * TODO this implementation is incorrect
+ * 
  * @author Olaf Delgado
- * @version $Id: Patches.java,v 1.1 2006/09/27 23:30:02 odf Exp $
+ * @version $Id: Patches.java,v 1.2 2006/09/28 00:54:37 odf Exp $
  */
 public class Patches extends BranchAndCut {
 	static final private List idcs = new IndexList(0, 1);
