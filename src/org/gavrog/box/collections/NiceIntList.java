@@ -24,7 +24,7 @@ import java.util.List;
  * in a nice useful way.
  * 
  * @author Olaf Delgado
- * @version $Id: NiceIntList.java,v 1.2 2005/10/13 05:23:00 odf Exp $
+ * @version $Id: NiceIntList.java,v 1.3 2006/10/02 22:41:08 odf Exp $
  */
 public class NiceIntList extends ArrayList implements Comparable {
 
@@ -39,6 +39,30 @@ public class NiceIntList extends ArrayList implements Comparable {
     /* (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
+//    public int compareTo(final Object arg) {
+//        if (!(arg instanceof NiceIntList)) {
+//            throw new IllegalArgumentException("argument must be of type Invariant");
+//        }
+//        final NiceIntList other = (NiceIntList) arg;
+//        for (int i = 0; i < Math.min(this.size(), other.size()); ++i) {
+//            final int a = ((Integer) this.get(i)).intValue();
+//            final int b = ((Integer) other.get(i)).intValue();
+//            if (a != b) {
+//                if (a == 0) {
+//                    return 1;
+//                } else if (b == 0) {
+//                    return -1;
+//                } else {
+//                    return a - b;
+//                }
+//            }
+//        }
+//        return this.size() - other.size();
+//    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
     public int compareTo(final Object arg) {
         if (!(arg instanceof NiceIntList)) {
             throw new IllegalArgumentException("argument must be of type Invariant");
@@ -48,13 +72,7 @@ public class NiceIntList extends ArrayList implements Comparable {
             final int a = ((Integer) this.get(i)).intValue();
             final int b = ((Integer) other.get(i)).intValue();
             if (a != b) {
-                if (a == 0) {
-                    return 1;
-                } else if (b == 0) {
-                    return -1;
-                } else {
-                    return a - b;
-                }
+            	return a - b;
             }
         }
         return this.size() - other.size();
