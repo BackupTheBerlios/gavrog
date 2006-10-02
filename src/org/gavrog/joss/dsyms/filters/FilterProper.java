@@ -27,7 +27,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.2 2006/09/18 21:07:56 odf Exp $
+ * @version $Id: FilterProper.java,v 1.3 2006/10/02 07:24:14 odf Exp $
  */
 public class FilterProper {
 
@@ -40,24 +40,27 @@ public class FilterProper {
         for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
             final DSymbol ds = (DSymbol) input.next();
             ++inCount;
-            if (isProper(ds)) {
+            if (isProperAndStable(ds)) {
                 ++outCount;
                 System.out.println(ds);
             }
         }
 
-        System.err.println("Read " + inCount + " symbols, " + outCount
+        System.out.println("### Read " + inCount + " symbols, " + outCount
                            + " of which were proper and had stable graphs.");
     }
 
-    private static boolean isProper(final DSymbol ds) {
+    private static boolean isProperAndStable(final DSymbol ds) {
         final DSymbol min = new DSymbol(ds.minimal());
         final DSymbol cov = new DSymbol(Covers.pseudoToroidalCover3D(min));
         try {
             final PeriodicGraph gr = new Skeleton(cov);
+            if (!gr.isStable()) {
+            	return false;
+            }
             return gr.isMinimal() && gr.symmetries().size() == cov.size() / min.size();
         } catch (final Exception ex) {
-            System.out.println("??? " + ds);
+            System.out.println("#??? " + ds);
             return false;
         }
     }
