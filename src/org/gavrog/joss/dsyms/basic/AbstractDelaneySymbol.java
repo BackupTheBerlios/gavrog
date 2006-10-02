@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.3 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.4 2006/10/02 07:23:22 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 
@@ -436,12 +436,18 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
         return true;
     }
 
+    // --- Caches for invariant and map from original to canonical element names
+    private NiceIntList _invariant = null;
     private Map original2canonical;
     
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#invariant()
      */
     public NiceIntList invariant() {
+    	if (this._invariant != null) {
+    		return this._invariant;
+    	}
+    	
         try {
             size();
         } catch (UnsupportedOperationException ex) {
@@ -461,7 +467,8 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
             for (final Iterator iter = invariants.iterator(); iter.hasNext();) {
                 result.addAll((List) iter.next());
             }
-            return new NiceIntList(result);
+            this._invariant = new NiceIntList(result);
+            return this._invariant;
         }
         
         /* --- Preparations. */
@@ -592,8 +599,9 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
             result.add(new Integer(best[i]));
         }
         
-        /* --- Return it. */
-        return new NiceIntList(result);
+        /* --- Cache and return it. */
+        this._invariant = new NiceIntList(result);
+        return this._invariant;
     }
 
     /* (non-Javadoc)
