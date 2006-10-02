@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Output.java,v 1.3 2006/09/20 20:53:57 odf Exp $
+ * @version $Id: Output.java,v 1.4 2006/10/02 22:43:30 odf Exp $
  */
 public class Output {
     public static void writePGR(final Writer out, final PeriodicGraph G, final String name)
@@ -60,16 +60,25 @@ public class Output {
         i = 0;
         for (final Iterator edges = G.edges(); edges.hasNext();) {
             final IEdge e = (IEdge) edges.next();
-            final INode v = e.source();
-            final INode w = e.target();
+            final Integer v = (Integer) node2idx.get(e.source());
+            final Integer w = (Integer) node2idx.get(e.target());
             final Vector s = G.getShift(e);
             final List list = new LinkedList();
-            list.add(node2idx.get(v));
-            list.add(node2idx.get(w));
-            for (int k = 0; k < s.getDimension(); ++k) {
-                list.add(s.get(k));
-            }
-            tmp[i] = new NiceIntList(list);
+            final int d = v.compareTo(w);
+            if (d > 0 || (d == 0 && s.isNegative())) {
+				list.add(w);
+				list.add(v);
+				for (int k = 0; k < s.getDimension(); ++k) {
+					list.add(new Integer(((Whole) s.get(k).negative()).intValue()));
+				}
+			} else {
+				list.add(v);
+				list.add(w);
+				for (int k = 0; k < s.getDimension(); ++k) {
+					list.add(new Integer(((Whole) s.get(k)).intValue()));
+				}
+			}
+			tmp[i] = new NiceIntList(list);
             ++i;
         }
         Arrays.sort(tmp);
@@ -93,12 +102,7 @@ public class Output {
     
     private static String format(final Object num, final boolean isIndex) {
     	final StringBuffer tmp = new StringBuffer(5);
-    	final int n;
-    	if (num instanceof Whole) {
-    		n = ((Whole) num).intValue();
-    	} else {
-    		n = ((Integer) num).intValue();
-    	}
+    	final int n = ((Integer) num).intValue();
 		if (isIndex) {
 			if (n < 10) {
 				tmp.append(' ');
