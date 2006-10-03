@@ -16,6 +16,17 @@
 
 package org.gavrog.joss.dsyms.filters;
 
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.Skeleton;
@@ -27,41 +38,75 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.3 2006/10/02 07:24:14 odf Exp $
+ * @version $Id: FilterProper.java,v 1.4 2006/10/03 05:34:34 odf Exp $
  */
 public class FilterProper {
 
     public static void main(String[] args) {
-        final String filename = args[0];
+		try {
+			boolean unique = false;
+			boolean canonical = false;
+			
+	        int i = 0;
+	        while (i < args.length && args[i].startsWith("-")) {
+	        	if (args[i].equalsIgnoreCase("-c")) {
+	        		canonical = !canonical;
+	        	} else if (args[i].equalsIgnoreCase("-u")){
+	        		unique = !unique;
+	        	} else {
+	        		System.err.println("Unknown option '" + args[i] + "'");
+	        	}
+	            ++i;
+	        }
+			
+			final Reader in;
+			final Writer out;
+			if (args.length > i) {
+				in = new FileReader(args[i]);
+			} else {
+				in = new InputStreamReader(System.in);
+			}
+			if (args.length > i+1) {
+				out = new FileWriter(args[i+1]);
+			} else {
+				out = new OutputStreamWriter(System.out);
+			}
 
-        int inCount = 0;
-        int outCount = 0;
+			int inCount = 0;
+			int outCount = 0;
+			final Set seen = new HashSet();
 
-        for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
-            final DSymbol ds = (DSymbol) input.next();
-            ++inCount;
-            if (isProperAndStable(ds)) {
-                ++outCount;
-                System.out.println(ds);
-            }
-        }
-
-        System.out.println("### Read " + inCount + " symbols, " + outCount
-                           + " of which were proper and had stable graphs.");
-    }
-
-    private static boolean isProperAndStable(final DSymbol ds) {
-        final DSymbol min = new DSymbol(ds.minimal());
-        final DSymbol cov = new DSymbol(Covers.pseudoToroidalCover3D(min));
-        try {
-            final PeriodicGraph gr = new Skeleton(cov);
-            if (!gr.isStable()) {
-            	return false;
-            }
-            return gr.isMinimal() && gr.symmetries().size() == cov.size() / min.size();
-        } catch (final Exception ex) {
-            System.out.println("#??? " + ds);
-            return false;
-        }
+			for (final Iterator input = new InputIterator(in); input.hasNext();) {
+				final DSymbol ds = (DSymbol) input.next();
+				++inCount;
+				final DSymbol min = new DSymbol(ds.minimal());
+				final DSymbol cov = new DSymbol(Covers.pseudoToroidalCover3D(min));
+				final PeriodicGraph gr = new Skeleton(cov);
+				if (!gr.isStable() || !gr.isMinimal()) {
+					continue;
+				}
+				if (seen.contains(gr)) {
+					continue;
+				}
+				if (gr.symmetries().size() != cov.size() / min.size()) {
+					continue;
+				}
+				++outCount;
+				if (canonical) {
+					out.write(ds.toString());
+				} else {
+					out.write(ds.canonical().flat().toString());
+				}
+				if (unique) {
+					seen.add(gr);
+				}
+				out.write('\n');
+				out.flush();
+			}
+	        System.out.println("### Read " + inCount + " symbols, " + outCount
+	                           + " of which were proper and had stable graphs.");
+		} catch (final IOException ex) {
+			ex.printStackTrace();
+		}
     }
 }
