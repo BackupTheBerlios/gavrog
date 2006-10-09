@@ -6,11 +6,14 @@ In progress:
 
 =====================================================
 
-For Systre 1.0:
+For Systre 1.0 (bug fixes):
 
-(none)
+- Allow file name extensions in capital letters (e.g. '.CGD' insted of '.cgd')
+- Fix problems reading archive files as regular input.
+- Make SystreGUI accept command line arguments.
 
-For later (maybe):
+
+For Systre 1.1 (maybe):
 - Keyboard shortcuts.
 - Optionally report alternate monoclinic settings where better than first setting.
 - Link to online databases.
