@@ -37,15 +37,15 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * Generates all minimal euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate3d.java,v 1.1 2006/09/18 08:02:28 odf Exp $
+ * @version $Id: Generate3d.java,v 1.2 2006/10/11 00:48:21 odf Exp $
  */
 public class Generate3d extends IteratorAdapter {
     /*
      * A subclass of DefineBranching which forbids certain degeneracies.
      */
     private static class DefineProperBranching extends DefineBranching3d {
-        public DefineProperBranching(final DelaneySymbol ds) {
-            super(ds);
+        public DefineProperBranching(final DelaneySymbol ds, final boolean deg2ok) {
+            super(ds, deg2ok);
         }
 
         protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
@@ -83,12 +83,18 @@ public class Generate3d extends IteratorAdapter {
 	final private Iterator actions;
 	private Iterator current;
 	final private FundamentalGroup G;
+	final boolean allowEdgesOfDegreeTwo;
 
     public Generate3d(final int size) {
+    	this(size, false);
+    }
+    
+    public Generate3d(final int size, boolean allowEdgesOfDegreeTwo) {
         this.G = new FundamentalGroup(new DSymbol("1 3:1,1,1,1:0,0,0"));
         final FpGroup pG = G.getPresentation();
         this.actions = new SmallActionsIterator(pG, size, false);
         this.current = Iterators.empty();
+        this.allowEdgesOfDegreeTwo = allowEdgesOfDegreeTwo;
     }
     
     protected Object findNext() throws NoSuchElementException {
@@ -102,7 +108,7 @@ public class Generate3d extends IteratorAdapter {
 				final GroupAction action = (GroupAction) actions.next();
 				final DSymbol set = new DSymbol(Covers.cover(G, action));
 				if (Utils.mayBecomeLocallyEuclidean3D(set)) {
-					current = new DefineProperBranching(set);
+					current = new DefineProperBranching(set, this.allowEdgesOfDegreeTwo);
 				}
 			} else {
 				throw new NoSuchElementException("at end");
@@ -111,8 +117,14 @@ public class Generate3d extends IteratorAdapter {
 	}
     
     public static void main(final String[] args) {
-        final int maxSize = args.length > 0 ? Integer.parseInt(args[0]) : 6;
-        final Iterator symbols = new Generate3d(maxSize);
+    	int i = 0;
+    	boolean allowEdgesOfDegreeTwo = false;
+    	if (args.length > 0 && args[0].equalsIgnoreCase("-x")) {
+    		allowEdgesOfDegreeTwo = !allowEdgesOfDegreeTwo;
+    		++i;
+    	}
+        final int maxSize = args.length > i ? Integer.parseInt(args[i]) : 6;
+        final Iterator symbols = new Generate3d(maxSize, allowEdgesOfDegreeTwo);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");

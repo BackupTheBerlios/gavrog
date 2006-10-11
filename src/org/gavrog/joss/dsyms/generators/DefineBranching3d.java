@@ -53,7 +53,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching3d.java,v 1.1 2006/09/04 00:09:26 odf Exp $
+ * @version $Id: DefineBranching3d.java,v 1.2 2006/10/11 00:48:21 odf Exp $
  */
 public class DefineBranching3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -62,6 +62,7 @@ public class DefineBranching3d extends IteratorAdapter {
     // --- the input data
     final private DelaneySymbol input;
     final private List acceptedValues;
+    final private boolean allowEdgeDegreeTwo;
     
     // --- properties of the input symbol
     final private int size;
@@ -114,22 +115,38 @@ public class DefineBranching3d extends IteratorAdapter {
                 new Integer(2), new Integer(3), new Integer(4), new Integer(6) }));
     
     /**
-     * Constructs an instance with the standard set of accepted branch values.
+     * Constructs an instance with standard options.
      */
     public DefineBranching3d(final DelaneySymbol ds) {
-        this(ds, standardValues);
+        this(ds, standardValues, false);
+    }
+    
+    /**
+     * Constructs an instance with the standard set of accepted branch values.
+     */
+    public DefineBranching3d(final DelaneySymbol ds, final boolean allowEdgeDegreeTwo) {
+        this(ds, standardValues, allowEdgeDegreeTwo);
+    }
+    
+    /**
+     * Constructs an instance with no edges of degree two allowed.
+     */
+    public DefineBranching3d(final DelaneySymbol ds, final List acceptedValues) {
+        this(ds, acceptedValues, false);
     }
     
     /**
      * Constructs an instance.
      */
-    public DefineBranching3d(final DelaneySymbol ds, final List acceptedValues) {
+    public DefineBranching3d(final DelaneySymbol ds, final List acceptedValues,
+    		final boolean allowEdgeDegreeTwo) {
         // --- check the argument
         check(ds, acceptedValues);
         
         // --- store the input parameters
         this.input = ds;
         this.acceptedValues = acceptedValues;
+        this.allowEdgeDegreeTwo = allowEdgeDegreeTwo;
         
         // --- compute successors for acepted values
         this.nextValue = new HashMap();
@@ -437,14 +454,22 @@ public class DefineBranching3d extends IteratorAdapter {
             // --- record the move we have performed
             this.stack.addLast(move);
             
-            // --- check that we have not introduced a face or edge of degree 2 or less
-            if ((i == 0 || i == 2) && ds.m(i, i+1, D) < 3) {
+            // --- make sure we have not introduced a face of degree 2 or less
+            if (i == 0 && ds.m(i, i+1, D) < 3) {
                 if (LOGGING) {
-                    System.err.println("    found degeneracy");
+                    System.err.println("    found degenerate face");
                 }
                 return false;
             }
-                        
+            
+            // --- make sure we have not introduced an edge of degree 2 or less
+            if (i == 2 && ds.m(i, i+1, D) < (this.allowEdgeDegreeTwo ? 2 : 3)) {
+                if (LOGGING) {
+                    System.err.println("    found degenerate edge");
+                }
+                return false;
+            }
+            
             // --- handle deductions or contradictions specified by a derived class
             final List extraDeductions = getExtraDeductions(ds, move);
             if (extraDeductions == null) {
