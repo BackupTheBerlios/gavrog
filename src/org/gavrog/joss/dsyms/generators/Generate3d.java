@@ -28,6 +28,7 @@ import org.gavrog.jane.fpgroups.GroupAction;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
@@ -37,7 +38,7 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * Generates all minimal euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate3d.java,v 1.2 2006/10/11 00:48:21 odf Exp $
+ * @version $Id: Generate3d.java,v 1.3 2006/10/11 22:02:09 odf Exp $
  */
 public class Generate3d extends IteratorAdapter {
     /*
@@ -80,21 +81,25 @@ public class Generate3d extends IteratorAdapter {
         }
     }
 
+    final private static List edgeIndices = new IndexList(0, 2, 3);
 	final private Iterator actions;
 	private Iterator current;
 	final private FundamentalGroup G;
 	final boolean allowEdgesOfDegreeTwo;
+	final boolean edgeTransitive;
 
     public Generate3d(final int size) {
-    	this(size, false);
+    	this(size, false, false);
     }
     
-    public Generate3d(final int size, boolean allowEdgesOfDegreeTwo) {
+    public Generate3d(final int size, final boolean allowEdgesOfDegreeTwo,
+    		final boolean edgeTransitive) {
         this.G = new FundamentalGroup(new DSymbol("1 3:1,1,1,1:0,0,0"));
         final FpGroup pG = G.getPresentation();
         this.actions = new SmallActionsIterator(pG, size, false);
         this.current = Iterators.empty();
         this.allowEdgesOfDegreeTwo = allowEdgesOfDegreeTwo;
+        this.edgeTransitive = edgeTransitive;
     }
     
     protected Object findNext() throws NoSuchElementException {
@@ -107,6 +112,9 @@ public class Generate3d extends IteratorAdapter {
 			} else if (actions.hasNext()) {
 				final GroupAction action = (GroupAction) actions.next();
 				final DSymbol set = new DSymbol(Covers.cover(G, action));
+				if (this.edgeTransitive && set.numberOfOrbits(edgeIndices) > 1) {
+					continue;
+				}
 				if (Utils.mayBecomeLocallyEuclidean3D(set)) {
 					current = new DefineProperBranching(set, this.allowEdgesOfDegreeTwo);
 				}
@@ -117,14 +125,21 @@ public class Generate3d extends IteratorAdapter {
 	}
     
     public static void main(final String[] args) {
-    	int i = 0;
+    	int i;
     	boolean allowEdgesOfDegreeTwo = false;
-    	if (args.length > 0 && args[0].equalsIgnoreCase("-x")) {
-    		allowEdgesOfDegreeTwo = !allowEdgesOfDegreeTwo;
-    		++i;
+    	boolean edgeTransitive = false;
+    	for (i = 0; i < args.length; ++i) {
+    		if (args[i].equalsIgnoreCase("-x")) {
+    			allowEdgesOfDegreeTwo = !allowEdgesOfDegreeTwo;
+    		} else if (args[i].equalsIgnoreCase("-e")) {
+    			edgeTransitive = !edgeTransitive;
+    		} else {
+    			break;
+    		}
     	}
         final int maxSize = args.length > i ? Integer.parseInt(args[i]) : 6;
-        final Iterator symbols = new Generate3d(maxSize, allowEdgesOfDegreeTwo);
+        final Iterator symbols = new Generate3d(maxSize, allowEdgesOfDegreeTwo,
+        		edgeTransitive);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
