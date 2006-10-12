@@ -38,7 +38,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.5 2006/10/04 06:53:29 odf Exp $
+ * @version $Id: FilterProper.java,v 1.6 2006/10/12 00:42:31 odf Exp $
  */
 public class FilterProper {
 
@@ -103,8 +103,8 @@ public class FilterProper {
 				out.write('\n');
 				out.flush();
 			}
-	        System.out.println("### Read " + inCount + " and wrote " + outCount
-					+ " symbols.");
+	        out.write("### Read " + inCount + " and wrote " + outCount + " symbols.\n");
+	        out.flush();
 		} catch (final IOException ex) {
 			ex.printStackTrace();
 		}
