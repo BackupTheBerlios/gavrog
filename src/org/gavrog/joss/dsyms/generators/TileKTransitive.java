@@ -28,17 +28,16 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
-
 /**
- * Generates all minimal, locally euclidean, tile-k-transitive tilings by a given
- * combinatorial tile.
+ * Generates all minimal, locally euclidean, tile-k-transitive tilings by a
+ * given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.6 2006/09/04 00:09:26 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.7 2006/10/30 21:40:58 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
-    
+
     private final Iterator partLists;
     private Iterator extended;
     private Iterator symbols;
@@ -50,21 +49,25 @@ public class TileKTransitive extends IteratorAdapter {
 
     /**
      * Constructs an instance.
+     * 
      * @param tile the tile to use in the tilings.
      * @param k the number of transitivity classes of tiles aimed for.
      * @param verbose if true, some logging information is produced.
      */
-    public TileKTransitive(final DelaneySymbol tile, final int k, final boolean verbose) {
+    public TileKTransitive(final DelaneySymbol tile, final int k,
+            final boolean verbose) {
         this.verbose = verbose;
-        
+
         final List covers = Iterators.asList(Covers.allCovers(tile.minimal()));
         this.partLists = Iterators.selections(covers.toArray(), k);
-        
+
         this.extended = null;
         this.symbols = null;
     }
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see javaDSym.util.IteratorAdapter#findNext()
      */
     protected Object findNext() throws NoSuchElementException {
@@ -74,7 +77,8 @@ public class TileKTransitive extends IteratorAdapter {
                     if (partLists.hasNext()) {
                         final List tiles = (List) partLists.next();
                         final DynamicDSymbol tmp = new DynamicDSymbol(2);
-                        for (final Iterator iter = tiles.iterator(); iter.hasNext();) {
+                        for (final Iterator iter = tiles.iterator(); iter
+                                .hasNext();) {
                             tmp.append((DSymbol) iter.next());
                         }
                         final DSymbol ds = new DSymbol(tmp);
@@ -106,19 +110,22 @@ public class TileKTransitive extends IteratorAdapter {
             }
         }
     }
-    
+
     /**
-     * Override this to restrict or change the generation of branching number combination.
+     * Override this to restrict or change the generation of branching number
+     * combination.
      * 
      * @param ds a Delaney symbol.
-     * @return an iterator over all admissible extensions of ds with complete branching.
+     * @return an iterator over all admissible extensions of ds with complete
+     *         branching.
      */
     protected Iterator defineBranching(final DelaneySymbol ds) {
         return new DefineBranching3d(ds);
     }
-    
+
     /**
-     * Override this to restrict or change the generation of 3-neighbor relations.
+     * Override this to restrict or change the generation of 3-neighbor
+     * relations.
      * 
      * @param ds a Delaney symbol.
      * @return an iterator over all admissible extensions.
@@ -126,25 +133,26 @@ public class TileKTransitive extends IteratorAdapter {
     protected Iterator extendTo3d(final DSymbol ds) {
         return new ExtendTo3d(ds);
     }
-    
+
     public String statistics() {
-        return "Constructed " + count2dSymbols + " spherical symbols, " + count3dSets
-               + " partial spatial symbols and " + count3dSymbols + " complete spatial symbols, of which "
-               + countMinimal + " were minimal.";
+        return "Constructed " + count2dSymbols + " spherical symbols, "
+                + count3dSets + " partial spatial symbols and "
+                + count3dSymbols + " complete spatial symbols, of which "
+                + countMinimal + " were minimal.";
     }
-    
+
     private static String setAsString(final DSymbol ds) {
         final String tmp = ds.toString();
         final int i = tmp.lastIndexOf(':');
         return tmp.substring(0, i);
     }
-    
+
     private static String branchingAsString(final DSymbol ds) {
         final String tmp = ds.toString();
         final int i = tmp.lastIndexOf(':');
-        return tmp.substring(i+1);
+        return tmp.substring(i + 1);
     }
-    
+
     public static void main(final String[] args) {
         boolean verbose = false;
         boolean check = true;
@@ -152,16 +160,16 @@ public class TileKTransitive extends IteratorAdapter {
         while (i < args.length && args[i].startsWith("-")) {
             if (args[i].equals("-v")) {
                 verbose = !verbose;
-            } else if (args[i].equals("-e")){
+            } else if (args[i].equals("-e")) {
                 check = !check;
             } else {
                 System.err.println("Unknown option '" + args[i] + "'");
             }
             ++i;
         }
-        
+
         final DSymbol ds = new DSymbol(args[i]);
-        final int k = Integer.parseInt(args[i+1]);
+        final int k = Integer.parseInt(args[i + 1]);
         final TileKTransitive iter = new TileKTransitive(ds, k, verbose);
         int countGood = 0;
         int countAmbiguous = 0;
@@ -185,16 +193,18 @@ public class TileKTransitive extends IteratorAdapter {
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
-        
+
         System.err.println(iter.statistics());
         if (check) {
-            System.err.println("Of the latter, " + countGood + " were found euclidean.");
+            System.err.println("Of the latter, " + countGood
+                    + " were found euclidean.");
             if (countAmbiguous > 0) {
                 System.err.println("For " + countAmbiguous
-                                   + " symbols, euclidicity could not yet be decided.");
+                        + " symbols, euclidicity could not yet be decided.");
             }
         }
-        System.err.println("Options: " + (check ? "" : "no") + " euclidicity check, "
-                           + (verbose ? "verbose" : "quiet") + ".");
+        System.err.println("Options: " + (check ? "" : "no")
+                + " euclidicity check, " + (verbose ? "verbose" : "quiet")
+                + ".");
     }
 }
