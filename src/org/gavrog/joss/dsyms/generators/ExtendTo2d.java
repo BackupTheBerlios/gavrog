@@ -33,14 +33,14 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Takes a connected 1-dimensional Delany symbol and extends it to a 2d symbol
  * in all possible ways.
  * 
- * TODO simplify using the fact we're now restricted to a very special case TODO
- * make this work for non-connected symbols
- * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo2d.java,v 1.6 2006/10/30 21:56:20 odf Exp $
+ * @version $Id: ExtendTo2d.java,v 1.7 2006/10/30 21:59:42 odf Exp $
  * 
  */
 public class ExtendTo2d extends BranchAndCut {
+    // TODO simplify using the fact we're now restricted to a very special case
+    // TODO make this work for non-connected symbols
+
     // --- the current symbol
     final private DynamicDSymbol current;
 
