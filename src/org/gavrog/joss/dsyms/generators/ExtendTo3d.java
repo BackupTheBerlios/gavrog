@@ -39,7 +39,6 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Morphism;
 
-
 /**
  * An iterator that takes a two-dimensional Delaney Symbol with spherical
  * components (a collection of tiles) and defines a 3-neighbor operation on it
@@ -48,15 +47,15 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * For each isomorphism class of extended symbols, only one representative is
  * produced. The order or naming of elements is not preserved.
  * 
- * TODO test symbols (unfinished and finished) for being locally euclidean
- * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.6 2005/11/08 21:44:41 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.7 2006/10/30 22:07:52 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
+    // TODO test symbols (unfinished and finished) for being locally euclidean
+
     // --- set to true to enable logging
     final private static boolean LOGGING = false;
-    
+
     // --- the input symbol
     final DelaneySymbol original;
 
@@ -67,7 +66,7 @@ public class ExtendTo3d extends IteratorAdapter {
     private final DynamicDSymbol current;
     private final LinkedList stack;
     private final List unused;
-    
+
     // --- auxiliary information applying to the current state
     private int size;
     private Map signatures;
@@ -117,16 +116,18 @@ public class ExtendTo3d extends IteratorAdapter {
             throw new UnsupportedOperationException("symbol must be finite");
         }
         final List idcs = new IndexList(ds);
-        for (final Iterator orbs = ds.orbitRepresentatives(idcs); orbs.hasNext();) {
+        for (final Iterator orbs = ds.orbitRepresentatives(idcs); orbs
+                .hasNext();) {
             final DelaneySymbol sub = new Subsymbol(ds, idcs, orbs.next());
             if (!sub.isSpherical2D()) {
-                throw new IllegalArgumentException("components must be spherical");
+                throw new IllegalArgumentException(
+                        "components must be spherical");
             }
         }
 
         // --- remember the input symbol
         this.original = ds;
-        
+
         // --- compute auxiliary information
         final DSymbol canonical = (DSymbol) ds.canonical();
         final Map multiplicities = componentMultiplicities(canonical);
@@ -139,9 +140,9 @@ public class ExtendTo3d extends IteratorAdapter {
             forms.add(Collections.unmodifiableList(subCanonicalForms(type)));
             free.add(multiplicities.get(type));
             if (LOGGING) {
-                System.out.println(free.get(i) + " copies and " + ((List) forms.get(i)).size()
-                        + " forms for " + type + " with invariant " + type.invariant()
-                        + "\n");
+                System.out.println(free.get(i) + " copies and "
+                        + ((List) forms.get(i)).size() + " forms for " + type
+                        + " with invariant " + type.invariant() + "\n");
             }
         }
         this.componentTypes = Collections.unmodifiableList(forms);
@@ -153,17 +154,21 @@ public class ExtendTo3d extends IteratorAdapter {
         this.unused = new ArrayList(free);
         this.current = new DynamicDSymbol(3);
 
-        // --- add the component with the smallest invariant to the current symbol
-        final DSymbol start = (DSymbol) ((List) this.componentTypes.get(0)).get(0);
-        this.current.append((DSymbol) start.canonical()); // --- MUST be made canonical!
-        this.unused.set(0, new Integer(((Integer) this.unused.get(0)).intValue() - 1));
+        // --- add the component with the smallest invariant to the current
+        // symbol
+        final DSymbol start = (DSymbol) ((List) this.componentTypes.get(0))
+                .get(0);
+        this.current.append((DSymbol) start.canonical()); // --- MUST be made
+                                                            // canonical!
+        this.unused.set(0, new Integer(((Integer) this.unused.get(0))
+                .intValue() - 1));
         this.size = this.current.size();
         this.signatures = elementSignatures(this.current);
-        
+
         // --- push a dummy move on the stack as a fallback
         stack.addLast(new Move(new Integer(1), new Integer(0), 0, 0, true));
     }
-    
+
     /**
      * Repeatedly finds the next legal choice in the enumeration tree and
      * executes it, together with all its implications, until all 3-neighbors
@@ -176,9 +181,9 @@ public class ExtendTo3d extends IteratorAdapter {
      * 
      * To simplify the code, the algorithm makes use of "dummy moves", which are
      * put on the stack as fallback entries but do not have any effect on the
-     * symbol. A dummy move is of the form <code>Move(element, ..., false)</code>
-     * and effectively indicates that the next neighbor to be set is for
-     * element.
+     * symbol. A dummy move is of the form
+     * <code>Move(element, ..., false)</code> and effectively indicates that
+     * the next neighbor to be set is for element.
      * 
      * @return the next symbol, if any.
      */
@@ -221,7 +226,8 @@ public class ExtendTo3d extends IteratorAdapter {
                             }
                         }
                     } else {
-                        this.stack.addLast(new Move(D, new Integer(0), -1, -1, true));
+                        this.stack.addLast(new Move(D, new Integer(0), -1, -1,
+                                true));
                     }
                 } else {
                     if (LOGGING) {
@@ -252,7 +258,7 @@ public class ExtendTo3d extends IteratorAdapter {
                 return null;
             }
             last = (Move) this.stack.removeLast();
-            
+
             if (LOGGING) {
                 System.out.println("Undoing " + last);
             }
@@ -260,37 +266,41 @@ public class ExtendTo3d extends IteratorAdapter {
                 this.current.undefineOp(3, last.element);
             }
             if (last.newType >= 0 && ((Integer) last.neighbor).intValue() > 0) {
-                final Iterator disposable = this.current.orbit(idcs, last.neighbor);
+                final Iterator disposable = this.current.orbit(idcs,
+                        last.neighbor);
                 while (disposable.hasNext()) {
                     this.current.removeElement(disposable.next());
                 }
                 this.current.renumber();
-                this.unused.set(last.newType, new Integer(((Integer) this.unused
-                        .get(last.newType)).intValue() + 1));
+                this.unused.set(last.newType,
+                        new Integer(((Integer) this.unused.get(last.newType))
+                                .intValue() + 1));
                 this.size = this.current.size();
                 this.signatures = elementSignatures(this.current);
             }
         } while (!last.isChoice);
-    
+
         return last;
     }
 
     /**
      * Finds the next legal move with the same element to connect.
+     * 
      * @param choice describes the previous move.
      * @return the next move or null.
      */
     private Move nextMove(final Move choice) {
         final Object D = choice.element;
         final List sigD = (List) this.signatures.get(D);
-        
+
         // --- look for a neighbor in the curently connected portion
         for (int E = ((Integer) choice.neighbor).intValue() + 1; E <= size; ++E) {
-            if (!this.current.definesOp(3, new Integer(E)) && sigD.equals(this.signatures.get(new Integer(E)))) {
+            if (!this.current.definesOp(3, new Integer(E))
+                    && sigD.equals(this.signatures.get(new Integer(E)))) {
                 return new Move(choice.element, new Integer(E), -1, -1, true);
             }
         }
-        
+
         // --- look for a new component to connect
         int type = Math.max(0, choice.newType);
         int form = Math.max(0, choice.newForm + 1);
@@ -301,7 +311,8 @@ public class ExtendTo3d extends IteratorAdapter {
                     final DSymbol candidate = (DSymbol) forms.get(form);
                     final Map sigs = elementSignatures(candidate);
                     if (sigD.equals(sigs.get(new Integer(1)))) {
-                        return new Move(choice.element, new Integer(this.size + 1), type, form, true);
+                        return new Move(choice.element, new Integer(
+                                this.size + 1), type, form, true);
                     }
                     ++form;
                 }
@@ -309,7 +320,7 @@ public class ExtendTo3d extends IteratorAdapter {
             ++type;
             form = 0;
         }
-        
+
         // --- nothing found
         return null;
     }
@@ -338,14 +349,15 @@ public class ExtendTo3d extends IteratorAdapter {
             final int form = move.newForm;
             final Object D = move.element;
             final Object E = move.neighbor;
-            
+
             // --- see if the move would contradict the current state
             if (ds.definesOp(3, D) || ds.definesOp(3, E)) {
                 if (ds.definesOp(3, D) && ds.op(3, D).equals(E)) {
                     continue;
                 } else {
                     if (LOGGING) {
-                        System.out.println("Found contradiction at " + D + "<-->" + E);
+                        System.out.println("Found contradiction at " + D
+                                + "<-->" + E);
                     }
                     if (move == initial) {
                         // --- the initial move was impossible
@@ -355,43 +367,48 @@ public class ExtendTo3d extends IteratorAdapter {
                     return false;
                 }
             }
-            
+
             // --- perform the move
             if (type >= 0) {
                 // --- connect a new component
-                final DSymbol component = (DSymbol) ((List) this.componentTypes.get(type)).get(form);
+                final DSymbol component = (DSymbol) ((List) this.componentTypes
+                        .get(type)).get(form);
                 this.current.append(component);
-                this.unused.set(type, new Integer(((Integer) this.unused.get(type)).intValue() - 1));
+                this.unused.set(type, new Integer(((Integer) this.unused
+                        .get(type)).intValue() - 1));
                 this.size = this.current.size();
                 this.signatures = elementSignatures(this.current);
             }
             ds.redefineOp(3, D, E);
-            
+
             // --- record the move we have performed
             this.stack.addLast(move);
-            
-            // --- handle deductions or contradictions specified by a derived class
+
+            // --- handle deductions or contradictions specified by a derived
+            // class
             final List extraDeductions = getExtraDeductions(ds, move);
             if (extraDeductions == null) {
                 return false;
             } else {
                 if (LOGGING) {
-                    for (final Iterator iter = extraDeductions.iterator(); iter.hasNext();) {
+                    for (final Iterator iter = extraDeductions.iterator(); iter
+                            .hasNext();) {
                         final Move ded = (Move) iter.next();
                         System.err.println("    found extra deduction " + ded);
                     }
                 }
                 queue.addAll(extraDeductions);
             }
-            
+
             // --- check for any problems with that move
             if (!this.signatures.get(D).equals(this.signatures.get(E))) {
                 if (LOGGING) {
-                    System.out.println("Bad connection " + D + "<-->" + E + ".");
+                    System.out
+                            .println("Bad connection " + D + "<-->" + E + ".");
                 }
                 return false;
             }
-            
+
             // --- finally, find deductions
             for (int i = 0; i <= 1; ++i) {
                 final Object Di = ds.op(i, D);
@@ -416,7 +433,8 @@ public class ExtendTo3d extends IteratorAdapter {
      */
     private boolean isCanonical() {
         final DSymbol flat = new DSymbol(this.current);
-        return flat.getMapToCanonical().get(new Integer(1)).equals(new Integer(1));
+        return flat.getMapToCanonical().get(new Integer(1)).equals(
+                new Integer(1));
     }
 
     /**
@@ -433,7 +451,7 @@ public class ExtendTo3d extends IteratorAdapter {
                 return null;
             }
         } while (this.current.definesOp(3, new Integer(D)));
-        
+
         return new Integer(D);
     }
 
@@ -490,8 +508,9 @@ public class ExtendTo3d extends IteratorAdapter {
                 E = cuts0.get(0);
                 Object F = cuts0.get(1);
                 for (int i = 0; i < r / 2; ++i) {
-                    final List sig = Arrays.asList(new Object[] { new Integer(1),
-                            new Integer(r), new Integer(v), new Integer(i) });
+                    final List sig = Arrays.asList(new Object[] {
+                            new Integer(1), new Integer(r), new Integer(v),
+                            new Integer(i) });
                     signatures.put(E, sig);
                     signatures.put(F, sig);
                     E = ds.op(1 - i % 2, E);
@@ -501,8 +520,9 @@ public class ExtendTo3d extends IteratorAdapter {
                 E = cuts1.get(0);
                 Object F = cuts1.get(1);
                 for (int i = 0; i < r / 2; ++i) {
-                    final List sig = Arrays.asList(new Object[] { new Integer(2),
-                            new Integer(r), new Integer(v), new Integer(i) });
+                    final List sig = Arrays.asList(new Object[] {
+                            new Integer(2), new Integer(r), new Integer(v),
+                            new Integer(i) });
                     signatures.put(E, sig);
                     signatures.put(F, sig);
                     E = ds.op(i % 2, E);
@@ -511,8 +531,9 @@ public class ExtendTo3d extends IteratorAdapter {
             } else if (cuts0.size() == 1 && cuts1.size() == 1) {
                 E = cuts0.get(0);
                 for (int i = 0; i < r; ++i) {
-                    final List sig = Arrays.asList(new Object[] { new Integer(3),
-                            new Integer(r), new Integer(v), new Integer(i) });
+                    final List sig = Arrays.asList(new Object[] {
+                            new Integer(3), new Integer(r), new Integer(v),
+                            new Integer(i) });
                     signatures.put(E, sig);
                     E = ds.op(1 - i % 2, E);
                 }
@@ -535,17 +556,20 @@ public class ExtendTo3d extends IteratorAdapter {
     public static Map componentMultiplicities(final DelaneySymbol ds) {
         final Map type2number = new HashMap();
         final List idcs = new IndexList(ds);
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
-            final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next()).canonical();
+        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+                .hasNext();) {
+            final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next())
+                    .canonical();
             if (type2number.containsKey(sub)) {
-                type2number.put(sub, new Integer(((Integer) type2number.get(sub)).intValue() + 1));
+                type2number.put(sub, new Integer(((Integer) type2number
+                        .get(sub)).intValue() + 1));
             } else {
                 type2number.put(sub, new Integer(1));
             }
         }
         return type2number;
     }
-    
+
     /**
      * Takes a connected symbol and computes the first representative of each
      * equivalence class with respect to its automorphism group.
@@ -557,7 +581,7 @@ public class ExtendTo3d extends IteratorAdapter {
         if (!ds.isConnected()) {
             throw new UnsupportedOperationException("symbol must be connected");
         }
-        
+
         final List res = new LinkedList();
         final Iterator elms = ds.elements();
         if (elms.hasNext()) {
@@ -592,7 +616,7 @@ public class ExtendTo3d extends IteratorAdapter {
         }
         return res;
     }
-    
+
     /**
      * Returns the list of distinct subcanonical forms for a given connected
      * symbol. A subcanonical form is obtained by assigning numbers to the
@@ -607,20 +631,21 @@ public class ExtendTo3d extends IteratorAdapter {
             throw new UnsupportedOperationException("symbol must be connected");
         }
         if (!ds.hasStandardIndexSet()) {
-            throw new UnsupportedOperationException("symbol must have indices 0..dim");
+            throw new UnsupportedOperationException(
+                    "symbol must have indices 0..dim");
         }
-        
+
         final List res = new LinkedList();
-        
+
         final int size = ds.size();
         final int dim = ds.dim();
         final List idcs = new IndexList(ds);
-        
+
         final List reps = firstRepresentatives(ds);
         for (final Iterator iter = reps.iterator(); iter.hasNext();) {
             final Object seed = iter.next();
             final Traversal trav = new Traversal(ds, idcs, seed, true);
-            
+
             // --- elements will be numbered in the order they appear
             final HashMap old2new = new HashMap();
 
@@ -630,7 +655,7 @@ public class ExtendTo3d extends IteratorAdapter {
                 // --- retrieve the next edge
                 final Edge e = (Edge) trav.next();
                 final Object D = e.getElement();
-                
+
                 // --- determine a running number E for the target element D
                 final Integer tmp = (Integer) old2new.get(D);
                 if (tmp == null) {
@@ -639,7 +664,7 @@ public class ExtendTo3d extends IteratorAdapter {
                     ++nextE;
                 }
             }
-            
+
             // --- construct the new symbol
             int op[][] = new int[dim + 1][size + 1];
             int v[][] = new int[dim][size + 1];
@@ -650,30 +675,31 @@ public class ExtendTo3d extends IteratorAdapter {
                 for (int i = 0; i <= dim; ++i) {
                     op[i][D] = ((Integer) old2new.get(ds.op(i, E))).intValue();
                     if (i < dim) {
-                        v[i][D] = ds.v(i, i+1, E);
+                        v[i][D] = ds.v(i, i + 1, E);
                     }
                 }
             }
-            
+
             // --- add it to the list
             res.add(new DSymbol(op, v));
         }
-        
+
         // --- finis
         return res;
     }
-    
+
     /**
      * Hook for derived classes to specify additional deductions of a move.
      * 
      * @param ds the current symbol.
      * @param move the last move performed.
-     * @return the list of deductions (may be empty) or null in case of a contradiction.
+     * @return the list of deductions (may be empty) or null in case of a
+     *         contradiction.
      */
     protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
         return new ArrayList();
     }
-    
+
     public static void main(String[] args) {
         int i = 0;
         final DSymbol ds = new DSymbol(args[i]);
