@@ -42,13 +42,14 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.7 2006/09/27 22:03:12 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.8 2006/11/01 20:48:44 odf Exp $
  *
  */
 public class DefineBranching2d extends BranchAndCut {
 
-	private int minVertDeg;
-	private Rational minCurv;
+    private final int minFaceDeg;
+	private final int minVertDeg;
+	private final Rational minCurv;
 	private DynamicDSymbol current;
 	private List inputAutomorphisms;
 
@@ -77,10 +78,12 @@ public class DefineBranching2d extends BranchAndCut {
     
 	/**
 	 * Constructs a new instance.
+	 * @param minFaceDeg TODO
 	 */
-	public DefineBranching2d(
-			final DelaneySymbol ds, final int minVertDeg, final Rational minCurv) {
+	public DefineBranching2d(final DelaneySymbol ds, int minFaceDeg,
+            final int minVertDeg, final Rational minCurv) {
 		super();
+        this.minFaceDeg = minFaceDeg;
 		this.minVertDeg = minVertDeg;
 		this.minCurv = minCurv;
 		
@@ -151,6 +154,9 @@ public class DefineBranching2d extends BranchAndCut {
 		final Integer D = new Integer(((BMove) move).element);
 		final int val = ((BMove) move).value;
 		
+        if (idx == 0 && this.current.r(idx, idx+1, D) * val < this.minFaceDeg) {
+            return Status.ILLEGAL;
+        }
 		if (idx == 1 && this.current.r(idx, idx+1, D) * val < this.minVertDeg) {
 			return Status.ILLEGAL;
 		}
@@ -302,7 +308,7 @@ public class DefineBranching2d extends BranchAndCut {
         while (syms.hasNext()) {
             final DSymbol ds = (DSymbol) syms.next();
             ++inCount;
-            final Iterator iter = new DefineBranching2d(ds, 2, Whole.ZERO);
+            final Iterator iter = new DefineBranching2d(ds, 3, 2, Whole.ZERO);
 
             try {
                 while (iter.hasNext()) {

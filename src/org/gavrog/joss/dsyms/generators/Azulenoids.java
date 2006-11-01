@@ -90,7 +90,7 @@ public class Azulenoids extends IteratorAdapter {
 	                    if (curv.isNegative()) {
 	                    	continue;
 	                    }
-	                    this.syms = new DefineBranching2d(ds, 2, Whole.ZERO);
+	                    this.syms = new DefineBranching2d(ds, 3, 2, Whole.ZERO);
 	                } else {
 	                    throw new NoSuchElementException("At end");
 	                }
