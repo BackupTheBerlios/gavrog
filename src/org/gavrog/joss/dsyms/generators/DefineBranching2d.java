@@ -34,18 +34,20 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.derived.Morphism;
 
 /**
- * An iterator that takes a 3-dimensional Delaney symbol with some undefined
- * branching numbers and defines these in all possible combinations such that
- * the results are locally euclidean symbols.
+ * An iterator that takes a 2-dimensional Delaney symbol with some undefined
+ * branching numbers and defines these in all possible combinations. Only
+ * branching numbers 1, 2, 3, 4 and 6 are tried. Derived classes may change the
+ * definition of {@link #nextChoice(Move)} to change that.
  * 
  * For each isomorphism class of resulting symbols, only one respresentative is
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.8 2006/11/01 20:48:44 odf Exp $
- *
+ * @version $Id: DefineBranching2d.java,v 1.9 2006/11/01 22:26:20 odf Exp $
+ * 
  */
 public class DefineBranching2d extends BranchAndCut {
+    //TODO add option to change the set of branching numbers tried
 
     private final int minFaceDeg;
 	private final int minVertDeg;
