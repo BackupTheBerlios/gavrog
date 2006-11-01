@@ -17,6 +17,7 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.IteratorAdapter;
@@ -36,32 +37,51 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: MakeTilesForFaceTransitive.java,v 1.1 2006/11/01 20:47:14 odf Exp $
+ * @version $Id: MakeTilesForFaceTransitive.java,v 1.2 2006/11/01 23:07:09 odf Exp $
  */
 public class MakeTilesForFaceTransitive extends IteratorAdapter {
-	final private Iterator actions;
+    final private int size;
+    private int deg;
+    private FundamentalGroup G;
+	private Iterator actions;
 	private Iterator current;
-	final private FundamentalGroup G;
 
     public MakeTilesForFaceTransitive(final int size) {
-        this.G = new FundamentalGroup(new DSymbol("1:1,1,1:0,0"));
-        final FpGroup pG = G.getPresentation();
-        this.actions = new SmallActionsIterator(pG, size, false);
+        this.size = size;
+        this.deg = 3;
+        this.actions = Iterators.empty();
         this.current = Iterators.empty();
     }
     
     protected Object findNext() throws NoSuchElementException {
+        final List idcs = new IndexList(0, 1);
 		while (true) {
-			if (current.hasNext()) {
-				return (DSymbol) current.next();
-			} else if (actions.hasNext()) {
-				final GroupAction action = (GroupAction) actions.next();
+			if (this.current.hasNext()) {
+                boolean ok = true;
+			    final DSymbol ds = (DSymbol) this.current.next();
+                for (Iterator iter = ds.orbitRepresentatives(idcs); iter
+                        .hasNext();) {
+                    if (ds.v(0, 1, iter.next()) == 5) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (ok) {
+                    return ds;
+                }
+			} else if (this.actions.hasNext()) {
+				final GroupAction action = (GroupAction) this.actions.next();
 				final DSymbol set = new DSymbol(Covers.cover(G, action));
-                if (set.numberOfOrbits(new IndexList(0, 1)) > 2) {
-                    //TODO make sure face degrees are equal and between 3 and 5
+                if (set.numberOfOrbits(idcs) > 2) {
                     continue;
                 }
-				current = new DefineBranching2d(set, 3, 3, new Fraction(1, 30));
+                this.current = new DefineBranching2d(set, 3, 3, new Fraction(1, 12));
+            } else if (this.deg <= 5) {
+                final String code = "1:1,1,1:" + deg + ",0";
+                this.G = new FundamentalGroup(new DSymbol(code));
+                final FpGroup pG = G.getPresentation();
+                this.actions = new SmallActionsIterator(pG, size, false);
+                ++this.deg;
 			} else {
 				throw new NoSuchElementException("at end");
 			}
