@@ -28,6 +28,7 @@ import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 
@@ -37,17 +38,15 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: MakeTilesForFaceTransitive.java,v 1.2 2006/11/01 23:07:09 odf Exp $
+ * @version $Id: MakeTilesForFaceTransitive.java,v 1.3 2006/11/02 22:02:37 odf Exp $
  */
 public class MakeTilesForFaceTransitive extends IteratorAdapter {
-    final private int size;
     private int deg;
     private FundamentalGroup G;
 	private Iterator actions;
 	private Iterator current;
 
-    public MakeTilesForFaceTransitive(final int size) {
-        this.size = size;
+    public MakeTilesForFaceTransitive() {
         this.deg = 3;
         this.actions = Iterators.empty();
         this.current = Iterators.empty();
@@ -72,15 +71,28 @@ public class MakeTilesForFaceTransitive extends IteratorAdapter {
 			} else if (this.actions.hasNext()) {
 				final GroupAction action = (GroupAction) this.actions.next();
 				final DSymbol set = new DSymbol(Covers.cover(G, action));
-                if (set.numberOfOrbits(idcs) > 2) {
+                final int nf = set.numberOfOrbits(idcs);
+                if (nf > 2) {
                     continue;
+                } else if (nf == 2) {
+                    final Iterator reps = set.orbitRepresentatives(idcs);
+                    final Object D1 = reps.next();
+                    final Object D2 = reps.next();
+                    final DSymbol face1 = new DSymbol(new Subsymbol(set, idcs,
+                            D1));
+                    final DSymbol face2 = new DSymbol(new Subsymbol(set, idcs,
+                            D2));
+                    if (!face1.equals(face2)) {
+                        continue;
+                    }
                 }
-                this.current = new DefineBranching2d(set, 3, 3, new Fraction(1, 12));
+                this.current = new DefineBranching2d(set, 3, 3, new Fraction(1,
+                        12));
             } else if (this.deg <= 5) {
                 final String code = "1:1,1,1:" + deg + ",0";
                 this.G = new FundamentalGroup(new DSymbol(code));
                 final FpGroup pG = G.getPresentation();
-                this.actions = new SmallActionsIterator(pG, size, false);
+                this.actions = new SmallActionsIterator(pG, 4 * deg, false);
                 ++this.deg;
 			} else {
 				throw new NoSuchElementException("at end");
@@ -89,15 +101,13 @@ public class MakeTilesForFaceTransitive extends IteratorAdapter {
 	}
     
     public static void main(final String[] args) {
-        int i = 0;
-        final int maxSize = args.length > i ? Integer.parseInt(args[i]) : 6;
-        final Iterator symbols = new MakeTilesForFaceTransitive(maxSize);
+        final Iterator symbols = new MakeTilesForFaceTransitive();
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
         final long stop = System.currentTimeMillis();
-        System.out.println("\nGenerated " + count + " symbols.");
-        System.out.println("Execution time was " + (stop - start) / 1000.0
+        System.out.println("\n#Generated " + count + " symbols.");
+        System.out.println("#Execution time was " + (stop - start) / 1000.0
                 + " seconds.");
     }
 }
