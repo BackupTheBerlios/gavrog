@@ -25,7 +25,7 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.4 2006/09/04 05:46:08 odf Exp $
+ * @version $Id: DSymbol.java,v 1.5 2006/11/03 22:02:49 odf Exp $
  */
 public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
     
@@ -153,8 +153,8 @@ public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
      * @param v the branching array.
      */
     public DSymbol(int[][] op, int[][] v) {
-    	this.dim = v.length;
-    	this.size = v[0].length - 1;
+    	this.dim = op.length - 1;
+    	this.size = op[0].length - 1;
     	this.op = (int[][]) op.clone();
     	this.v = (int[][]) v.clone();
     	assertConsistency();
