@@ -40,19 +40,17 @@ import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Morphism;
 
 /**
- * An iterator that takes a collection of tiles and combines them to a
- * d-dimensional tiling in every possible way. The collection of input tiles is
- * encoded by a single (d-1)-dimensional Delaney symbol. Tiles are taken as is,
- * that is there given symmetry groups determine their stabilizers in the final
- * tiling.
+ * An iterator that takes a (d-1)-dimensional Delaney symbol encoding a
+ * collection of tiles and combines them to a connected d-dimensional in every
+ * possible way.
  * 
  * For each isomorphism class of extended symbols, only one representative is
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: TilesToTiling.java,v 1.1 2006/11/03 00:23:55 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.1 2006/11/03 00:28:12 odf Exp $
  */
-public class TilesToTiling extends IteratorAdapter {
+public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
@@ -105,7 +103,7 @@ public class TilesToTiling extends IteratorAdapter {
      * 
      * @param ds the symbol to extend.
      */
-    public TilesToTiling(final DSymbol ds) {
+    public CombineTiles(final DSymbol ds) {
         this.dim = ds.dim() + 1;
         
         // --- check the argument
@@ -712,7 +710,7 @@ public class TilesToTiling extends IteratorAdapter {
     public static void main(String[] args) {
         int i = 0;
         final DSymbol ds = new DSymbol(args[i]);
-        final Iterator iter = new TilesToTiling(ds);
+        final Iterator iter = new CombineTiles(ds);
 
         int count = 0;
         try {
