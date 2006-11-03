@@ -19,13 +19,11 @@ package org.gavrog.joss.dsyms.generators;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
@@ -48,7 +46,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.2 2006/11/03 05:50:34 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.3 2006/11/03 20:17:32 odf Exp $
  */
 public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
@@ -166,7 +164,7 @@ public class CombineTiles extends IteratorAdapter {
         this.unused.set(0, new Integer(((Integer) this.unused.get(0))
                 .intValue() - 1));
         this.size = this.current.size();
-        this.signatures = elementSignatures(this.current);
+        this.signatures = elementSignatures(this.current, this.dim - 1);
 
         // --- push a dummy move on the stack as a fallback
         stack.addLast(new Move(new Integer(1), new Integer(0), 0, 0, true));
@@ -280,7 +278,7 @@ public class CombineTiles extends IteratorAdapter {
                         new Integer(((Integer) this.unused.get(last.newType))
                                 .intValue() + 1));
                 this.size = this.current.size();
-                this.signatures = elementSignatures(this.current);
+                this.signatures = elementSignatures(this.current, this.dim - 2);
             }
         } while (!last.isChoice);
 
@@ -295,7 +293,7 @@ public class CombineTiles extends IteratorAdapter {
      */
     private Move nextMove(final Move choice) {
         final Object D = choice.element;
-        final List sigD = (List) this.signatures.get(D);
+        final Object sigD = this.signatures.get(D);
 
         // --- look for a neighbor in the curently connected portion
         for (int E = ((Integer) choice.neighbor).intValue() + 1; E <= size; ++E) {
@@ -313,7 +311,7 @@ public class CombineTiles extends IteratorAdapter {
                 final List forms = (List) this.componentTypes.get(type);
                 while (form < forms.size()) {
                     final DSymbol candidate = (DSymbol) forms.get(form);
-                    final Map sigs = elementSignatures(candidate);
+                    final Map sigs = elementSignatures(candidate, this.dim - 2);
                     if (sigD.equals(sigs.get(new Integer(1)))) {
                         return new Move(choice.element, new Integer(
                                 this.size + 1), type, form, true);
@@ -382,7 +380,7 @@ public class CombineTiles extends IteratorAdapter {
                 this.unused.set(type, new Integer(((Integer) this.unused
                         .get(type)).intValue() - 1));
                 this.size = this.current.size();
-                this.signatures = elementSignatures(this.current);
+                this.signatures = elementSignatures(this.current, this.dim - 2);
             }
             ds.redefineOp(d, D, E);
 
@@ -461,32 +459,25 @@ public class CombineTiles extends IteratorAdapter {
     }
 
     /**
-     * Computes signatures for the elements of a symbol. Two elements can only
-     * be d-neighbors if they have equal signatures.
+     * Computes signatures for the elements of symbol.
      * 
      * @param ds the symbol to compute signatures for.
+     * @param dim 
      * @return a map assigning signatures to the symbol's elements.
      */
-    public static Map elementSignatures(final DelaneySymbol ds) {
+    public static Map elementSignatures(final DelaneySymbol ds, final int dim) {
         //TODO test this
         
         final Map signatures = new HashMap();
         final Map invarToIndex = new HashMap();
         final List indexToRepMap = new ArrayList();
-        final Set seen = new HashSet();
         final List idcs = new ArrayList();
-        for (int i = 0; i <= ds.dim() - 2; ++i) {
+        for (int i = 0; i <= dim; ++i) {
         	idcs.add(new Integer(i));
         }
 
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-            final Object D = elms.next();
-            if (seen.contains(D)) {
-                continue;
-            }
-            for (final Iterator orbit = ds.orbit(idcs, D); orbit.hasNext();) {
-            	seen.add(orbit.next());
-            }
+        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+            final Object D = reps.next();
             final DelaneySymbol face = new Subsymbol(ds, idcs, D);
             final List invariant = face.invariant();
             if (!invarToIndex.containsKey(invariant)) {
