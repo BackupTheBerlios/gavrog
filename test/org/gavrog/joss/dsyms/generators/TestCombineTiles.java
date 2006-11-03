@@ -29,7 +29,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestCombineTiles.java,v 1.1 2006/11/03 20:16:10 odf Exp $
+ * @version $Id: TestCombineTiles.java,v 1.2 2006/11/03 21:24:12 odf Exp $
  */
 public class TestCombineTiles extends TestCase {
     /*
@@ -46,6 +46,7 @@ public class TestCombineTiles extends TestCase {
         super.tearDown();
     }
 
+    //TODO write a test for the new implementation
 //    public void testComputeSignatures() {
 //        final DSymbol ds = new DSymbol(
 //                "15:2 4 5 7 8 10 12 14 15,4 3 6 8 9 11 12 13 15,"
