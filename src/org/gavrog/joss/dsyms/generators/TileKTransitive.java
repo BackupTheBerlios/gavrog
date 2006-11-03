@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.7 2006/10/30 21:40:58 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.8 2006/11/03 21:47:52 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
@@ -131,7 +131,7 @@ public class TileKTransitive extends IteratorAdapter {
      * @return an iterator over all admissible extensions.
      */
     protected Iterator extendTo3d(final DSymbol ds) {
-        return new ExtendTo3d(ds);
+        return new CombineTiles(ds);
     }
 
     public String statistics() {
