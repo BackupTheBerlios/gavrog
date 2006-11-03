@@ -46,7 +46,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.3 2006/11/03 20:17:32 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.4 2006/11/03 21:23:34 odf Exp $
  */
 public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
@@ -60,6 +60,8 @@ public class CombineTiles extends IteratorAdapter {
     // --- precomputed or extracted data used by the algorithm
     final private int dim;
     final private List componentTypes;
+    final private Map invarToIndex = new HashMap();
+    final private List indexToRepMap = new ArrayList();
 
     // --- the current state
     private final DynamicDSymbol current;
@@ -103,7 +105,7 @@ public class CombineTiles extends IteratorAdapter {
      */
     public CombineTiles(final DSymbol ds) {
         this.dim = ds.dim() + 1;
-        
+
         // --- check the argument
         if (ds == null) {
             throw new IllegalArgumentException("null argument");
@@ -160,11 +162,11 @@ public class CombineTiles extends IteratorAdapter {
         final DSymbol start = (DSymbol) ((List) this.componentTypes.get(0))
                 .get(0);
         this.current.append((DSymbol) start.canonical()); // --- MUST be made
-                                                            // canonical!
+        // canonical!
         this.unused.set(0, new Integer(((Integer) this.unused.get(0))
                 .intValue() - 1));
         this.size = this.current.size();
-        this.signatures = elementSignatures(this.current, this.dim - 1);
+        this.signatures = elementSignatures(this.current, this.dim - 2);
 
         // --- push a dummy move on the stack as a fallback
         stack.addLast(new Move(new Integer(1), new Integer(0), 0, 0, true));
@@ -413,7 +415,7 @@ public class CombineTiles extends IteratorAdapter {
             }
 
             // --- finally, find deductions
-            for (int i = 0; i <= d-2; ++i) {
+            for (int i = 0; i <= d - 2; ++i) {
                 final Object Di = ds.op(i, D);
                 final Object Ei = ds.op(i, E);
                 if (LOGGING) {
@@ -462,40 +464,37 @@ public class CombineTiles extends IteratorAdapter {
      * Computes signatures for the elements of symbol.
      * 
      * @param ds the symbol to compute signatures for.
-     * @param dim 
+     * @param dim
      * @return a map assigning signatures to the symbol's elements.
      */
-    public static Map elementSignatures(final DelaneySymbol ds, final int dim) {
-        //TODO test this
-        
+    public Map elementSignatures(final DelaneySymbol ds, final int dim) {
         final Map signatures = new HashMap();
-        final Map invarToIndex = new HashMap();
-        final List indexToRepMap = new ArrayList();
         final List idcs = new ArrayList();
         for (int i = 0; i <= dim; ++i) {
-        	idcs.add(new Integer(i));
+            idcs.add(new Integer(i));
         }
 
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+                .hasNext();) {
             final Object D = reps.next();
             final DelaneySymbol face = new Subsymbol(ds, idcs, D);
             final List invariant = face.invariant();
-            if (!invarToIndex.containsKey(invariant)) {
-            	final int i = indexToRepMap.size();
-            	invarToIndex.put(invariant, new Integer(i));
-            	final DSymbol canon = new DSymbol(face.canonical());
-            	indexToRepMap.add(mapToFirstRepresentatives(canon));
+            if (!this.invarToIndex.containsKey(invariant)) {
+                final int i = this.indexToRepMap.size();
+                this.invarToIndex.put(invariant, new Integer(i));
+                final DSymbol canon = (DSymbol) face.canonical();
+                this.indexToRepMap.add(mapToFirstRepresentatives(canon));
             }
-            final Integer i = (Integer) invarToIndex.get(invariant);
-            final Map toRep = (Map) indexToRepMap.get(i.intValue());
+            final Integer i = (Integer) this.invarToIndex.get(invariant);
+            final Map toRep = (Map) this.indexToRepMap.get(i.intValue());
             final Map toCanon = face.getMapToCanonical();
             for (final Iterator iter = face.elements(); iter.hasNext();) {
-            	final Object E = iter.next();
-            	final Object rep = toRep.get(toCanon.get(E));
-            	signatures.put(E, new Pair(i, rep));
+                final Object E = iter.next();
+                final Object rep = toRep.get(toCanon.get(E));
+                signatures.put(E, new Pair(i, rep));
             }
         }
-        
+
         return signatures;
     }
 
@@ -533,25 +532,25 @@ public class CombineTiles extends IteratorAdapter {
      * @return the list of first representatives.
      */
     public static List firstRepresentatives(final DelaneySymbol ds) {
-    	final Map map = mapToFirstRepresentatives(ds);
-    	final List res = new ArrayList();
-    	for (final Iterator elms = ds.elements(); elms.hasNext();) {
-    		final Object D = elms.next();
-    		if (D.equals(map.get(D))) {
-    			res.add(D);
-    		}
-    	}
-    	return res;
+        final Map map = mapToFirstRepresentatives(ds);
+        final List res = new ArrayList();
+        for (final Iterator elms = ds.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            if (D.equals(map.get(D))) {
+                res.add(D);
+            }
+        }
+        return res;
     }
-    
+
     /**
-	 * Takes a connected symbol and returns a map that to each element assigns
-	 * the first representative of its equivalence class with respect to the
-	 * symbol's automorphism group.
-	 * 
-	 * @param ds the symbol to use.
-	 * @return the map from elements to first representatives.
-	 */
+     * Takes a connected symbol and returns a map that to each element assigns
+     * the first representative of its equivalence class with respect to the
+     * symbol's automorphism group.
+     * 
+     * @param ds the symbol to use.
+     * @return the map from elements to first representatives.
+     */
     public static Map mapToFirstRepresentatives(final DelaneySymbol ds) {
         if (!ds.isConnected()) {
             throw new UnsupportedOperationException("symbol must be connected");
@@ -586,7 +585,7 @@ public class CombineTiles extends IteratorAdapter {
                     res.put(D, D);
                     res.put(E, D);
                 } else {
-                	res.put(D, res.get(E));
+                    res.put(D, res.get(E));
                 }
             }
         }
