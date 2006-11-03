@@ -46,7 +46,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.4 2006/11/03 21:23:34 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.5 2006/11/03 22:03:20 odf Exp $
  */
 public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
@@ -103,7 +103,7 @@ public class CombineTiles extends IteratorAdapter {
      * 
      * @param ds the symbol to extend.
      */
-    public CombineTiles(final DSymbol ds) {
+    public CombineTiles(final DelaneySymbol ds) {
         this.dim = ds.dim() + 1;
 
         // --- check the argument
