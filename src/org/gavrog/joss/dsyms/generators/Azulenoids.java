@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
  */
 public class Azulenoids extends IteratorAdapter {
 
-	private ExtendTo2d sets;
+	private Iterator sets;
 	private DefineBranching2d syms;
 	private int pos;
 	private DSymbol ds;
@@ -68,7 +68,7 @@ public class Azulenoids extends IteratorAdapter {
     	ds.redefineOp(1, new Integer(1), new Integer(2*n));
     	ds.redefineV(0, 1, new Integer(1), 1);
     	
-        this.sets = new ExtendTo2d(ds);
+        this.sets = new CombineTiles(ds);
         this.syms = null;
         this.pos = 0;
         this.seenInvariants = new HashSet();
