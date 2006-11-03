@@ -17,7 +17,6 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
@@ -48,7 +48,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.1 2006/11/03 00:28:12 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.2 2006/11/03 05:50:34 odf Exp $
  */
 public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
@@ -468,86 +468,43 @@ public class CombineTiles extends IteratorAdapter {
      * @return a map assigning signatures to the symbol's elements.
      */
     public static Map elementSignatures(final DelaneySymbol ds) {
-        //TODO modify this to work for general dimension
+        //TODO test this
         
         final Map signatures = new HashMap();
+        final Map invarToIndex = new HashMap();
+        final List indexToRepMap = new ArrayList();
         final Set seen = new HashSet();
+        final List idcs = new ArrayList();
+        for (int i = 0; i <= ds.dim() - 2; ++i) {
+        	idcs.add(new Integer(i));
+        }
 
         for (final Iterator elms = ds.elements(); elms.hasNext();) {
             final Object D = elms.next();
             if (seen.contains(D)) {
                 continue;
             }
-
-            final int v = ds.v(0, 1, D);
-            final List cuts0 = new LinkedList();
-            final List cuts1 = new LinkedList();
-            Object E = D;
-            int r = 0;
-
-            do {
-                if (!ds.definesOp(0, E) || ds.op(0, E).equals(E)) {
-                    cuts0.add(E);
-                } else {
-                    E = ds.op(0, E);
-                }
-                seen.add(E);
-                if (!ds.definesOp(1, E) || ds.op(1, E).equals(E)) {
-                    cuts1.add(E);
-                } else {
-                    E = ds.op(1, E);
-                }
-                seen.add(E);
-                ++r;
-            } while (!E.equals(D));
-
-            if (cuts0.size() == 0 && cuts1.size() == 0) {
-                final List sig = Arrays.asList(new Object[] { new Integer(0),
-                        new Integer(r), new Integer(v), new Integer(0) });
-                E = D;
-                for (int i = 0; i < r; ++i) {
-                    signatures.put(E, sig);
-                    E = ds.op(0, E);
-                    signatures.put(E, sig);
-                    E = ds.op(1, E);
-                }
-            } else if (cuts0.size() == 2) {
-                E = cuts0.get(0);
-                Object F = cuts0.get(1);
-                for (int i = 0; i < r / 2; ++i) {
-                    final List sig = Arrays.asList(new Object[] {
-                            new Integer(1), new Integer(r), new Integer(v),
-                            new Integer(i) });
-                    signatures.put(E, sig);
-                    signatures.put(F, sig);
-                    E = ds.op(1 - i % 2, E);
-                    F = ds.op(1 - i % 2, F);
-                }
-            } else if (cuts1.size() == 2) {
-                E = cuts1.get(0);
-                Object F = cuts1.get(1);
-                for (int i = 0; i < r / 2; ++i) {
-                    final List sig = Arrays.asList(new Object[] {
-                            new Integer(2), new Integer(r), new Integer(v),
-                            new Integer(i) });
-                    signatures.put(E, sig);
-                    signatures.put(F, sig);
-                    E = ds.op(i % 2, E);
-                    F = ds.op(i % 2, F);
-                }
-            } else if (cuts0.size() == 1 && cuts1.size() == 1) {
-                E = cuts0.get(0);
-                for (int i = 0; i < r; ++i) {
-                    final List sig = Arrays.asList(new Object[] {
-                            new Integer(3), new Integer(r), new Integer(v),
-                            new Integer(i) });
-                    signatures.put(E, sig);
-                    E = ds.op(1 - i % 2, E);
-                }
-            } else {
-                throw new RuntimeException("this cannot happen");
+            for (final Iterator orbit = ds.orbit(idcs, D); orbit.hasNext();) {
+            	seen.add(orbit.next());
+            }
+            final DelaneySymbol face = new Subsymbol(ds, idcs, D);
+            final List invariant = face.invariant();
+            if (!invarToIndex.containsKey(invariant)) {
+            	final int i = indexToRepMap.size();
+            	invarToIndex.put(invariant, new Integer(i));
+            	final DSymbol canon = new DSymbol(face.canonical());
+            	indexToRepMap.add(mapToFirstRepresentatives(canon));
+            }
+            final Integer i = (Integer) invarToIndex.get(invariant);
+            final Map toRep = (Map) indexToRepMap.get(i.intValue());
+            final Map toCanon = face.getMapToCanonical();
+            for (final Iterator iter = face.elements(); iter.hasNext();) {
+            	final Object E = iter.next();
+            	final Object rep = toRep.get(toCanon.get(E));
+            	signatures.put(E, new Pair(i, rep));
             }
         }
+        
         return signatures;
     }
 
@@ -585,11 +542,31 @@ public class CombineTiles extends IteratorAdapter {
      * @return the list of first representatives.
      */
     public static List firstRepresentatives(final DelaneySymbol ds) {
+    	final Map map = mapToFirstRepresentatives(ds);
+    	final List res = new ArrayList();
+    	for (final Iterator elms = ds.elements(); elms.hasNext();) {
+    		final Object D = elms.next();
+    		if (D.equals(map.get(D))) {
+    			res.add(D);
+    		}
+    	}
+    	return res;
+    }
+    
+    /**
+	 * Takes a connected symbol and returns a map that to each element assigns
+	 * the first representative of its equivalence class with respect to the
+	 * symbol's automorphism group.
+	 * 
+	 * @param ds the symbol to use.
+	 * @return the map from elements to first representatives.
+	 */
+    public static Map mapToFirstRepresentatives(final DelaneySymbol ds) {
         if (!ds.isConnected()) {
             throw new UnsupportedOperationException("symbol must be connected");
         }
 
-        final List res = new LinkedList();
+        final Map res = new HashMap();
         final Iterator elms = ds.elements();
         if (elms.hasNext()) {
             final Object first = elms.next();
@@ -611,13 +588,14 @@ public class CombineTiles extends IteratorAdapter {
                 }
             }
 
-            final Set seen = new HashSet();
             for (final Iterator iter = ds.elements(); iter.hasNext();) {
                 final Object D = iter.next();
                 final Object E = classes.find(D);
-                if (!seen.contains(E)) {
-                    seen.add(E);
-                    res.add(D);
+                if (!res.containsKey(E)) {
+                    res.put(D, D);
+                    res.put(E, D);
+                } else {
+                	res.put(D, res.get(E));
                 }
             }
         }
