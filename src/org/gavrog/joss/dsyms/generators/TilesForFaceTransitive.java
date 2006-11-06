@@ -36,16 +36,16 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: MakeTilesForFaceTransitive.java,v 1.4 2006/11/06 23:29:29 odf Exp $
+ * @version $Id: TilesForFaceTransitive.java,v 1.1 2006/11/06 23:32:56 odf Exp $
  */
-public class MakeTilesForFaceTransitive extends IteratorAdapter {
+public class TilesForFaceTransitive extends IteratorAdapter {
     final private static Rational minCurv = new Fraction(1, 12);
     private int deg;
 	private Iterator faceSets;
 	private Iterator preSymbols;
     private Iterator symbols;
 
-    public MakeTilesForFaceTransitive() {
+    public TilesForFaceTransitive() {
         this.deg = 3;
         this.faceSets = Iterators.empty();
         this.preSymbols = Iterators.empty();
@@ -94,7 +94,7 @@ public class MakeTilesForFaceTransitive extends IteratorAdapter {
 	}
     
     public static void main(final String[] args) {
-        final Iterator symbols = new MakeTilesForFaceTransitive();
+        final Iterator symbols = new TilesForFaceTransitive();
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
