@@ -17,20 +17,18 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
-import org.gavrog.jane.fpgroups.FpGroup;
-import org.gavrog.jane.fpgroups.GroupAction;
-import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.jane.numbers.Fraction;
+import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
-import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 
 
 /**
@@ -38,27 +36,29 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: MakeTilesForFaceTransitive.java,v 1.3 2006/11/02 22:02:37 odf Exp $
+ * @version $Id: MakeTilesForFaceTransitive.java,v 1.4 2006/11/06 23:29:29 odf Exp $
  */
 public class MakeTilesForFaceTransitive extends IteratorAdapter {
+    final private static Rational minCurv = new Fraction(1, 12);
     private int deg;
-    private FundamentalGroup G;
-	private Iterator actions;
-	private Iterator current;
+	private Iterator faceSets;
+	private Iterator preSymbols;
+    private Iterator symbols;
 
     public MakeTilesForFaceTransitive() {
         this.deg = 3;
-        this.actions = Iterators.empty();
-        this.current = Iterators.empty();
+        this.faceSets = Iterators.empty();
+        this.preSymbols = Iterators.empty();
+        this.symbols = Iterators.empty();
     }
     
     protected Object findNext() throws NoSuchElementException {
         final List idcs = new IndexList(0, 1);
 		while (true) {
-			if (this.current.hasNext()) {
+			if (this.symbols.hasNext()) {
                 boolean ok = true;
-			    final DSymbol ds = (DSymbol) this.current.next();
-                for (Iterator iter = ds.orbitRepresentatives(idcs); iter
+			    final DSymbol ds = (DSymbol) this.symbols.next();
+                for (final Iterator iter = ds.orbitRepresentatives(idcs); iter
                         .hasNext();) {
                     if (ds.v(0, 1, iter.next()) == 5) {
                         ok = false;
@@ -68,32 +68,25 @@ public class MakeTilesForFaceTransitive extends IteratorAdapter {
                 if (ok) {
                     return ds;
                 }
-			} else if (this.actions.hasNext()) {
-				final GroupAction action = (GroupAction) this.actions.next();
-				final DSymbol set = new DSymbol(Covers.cover(G, action));
-                final int nf = set.numberOfOrbits(idcs);
-                if (nf > 2) {
-                    continue;
-                } else if (nf == 2) {
-                    final Iterator reps = set.orbitRepresentatives(idcs);
-                    final Object D1 = reps.next();
-                    final Object D2 = reps.next();
-                    final DSymbol face1 = new DSymbol(new Subsymbol(set, idcs,
-                            D1));
-                    final DSymbol face2 = new DSymbol(new Subsymbol(set, idcs,
-                            D2));
-                    if (!face1.equals(face2)) {
-                        continue;
-                    }
-                }
-                this.current = new DefineBranching2d(set, 3, 3, new Fraction(1,
-                        12));
+			} else if (this.preSymbols.hasNext()) {
+                final DSymbol ds = (DSymbol) this.preSymbols.next();
+                this.symbols = new DefineBranching2d(ds, 3, 3, minCurv);
+            } else if (this.faceSets.hasNext()) {
+                final DSymbol ds = (DSymbol) this.faceSets.next();
+                this.preSymbols = new CombineTiles(ds);
             } else if (this.deg <= 5) {
-                final String code = "1:1,1,1:" + deg + ",0";
-                this.G = new FundamentalGroup(new DSymbol(code));
-                final FpGroup pG = G.getPresentation();
-                this.actions = new SmallActionsIterator(pG, 4 * deg, false);
-                ++this.deg;
+                final DSymbol min = new DSymbol("1 1:1,1,1:" + deg);
+                final List tmp = new LinkedList();
+                
+                for (Iterator covers = Covers.allCovers(min); covers.hasNext();) {
+                    final DSymbol ds = (DSymbol) covers.next();
+                    tmp.add(ds);
+                    final DynamicDSymbol dyn = new DynamicDSymbol(ds);
+                    dyn.append(ds);
+                    tmp.add(new DSymbol(dyn));
+                }
+                this.faceSets = tmp.iterator();
+                ++deg;
 			} else {
 				throw new NoSuchElementException("at end");
 			}
