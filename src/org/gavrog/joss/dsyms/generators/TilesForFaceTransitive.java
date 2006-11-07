@@ -35,7 +35,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: TilesForFaceTransitive.java,v 1.3 2006/11/07 07:10:14 odf Exp $
+ * @version $Id: TilesForFaceTransitive.java,v 1.4 2006/11/07 23:19:10 odf Exp $
  */
 public class TilesForFaceTransitive extends IteratorAdapter {
     final private static Rational minCurv = new Fraction(1, 12);
@@ -55,6 +55,9 @@ public class TilesForFaceTransitive extends IteratorAdapter {
 		while (true) {
 			if (this.symbols.hasNext()) {
 				final DSymbol ds = (DSymbol) this.symbols.next();
+                if (!ds.isSpherical2D()) {
+                    continue;
+                }
 				for (final Iterator elms = ds.elements(); elms.hasNext();) {
 					if (ds.v(1, 2, elms.next()) > 2) {
 						return ds;
