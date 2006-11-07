@@ -27,7 +27,6 @@ import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.Covers;
 
 
@@ -36,7 +35,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: TilesForFaceTransitive.java,v 1.2 2006/11/07 01:48:15 odf Exp $
+ * @version $Id: TilesForFaceTransitive.java,v 1.3 2006/11/07 07:10:14 odf Exp $
  */
 public class TilesForFaceTransitive extends IteratorAdapter {
     final private static Rational minCurv = new Fraction(1, 12);
@@ -53,21 +52,15 @@ public class TilesForFaceTransitive extends IteratorAdapter {
     }
     
     protected Object findNext() throws NoSuchElementException {
-        final List idcs = new IndexList(0, 1);
 		while (true) {
 			if (this.symbols.hasNext()) {
-                boolean ok = true;
-			    final DSymbol ds = (DSymbol) this.symbols.next();
-                for (final Iterator iter = ds.orbitRepresentatives(idcs); iter
-                        .hasNext();) {
-                    if (ds.v(0, 1, iter.next()) == 5) {
-                        ok = false;
-                        break;
-                    }
-                }
-                if (ok) {
-                    return ds;
-                }
+				final DSymbol ds = (DSymbol) this.symbols.next();
+				for (final Iterator elms = ds.elements(); elms.hasNext();) {
+					if (ds.v(1, 2, elms.next()) > 2) {
+						return ds;
+					}
+				}
+			    continue;
 			} else if (this.preSymbols.hasNext()) {
                 final DSymbol ds = (DSymbol) this.preSymbols.next();
                 this.symbols = new DefineBranching2d(ds, 3, 2, minCurv);
@@ -80,6 +73,10 @@ public class TilesForFaceTransitive extends IteratorAdapter {
                 
                 for (Iterator covers = Covers.allCovers(min); covers.hasNext();) {
                     final DSymbol ds = (DSymbol) covers.next();
+                    final Object D = ds.elements().next();
+                    if (ds.v(0, 1, D) > 4) {
+                    	continue;
+                    }
                     tmp.add(ds);
                     final DynamicDSymbol dyn = new DynamicDSymbol(ds);
                     dyn.append(ds);
