@@ -31,7 +31,7 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.1 2006/11/07 22:53:47 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.2 2006/11/07 23:44:25 odf Exp $
  */
 public class FaceTransitive {
 
@@ -104,14 +104,17 @@ public class FaceTransitive {
         }
     }
     
+    /**
+     * Generates all feasible 2-dimensional symbols made from a given
+     * 1-dimensional one.
+     */
     public static class SingleFaceTiles extends IteratorAdapter {
         final private static Rational minCurv = new Fraction(1, 12);
-        Iterator faces = Iterators.empty();
         Iterator preTiles = Iterators.empty();
         Iterator tiles = Iterators.empty();
         
-        public SingleFaceTiles(final int size) {
-            this.faces = new Faces(size);
+        public SingleFaceTiles(final DSymbol face) {
+            this.preTiles = new CombineTiles(face);
         }
 
         /* (non-Javadoc)
@@ -132,9 +135,46 @@ public class FaceTransitive {
                 } else if (this.preTiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 3, 2, minCurv);
-                } else if (this.faces.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.faces.next();
-                    this.preTiles = new CombineTiles(ds);
+                } else {
+                    throw new NoSuchElementException("at end");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Generates all feasible 2-dimensional symbols made from two copies of a
+     * given 1-dimensional one.
+     */
+    public static class DoubleFaceTiles extends IteratorAdapter {
+        final private static Rational minCurv = new Fraction(1, 12);
+        Iterator preTiles = Iterators.empty();
+        Iterator tiles = Iterators.empty();
+        
+        public DoubleFaceTiles(final DSymbol face) {
+            final DynamicDSymbol ds = new DynamicDSymbol(face);
+            ds.append(face);
+            this.preTiles = new CombineTiles(new DSymbol(ds));
+        }
+
+        /* (non-Javadoc)
+         * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+         */
+        protected Object findNext() throws NoSuchElementException {
+            while (true) {
+                if (this.tiles.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.tiles.next();
+                    if (!ds.isSpherical2D()) {
+                        continue;
+                    }
+                    for (final Iterator elms = ds.elements(); elms.hasNext();) {
+                        if (ds.m(1, 2, elms.next()) > 2) {
+                            return ds;
+                        }
+                    }
+                } else if (this.preTiles.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.preTiles.next();
+                    this.tiles = new DefineBranching2d(ds, 3, 2, minCurv);
                 } else {
                     throw new NoSuchElementException("at end");
                 }
@@ -146,8 +186,13 @@ public class FaceTransitive {
      * @param args
      */
     public static void main(final String[] args) {
-        final int n = (args.length > 0 ? Integer.parseInt(args[0]) : 10);
-        final Iterator symbols = new SingleFaceTiles(n);
+        final DSymbol face;
+        if (args.length > 0) {
+            face = new DSymbol(args[0]);
+        } else {
+            face = new DSymbol("3 1:1 3,2 3:3");
+        }
+        final Iterator symbols = new DoubleFaceTiles(face);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
