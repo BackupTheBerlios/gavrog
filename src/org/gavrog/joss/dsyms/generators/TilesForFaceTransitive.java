@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * faces of the same size.
  * 
  * @author Olaf Delgado
- * @version $Id: TilesForFaceTransitive.java,v 1.1 2006/11/06 23:32:56 odf Exp $
+ * @version $Id: TilesForFaceTransitive.java,v 1.2 2006/11/07 01:48:15 odf Exp $
  */
 public class TilesForFaceTransitive extends IteratorAdapter {
     final private static Rational minCurv = new Fraction(1, 12);
@@ -70,7 +70,7 @@ public class TilesForFaceTransitive extends IteratorAdapter {
                 }
 			} else if (this.preSymbols.hasNext()) {
                 final DSymbol ds = (DSymbol) this.preSymbols.next();
-                this.symbols = new DefineBranching2d(ds, 3, 3, minCurv);
+                this.symbols = new DefineBranching2d(ds, 3, 2, minCurv);
             } else if (this.faceSets.hasNext()) {
                 final DSymbol ds = (DSymbol) this.faceSets.next();
                 this.preSymbols = new CombineTiles(ds);
