@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.4 2006/11/08 06:26:40 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.5 2006/11/08 06:47:19 odf Exp $
  */
 public class FaceTransitive {
 
@@ -112,10 +112,12 @@ public class FaceTransitive {
      */
     public static class SingleFaceTiles extends IteratorAdapter {
         final private static Rational minCurv = new Fraction(1, 12);
+		final private int minVert;
         Iterator preTiles = Iterators.empty();
         Iterator tiles = Iterators.empty();
         
-        public SingleFaceTiles(final DSymbol face) {
+        public SingleFaceTiles(final DSymbol face, final int minVert) {
+            this.minVert = minVert;
             this.preTiles = new CombineTiles(face);
         }
 
@@ -136,7 +138,7 @@ public class FaceTransitive {
                     }
                 } else if (this.preTiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
-                    this.tiles = new DefineBranching2d(ds, 3, 2, minCurv);
+                    this.tiles = new DefineBranching2d(ds, 3, minVert, minCurv);
                 } else {
                     throw new NoSuchElementException("at end");
                 }
@@ -149,11 +151,13 @@ public class FaceTransitive {
      * given 1-dimensional one.
      */
     public static class DoubleFaceTiles extends IteratorAdapter {
+		final private int minVert;
         final private static Rational minCurv = new Fraction(1, 12);
         Iterator preTiles = Iterators.empty();
         Iterator tiles = Iterators.empty();
         
-        public DoubleFaceTiles(final DSymbol face) {
+        public DoubleFaceTiles(final DSymbol face, final int minVert) {
+        	this.minVert = minVert;
             final DynamicDSymbol ds = new DynamicDSymbol(face);
             ds.append(face);
             this.preTiles = new CombineTiles(new DSymbol(ds));
@@ -176,7 +180,7 @@ public class FaceTransitive {
                     }
                 } else if (this.preTiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
-                    this.tiles = new DefineBranching2d(ds, 3, 2, minCurv);
+                    this.tiles = new DefineBranching2d(ds, 3, minVert, minCurv);
                 } else {
                     throw new NoSuchElementException("at end");
                 }
@@ -193,8 +197,8 @@ public class FaceTransitive {
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
         
-    	public ONE(final DSymbol face) {
-    		this.tiles = new SingleFaceTiles(face);
+    	public ONE(final DSymbol face, final int minVert) {
+    		this.tiles = new SingleFaceTiles(face, minVert);
     	}
 
 		/* (non-Javadoc)
@@ -234,8 +238,8 @@ public class FaceTransitive {
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
         
-    	public TWO(final DSymbol face) {
-    		this.tiles = Iterators.asList(new SingleFaceTiles(face));
+    	public TWO(final DSymbol face, final int minVert) {
+    		this.tiles = Iterators.asList(new SingleFaceTiles(face, minVert));
     		i = j = 0;
     	}
 
@@ -283,8 +287,8 @@ public class FaceTransitive {
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
         
-    	public DOUBLE(final DSymbol face) {
-    		this.tiles = new DoubleFaceTiles(face);
+    	public DOUBLE(final DSymbol face, final int minVert) {
+    		this.tiles = new DoubleFaceTiles(face, minVert);
     	}
 
 		/* (non-Javadoc)
@@ -318,7 +322,8 @@ public class FaceTransitive {
     }
     
     /**
-     * @param args
+     * Main method.
+     * @param args command line arguments.
      */
     public static void main(final String[] args) {
         final DSymbol face;
@@ -327,7 +332,7 @@ public class FaceTransitive {
         } else {
             face = new DSymbol("6 1:2 4 6,6 3 5:3");
         }
-        final Iterator symbols = new DOUBLE(face);
+        final Iterator symbols = new DOUBLE(face, 2);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
