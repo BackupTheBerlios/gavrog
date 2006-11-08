@@ -33,9 +33,9 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.5 2006/11/08 06:47:19 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.6 2006/11/08 22:27:12 odf Exp $
  */
-public class FaceTransitive {
+public class FaceTransitive extends IteratorAdapter {
 
     /**
      * Generates all feasible 1-dimensional symbols of a given size.
@@ -208,13 +208,9 @@ public class FaceTransitive {
             while (true) {
                 if (this.tilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tilings.next();
-                    if (!ds.isMinimal()) {
-                    	continue;
+                    if (isGood(ds)) {
+                        return ds;
                     }
-                    if (new EuclidicityTester(ds).isBad()) {
-                        continue;
-                    }
-                    return ds;
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
                     this.tilings = new DefineBranching3d(ds);
@@ -250,13 +246,9 @@ public class FaceTransitive {
             while (true) {
                 if (this.tilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tilings.next();
-                    if (!ds.isMinimal()) {
-                    	continue;
+                    if (isGood(ds)) {
+                        return ds;
                     }
-                    if (new EuclidicityTester(ds).isBad()) {
-                        continue;
-                    }
-                    return ds;
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
                     this.tilings = new DefineBranching3d(ds);
@@ -301,13 +293,9 @@ public class FaceTransitive {
                     if (ds.numberOfOrbits(idcs) != 1) {
                     	continue;
                     }
-                    if (!ds.isMinimal()) {
-                    	continue;
+                    if (isGood(ds)) {
+                        return ds;
                     }
-                    if (new EuclidicityTester(ds).isBad()) {
-                        continue;
-                    }
-                    return ds;
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
                     this.tilings = new DefineBranching3d(ds);
@@ -320,19 +308,99 @@ public class FaceTransitive {
             }
 		}
     }
+
+    private static boolean isGood(final DSymbol ds) {
+        final List idcs = new IndexList(1, 2, 3);
+
+        if (!ds.isMinimal()) {
+            return false;
+        }
+        if (new EuclidicityTester(ds).isBad()) {
+            return false;
+        }
+        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+                .hasNext();) {
+            boolean bad = true;
+            for (final Iterator elms = ds.orbit(idcs, reps.next()); elms
+                    .hasNext();) {
+                if (ds.m(1, 2, elms.next()) > 2) {
+                    bad = false;
+                    break;
+                }
+            }
+            if (bad) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
+    
+    final private int maxSize;
+    final private int minVert;
+
+    private int size;
+    private int type;
+    private Iterator faces = Iterators.empty();
+    private Iterator tilings = Iterators.empty();
+
+    public FaceTransitive(final int minSize, final int maxSize,
+            final int minVertexDegree) {
+        this.maxSize = maxSize;
+        this.minVert = minVertexDegree;
+        
+        this.size = minSize - 1;
+        this.type = 3;
+    }
+    
+    /* (non-Javadoc)
+     * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+     */
+    protected Object findNext() throws NoSuchElementException {
+        while (true) {
+            if (this.tilings.hasNext()) {
+                return this.tilings.next();
+            } else if (this.faces.hasNext()) {
+                final DSymbol face = (DSymbol) faces.next();
+                switch (this.type) {
+                case 0:
+                    this.tilings = new ONE(face, this.minVert);
+                    break;
+                case 1:
+                    this.tilings = new TWO(face, this.minVert);
+                    break;
+                case 2:
+                    this.tilings = new DOUBLE(face, this.minVert);
+                    break;
+                }
+            } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
+                ++this.type;
+                if (this.type == 0) {
+                    this.faces = new Faces(this.size);
+                } else {
+                    this.faces = new Faces(this.size / 2);
+                }
+            } else if (this.size < this.maxSize) {
+                ++this.size;
+                this.type = -1;
+            } else {
+                throw new NoSuchElementException("at end");
+            }
+        }
+    }
     
     /**
      * Main method.
      * @param args command line arguments.
      */
     public static void main(final String[] args) {
-        final DSymbol face;
-        if (args.length > 0) {
-            face = new DSymbol(args[0]);
-        } else {
-            face = new DSymbol("6 1:2 4 6,6 3 5:3");
-        }
-        final Iterator symbols = new DOUBLE(face, 2);
+        final int n = args.length;
+        final int minSize = (n > 0 ? Integer.parseInt(args[0]) : 1);
+        final int maxSize = (n > 1 ? Integer.parseInt(args[1]) : 6);
+        final int minVert = (n > 2 ? Integer.parseInt(args[2]) : 2);
+
+        final Iterator symbols = new FaceTransitive(minSize, maxSize, minVert);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
