@@ -28,10 +28,11 @@ import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
+import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.2 2006/11/07 23:44:25 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.3 2006/11/08 06:15:49 odf Exp $
  */
 public class FaceTransitive {
 
@@ -183,6 +184,95 @@ public class FaceTransitive {
     }
     
     /**
+	 * Generates all minimal, euclidean, 3-dimensional symbols made from a given
+	 * 1-dimensional symbol.
+	 */
+    public static class ONE extends IteratorAdapter {
+    	Iterator tiles = Iterators.empty();
+        Iterator preTilings = Iterators.empty();
+        Iterator tilings = Iterators.empty();
+        
+    	public ONE(final DSymbol face) {
+    		this.tiles = new SingleFaceTiles(face);
+    	}
+
+		/* (non-Javadoc)
+		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+		 */
+		protected Object findNext() throws NoSuchElementException {
+            while (true) {
+                if (this.tilings.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.tilings.next();
+                    if (!ds.isMinimal()) {
+                    	continue;
+                    }
+                    if (new EuclidicityTester(ds).isBad()) {
+                        continue;
+                    }
+                    return ds;
+                } else if (this.preTilings.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.preTilings.next();
+                    this.tilings = new DefineBranching3d(ds);
+                } else if (this.tiles.hasNext()) {
+                	final DSymbol ds = (DSymbol) this.tiles.next();
+                	this.preTilings = new CombineTiles(ds);
+                } else {
+                    throw new NoSuchElementException("at end");
+                }
+            }
+		}
+    }
+    
+    /**
+	 * Generates all minimal, euclidean, 3-dimensional symbols containing two
+	 * 2-dimensional symbols each made from the single given 1-dimensional one.
+	 */
+    public static class TWO extends IteratorAdapter {
+    	final List tiles;
+    	int i, j;
+        Iterator preTilings = Iterators.empty();
+        Iterator tilings = Iterators.empty();
+        
+    	public TWO(final DSymbol face) {
+    		this.tiles = Iterators.asList(new SingleFaceTiles(face));
+    		i = j = 0;
+    	}
+
+		/* (non-Javadoc)
+		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+		 */
+		protected Object findNext() throws NoSuchElementException {
+            while (true) {
+                if (this.tilings.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.tilings.next();
+                    if (!ds.isMinimal()) {
+                    	continue;
+                    }
+                    if (new EuclidicityTester(ds).isBad()) {
+                        continue;
+                    }
+                    return ds;
+                } else if (this.preTilings.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.preTilings.next();
+                    this.tilings = new DefineBranching3d(ds);
+                } else if (this.i < this.tiles.size()) {
+                	final DSymbol t1 = (DSymbol) this.tiles.get(i);
+                	final DSymbol t2 = (DSymbol) this.tiles.get(j);
+                	++j;
+                	if (j >= this.tiles.size()) {
+                		j = ++i;
+                	}
+                	final DynamicDSymbol ds = new DynamicDSymbol(t1);
+                	ds.append(t2);
+                	this.preTilings = new CombineTiles(new DSymbol(ds));
+                } else {
+                    throw new NoSuchElementException("at end");
+                }
+            }
+		}
+    }
+    
+    /**
      * @param args
      */
     public static void main(final String[] args) {
@@ -190,9 +280,9 @@ public class FaceTransitive {
         if (args.length > 0) {
             face = new DSymbol(args[0]);
         } else {
-            face = new DSymbol("3 1:1 3,2 3:3");
+            face = new DSymbol("6 1:2 4 6,6 3 5:3");
         }
-        final Iterator symbols = new DoubleFaceTiles(face);
+        final Iterator symbols = new TWO(face);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
