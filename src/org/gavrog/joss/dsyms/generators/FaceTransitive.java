@@ -28,11 +28,12 @@ import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.3 2006/11/08 06:15:49 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.4 2006/11/08 06:26:40 odf Exp $
  */
 public class FaceTransitive {
 
@@ -106,7 +107,7 @@ public class FaceTransitive {
     }
     
     /**
-     * Generates all feasible 2-dimensional symbols made from a given
+     * Generates all feasible 2-dimensional symbols extending a given
      * 1-dimensional one.
      */
     public static class SingleFaceTiles extends IteratorAdapter {
@@ -184,7 +185,7 @@ public class FaceTransitive {
     }
     
     /**
-	 * Generates all minimal, euclidean, 3-dimensional symbols made from a given
+	 * Generates all minimal, euclidean, 3-dimensional symbols extending a given
 	 * 1-dimensional symbol.
 	 */
     public static class ONE extends IteratorAdapter {
@@ -273,6 +274,50 @@ public class FaceTransitive {
     }
     
     /**
+	 * Generates all minimal, euclidean, tile- and face-transitive 3-dimensional
+	 * symbols made from two copies of a given 1-dimensional symbol.
+	 */
+    public static class DOUBLE extends IteratorAdapter {
+    	final static List idcs = new IndexList(0, 1, 3);
+    	Iterator tiles = Iterators.empty();
+        Iterator preTilings = Iterators.empty();
+        Iterator tilings = Iterators.empty();
+        
+    	public DOUBLE(final DSymbol face) {
+    		this.tiles = new DoubleFaceTiles(face);
+    	}
+
+		/* (non-Javadoc)
+		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+		 */
+		protected Object findNext() throws NoSuchElementException {
+            while (true) {
+                if (this.tilings.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.tilings.next();
+                    if (ds.numberOfOrbits(idcs) != 1) {
+                    	continue;
+                    }
+                    if (!ds.isMinimal()) {
+                    	continue;
+                    }
+                    if (new EuclidicityTester(ds).isBad()) {
+                        continue;
+                    }
+                    return ds;
+                } else if (this.preTilings.hasNext()) {
+                    final DSymbol ds = (DSymbol) this.preTilings.next();
+                    this.tilings = new DefineBranching3d(ds);
+                } else if (this.tiles.hasNext()) {
+                	final DSymbol ds = (DSymbol) this.tiles.next();
+                	this.preTilings = new CombineTiles(ds);
+                } else {
+                    throw new NoSuchElementException("at end");
+                }
+            }
+		}
+    }
+    
+    /**
      * @param args
      */
     public static void main(final String[] args) {
@@ -282,7 +327,7 @@ public class FaceTransitive {
         } else {
             face = new DSymbol("6 1:2 4 6,6 3 5:3");
         }
-        final Iterator symbols = new TWO(face);
+        final Iterator symbols = new DOUBLE(face);
 
         final long start = System.currentTimeMillis();
         final int count = Iterators.print(System.out, symbols, "\n");
