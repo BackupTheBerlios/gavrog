@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.6 2006/11/08 22:27:12 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.7 2006/11/09 05:22:42 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -375,7 +375,7 @@ public class FaceTransitive extends IteratorAdapter {
                     break;
                 }
             } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
-                ++this.type;
+            	++this.type;
                 if (this.type == 0) {
                     this.faces = new Faces(this.size);
                 } else {
@@ -397,7 +397,7 @@ public class FaceTransitive extends IteratorAdapter {
     public static void main(final String[] args) {
         final int n = args.length;
         final int minSize = (n > 0 ? Integer.parseInt(args[0]) : 1);
-        final int maxSize = (n > 1 ? Integer.parseInt(args[1]) : 6);
+        final int maxSize = (n > 1 ? Integer.parseInt(args[1]) : 8);
         final int minVert = (n > 2 ? Integer.parseInt(args[2]) : 2);
 
         final Iterator symbols = new FaceTransitive(minSize, maxSize, minVert);
