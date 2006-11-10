@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.7 2006/11/09 05:22:42 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.8 2006/11/10 00:00:03 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -312,12 +312,6 @@ public class FaceTransitive extends IteratorAdapter {
     private static boolean isGood(final DSymbol ds) {
         final List idcs = new IndexList(1, 2, 3);
 
-        if (!ds.isMinimal()) {
-            return false;
-        }
-        if (new EuclidicityTester(ds).isBad()) {
-            return false;
-        }
         for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
                 .hasNext();) {
             boolean bad = true;
@@ -331,6 +325,12 @@ public class FaceTransitive extends IteratorAdapter {
             if (bad) {
                 return false;
             }
+        }
+        if (!ds.isMinimal()) {
+            return false;
+        }
+        if (new EuclidicityTester(ds).isBad()) {
+            return false;
         }
 
         return true;
