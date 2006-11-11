@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.8 2006/11/10 00:00:03 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.9 2006/11/11 06:58:37 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -192,7 +192,7 @@ public class FaceTransitive extends IteratorAdapter {
 	 * Generates all minimal, euclidean, 3-dimensional symbols extending a given
 	 * 1-dimensional symbol.
 	 */
-    public static class ONE extends IteratorAdapter {
+    private class ONE extends IteratorAdapter {
     	Iterator tiles = Iterators.empty();
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
@@ -228,7 +228,7 @@ public class FaceTransitive extends IteratorAdapter {
 	 * Generates all minimal, euclidean, 3-dimensional symbols containing two
 	 * 2-dimensional symbols each made from the single given 1-dimensional one.
 	 */
-    public static class TWO extends IteratorAdapter {
+    private class TWO extends IteratorAdapter {
     	final List tiles;
     	int i, j;
         Iterator preTilings = Iterators.empty();
@@ -273,8 +273,8 @@ public class FaceTransitive extends IteratorAdapter {
 	 * Generates all minimal, euclidean, tile- and face-transitive 3-dimensional
 	 * symbols made from two copies of a given 1-dimensional symbol.
 	 */
-    public static class DOUBLE extends IteratorAdapter {
-    	final static List idcs = new IndexList(0, 1, 3);
+    private class DOUBLE extends IteratorAdapter {
+    	final List idcs = new IndexList(0, 1, 3);
     	Iterator tiles = Iterators.empty();
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
@@ -309,7 +309,28 @@ public class FaceTransitive extends IteratorAdapter {
 		}
     }
 
-    private static boolean isGood(final DSymbol ds) {
+	private int badVertices = 0;
+	private int nonMinimal = 0;
+	private int nonEuclidean = 0;
+	private long timeForEuclidicityTest = 0;
+
+	public int getBadVertices() {
+		return this.badVertices;
+	}
+
+	public int getNonEuclidean() {
+		return this.nonEuclidean;
+	}
+
+	public int getNonMinimal() {
+		return this.nonMinimal;
+	}
+	
+    public long getTimeForEuclidicityTest() {
+		return this.timeForEuclidicityTest;
+	}
+
+	private boolean isGood(final DSymbol ds) {
         final List idcs = new IndexList(1, 2, 3);
 
         for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
@@ -323,13 +344,19 @@ public class FaceTransitive extends IteratorAdapter {
                 }
             }
             if (bad) {
+            	++this.badVertices;
                 return false;
             }
         }
         if (!ds.isMinimal()) {
+        	++this.nonMinimal;
             return false;
         }
-        if (new EuclidicityTester(ds).isBad()) {
+        final long time = System.currentTimeMillis();
+        final boolean bad = new EuclidicityTester(ds).isBad();
+        this.timeForEuclidicityTest += System.currentTimeMillis() - time;
+        if (bad) {
+        	++this.nonEuclidean;
             return false;
         }
 
@@ -400,13 +427,22 @@ public class FaceTransitive extends IteratorAdapter {
         final int maxSize = (n > 1 ? Integer.parseInt(args[1]) : 8);
         final int minVert = (n > 2 ? Integer.parseInt(args[2]) : 2);
 
-        final Iterator symbols = new FaceTransitive(minSize, maxSize, minVert);
+        final FaceTransitive symbols = new FaceTransitive(minSize, maxSize,
+				minVert);
 
-        final long start = System.currentTimeMillis();
-        final int count = Iterators.print(System.out, symbols, "\n");
-        final long stop = System.currentTimeMillis();
-        System.out.println("\n#Generated " + count + " symbols.");
-        System.out.println("#Execution time was " + (stop - start) / 1000.0
-                + " seconds.");
+		final long start = System.currentTimeMillis();
+		final int count = Iterators.print(System.out, symbols, "\n");
+		final long stop = System.currentTimeMillis();
+		System.out.println("\n# Generated " + count + " symbols.");
+		System.out.println("# Rejected " + symbols.getBadVertices()
+				+ " symbols with trivial vertices,");
+		System.out.println("#          " + symbols.getNonMinimal()
+				+ " non-minimal symbols and");
+		System.out.println("#          " + symbols.getNonEuclidean()
+				+ " non-Euclidean symbols");
+		System.out.println("# Execution time was " + (stop - start) / 1000.0
+				+ " seconds.");
+		System.out.println("# Used " + symbols.getTimeForEuclidicityTest()
+				/ 1000.0 + " seconds for Euclidicity tests.");
     }
 }
