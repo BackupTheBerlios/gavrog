@@ -19,9 +19,11 @@ package org.gavrog.joss.dsyms.derived;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
@@ -32,7 +34,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.1 2006/11/14 23:45:51 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.2 2006/11/15 00:15:42 odf Exp $
  */
 public class OrbifoldGraph {
 
@@ -136,27 +138,44 @@ public class OrbifoldGraph {
         }
 
         // --- add 2-dimensional orbits (chamber vertices)
-//
-//        for (i,j,k) in ((a,b,c), (a,b,d), (a,c,d), (b,c,d)):
-//            for sub2d in ds.orbits((i, j, k)):
-//                cones = []
-//                corners = []
-//                neighbors  = []
-//                for (n, m) in  ((i,j), (i,k), (j,k)):
-//                    seen = {}
-//                    for D in sub2d:
-//                        if not seen.has_key(D):
-//                            orb = orb2rep[(n, m), D]
-//                            for E in orb2elms[orb]:
-//                                seen[E] = 1
-//                            t = orb2type.get(orb)
-//                            if t:
-//                                if t[0] == '*':
-//                                    if len(t) > 1:
-//                                        corners.append(t[1])
-//                                else:
-//                                    cones.append(t[0])
-//                                neighbors.append(orb)
+        for (int i = 0; i <= 3; ++i) {
+            final List idcs = new IndexList(ds);
+            idcs.remove(new Integer(i));
+            for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+                    .hasNext();) {
+                final List sub = Iterators.asList(ds.orbit(idcs, reps.next()));
+                final List cones = new ArrayList();
+                final List corners = new ArrayList();
+                final List neighbors = new ArrayList();
+                
+                // --- collect all relevant 1-dim orbits this one contains
+                for (int j = 0; j <= 2; ++j) {
+                    final int n = ((Integer) idcs.get((j + 1) % 3)).intValue();
+                    final int m = ((Integer) idcs.get((j + 2) % 3)).intValue();
+                    final List ilnm = new IndexList(n, m);
+                    final Set seen = new HashSet();
+                    for (final Iterator elms = sub.iterator(); elms.hasNext();) {
+                        final Object D = elms.next();
+                        if (!seen.contains(D)) {
+                            final Pair orb0 = new Pair(ilnm, D);
+                            final Pair orb = (Pair) orb2rep.get(orb0);    
+                            seen.addAll((List) orb2elms.get(orb));
+                            final String t = (String) orb2type.get(orb);
+                            if (t.length() > 0) {
+                                if (t.charAt(0) == '*') {
+                                    if (t.length() > 1) {
+                                        corners.add(t.substring(1, 2));
+                                    }
+                                } else {
+                                    cones.add(t.substring(0, 1));
+                                }
+                                neighbors.add(orb);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 //                cones.sort()
 //                cones.reverse()
 //                corners.sort()
