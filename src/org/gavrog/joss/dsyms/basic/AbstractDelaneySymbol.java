@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.4 2006/10/02 07:23:22 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.5 2006/11/15 02:03:45 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 
@@ -393,28 +393,46 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
         return partialOrientation(new IndexList(this), this.elements());
     }
 
+    /**
+     * Determines if an orbit is weakly oriented and/or loopless. Returns an
+     * number between 0 and 3 which is 2 or larger exactly if the orbit is
+     * weakly oriented and odd exactly if the orbit is loopless. In particular,
+     * the orbit is oriented exactly if the result returned is 3.
+     * 
+     * @param indices the indices to use.
+     * @param seed the seed for the orbit.
+     * @return an integer encoding the result.
+     */
+    private int orbitOrientation(List indices, Object seed) {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        final Map or = partialOrientation(indices, Iterators.singleton(seed));
+        final Iterator elms = orbit(indices, seed);
+        boolean weaklyOriented = true;
+        boolean loopless = true;
+        while (elms.hasNext()) {
+            final Object D = elms.next();
+            for (int k = 0; k < indices.size(); ++k) {
+                final int i = ((Integer) indices.get(k)).intValue();
+                final Object Di = op(i, D);
+                if (Di.equals(D)) {
+                    loopless = false;
+                } else if (or.get(D).equals(or.get(Di))) {
+                    weaklyOriented = false;
+                }
+            }
+        }
+        return (weaklyOriented ? 2 : 0) + (loopless ? 1 : 0);
+    }
+
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#isOriented(java.util.List, java.lang.Object)
      */
     public boolean orbitIsOriented(List indices, Object seed) {
-        try {
-            size();
-        } catch (UnsupportedOperationException ex) {
-    		throw new UnsupportedOperationException("symbol must be finite");
-    	}
-    	Map or = partialOrientation(indices, Iterators.singleton(seed));
-    	Iterator elms = orbit(indices, seed);
-    	while (elms.hasNext()) {
-    	    Object D = elms.next();
-    	    for (int k = 0; k < indices.size(); ++k) {
-    	        int i = ((Integer) indices.get(k)).intValue();
-    	        Object Di = op(i, D);
-    	        if (or.get(D).equals(or.get(Di))) {
-    	            return false;
-    	        }
-    	    }
-    	}
-    	return true;
+        return orbitOrientation(indices, seed) == 3;
     }
 
     /* (non-Javadoc)
@@ -430,6 +448,59 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
         Iterator reps = this.orbitRepresentatives(idcs);
         while (reps.hasNext()) {
             if (!orbitIsOriented(idcs, reps.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isLoopless(java.util.List, java.lang.Object)
+     */
+    public boolean orbitIsLoopless(List indices, Object seed) {
+        return orbitOrientation(indices, seed) % 2 == 1;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isLoopless()
+     */
+    public boolean isLoopless() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        List idcs = new IndexList(this);
+        Iterator reps = this.orbitRepresentatives(idcs);
+        while (reps.hasNext()) {
+            if (!orbitIsLoopless(idcs, reps.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isWeaklyOriented(java.util.List,
+     *      java.lang.Object)
+     */
+    public boolean orbitIsWeaklyOriented(List indices, Object seed) {
+        return orbitOrientation(indices, seed) >= 2;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isWeaklyOriented()
+     */
+    public boolean isWeaklyOriented() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        List idcs = new IndexList(this);
+        Iterator reps = this.orbitRepresentatives(idcs);
+        while (reps.hasNext()) {
+            if (!orbitIsWeaklyOriented(idcs, reps.next())) {
                 return false;
             }
         }

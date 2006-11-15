@@ -29,7 +29,7 @@ import org.gavrog.jane.numbers.Rational;
  * Rich interface for Delaney symbol (or D-symbol for short) classes.
  * 
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.3 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.4 2006/11/15 02:03:45 odf Exp $
  */
 
 public interface DelaneySymbol extends Comparable {
@@ -188,9 +188,11 @@ public interface DelaneySymbol extends Comparable {
     
     /**
      * Determines if a specified orbit is oriented. This is the case if the
-     * partial orientation has the property that for any pair of elements in
-     * the orbit connected by one of the specified indices, the orientation
-     * values are different.
+     * partial orientation has the property that for any pair of (possibly
+     * equal) elements in the orbit connected by one of the specified indices,
+     * the orientation values are different. In particular, an orbit is never
+     * oriented if it contains loops.
+     * 
      * @param indices the indices to use.
      * @param seed the seed for the orbit.
      * @return true if the orbit is oriented.
@@ -198,10 +200,44 @@ public interface DelaneySymbol extends Comparable {
     public boolean orbitIsOriented(List indices, Object seed);
     
     /**
-     * This version checks if the symbol as a whole is oriented.
+     * This method checks if the symbol as a whole is oriented.
      * @return true if the symbol is oriented.
      */
     public boolean isOriented();
+    
+    /**
+     * Determines if a specified orbit is loopless. This means that no element
+     * of the orbit is connect to itself by one of the specified indices.
+     * 
+     * @param indices the indices to use.
+     * @param seed the seed for the orbit.
+     * @return true if the orbit is loopless.
+     */
+    public boolean orbitIsLoopless(List indices, Object seed);
+    
+    /**
+     * This method checks if the symbol as a whole is loopless.
+     * @return true if the symbol is loopless.
+     */
+    public boolean isLoopless();
+    
+    /**
+     * Determines if a specified orbit is weakly oriented. This is the case if
+     * the partial orientation has the property that for any pair of non-equal
+     * elements in the orbit connected by one of the specified indices, the
+     * orientation values are different.
+     * 
+     * @param indices the indices to use.
+     * @param seed the seed for the orbit.
+     * @return true if the orbit is weakly oriented.
+     */
+    public boolean orbitIsWeaklyOriented(List indices, Object seed);
+    
+    /**
+     * This method checks if the symbol as a whole is weakly oriented.
+     * @return true if the symbol is weakly oriented.
+     */
+    public boolean isWeaklyOriented();
     
     /**
      * Produces a list of integers that is characteristic for this symbol. The

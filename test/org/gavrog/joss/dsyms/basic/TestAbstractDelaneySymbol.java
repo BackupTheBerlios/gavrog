@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 /**
  * Test methods implemented in AbstractDelaneySymbol.
  * @author Olaf Delgado
- * @version $Id: TestAbstractDelaneySymbol.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestAbstractDelaneySymbol.java,v 1.2 2006/11/15 02:03:46 odf Exp $
  */
 public class TestAbstractDelaneySymbol extends TestCase {
 	private String code;
@@ -156,6 +156,18 @@ public class TestAbstractDelaneySymbol extends TestCase {
 		Assert.assertTrue(ds2.isOriented());
 		Assert.assertFalse(ds3.isOriented());
 	}
+
+    public void testIsLoopless() {
+        Assert.assertFalse(ds1.isLoopless());
+        Assert.assertTrue(ds2.isLoopless());
+        Assert.assertTrue(ds3.isLoopless());
+    }
+
+    public void testIsWeaklyOriented() {
+        Assert.assertTrue(ds1.isWeaklyOriented());
+        Assert.assertTrue(ds2.isWeaklyOriented());
+        Assert.assertFalse(ds3.isWeaklyOriented());
+    }
 
 	public void testCanonical() {
 		String out =
