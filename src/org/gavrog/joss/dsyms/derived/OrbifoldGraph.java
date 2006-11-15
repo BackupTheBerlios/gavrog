@@ -32,11 +32,10 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
-import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.4 2006/11/15 02:24:57 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.5 2006/11/15 07:31:19 odf Exp $
  */
 public class OrbifoldGraph {
 
@@ -69,7 +68,7 @@ public class OrbifoldGraph {
                 if (ds.op(i, D).equals(D)) {
                     final Pair orb = new Pair(new IndexList(i), D);
                     orbs.add(orb);
-                    orb2type.put(orb, "*");
+                    orb2type.put(orb, "1*");
                     edges.put(orb, new ArrayList());
                 }
             }
@@ -102,10 +101,20 @@ public class OrbifoldGraph {
                     }
                     
                     // --- determine the stabilizer type of this orbit
-                    String type = (cuts.size() > 0 ? "*" : "");
+                    final String type;
                     final int v = ds.v(i, j, D);
-                    if (v > 1) {
-                        type = type + v + v;
+                    if (cuts.size() > 0) {
+                    	if (v > 1) {
+                    		type = "*" + v + v;
+                    	} else {
+                    		type = "1*";
+                    	}
+                    } else {
+                    	if (v > 1) {
+                    		type = "" + v + v;
+                    	} else {
+                    		type = "";
+                    	}
                     }
                     
                     // --- store and link this orbit if stabilizer not trivial
@@ -121,7 +130,7 @@ public class OrbifoldGraph {
                             ((List) edges.get(ca)).add(orb);
                             ((List) edges.get(cb)).add(orb);
                             edges.put(orb, cuts);
-                            if (type.equals("*")) {
+                            if (type.equals("1*")) {
                                 p.unite(orb, ca);
                                 p.unite(orb, cb);
                             }
@@ -165,10 +174,8 @@ public class OrbifoldGraph {
                             final String t = (String) orb2type.get(orb);
                             if (t.length() > 0) {
                                 if (t.charAt(0) == '*') {
-                                    if (t.length() > 1) {
-                                        corners.add(t.substring(1, 2));
-                                    }
-                                } else {
+                                	corners.add(t.substring(1, 2));
+                                } else if (t.charAt(0) != '1') {
                                     cones.add(t.substring(0, 1));
                                 }
                                 neighbors.add(orb);
@@ -184,43 +191,48 @@ public class OrbifoldGraph {
                 Collections.reverse(corners);
                 Collections.sort(neighbors);
                 
-                // ---
+                // --- assemble the string specifying the stabilizer type
                 final Object D = sub.get(0);
+                
+                final StringBuffer buf = new StringBuffer(20);
+                for (final Iterator iter = cones.iterator(); iter.hasNext();) {
+                	buf.append(iter.next());
+                }
+                if (!ds.orbitIsLoopless(idcs, D)) {
+                	buf.append('*');
+                    for (final Iterator iter = corners.iterator(); iter
+							.hasNext();) {
+						buf.append(iter.next());
+					}
+                }
+                if (!ds.orbitIsWeaklyOriented(idcs, D)) {
+                	buf.append('x');
+                }
+                String type = buf.toString();
+                if (type.equals("*") || type.equals("x")) {
+                	type = "1" + type;
+                }
+                
+                if (type.length() == 0) {
+                	continue;
+                }
+                
+                // --- store and link new orbit
+                final Pair orb = new Pair(idcs, D);
+                orbs.add(orb);
+                orb2type.put(orb, type);
+                edges.put(orb, neighbors);
+                for (final Iterator iter = neighbors.iterator(); iter.hasNext();) {
+                	final Object n = iter.next();
+                	((List) edges.get(n)).add(orb);
+                	if (type.equals(orb2type.get(n))) {
+                		p.unite(orb, n);
+                	}
+                }
             }
         }
-//
-//                if ds.orbit_is_loopless((i, j, k), D):
-//                    type = cones
-//                else:
-//                    type = cones + ['*'] + corners
-//                if not ds.orbit_is_weakly_oriented((i, j, k), D):
-//                    type.append('x')
-//                type = tuple(type)
-//
-//                if type == ():
-//                    continue
-//
-//                orb = ((i, j, k), D)
-//                orbs.append(orb)
-//                orb2type[orb] = type
-//
-//                edges[orb] = neighbors
-//                for v in neighbors:
-//                    edges[v].append(orb)
-//
-//                for v in neighbors:
-//                    if orb2type[v] == type:
-//                        p.unite(orb, v)
-//
-//        # --- convert stabilizer types to strings ---
-//
-//        for (orb, val) in orb2type.items():
-//            val = string.join(map(str, val), '')
-//            if val in ('*', 'x'):
-//                val = '1' + val
-//            orb2type[orb] = val
-//
-//        # --- reduce equivalence classes to single nodes ---
+
+        // --- reduce equivalence classes to single nodes
 //
 //        orbs = orb2type.keys()
 //        orb2class = {}
