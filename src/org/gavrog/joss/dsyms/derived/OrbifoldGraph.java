@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.3 2006/11/15 02:05:09 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.4 2006/11/15 02:24:57 odf Exp $
  */
 public class OrbifoldGraph {
 
@@ -186,11 +186,8 @@ public class OrbifoldGraph {
                 
                 // ---
                 final Object D = sub.get(0);
-                final DSymbol subsym = new DSymbol(new Subsymbol(ds, idcs, D));
             }
         }
-//
-//                D = sub2d[0]
 //
 //                if ds.orbit_is_loopless((i, j, k), D):
 //                    type = cones
