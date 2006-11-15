@@ -18,6 +18,7 @@
 package org.gavrog.joss.dsyms.derived;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,10 +32,11 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.2 2006/11/15 00:15:42 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.3 2006/11/15 02:05:09 odf Exp $
  */
 public class OrbifoldGraph {
 
@@ -174,13 +176,19 @@ public class OrbifoldGraph {
                         }
                     }
                 }
+                
+                // --- do some sorting
+                Collections.sort(cones);
+                Collections.reverse(cones);
+                Collections.sort(corners);
+                Collections.reverse(corners);
+                Collections.sort(neighbors);
+                
+                // ---
+                final Object D = sub.get(0);
+                final DSymbol subsym = new DSymbol(new Subsymbol(ds, idcs, D));
             }
         }
-//                cones.sort()
-//                cones.reverse()
-//                corners.sort()
-//                corners.reverse()
-//                neighbors.sort()
 //
 //                D = sub2d[0]
 //
