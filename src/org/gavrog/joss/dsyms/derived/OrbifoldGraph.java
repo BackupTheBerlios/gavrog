@@ -36,7 +36,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.6 2006/11/15 23:24:29 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.7 2006/11/15 23:25:50 odf Exp $
  */
 public class OrbifoldGraph {
 
@@ -258,7 +258,7 @@ public class OrbifoldGraph {
             orb2class.put(orb, class2nr.get(cl));
         }
         
-        // --- collect stabilizer types and adjacency matrix new nodes
+        // --- collect stabilizer types and adjacency matrix for new nodes
         final String class2type[] = new String[nrOfClasses];
         final boolean adj[][] = new boolean[nrOfClasses][nrOfClasses];
         for (final Iterator iter = orb2class.keySet().iterator(); iter
@@ -287,5 +287,19 @@ public class OrbifoldGraph {
         // --- store results
         this.stabilizers = class2type;
         this.edges = edgeList;
+    }
+
+    /**
+     * @return the edges
+     */
+    public List getEdges() {
+        return this.edges;
+    }
+
+    /**
+     * @return the stabilizers
+     */
+    public String[] getStabilizers() {
+        return this.stabilizers;
     }
 }
