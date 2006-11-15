@@ -19,6 +19,7 @@ package org.gavrog.joss.dsyms.derived;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,9 +36,12 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.5 2006/11/15 07:31:19 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.6 2006/11/15 23:24:29 odf Exp $
  */
 public class OrbifoldGraph {
+
+    final private String[] stabilizers;
+    final private List edges;
 
     public OrbifoldGraph(final DelaneySymbol input) {
         final DSymbol ds = new DSymbol(input);
@@ -54,7 +58,6 @@ public class OrbifoldGraph {
         
         // --- initialize
         final int d = ds.dim();
-        final List orbs = new ArrayList();
         final Map edges = new HashMap();
         final Map orb2type = new HashMap();
         final Map orb2rep = new HashMap();
@@ -67,7 +70,6 @@ public class OrbifoldGraph {
                 final Object D = elms.next();
                 if (ds.op(i, D).equals(D)) {
                     final Pair orb = new Pair(new IndexList(i), D);
-                    orbs.add(orb);
                     orb2type.put(orb, "1*");
                     edges.put(orb, new ArrayList());
                 }
@@ -121,7 +123,6 @@ public class OrbifoldGraph {
                     if (type.length() > 0) {
                         final Pair orb = new Pair(idcs, D);
                         orb2elms.put(orb, Iterators.asList(ds.orbit(idcs, D)));
-                        orbs.add(orb);
                         orb2type.put(orb, type);
                         
                         if (cuts.size() > 0) {
@@ -219,7 +220,6 @@ public class OrbifoldGraph {
                 
                 // --- store and link new orbit
                 final Pair orb = new Pair(idcs, D);
-                orbs.add(orb);
                 orb2type.put(orb, type);
                 edges.put(orb, neighbors);
                 for (final Iterator iter = neighbors.iterator(); iter.hasNext();) {
@@ -232,47 +232,60 @@ public class OrbifoldGraph {
             }
         }
 
-        // --- reduce equivalence classes to single nodes
-//
-//        orbs = orb2type.keys()
-//        orb2class = {}
-//        class2nr = {}
-//        nr_classes = 0
-//        reps = p.reps(orbs).items()
-//        reps.sort(lambda a, b, o2t = orb2type: cmp(o2t[a[0]], o2t[b[0]]))
-//
-//        for (orb, cl) in reps:
-//            n = class2nr.get(cl)
-//            if n is None:
-//                n = class2nr[cl] = nr_classes
-//                nr_classes = nr_classes + 1
-//            orb2class[orb] = n
-//
-//        c_edges = [None] * nr_classes
-//        class2type = [None] * nr_classes
-//
-//        for (orb, cl) in orb2class.items():
-//            c_edges[cl] = {}
-//            class2type[cl] = orb2type[orb]
-//
-//        for (orb, cl) in orb2class.items():
-//            a = c_edges[cl]
-//            for v in edges[orb]:
-//                cl_v = orb2class[v]
-//                if cl_v != cl:
-//                    a[cl_v] = 1
-//                    c_edges[cl_v][cl] = 1
-//
-//        # --- post processing ---
-//
-//        for cl in range(nr_classes):
-//            a = c_edges[cl].keys()
-//            a.sort()
-//            c_edges[cl] = a
-//
-//        # --- spit it out ---
-//
-//        return class2type, c_edges
+        // --- sort orbits by types
+        final List orbs = new ArrayList();
+        orbs.addAll(orb2type.keySet());
+        Collections.sort(orbs, new Comparator() {
+            public int compare(final Object arg0, final Object arg1) {
+                final String type0 = (String) orb2type.get(arg0);
+                final String type1 = (String) orb2type.get(arg1);
+                return type0.compareTo(type1);
+            }
+        });
         
+        // --- reduce equivalence classes to single nodes
+        final Map orb2class = new HashMap();
+        final Map class2nr = new HashMap();
+        final Map reps = p.representativeMap();
+        int nrOfClasses = 0;
+        for (int i = 0; i < orbs.size(); ++i) {
+            final Object orb = orbs.get(i);
+            final Object cl = reps.get(orb);
+            if (!class2nr.containsKey(cl)) {
+                class2nr.put(cl, new Integer(nrOfClasses));
+                ++nrOfClasses;
+            }
+            orb2class.put(orb, class2nr.get(cl));
+        }
+        
+        // --- collect stabilizer types and adjacency matrix new nodes
+        final String class2type[] = new String[nrOfClasses];
+        final boolean adj[][] = new boolean[nrOfClasses][nrOfClasses];
+        for (final Iterator iter = orb2class.keySet().iterator(); iter
+                .hasNext();) {
+            final Object orb = iter.next();
+            final int cl = ((Integer) orb2class.get(orb)).intValue();
+            class2type[cl] = (String) orb2type.get(orb);
+            final List neighbors = (List) edges.get(orb);
+            for (final Iterator it2 = neighbors.iterator(); it2.hasNext();) {
+                final int v = ((Integer) orb2class.get(it2.next())).intValue();
+                adj[cl][v] = true;
+                adj[v][cl] = true;
+            }
+        }
+        
+        // --- turn adjacency matrix into edge list
+        final List edgeList = new ArrayList();
+        for (int i = 0; i < nrOfClasses; ++i) {
+            for (int j = i+1; j < nrOfClasses; ++j) {
+                if (adj[i][j]) {
+                    edgeList.add(new int[] {i, j});
+                }
+            }
+        }
+        
+        // --- store results
+        this.stabilizers = class2type;
+        this.edges = edgeList;
     }
 }
