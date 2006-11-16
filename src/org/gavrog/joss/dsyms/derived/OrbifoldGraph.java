@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.9 2006/11/16 06:20:55 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.10 2006/11/16 07:40:38 odf Exp $
  */
 public class OrbifoldGraph {
 
@@ -172,7 +172,7 @@ public class OrbifoldGraph {
                             final Pair orb = (Pair) orb2rep.get(orb0);    
                             final String t = (String) orb2type.get(orb);
                             seen.addAll((List) orb2elms.get(orb));
-                            if (t.length() > 0) {
+                            if (t != null) {
                                 if (t.charAt(0) == '*') {
                                 	corners.add(t.substring(1, 2));
                                 } else if (t.charAt(0) != '1') {
