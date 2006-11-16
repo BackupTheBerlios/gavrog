@@ -37,12 +37,13 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.8 2006/11/16 00:02:11 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.9 2006/11/16 06:20:55 odf Exp $
  */
 public class OrbifoldGraph {
 
     final private String[] stabilizers;
     final private List edges;
+	final private List[] neighbors;
 
     public OrbifoldGraph(final DelaneySymbol input) {
         final DSymbol ds = new DSymbol(input);
@@ -286,10 +287,16 @@ public class OrbifoldGraph {
         
         // --- turn adjacency matrix into edge list
         final List edgeList = new ArrayList();
+        final List neighbors[] = new List[nrOfClasses];
+        for (int i = 0; i < nrOfClasses; ++i) {
+        	neighbors[i] = new ArrayList();
+        }
         for (int i = 0; i < nrOfClasses; ++i) {
             for (int j = i+1; j < nrOfClasses; ++j) {
                 if (adj[i][j]) {
                     edgeList.add(new int[] {i, j});
+                    neighbors[i].add(new Integer(j));
+                    neighbors[j].add(new Integer(i));
                 }
             }
         }
@@ -297,22 +304,21 @@ public class OrbifoldGraph {
         // --- store results
         this.stabilizers = class2type;
         this.edges = edgeList;
+        this.neighbors = neighbors;
     }
 
-    /**
-     * @return the edges
-     */
-    public List getEdges() {
-        return this.edges;
-    }
-
-    /**
-     * @return the stabilizers
-     */
     public String[] getStabilizers() {
         return this.stabilizers;
     }
     
+    public List getEdges() {
+        return this.edges;
+    }
+
+    public List[] getNeighbors() {
+		return this.neighbors;
+	}
+
     public static void main(final String args[]) {
         final DSymbol ds = new DSymbol("1 3:1,1,1,1:4,3,4");
         final OrbifoldGraph og = new OrbifoldGraph(ds);
@@ -323,5 +329,6 @@ public class OrbifoldGraph {
             System.out.println(e[0] + "(" + stabs[e[0]] + ") <-> " + e[1] + "("
                     + stabs[e[1]] + ")");
         }
+        System.out.println(Arrays.asList(og.getNeighbors()));
     }
 }
