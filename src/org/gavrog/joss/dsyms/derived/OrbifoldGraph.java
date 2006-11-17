@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.11 2006/11/17 00:13:00 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.12 2006/11/17 00:28:44 odf Exp $
  */
 public class OrbifoldGraph {
     //TODO this code seems to be buggy
@@ -174,12 +174,14 @@ public class OrbifoldGraph {
                             final String t = (String) orb2type.get(orb);
                             seen.addAll((List) orb2elms.get(orb));
                             if (t != null) {
-                                if (t.charAt(0) == '*') {
-                                	corners.add(t.substring(1, 2));
-                                } else if (t.charAt(0) != '1') {
-                                    cones.add(t.substring(0, 1));
+                                if (t.charAt(0) != '1') {
+                                    if (t.charAt(0) == '*') {
+                                        corners.add(t.substring(1, 2));
+                                    } else {
+                                        cones.add(t.substring(0, 1));
+                                    }
+                                    neighbors.add(orb);
                                 }
-                                neighbors.add(orb);
                                 seen.addAll((List) orb2elms.get(orb));
                             }
                         }
@@ -214,7 +216,7 @@ public class OrbifoldGraph {
                 	type = "1" + type;
                 }
                 
-                if (type.length() == 0) {
+                if (type.length() == 0 || type.charAt(0) == '1') {
                 	continue;
                 }
                 
@@ -321,10 +323,16 @@ public class OrbifoldGraph {
 	}
 
     public static void main(final String args[]) {
-        final DSymbol ds = new DSymbol("1 3:1,1,1,1:4,3,4");
+        final DSymbol ds = new DSymbol("24 3:7 8 13 14 19 20 15 16 21 22 23 24,"
+                + "3 5 6 9 11 12 15 17 18 21 23 24,"
+                + "2 4 6 8 10 12 14 16 18 20 22 24,"
+                + "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 "
+                + "24:3 3 3 3,3 3 3 3,8 4 6 8 4 4 4 4 8 6 4 8");
         final OrbifoldGraph og = new OrbifoldGraph(ds);
         final String stabs[] = og.getStabilizers();
+        System.out.println(stabs.length + " nodes");
         System.out.println(Arrays.asList(stabs));
+        System.out.println(og.getEdges().size() + " edges");
         for (final Iterator iter = og.getEdges().iterator(); iter.hasNext();) {
             final int e[] = (int[]) iter.next();
             System.out.println(e[0] + "(" + stabs[e[0]] + ") <-> " + e[1] + "("
