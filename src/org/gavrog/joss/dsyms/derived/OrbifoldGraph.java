@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.12 2006/11/17 00:28:44 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.13 2006/11/17 00:30:52 odf Exp $
  */
 public class OrbifoldGraph {
     //TODO this code seems to be buggy
@@ -216,7 +216,7 @@ public class OrbifoldGraph {
                 	type = "1" + type;
                 }
                 
-                if (type.length() == 0 || type.charAt(0) == '1') {
+                if (type.length() == 0 || type == "1*") {
                 	continue;
                 }
                 
