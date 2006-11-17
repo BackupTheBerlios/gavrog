@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.15 2006/11/17 06:44:58 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.16 2006/11/17 23:45:45 odf Exp $
  */
 public class OrbifoldGraph {
     //TODO this code seems to be buggy
@@ -334,30 +334,14 @@ public class OrbifoldGraph {
 	}
 
     public static void main(final String args[]) {
-    	final String code1 = ""
-    		+ "24 3:7 8 13 14 19 20 15 16 21 22 23 24,"
-            + "3 5 6 9 11 12 15 17 18 21 23 24,"
-            + "2 4 6 8 10 12 14 16 18 20 22 24,"
-            + "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24:"
-            + "3 3 3 3,3 3 3 3,8 4 6 8 4 4 4 4 8 6 4 8";
-    	final String code2 = ""
-    		+ "48 3:7 8 13 14 19 20 15 16 21 22 23 24 31 32 37 38 43 44 39 40 "
-    		+ "45 46 47 48,"
-    		+ "3 5 6 9 11 12 15 17 18 21 23 24 27 29 30 33 35 36 39 41 42 45 "
-    		+ "47 48,"
-    		+ "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 "
-    		+ "46 48,"
-    		+ "25 2 27 4 5 6 31 8 33 34 11 36 37 14 39 40 17 42 19 20 21 46 23 "
-    		+ "48 26 28 29 30 32 35 38 41 43 44 45 47:"
-    		+ "3 3 3 3 3 3 3 3,3 3 3 3 3 3 3 3,12 4 4 12 4 4 4 4 8 4 4 8 8 8";
-    	final String code3 = ""
+    	final String code = ""
     		+ "36 3:1 2 3 5 6 8 9 11 12 13 14 15 16 17 18 19 20 21 23 24 25 26 "
     		+ "27 28 29 30 31 32 33 34 35 36,"
     		+ "2 5 12 8 13 11 27 33 16 18 20 23 26 25 30 36 32 35,"
     		+ "3 6 7 8 31 11 19 20 16 18 33 24 23 26 32 34 30 36,"
     		+ "18 17 26 23 22 9 10 11 21 27 36 25 24 35 34 32 33 31:"
     		+ "4 4 4 4 8 4 4 4 4 4 6 8 6 4,3 3 3 3 3 3,3 4 4 4 3";
-    	final DSymbol ds = new DSymbol(code3);
+    	final DSymbol ds = new DSymbol(code);
         final OrbifoldGraph og = new OrbifoldGraph(ds);
         final String stabs[] = og.getStabilizers();
         System.out.println(stabs.length + " nodes");
