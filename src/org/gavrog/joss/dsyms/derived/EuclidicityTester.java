@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
  * 
  * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.4 2006/11/17 06:44:58 odf Exp $
+ * @version $Id: EuclidicityTester.java,v 1.5 2006/11/17 23:45:24 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;
@@ -101,6 +101,8 @@ public class EuclidicityTester {
     }
     
     final private DelaneySymbol ds;
+    final private boolean useInvariant;
+    
     private boolean done = false;
     private boolean good = false;
     private boolean bad = false;
@@ -112,13 +114,24 @@ public class EuclidicityTester {
      * Constructs an instance.
      * 
      * @param ds the Delaney symbol to test.
+     * @param useInvars if true, orbifold invariants are compared first
      */
-    public EuclidicityTester(final DelaneySymbol ds) {
+    public EuclidicityTester(final DelaneySymbol ds, final boolean useInvars) {
         if (ds.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
             throw new UnsupportedOperationException(s);
         }
         this.ds = ds;
+        this.useInvariant = useInvars;
+    }
+    
+    /**
+     * Constructs an instance that does not use orbifold invariants.
+     * 
+     * @param ds the Delaney symbol to test.
+     */
+    public EuclidicityTester(final DelaneySymbol ds) {
+    	this(ds, false);
     }
     
     /**
@@ -178,8 +191,7 @@ public class EuclidicityTester {
         if (LOGGING) {
             System.err.println("\nStarting tests for symbol " + ds);
         }
-        if (false)
-        {
+        if (this.useInvariant) {
 			if (LOGGING) {
 				System.err.print("Computing orbifold invariant ...");
 				System.err.flush();
