@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
  * 
  * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.3 2006/11/17 00:11:35 odf Exp $
+ * @version $Id: EuclidicityTester.java,v 1.4 2006/11/17 06:44:58 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;
@@ -178,19 +178,22 @@ public class EuclidicityTester {
         if (LOGGING) {
             System.err.println("\nStarting tests for symbol " + ds);
         }
-//        if (LOGGING) {
-//            System.err.print("Computing orbifold invariant ...");
-//            System.err.flush();
-//        }
-//        final String invar = new OrbifoldInvariant(ds).toString();
-//        if (LOGGING) {
-//            System.err.println(" done.");
-//            System.err.flush();
-//        }
-//        if (!goodInvariants.contains(invar)) {
-//            decide(false, "orbifold invariants do not match");
-//            return;
-//        }
+        if (false)
+        {
+			if (LOGGING) {
+				System.err.print("Computing orbifold invariant ...");
+				System.err.flush();
+			}
+			final String invar = new OrbifoldInvariant(ds).toString();
+			if (LOGGING) {
+				System.err.println(" done.");
+				System.err.flush();
+			}
+			if (!goodInvariants.contains(invar)) {
+				decide(false, "orbifold invariants do not match");
+				return;
+			}
+		}
         if (LOGGING) {
             System.err.print("Computing pseudo-toroidal cover ...");
             System.err.flush();

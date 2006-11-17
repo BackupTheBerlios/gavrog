@@ -35,7 +35,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldInvariant.java,v 1.1 2006/11/16 07:40:51 odf Exp $
+ * @version $Id: OrbifoldInvariant.java,v 1.2 2006/11/17 06:44:58 odf Exp $
  */
 public class OrbifoldInvariant {
 	final private DelaneySymbol ds;
@@ -105,6 +105,9 @@ public class OrbifoldInvariant {
 			for (final Iterator input = new InputIterator(in); input.hasNext();) {
 				final DSymbol ds = (DSymbol) input.next();
 				++inCount;
+				out.write("# ");
+				out.write(ds.toString());
+				out.write('\n');
 				final String inv = new OrbifoldInvariant(ds).toString();
 				if (seen.contains(inv)) {
 					out.write("# Dup: ");
