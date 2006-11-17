@@ -16,11 +16,17 @@
 
 package org.gavrog.joss.dsyms.derived;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.GroupAction;
@@ -37,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
  * 
  * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: EuclidicityTester.java,v 1.2 2006/11/17 00:08:10 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;
@@ -67,6 +73,32 @@ public class EuclidicityTester {
     final private static List Z3 = Arrays.asList(new Whole[] {
             Whole.ZERO, Whole.ZERO, Whole.ZERO });
     final private static List empty = new LinkedList();
+
+    final private static Set goodInvariants = new HashSet();
+    static {
+        final Package pkg = EuclidicityTester.class.getPackage();
+        final String packagePath = pkg.getName().replaceAll("\\.", "/");
+        final String filePath = packagePath + "/euclideanInvariants.data";
+        final InputStream inStream = ClassLoader
+                .getSystemResourceAsStream(filePath);
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(
+                inStream));
+        while (true) {
+            final String line;
+            try {
+                line = reader.readLine();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            if (line == null) {
+                break;
+            }
+            if (line.length() == 0 || line.trim().charAt(0) == '#') {
+                continue;
+            }
+            goodInvariants.add(line.trim());
+        }
+    }
     
     final private DelaneySymbol ds;
     private boolean done = false;
@@ -145,6 +177,21 @@ public class EuclidicityTester {
 
         if (LOGGING) {
             System.err.println("\nStarting tests for symbol " + ds);
+        }
+//        if (LOGGING) {
+//            System.err.print("Computing orbifold invariant ...");
+//            System.err.flush();
+//        }
+//        final String invar = new OrbifoldInvariant(ds).toString();
+//        if (LOGGING) {
+//            System.err.println(" done.");
+//            System.err.flush();
+//        }
+//        if (!goodInvariants.contains(invar)) {
+//            decide(false, "orbifold invariants do not match an euclidean ones");
+//            return;
+//        }
+        if (LOGGING) {
             System.err.print("Computing pseudo-toroidal cover ...");
             System.err.flush();
         }
