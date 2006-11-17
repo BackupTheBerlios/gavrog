@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
  * 
  * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.2 2006/11/17 00:08:10 odf Exp $
+ * @version $Id: EuclidicityTester.java,v 1.3 2006/11/17 00:11:35 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;
@@ -188,7 +188,7 @@ public class EuclidicityTester {
 //            System.err.flush();
 //        }
 //        if (!goodInvariants.contains(invar)) {
-//            decide(false, "orbifold invariants do not match an euclidean ones");
+//            decide(false, "orbifold invariants do not match");
 //            return;
 //        }
         if (LOGGING) {
