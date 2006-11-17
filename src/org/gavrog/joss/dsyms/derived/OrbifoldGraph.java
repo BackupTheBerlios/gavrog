@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.13 2006/11/17 00:30:52 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.14 2006/11/17 00:37:06 odf Exp $
  */
 public class OrbifoldGraph {
     //TODO this code seems to be buggy
@@ -174,14 +174,12 @@ public class OrbifoldGraph {
                             final String t = (String) orb2type.get(orb);
                             seen.addAll((List) orb2elms.get(orb));
                             if (t != null) {
-                                if (t.charAt(0) != '1') {
-                                    if (t.charAt(0) == '*') {
-                                        corners.add(t.substring(1, 2));
-                                    } else {
-                                        cones.add(t.substring(0, 1));
-                                    }
-                                    neighbors.add(orb);
+                                if (t.charAt(0) == '*') {
+                                    corners.add(t.substring(1, 2));
+                                } else if (t.charAt(0) != '1') {
+                                    cones.add(t.substring(0, 1));
                                 }
+                                neighbors.add(orb);
                                 seen.addAll((List) orb2elms.get(orb));
                             }
                         }
@@ -216,7 +214,7 @@ public class OrbifoldGraph {
                 	type = "1" + type;
                 }
                 
-                if (type.length() == 0 || type == "1*") {
+                if (type.length() == 0) {
                 	continue;
                 }
                 
