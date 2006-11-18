@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
  * over the same alphabet.
  * 
  * @author Olaf Delgado
- * @version $Id: FpGroup.java,v 1.2 2006/04/24 02:50:55 odf Exp $
+ * @version $Id: FpGroup.java,v 1.3 2006/11/18 08:12:39 odf Exp $
  */
 public class FpGroup {
     final static private Whole ZERO = Whole.ZERO;
@@ -286,6 +286,8 @@ public class FpGroup {
         for (int i = 0; i < ngens - n; ++i) {
             res.add(ZERO);
         }
+        
+        Collections.sort(res);
         
         // --- return the result
         return res;
