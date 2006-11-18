@@ -28,44 +28,51 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.1 2006/08/29 03:47:21 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.2 2006/11/18 01:09:33 odf Exp $
  */
 public class FilterEuclidean {
 
     public static void main(String[] args) {
+    	final boolean useInvars = false;
         final String filename = args[0];
 
         final List good = new LinkedList();
         final List ambiguous = new LinkedList();
         int count = 0;
+        final long before = System.currentTimeMillis();
 
         for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
             final DSymbol ds = (DSymbol) input.next();
             ++count;
 
-            final EuclidicityTester tester = new EuclidicityTester(ds);
+            final EuclidicityTester tester = new EuclidicityTester(ds, useInvars);
             if (tester.isGood()) {
-                System.out.println("Symbol " + count + " is good: " + tester.getCause());
+                System.out.println("#Symbol " + count + " is good: " + tester.getCause());
                 good.add(new Integer(count));
+                System.out.println(ds);
             } else if (tester.isBad()) {
-                System.out.println("Symbol " + count + " is bad: " + tester.getCause());
+                System.out.println("#Symbol " + count + " is bad: " + tester.getCause());
             } else {
-                System.out.println("Symbol " + count + " is ambiguous: "
+                System.out.println("#Symbol " + count + " is ambiguous: "
                                    + tester.getCause());
                 ambiguous.add(new Pair(new Integer(count), tester.getOutcome()));
+                System.out.println("#??? " + ds);
             }
         }
+        final long after = System.currentTimeMillis();
 
-        System.out.print(good.size() + " good symbols:");
+        System.out.print("### " + good.size() + " good symbols:");
         for (final Iterator iter = good.iterator(); iter.hasNext();) {
             System.out.print(" " + iter.next());
         }
         System.out.println();
 
-        System.out.println(ambiguous.size() + " ambiguous symbols:");
+        System.out.println("### " + ambiguous.size() + " ambiguous symbols:");
         for (final Iterator iter = ambiguous.iterator(); iter.hasNext();) {
             final Pair pair = (Pair) iter.next();
             System.out.println("  " + pair.getFirst() + " - " + pair.getSecond());
         }
+        System.out.println("### Running time was " + (after - before) / 1000
+        		+ " seconds.");
     }
 }
