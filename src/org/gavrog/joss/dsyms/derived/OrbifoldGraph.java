@@ -37,11 +37,9 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.16 2006/11/17 23:45:45 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.17 2006/11/18 23:33:21 odf Exp $
  */
 public class OrbifoldGraph {
-    //TODO this code seems to be buggy
-
     final private String[] stabilizers;
     final private List edges;
 	final private List[] neighbors;
