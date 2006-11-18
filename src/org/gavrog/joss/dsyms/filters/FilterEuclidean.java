@@ -28,12 +28,11 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.2 2006/11/18 01:09:33 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.3 2006/11/18 08:18:06 odf Exp $
  */
 public class FilterEuclidean {
 
     public static void main(String[] args) {
-    	final boolean useInvars = false;
         final String filename = args[0];
 
         final List good = new LinkedList();
@@ -45,7 +44,7 @@ public class FilterEuclidean {
             final DSymbol ds = (DSymbol) input.next();
             ++count;
 
-            final EuclidicityTester tester = new EuclidicityTester(ds, useInvars);
+            final EuclidicityTester tester = new EuclidicityTester(ds);
             if (tester.isGood()) {
                 System.out.println("#Symbol " + count + " is good: " + tester.getCause());
                 good.add(new Integer(count));
