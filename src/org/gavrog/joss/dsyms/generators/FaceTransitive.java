@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.10 2006/11/21 01:56:59 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.11 2006/11/21 02:14:04 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -294,15 +294,12 @@ public class FaceTransitive extends IteratorAdapter {
             while (true) {
                 if (this.tilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tilings.next();
-                    if (ds.numberOfOrbits(idcs) != 1) {
-                    	continue;
-                    }
                     if (isGood(ds)) {
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
-                    if (!hasTrivialVertices(ds)) {
+                    if (ds.numberOfOrbits(idcs) == 1 && !hasTrivialVertices(ds)) {
                         this.tilings = new DefineBranching3d(ds);
                     }
                 } else if (this.tiles.hasNext()) {
