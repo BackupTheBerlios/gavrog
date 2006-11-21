@@ -24,6 +24,7 @@ import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -33,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.11 2006/11/21 02:14:04 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.12 2006/11/21 22:47:48 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -315,7 +316,7 @@ public class FaceTransitive extends IteratorAdapter {
 	private int badVertices = 0;
 	private int nonMinimal = 0;
 	private int nonEuclidean = 0;
-	private long timeForEuclidicityTest = 0;
+	private Stopwatch time4euclid = new Stopwatch();
 
 	public int getBadVertices() {
 		return this.badVertices;
@@ -329,10 +330,6 @@ public class FaceTransitive extends IteratorAdapter {
 		return this.nonMinimal;
 	}
 	
-    public long getTimeForEuclidicityTest() {
-		return this.timeForEuclidicityTest;
-	}
-
     private boolean hasTrivialVertices(final DSymbol ds) {
         final List idcs = new IndexList(1, 2, 3);
 
@@ -364,9 +361,9 @@ public class FaceTransitive extends IteratorAdapter {
         	++this.nonMinimal;
             return false;
         }
-        final long time = System.currentTimeMillis();
+        this.time4euclid.start();
         final boolean bad = new EuclidicityTester(ds).isBad();
-        this.timeForEuclidicityTest += System.currentTimeMillis() - time;
+        this.time4euclid.stop();
         if (bad) {
         	++this.nonEuclidean;
             return false;
@@ -429,6 +426,10 @@ public class FaceTransitive extends IteratorAdapter {
         }
     }
     
+    public String timeForEuclidicityTest() {
+        return this.time4euclid.format();
+    }
+    
     /**
      * Main method.
      * @param args command line arguments.
@@ -442,9 +443,10 @@ public class FaceTransitive extends IteratorAdapter {
         final FaceTransitive symbols = new FaceTransitive(minSize, maxSize,
 				minVert);
 
-		final long start = System.currentTimeMillis();
+        final Stopwatch total = new Stopwatch();
+        total.start();
 		final int count = Iterators.print(System.out, symbols, "\n");
-		final long stop = System.currentTimeMillis();
+		total.stop();
 		System.out.println("\n# Generated " + count + " symbols.");
 		System.out.println("# Rejected " + symbols.getBadVertices()
 				+ " symbols with trivial vertices,");
@@ -452,9 +454,8 @@ public class FaceTransitive extends IteratorAdapter {
 				+ " non-minimal symbols and");
 		System.out.println("#          " + symbols.getNonEuclidean()
 				+ " non-Euclidean symbols");
-		System.out.println("# Execution time was " + (stop - start) / 1000.0
-				+ " seconds.");
-		System.out.println("# Used " + symbols.getTimeForEuclidicityTest()
-				/ 1000.0 + " seconds for Euclidicity tests.");
+		System.out.println("# Execution time was " + total.format() + ".");
+        System.out.println("# Used " + symbols.timeForEuclidicityTest()
+                + " for Euclidicity tests.");
     }
 }
