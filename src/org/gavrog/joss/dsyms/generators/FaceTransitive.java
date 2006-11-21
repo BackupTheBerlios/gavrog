@@ -34,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.12 2006/11/21 22:47:48 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.13 2006/11/21 23:56:02 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -111,21 +111,24 @@ public class FaceTransitive extends IteratorAdapter {
      * Generates all feasible 2-dimensional symbols extending a given
      * 1-dimensional one.
      */
-    public static class SingleFaceTiles extends IteratorAdapter {
-        final private static Rational minCurv = new Fraction(1, 12);
+    private class SingleFaceTiles extends IteratorAdapter {
+        final private Rational minCurv = new Fraction(1, 12);
 		final private int minVert;
         Iterator preTiles = Iterators.empty();
         Iterator tiles = Iterators.empty();
         
         public SingleFaceTiles(final DSymbol face, final int minVert) {
+            time4SingleFaced.start();
             this.minVert = minVert;
             this.preTiles = new CombineTiles(face);
+            time4SingleFaced.stop();
         }
 
         /* (non-Javadoc)
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
         protected Object findNext() throws NoSuchElementException {
+            time4SingleFaced.start();
             while (true) {
                 if (this.tiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tiles.next();
@@ -134,6 +137,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                     for (final Iterator elms = ds.elements(); elms.hasNext();) {
                         if (ds.m(1, 2, elms.next()) > 2) {
+                            time4SingleFaced.stop();
                             return ds;
                         }
                     }
@@ -141,6 +145,7 @@ public class FaceTransitive extends IteratorAdapter {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 3, minVert, minCurv);
                 } else {
+                    time4SingleFaced.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -151,23 +156,26 @@ public class FaceTransitive extends IteratorAdapter {
      * Generates all feasible 2-dimensional symbols made from two copies of a
      * given 1-dimensional one.
      */
-    public static class DoubleFaceTiles extends IteratorAdapter {
+    private class DoubleFaceTiles extends IteratorAdapter {
 		final private int minVert;
-        final private static Rational minCurv = new Fraction(1, 12);
+        final private Rational minCurv = new Fraction(1, 12);
         Iterator preTiles = Iterators.empty();
         Iterator tiles = Iterators.empty();
         
         public DoubleFaceTiles(final DSymbol face, final int minVert) {
+            time4DoubleFaced.start();
         	this.minVert = minVert;
             final DynamicDSymbol ds = new DynamicDSymbol(face);
             ds.append(face);
             this.preTiles = new CombineTiles(new DSymbol(ds));
+            time4DoubleFaced.stop();
         }
 
         /* (non-Javadoc)
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
         protected Object findNext() throws NoSuchElementException {
+            time4DoubleFaced.start();
             while (true) {
                 if (this.tiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tiles.next();
@@ -176,6 +184,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                     for (final Iterator elms = ds.elements(); elms.hasNext();) {
                         if (ds.m(1, 2, elms.next()) > 2) {
+                            time4DoubleFaced.stop();
                             return ds;
                         }
                     }
@@ -183,6 +192,7 @@ public class FaceTransitive extends IteratorAdapter {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 3, minVert, minCurv);
                 } else {
+                    time4DoubleFaced.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -199,17 +209,21 @@ public class FaceTransitive extends IteratorAdapter {
         Iterator tilings = Iterators.empty();
         
     	public ONE(final DSymbol face, final int minVert) {
+            time4One.start();
     		this.tiles = new SingleFaceTiles(face, minVert);
+            time4One.stop();
     	}
 
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
 		protected Object findNext() throws NoSuchElementException {
+            time4One.start();
             while (true) {
                 if (this.tilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tilings.next();
                     if (isGood(ds)) {
+                        time4One.stop();
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
@@ -221,6 +235,7 @@ public class FaceTransitive extends IteratorAdapter {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
                 	this.preTilings = new CombineTiles(ds);
                 } else {
+                    time4One.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -238,18 +253,22 @@ public class FaceTransitive extends IteratorAdapter {
         Iterator tilings = Iterators.empty();
         
     	public TWO(final DSymbol face, final int minVert) {
+            time4Two.start();
     		this.tiles = Iterators.asList(new SingleFaceTiles(face, minVert));
     		i = j = 0;
+            time4Two.stop();
     	}
 
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
 		protected Object findNext() throws NoSuchElementException {
+            time4Two.start();
             while (true) {
                 if (this.tilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tilings.next();
                     if (isGood(ds)) {
+                        time4Two.stop();
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
@@ -268,6 +287,7 @@ public class FaceTransitive extends IteratorAdapter {
                 	ds.append(t2);
                 	this.preTilings = new CombineTiles(new DSymbol(ds));
                 } else {
+                    time4Two.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -285,17 +305,21 @@ public class FaceTransitive extends IteratorAdapter {
         Iterator tilings = Iterators.empty();
         
     	public DOUBLE(final DSymbol face, final int minVert) {
+            time4Double.start();
     		this.tiles = new DoubleFaceTiles(face, minVert);
+            time4Double.stop();
     	}
 
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
 		protected Object findNext() throws NoSuchElementException {
+            time4Double.start();
             while (true) {
                 if (this.tilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tilings.next();
                     if (isGood(ds)) {
+                        time4Double.stop();
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
@@ -307,72 +331,13 @@ public class FaceTransitive extends IteratorAdapter {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
                 	this.preTilings = new CombineTiles(ds);
                 } else {
+                    time4Double.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
 		}
     }
 
-	private int badVertices = 0;
-	private int nonMinimal = 0;
-	private int nonEuclidean = 0;
-	private Stopwatch time4euclid = new Stopwatch();
-
-	public int getBadVertices() {
-		return this.badVertices;
-	}
-
-	public int getNonEuclidean() {
-		return this.nonEuclidean;
-	}
-
-	public int getNonMinimal() {
-		return this.nonMinimal;
-	}
-	
-    private boolean hasTrivialVertices(final DSymbol ds) {
-        final List idcs = new IndexList(1, 2, 3);
-
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
-                .hasNext();) {
-            boolean bad = true;
-            for (final Iterator elms = ds.orbit(idcs, reps.next()); elms
-                    .hasNext();) {
-                if (ds.m(1, 2, elms.next()) > 2) {
-                    bad = false;
-                    break;
-                }
-            }
-            if (bad) {
-                ++this.badVertices;
-                return true;
-            }
-        }
-        return false;
-    }
-        
-	private boolean isGood(final DSymbol ds) {
-        if (hasTrivialVertices(ds)) {
-            System.out.println("#!!! Unexpected symbol with trivial vertices:");
-            System.out.println("#!!!     " + ds);
-            return false;
-        }
-        if (!ds.isMinimal()) {
-        	++this.nonMinimal;
-            return false;
-        }
-        this.time4euclid.start();
-        final boolean bad = new EuclidicityTester(ds).isBad();
-        this.time4euclid.stop();
-        if (bad) {
-        	++this.nonEuclidean;
-            return false;
-        }
-
-        return true;
-    }
-    
-    
     final private int maxSize;
     final private int minVert;
 
@@ -380,6 +345,16 @@ public class FaceTransitive extends IteratorAdapter {
     private int type;
     private Iterator faces = Iterators.empty();
     private Iterator tilings = Iterators.empty();
+
+    private int badVertices = 0;
+    private int nonMinimal = 0;
+    private int nonEuclidean = 0;
+    private Stopwatch time4euclid = new Stopwatch();
+    private Stopwatch time4One = new Stopwatch();
+    private Stopwatch time4Two = new Stopwatch();
+    private Stopwatch time4Double = new Stopwatch();
+    private Stopwatch time4SingleFaced = new Stopwatch();
+    private Stopwatch time4DoubleFaced = new Stopwatch();
 
     public FaceTransitive(final int minSize, final int maxSize,
             final int minVertexDegree) {
@@ -426,8 +401,77 @@ public class FaceTransitive extends IteratorAdapter {
         }
     }
     
+    public int getBadVertices() {
+        return this.badVertices;
+    }
+
+    public int getNonEuclidean() {
+        return this.nonEuclidean;
+    }
+
+    public int getNonMinimal() {
+        return this.nonMinimal;
+    }
+    
+    private boolean hasTrivialVertices(final DSymbol ds) {
+        final List idcs = new IndexList(1, 2, 3);
+
+        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+                .hasNext();) {
+            boolean bad = true;
+            for (final Iterator elms = ds.orbit(idcs, reps.next()); elms
+                    .hasNext();) {
+                if (ds.m(1, 2, elms.next()) > 2) {
+                    bad = false;
+                    break;
+                }
+            }
+            if (bad) {
+                ++this.badVertices;
+                return true;
+            }
+        }
+        return false;
+    }
+        
+    private boolean isGood(final DSymbol ds) {
+        if (!ds.isMinimal()) {
+            ++this.nonMinimal;
+            return false;
+        }
+        this.time4euclid.start();
+        final boolean bad = new EuclidicityTester(ds).isBad();
+        this.time4euclid.stop();
+        if (bad) {
+            ++this.nonEuclidean;
+            return false;
+        }
+
+        return true;
+    }
+    
     public String timeForEuclidicityTest() {
         return this.time4euclid.format();
+    }
+    
+    public String timeForCaseOne() {
+        return this.time4One.format();
+    }
+    
+    public String timeForCaseTwo() {
+        return this.time4Two.format();
+    }
+    
+    public String timeForCaseDouble() {
+        return this.time4Double.format();
+    }
+    
+    public String timeForSingleFacedTiles() {
+        return this.time4SingleFaced.format();
+    }
+    
+    public String timeForDoubleFacedTiles() {
+        return this.time4DoubleFaced.format();
     }
     
     /**
@@ -455,7 +499,17 @@ public class FaceTransitive extends IteratorAdapter {
 		System.out.println("#          " + symbols.getNonEuclidean()
 				+ " non-Euclidean symbols");
 		System.out.println("# Execution time was " + total.format() + ".");
-        System.out.println("# Used " + symbols.timeForEuclidicityTest()
+        System.out.println("#     Used " + symbols.timeForEuclidicityTest()
                 + " for Euclidicity tests.");
+        System.out.println("#     Used " + symbols.timeForCaseOne()
+                + " for case ONE.");
+        System.out.println("#     Used " + symbols.timeForCaseTwo()
+                + " for case TWO.");
+        System.out.println("#     Used " + symbols.timeForCaseDouble()
+                + " for case DOUBLE.");
+        System.out.println("#     Used " + symbols.timeForSingleFacedTiles()
+                + " to generate single-faced tiles.");
+        System.out.println("#     Used " + symbols.timeForDoubleFacedTiles()
+                + " to generate double-faced tiles.");
     }
 }
