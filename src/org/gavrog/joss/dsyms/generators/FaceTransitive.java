@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.9 2006/11/11 06:58:37 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.10 2006/11/21 01:56:59 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -213,7 +213,9 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
-                    this.tilings = new DefineBranching3d(ds);
+                    if (!hasTrivialVertices(ds)) {
+                        this.tilings = new DefineBranching3d(ds);
+                    }
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
                 	this.preTilings = new CombineTiles(ds);
@@ -251,7 +253,9 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
-                    this.tilings = new DefineBranching3d(ds);
+                    if (!hasTrivialVertices(ds)) {
+                        this.tilings = new DefineBranching3d(ds);
+                    }
                 } else if (this.i < this.tiles.size()) {
                 	final DSymbol t1 = (DSymbol) this.tiles.get(i);
                 	final DSymbol t2 = (DSymbol) this.tiles.get(j);
@@ -298,7 +302,9 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
-                    this.tilings = new DefineBranching3d(ds);
+                    if (!hasTrivialVertices(ds)) {
+                        this.tilings = new DefineBranching3d(ds);
+                    }
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
                 	this.preTilings = new CombineTiles(ds);
@@ -330,7 +336,7 @@ public class FaceTransitive extends IteratorAdapter {
 		return this.timeForEuclidicityTest;
 	}
 
-	private boolean isGood(final DSymbol ds) {
+    private boolean hasTrivialVertices(final DSymbol ds) {
         final List idcs = new IndexList(1, 2, 3);
 
         for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
@@ -344,9 +350,18 @@ public class FaceTransitive extends IteratorAdapter {
                 }
             }
             if (bad) {
-            	++this.badVertices;
-                return false;
+                ++this.badVertices;
+                return true;
             }
+        }
+        return false;
+    }
+        
+	private boolean isGood(final DSymbol ds) {
+        if (hasTrivialVertices(ds)) {
+            System.out.println("#!!! Unexpected symbol with trivial vertices:");
+            System.out.println("#!!!     " + ds);
+            return false;
         }
         if (!ds.isMinimal()) {
         	++this.nonMinimal;
