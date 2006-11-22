@@ -34,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.14 2006/11/22 01:36:11 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.15 2006/11/22 05:58:53 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -542,5 +542,9 @@ public class FaceTransitive extends IteratorAdapter {
         System.out.println("#");
         System.out.println("#     Used " + symbols.timeForFinalBranching()
                 + " to generate final branching.");
+        System.out.println("#");
+        System.out.println("# Java version "
+				+ System.getProperty("java.version") + " on "
+				+ System.getProperty("os.name"));
     }
 }
