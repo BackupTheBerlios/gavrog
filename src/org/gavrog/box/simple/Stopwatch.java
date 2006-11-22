@@ -19,7 +19,7 @@ package org.gavrog.box.simple;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Stopwatch.java,v 1.2 2006/11/22 05:56:27 odf Exp $
+ * @version $Id: Stopwatch.java,v 1.3 2006/11/22 06:26:45 odf Exp $
  */
 public class Stopwatch {
     private long accumulated = 0;
@@ -40,7 +40,7 @@ public class Stopwatch {
     	if (java5) {
     		return System.nanoTime();
     	} else {
-    		return System.currentTimeMillis() * 1000000;
+    		return System.currentTimeMillis();
     	}
     }
     
@@ -64,10 +64,14 @@ public class Stopwatch {
         if (this.isRunning) {
             throw new RuntimeException("cannot read while running");
         }
-        return this.accumulated;
+        if (java5) {
+        	return this.accumulated / (int) 1e6;
+        } else {
+        	return this.accumulated;
+        }
     }
     
     public String format() {
-        return elapsed() / (int) 1e7 / 100.0 + " seconds";
+        return elapsed() / 10 / 100.0 + " seconds";
     }
 }
