@@ -34,7 +34,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.13 2006/11/21 23:56:02 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.14 2006/11/22 01:36:11 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -220,8 +220,13 @@ public class FaceTransitive extends IteratorAdapter {
 		protected Object findNext() throws NoSuchElementException {
             time4One.start();
             while (true) {
-                if (this.tilings.hasNext()) {
+                time4Final.start();
+                boolean moreTilings = this.tilings.hasNext();
+                time4Final.stop();
+                if (moreTilings) {
+                    time4Final.start();
                     final DSymbol ds = (DSymbol) this.tilings.next();
+                    time4Final.stop();
                     if (isGood(ds)) {
                         time4One.stop();
                         return ds;
@@ -229,7 +234,9 @@ public class FaceTransitive extends IteratorAdapter {
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
                     if (!hasTrivialVertices(ds)) {
+                        time4Final.start();
                         this.tilings = new DefineBranching3d(ds);
+                        time4Final.stop();
                     }
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
@@ -265,8 +272,13 @@ public class FaceTransitive extends IteratorAdapter {
 		protected Object findNext() throws NoSuchElementException {
             time4Two.start();
             while (true) {
-                if (this.tilings.hasNext()) {
+                time4Final.start();
+                boolean moreTilings = this.tilings.hasNext();
+                time4Final.stop();
+                if (moreTilings) {
+                    time4Final.start();
                     final DSymbol ds = (DSymbol) this.tilings.next();
+                    time4Final.stop();
                     if (isGood(ds)) {
                         time4Two.stop();
                         return ds;
@@ -274,7 +286,9 @@ public class FaceTransitive extends IteratorAdapter {
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
                     if (!hasTrivialVertices(ds)) {
+                        time4Final.start();
                         this.tilings = new DefineBranching3d(ds);
+                        time4Final.stop();
                     }
                 } else if (this.i < this.tiles.size()) {
                 	final DSymbol t1 = (DSymbol) this.tiles.get(i);
@@ -316,8 +330,13 @@ public class FaceTransitive extends IteratorAdapter {
 		protected Object findNext() throws NoSuchElementException {
             time4Double.start();
             while (true) {
-                if (this.tilings.hasNext()) {
+                time4Final.start();
+                boolean moreTilings = this.tilings.hasNext();
+                time4Final.stop();
+                if (moreTilings) {
+                    time4Final.start();
                     final DSymbol ds = (DSymbol) this.tilings.next();
+                    time4Final.stop();
                     if (isGood(ds)) {
                         time4Double.stop();
                         return ds;
@@ -325,7 +344,9 @@ public class FaceTransitive extends IteratorAdapter {
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
                     if (ds.numberOfOrbits(idcs) == 1 && !hasTrivialVertices(ds)) {
+                        time4Final.start();
                         this.tilings = new DefineBranching3d(ds);
+                        time4Final.stop();
                     }
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
@@ -355,6 +376,7 @@ public class FaceTransitive extends IteratorAdapter {
     private Stopwatch time4Double = new Stopwatch();
     private Stopwatch time4SingleFaced = new Stopwatch();
     private Stopwatch time4DoubleFaced = new Stopwatch();
+    private Stopwatch time4Final = new Stopwatch();
 
     public FaceTransitive(final int minSize, final int maxSize,
             final int minVertexDegree) {
@@ -474,6 +496,10 @@ public class FaceTransitive extends IteratorAdapter {
         return this.time4DoubleFaced.format();
     }
     
+    public String timeForFinalBranching() {
+        return this.time4Final.format();
+    }
+    
     /**
      * Main method.
      * @param args command line arguments.
@@ -501,15 +527,20 @@ public class FaceTransitive extends IteratorAdapter {
 		System.out.println("# Execution time was " + total.format() + ".");
         System.out.println("#     Used " + symbols.timeForEuclidicityTest()
                 + " for Euclidicity tests.");
+        System.out.println("#");
         System.out.println("#     Used " + symbols.timeForCaseOne()
                 + " for case ONE.");
         System.out.println("#     Used " + symbols.timeForCaseTwo()
                 + " for case TWO.");
         System.out.println("#     Used " + symbols.timeForCaseDouble()
                 + " for case DOUBLE.");
+        System.out.println("#");
         System.out.println("#     Used " + symbols.timeForSingleFacedTiles()
                 + " to generate single-faced tiles.");
         System.out.println("#     Used " + symbols.timeForDoubleFacedTiles()
                 + " to generate double-faced tiles.");
+        System.out.println("#");
+        System.out.println("#     Used " + symbols.timeForFinalBranching()
+                + " to generate final branching.");
     }
 }
