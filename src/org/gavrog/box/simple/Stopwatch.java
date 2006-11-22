@@ -19,26 +19,36 @@ package org.gavrog.box.simple;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Stopwatch.java,v 1.1 2006/11/21 22:46:56 odf Exp $
+ * @version $Id: Stopwatch.java,v 1.2 2006/11/22 05:56:27 odf Exp $
  */
 public class Stopwatch {
     private long accumulated = 0;
     private long start = 0;
     private boolean isRunning;
+    private static boolean java5 = System.getProperty("java.version")
+			.startsWith("1.5");
     
     public void start() {
         if (this.isRunning) {
             throw new RuntimeException("already running");
         }
-        this.start = System.nanoTime();
+        this.start = time();
         this.isRunning = true;
+    }
+    
+    private static long time() {
+    	if (java5) {
+    		return System.nanoTime();
+    	} else {
+    		return System.currentTimeMillis() * 1000000;
+    	}
     }
     
     public void stop() {
         if (!this.isRunning) {
             throw new RuntimeException("not running");
         }
-        final long end = System.nanoTime();
+        final long end = time();
         this.accumulated += end - this.start;
         this.isRunning = false;
     }
