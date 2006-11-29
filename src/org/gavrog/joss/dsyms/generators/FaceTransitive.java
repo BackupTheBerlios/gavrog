@@ -35,7 +35,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.16 2006/11/22 06:27:17 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.17 2006/11/29 00:49:31 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -43,11 +43,13 @@ public class FaceTransitive extends IteratorAdapter {
      * Generates all feasible 1-dimensional symbols of a given size.
      */
     public static class Faces extends IteratorAdapter {
+		final private int minVert;
         final Iterator sets;
         int v;
         DynamicDSymbol currentSet = null;
         
-        public Faces(final int size) {
+        public Faces(final int size, int minVert) {
+        	this.minVert = minVert;
             if (size % 2 == 1) {
                 final DynamicDSymbol ds = new DynamicDSymbol(1);
                 final List elms = ds.grow(size);
@@ -94,9 +96,13 @@ public class FaceTransitive extends IteratorAdapter {
                     final Object D = ds.elements().next();
                     ds.redefineV(0, 1, D, this.v);
                     ++this.v;
-                    if (ds.m(0, 1, D) >= 3) {
-                        return new DSymbol(ds);
+                    if (ds.m(0, 1, D) < 3) {
+                    	continue;
                     }
+                    if (this.minVert >= 3 && ds.m(0, 1, D) > 5) {
+                    	continue;
+                    }
+                    return new DSymbol(ds);
                 } else if (this.sets.hasNext()) {
                     final DSymbol ds = (DSymbol) this.sets.next();
                     this.currentSet = new DynamicDSymbol(ds);
@@ -107,7 +113,7 @@ public class FaceTransitive extends IteratorAdapter {
             }
         }
     }
-    
+
     /**
      * Generates all feasible 2-dimensional symbols extending a given
      * 1-dimensional one.
@@ -139,6 +145,7 @@ public class FaceTransitive extends IteratorAdapter {
                     for (final Iterator elms = ds.elements(); elms.hasNext();) {
                         if (ds.m(1, 2, elms.next()) > 2) {
                             time4SingleFaced.stop();
+                            ++countSingleFaced;
                             return ds;
                         }
                     }
@@ -186,6 +193,7 @@ public class FaceTransitive extends IteratorAdapter {
                     for (final Iterator elms = ds.elements(); elms.hasNext();) {
                         if (ds.m(1, 2, elms.next()) > 2) {
                             time4DoubleFaced.stop();
+                            ++countDoubleFaced;
                             return ds;
                         }
                     }
@@ -371,6 +379,9 @@ public class FaceTransitive extends IteratorAdapter {
     private int badVertices = 0;
     private int nonMinimal = 0;
     private int nonEuclidean = 0;
+	private int countSingleFaced = 0;
+	private int countDoubleFaced = 0;
+    
     private Stopwatch time4euclid = new Stopwatch();
     private Stopwatch time4One = new Stopwatch();
     private Stopwatch time4Two = new Stopwatch();
@@ -381,7 +392,11 @@ public class FaceTransitive extends IteratorAdapter {
 
     public FaceTransitive(final int minSize, final int maxSize,
             final int minVertexDegree) {
-        this.maxSize = maxSize;
+    	if (minVertexDegree >= 3 && (maxSize > 20 || maxSize < 1)) {
+    		this.maxSize = 20;
+    	} else {
+    		this.maxSize = maxSize;
+    	}
         this.minVert = minVertexDegree;
         
         this.size = minSize - 1;
@@ -411,11 +426,11 @@ public class FaceTransitive extends IteratorAdapter {
             } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
             	++this.type;
                 if (this.type == 0) {
-                    this.faces = new Faces(this.size);
+                    this.faces = new Faces(this.size, minVert);
                 } else {
-                    this.faces = new Faces(this.size / 2);
+                    this.faces = new Faces(this.size / 2, minVert);
                 }
-            } else if (this.size < this.maxSize) {
+            } else if (this.maxSize < 1 || this.size < this.maxSize) {
                 ++this.size;
                 this.type = -1;
             } else {
@@ -424,19 +439,7 @@ public class FaceTransitive extends IteratorAdapter {
         }
     }
     
-    public int getBadVertices() {
-        return this.badVertices;
-    }
-
-    public int getNonEuclidean() {
-        return this.nonEuclidean;
-    }
-
-    public int getNonMinimal() {
-        return this.nonMinimal;
-    }
-    
-    private boolean hasTrivialVertices(final DSymbol ds) {
+	private boolean hasTrivialVertices(final DSymbol ds) {
         final List idcs = new IndexList(1, 2, 3);
 
         for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
@@ -473,6 +476,26 @@ public class FaceTransitive extends IteratorAdapter {
         return true;
     }
     
+    public int getBadVertices() {
+        return this.badVertices;
+    }
+
+    public int getNonEuclidean() {
+        return this.nonEuclidean;
+    }
+
+    public int getNonMinimal() {
+        return this.nonMinimal;
+    }
+    
+	public int getCountDoubleFaced() {
+		return this.countDoubleFaced;
+	}
+
+	public int getCountSingleFaced() {
+		return this.countSingleFaced;
+	}
+
     public String timeForEuclidicityTest() {
         return this.time4euclid.format();
     }
@@ -524,7 +547,7 @@ public class FaceTransitive extends IteratorAdapter {
         }
         System.out.println();
         System.out.println("#");
-        System.out.println("# Java version "
+        System.out.println("# Running Java "
 				+ System.getProperty("java.version") + " on "
 				+ System.getProperty("os.name"));
         System.out.println("#");
@@ -553,9 +576,11 @@ public class FaceTransitive extends IteratorAdapter {
                 + " for case DOUBLE.");
         System.out.println("#");
         System.out.println("#     Used " + symbols.timeForSingleFacedTiles()
-                + " to generate single-faced tiles.");
+				+ " to generate " + symbols.getCountSingleFaced()
+				+ " single-faced tiles.");
         System.out.println("#     Used " + symbols.timeForDoubleFacedTiles()
-                + " to generate double-faced tiles.");
+                + " to generate " + symbols.getCountDoubleFaced()
+                + " double-faced tiles.");
         System.out.println("#");
         System.out.println("#     Used " + symbols.timeForFinalBranching()
                 + " to generate final branching.");
