@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.gavrog.box.simple.Misc;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.Skeleton;
@@ -38,7 +39,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.6 2006/10/12 00:42:31 odf Exp $
+ * @version $Id: FilterProper.java,v 1.7 2006/11/30 05:41:41 odf Exp $
  */
 public class FilterProper {
 
@@ -79,26 +80,32 @@ public class FilterProper {
 			for (final Iterator input = new InputIterator(in); input.hasNext();) {
 				final DSymbol ds = (DSymbol) input.next();
 				++inCount;
-				final DSymbol min = new DSymbol(ds.minimal());
-				final DSymbol cov = new DSymbol(Covers.pseudoToroidalCover3D(min));
-				final PeriodicGraph gr = new Skeleton(cov);
-				if (!gr.isStable() || !gr.isMinimal()) {
-					continue;
-				}
-				if (unique && seen.contains(gr.invariant())) {
-					continue;
-				}
-				if (gr.symmetries().size() != cov.size() / min.size()) {
-					continue;
-				}
-				++outCount;
-				if (canonical) {
-					out.write(ds.toString());
-				} else {
-					out.write(ds.canonical().flat().toString());
-				}
-				if (unique) {
-					seen.add(gr.invariant());
+				try {
+					final DSymbol min = new DSymbol(ds.minimal());
+					final DSymbol cov = new DSymbol(Covers
+							.pseudoToroidalCover3D(min));
+					final PeriodicGraph gr = new Skeleton(cov);
+					if (!gr.isStable() || !gr.isMinimal()) {
+						continue;
+					}
+					if (unique && seen.contains(gr.invariant())) {
+						continue;
+					}
+					if (gr.symmetries().size() != cov.size() / min.size()) {
+						continue;
+					}
+					++outCount;
+					if (canonical) {
+						out.write(ds.toString());
+					} else {
+						out.write(ds.canonical().flat().toString());
+					}
+					if (unique) {
+						seen.add(gr.invariant());
+					}
+				} catch (final Exception ex) {
+					out.write(Misc.stackTrace(ex, "# "));
+					out.write("# in symbol " + ds);
 				}
 				out.write('\n');
 				out.flush();
