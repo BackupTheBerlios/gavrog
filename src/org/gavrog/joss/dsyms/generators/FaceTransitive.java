@@ -18,9 +18,11 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.IteratorAdapter;
@@ -35,7 +37,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.17 2006/11/29 00:49:31 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.18 2006/12/05 22:08:55 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -114,6 +116,9 @@ public class FaceTransitive extends IteratorAdapter {
         }
     }
 
+    // @@@ to be used by enhanced SingleFaceTiles
+    final static Map basicTiles = new HashMap();
+
     /**
      * Generates all feasible 2-dimensional symbols extending a given
      * 1-dimensional one.
@@ -129,6 +134,48 @@ public class FaceTransitive extends IteratorAdapter {
             this.minVert = minVert;
             this.preTiles = new CombineTiles(face);
             time4SingleFaced.stop();
+        }
+
+        // @@@ to be used by enhanced SingleFaceTiles
+        private int type(final DSymbol face) {
+            if (face.isLoopless()) {
+                return -1;
+            } else {
+                int oneLoops = 0;
+                for (final Iterator elms = face.elements(); elms.hasNext();) {
+                    final Object D = elms.next();
+                    if (face.op(1, D).equals(D)) {
+                        ++oneLoops;
+                    }
+                }
+                return oneLoops;
+            }
+        }
+        
+        // @@@ to be used by enhanced SingleFaceTiles
+        private List baseFaces(final DSymbol face) {
+            final int v = face.v(0, 1, face.elements().next());
+            final int type = type(face);
+            final List results = new LinkedList();
+            final int d = v * (type < 0 ? 2 : 1);
+            for (int n = 6; n <= 10; n += 2) {
+                if (n % d != 0) {
+                    continue;
+                }
+                final int size = n / d;
+                if (size > face.size()) {
+                    continue;
+                }
+                for (final Iterator iter = new Faces(size, 3); iter.hasNext();) {
+                    final DSymbol ds = (DSymbol) iter.next();
+                    if (ds.v(0, 1, ds.elements().next()) == v
+                            && type(ds) == type) {
+                        results.add(ds);
+                    }
+                }
+            }
+            
+            return results;
         }
 
         /* (non-Javadoc)
