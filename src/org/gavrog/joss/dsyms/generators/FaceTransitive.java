@@ -40,7 +40,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.21 2006/12/07 22:45:39 uid198595 Exp $
+ * @version $Id: FaceTransitive.java,v 1.22 2006/12/07 23:34:24 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -121,7 +121,11 @@ public class FaceTransitive extends IteratorAdapter {
 
     private class Augmenter extends IteratorAdapter {
         final private DSymbol base;
-        final private int size;
+        final private int targetSize;
+        final Object orbRep[];
+        final int orbSize[];
+        final int orbAdded[];
+        int currentSize;
 
         /**
          * Constructs an instance.
@@ -129,27 +133,43 @@ public class FaceTransitive extends IteratorAdapter {
          * @param size
          */
         public Augmenter(final DSymbol base, final int size) {
+            // --- store parameters
             this.base = base;
-            this.size = size;
-            
-            final List idcs = new IndexList(0, 2);
-            final List orbits = new ArrayList();
+            this.targetSize = size;
+            this.currentSize = base.size();
             
             // --- collect (0,2)-orbits
+            final List idcs = new IndexList(0, 2);
+            final List orbits = new ArrayList();
             for (final Iterator reps = base.orbitRepresentatives(idcs); reps
                     .hasNext();) {
                 final Object D = reps.next();
                 final List orbit = Iterators.asList(base.orbit(idcs, D));
                 orbits.add(orbit);
             }
-            Collections.sort(orbits, new Comparator() {
 
-                public int compare(Object arg0, Object arg1) {
-                    // TODO Auto-generated method stub
-                    return 0;
+            // --- sort by decreasing size
+            Collections.sort(orbits, new Comparator() {
+                public int compare(final Object arg0, final Object arg1) {
+                    final List l0 = (List) arg0;
+                    final List l1 = (List) arg1;
+                    return l1.size() - l0.size();
                 }
-                
             });
+            
+            // --- create arrays
+            final int n = orbits.size();
+            this.orbRep = new Object[n];
+            this.orbSize = new int[n];
+            this.orbAdded = new int[n];
+            
+            // --- fill arrays
+            for (int i = 0; i < n; ++i) {
+                final List orb = (List) orbits.get(i);
+                this.orbRep[i] = orb.get(0);
+                this.orbSize[i] = orb.size();
+                this.orbAdded[i] = 0;
+            }
         }
         
         /* (non-Javadoc)
@@ -173,13 +193,17 @@ public class FaceTransitive extends IteratorAdapter {
      */
     private class SingleFaceTiles extends IteratorAdapter {
         final private int minVert;
+        final private int targetSize;
         final private Iterator baseFaces;
         private Iterator baseTiles;
+        private Iterator augmented;
         
         public SingleFaceTiles(final DSymbol face, final int minVert) {
             this.minVert = minVert;
+            this.targetSize = face.size();
             this.baseFaces = baseFaces(face).iterator();
             this.baseTiles = Iterators.empty();
+            this.augmented = Iterators.empty();
         }
 
         /**
@@ -249,8 +273,9 @@ public class FaceTransitive extends IteratorAdapter {
          */
         protected Object findNext() throws NoSuchElementException {
             while (true) {
-                // TODO check if there's a current base tile to be augmented
-                if (this.baseTiles.hasNext()) {
+                if (this.augmented.hasNext()) {
+                    return this.augmented.next();
+                } else if (this.baseTiles.hasNext()) {
                     final DSymbol tile = (DSymbol) this.baseTiles.next();
                     if (this.minVert >= 3) {
                         if (this.minVert <= minVert(tile)) {
@@ -259,9 +284,7 @@ public class FaceTransitive extends IteratorAdapter {
                             continue;
                         }
                     } else {
-                        final String msg = "working on this part...";
-                        throw new UnsupportedOperationException(msg);
-                        // TODO initialize the augmentation procedure here
+                        this.augmented = new Augmenter(tile, this.targetSize);
                     }
                 } else if (this.baseFaces.hasNext()) {
                     final DSymbol face = (DSymbol) this.baseFaces.next();
