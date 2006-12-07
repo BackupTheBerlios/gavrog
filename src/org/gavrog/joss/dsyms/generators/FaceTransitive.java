@@ -17,7 +17,10 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -37,7 +40,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.20 2006/12/06 01:06:53 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.21 2006/12/07 22:45:39 uid198595 Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -116,7 +119,49 @@ public class FaceTransitive extends IteratorAdapter {
         }
     }
 
-    // @@@ to be used by enhanced SingleFaceTiles
+    private class Augmenter extends IteratorAdapter {
+        final private DSymbol base;
+        final private int size;
+
+        /**
+         * Constructs an instance.
+         * @param base
+         * @param size
+         */
+        public Augmenter(final DSymbol base, final int size) {
+            this.base = base;
+            this.size = size;
+            
+            final List idcs = new IndexList(0, 2);
+            final List orbits = new ArrayList();
+            
+            // --- collect (0,2)-orbits
+            for (final Iterator reps = base.orbitRepresentatives(idcs); reps
+                    .hasNext();) {
+                final Object D = reps.next();
+                final List orbit = Iterators.asList(base.orbit(idcs, D));
+                orbits.add(orbit);
+            }
+            Collections.sort(orbits, new Comparator() {
+
+                public int compare(Object arg0, Object arg1) {
+                    // TODO Auto-generated method stub
+                    return 0;
+                }
+                
+            });
+        }
+        
+        /* (non-Javadoc)
+         * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+         */
+        protected Object findNext() throws NoSuchElementException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+    }
+    
+    // --- used by SingleFaceTiles
     final static Map bases = new HashMap();
 
     /**
@@ -176,7 +221,7 @@ public class FaceTransitive extends IteratorAdapter {
                 final int v = face.v(0, 1, face.elements().next());
                 final int type = type(face);
                 final int d = v * (type >= 0 ? 2 : 1);
-                for (int n = 6; n <= 10; n += 2) {
+                for (int n = 4; n <= 10; n += 2) {
                     if (n % d != 0) {
                         continue;
                     }
