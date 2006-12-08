@@ -40,7 +40,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.22 2006/12/07 23:34:24 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.23 2006/12/08 01:01:19 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -170,14 +170,45 @@ public class FaceTransitive extends IteratorAdapter {
                 this.orbSize[i] = orb.size();
                 this.orbAdded[i] = 0;
             }
+            
+            // --- a little trick to make findNext() code simpler
+            if (this.currentSize == this.targetSize) {
+                this.orbAdded[n-1] = -this.orbSize[n-1];
+                this.currentSize -= this.orbSize[n-1];
+            }
         }
         
         /* (non-Javadoc)
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
         protected Object findNext() throws NoSuchElementException {
-            // TODO Auto-generated method stub
-            return null;
+            while (true) {
+                final int target = this.targetSize;
+                int i = this.orbRep.length - 1;
+                while (i >= 0 && this.currentSize + this.orbSize[i] > target) {
+                    this.currentSize -= this.orbAdded[i];
+                    this.orbAdded[i] = 0;
+                    --i;
+                }
+                if (i < 0) {
+                    throw new NoSuchElementException("at end");
+                }
+                this.orbAdded[i] += this.orbSize[i];
+                this.currentSize += this.orbSize[i];
+
+                if (this.currentSize == this.targetSize) {
+                    return augmented();
+                }
+            }
+        }
+
+        /**
+         * @return
+         */
+        private DSymbol augmented() {
+            final DSymbol ds = this.base;
+            // TODO augment the tile and return it
+            return ds;
         }
     }
     
