@@ -40,7 +40,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.23 2006/12/08 01:01:19 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.24 2006/12/08 23:35:26 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -119,6 +119,11 @@ public class FaceTransitive extends IteratorAdapter {
         }
     }
 
+    /**
+     * Augments a tile in all possible ways by splitting edges (introducing
+     * vertices of degree two) so that the symbol for the resulting tile has a
+     * specific size.
+     */
     private class Augmenter extends IteratorAdapter {
         final private DSymbol base;
         final private int targetSize;
@@ -129,8 +134,8 @@ public class FaceTransitive extends IteratorAdapter {
 
         /**
          * Constructs an instance.
-         * @param base
-         * @param size
+         * @param base the symbol representing the input tile
+         * @param size the target size for the augmented symbol
          */
         public Augmenter(final DSymbol base, final int size) {
             // --- store parameters
@@ -203,12 +208,83 @@ public class FaceTransitive extends IteratorAdapter {
         }
 
         /**
-         * @return
+         * Constructs the augmented symbol based on the current values in
+         * <code>orbAdded</code>.
+         * @return the augmented symbol.
          */
         private DSymbol augmented() {
-            final DSymbol ds = this.base;
-            // TODO augment the tile and return it
-            return ds;
+            final DynamicDSymbol ds = new DynamicDSymbol(this.base);
+            for (int i = 0; i < this.orbRep.length; ++i) {
+                final int size = this.orbSize[i];
+                final int added = this.orbAdded[i];
+
+                // --- holds orbit and added elements
+                final Object D[] = new Object[size + added];
+                // --- encodes original 0 operation
+                final int op0[];
+                // --- encodes original 2 operation
+                final int op2[];
+
+                // --- fill "op" arrays and start "D" array
+                D[0] = this.orbRep[i];
+                switch (size) {
+                case 1:
+                    op0 = new int[] { 0 };
+                    op2 = new int[] { 0 };
+                    break;
+                case 2:
+                    if (ds.op(0, D[0]).equals(D[0])) {
+                        D[1] = ds.op(2, D[0]);
+                        op0 = new int[] { 0, 1 };
+                    } else {
+                        D[1] = ds.op(0, D[0]);
+                        ds.undefineOp(0, D[0]);
+                        op0 = new int[] { 1, 0 };
+                    }
+                    if (ds.op(2, D[0]).equals(D[0])) {
+                        op2 = new int[] { 0, 1 };
+                    } else {
+                        op2 = new int[] { 1, 0 };
+                    }
+                    break;
+                case 4:
+                    D[2] = ds.op(2, D[1]);
+                    D[3] = ds.op(0, D[2]);
+                    ds.undefineOp(0, D[2]);
+                    op0 = new int[] { 1, 0, 3, 2 };
+                    op2 = new int[] { 3, 2, 1, 0 };
+                    break;
+                default:
+                    throw new RuntimeException("this should not happen");
+                }
+                
+                // --- add new elements for augmentation to array
+                final List newElements = ds.grow(added);
+                for (int k = 0; k < added; ++k) {
+                    D[size + k] = newElements.get(k);
+                }
+                
+                // --- connect the elements
+                int n = added / size;
+                int idx = 0;
+                for (int k = 0; k <= n; ++k) {
+                    for (int m = 0; m < size; ++m)  {
+                        final Object E = D[k*size + m];
+                        final Object E2 = D[k*size + op2[m]];
+                        ds.redefineOp(2, E, E2);
+                        final Object Ei;
+                        if (k < n) {
+                            Ei = D[(k+1)*size + m];
+                        } else {
+                            Ei = D[k*size + op0[m]];
+                        }
+                        ds.redefineOp(idx, E, Ei);
+                        idx = 1 - idx;
+                    }
+                }
+                //TODO continue here
+            }
+            return new DSymbol(ds);
         }
     }
     
