@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
  * A collection of methods that return special iterators.
  * 
  * @author Olaf Delgado
- * @version $Id: Iterators.java,v 1.2 2006/11/19 03:48:48 odf Exp $
+ * @version $Id: Iterators.java,v 1.3 2006/12/09 06:40:51 odf Exp $
  */
 final public class Iterators {
     /**
@@ -383,20 +383,15 @@ final public class Iterators {
      * 
      * @param out represents the output stream.
      * @param iter the iterator to write.
-     * @param separator written in between entries.
+     * @param separator written after each entry.
      * @return the number of items written.
      */
     public static int print(final PrintStream out, final Iterator iter,
             final String separator) {
         int count = 0;
-        if (iter.hasNext()) {
-            out.print(String.valueOf(iter.next()));
-            out.flush();
-            ++count;
-        }
         while (iter.hasNext()) {
-            out.print(separator);
             out.print(String.valueOf(iter.next()));
+            out.print(separator);
             out.flush();
             ++count;
         }
