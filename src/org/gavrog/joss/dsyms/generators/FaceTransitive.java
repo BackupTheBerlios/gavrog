@@ -42,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.25 2006/12/09 00:13:29 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.26 2006/12/09 00:57:29 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -225,6 +225,9 @@ public class FaceTransitive extends IteratorAdapter {
             for (int i = 0; i < this.orbRep.length; ++i) {
                 final int size = this.orbSize[i];
                 final int added = this.orbAdded[i];
+                if (added == 0) {
+                    continue;
+                }
 
                 // --- holds orbit and added elements
                 final Object D[] = new Object[size + added];
@@ -255,6 +258,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                     break;
                 case 4:
+                    D[1] = ds.op(0, D[0]);
                     D[2] = ds.op(2, D[1]);
                     D[3] = ds.op(0, D[2]);
                     op0 = new int[] { 1, 0, 3, 2 };
@@ -278,8 +282,15 @@ public class FaceTransitive extends IteratorAdapter {
                     D[size + k] = newElements.get(k);
                 }
                 
-                // --- connect the elements
+                // --- set some v values
                 int n = added / size;
+                for (int k = 1; k <= n; ++k) {
+                    for (int m = 0; m < size; ++m) {
+                        ds.redefineV(0, 1, D[k*size + m], v[m]);
+                    }
+                }
+                
+                // --- connect the elements
                 int idx = 0;
                 for (int k = 0; k <= n; ++k) {
                     for (int m = 0; m < size; ++m)  {
@@ -293,17 +304,14 @@ public class FaceTransitive extends IteratorAdapter {
                             Ei = D[k*size + op0[m]];
                         }
                         ds.redefineOp(idx, E, Ei);
-                        idx = 1 - idx;
                     }
+                    idx = 1 - idx;
                 }
 
-                // --- set v values
-                for (int k = 0; k < D.length; ++k) {
+                // --- set more v values
+                for (int k = size; k < D.length; ++k) {
                     final Object E = D[k];
-                    ds.redefineV(1, 2, E, 2 / ds.r(0, 1, E));
-                }
-                for (int k = 0; k < size; ++k) {
-                    ds.redefineV(0, 1, D[k], v[k]);
+                    ds.redefineV(1, 2, E, 2 / ds.r(1, 2, E));
                 }
             }
             return new DSymbol(ds);
