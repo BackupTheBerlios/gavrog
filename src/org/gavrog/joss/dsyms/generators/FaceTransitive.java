@@ -22,11 +22,13 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
@@ -40,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.24 2006/12/08 23:35:26 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.25 2006/12/09 00:13:29 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -122,7 +124,7 @@ public class FaceTransitive extends IteratorAdapter {
     /**
      * Augments a tile in all possible ways by splitting edges (introducing
      * vertices of degree two) so that the symbol for the resulting tile has a
-     * specific size.
+     * specified size.
      */
     private class Augmenter extends IteratorAdapter {
         final private DSymbol base;
@@ -131,6 +133,7 @@ public class FaceTransitive extends IteratorAdapter {
         final int orbSize[];
         final int orbAdded[];
         int currentSize;
+        final Set results = new HashSet();
 
         /**
          * Constructs an instance.
@@ -202,7 +205,12 @@ public class FaceTransitive extends IteratorAdapter {
                 this.currentSize += this.orbSize[i];
 
                 if (this.currentSize == this.targetSize) {
-                    return augmented();
+                    final DSymbol ds = augmented();
+                    final List invariant = ds.invariant();
+                    if (!this.results.contains(invariant)) {
+                        this.results.add(invariant);
+                        return ds;
+                    }
                 }
             }
         }
@@ -238,7 +246,6 @@ public class FaceTransitive extends IteratorAdapter {
                         op0 = new int[] { 0, 1 };
                     } else {
                         D[1] = ds.op(0, D[0]);
-                        ds.undefineOp(0, D[0]);
                         op0 = new int[] { 1, 0 };
                     }
                     if (ds.op(2, D[0]).equals(D[0])) {
@@ -250,12 +257,19 @@ public class FaceTransitive extends IteratorAdapter {
                 case 4:
                     D[2] = ds.op(2, D[1]);
                     D[3] = ds.op(0, D[2]);
-                    ds.undefineOp(0, D[2]);
                     op0 = new int[] { 1, 0, 3, 2 };
                     op2 = new int[] { 3, 2, 1, 0 };
                     break;
                 default:
                     throw new RuntimeException("this should not happen");
+                }
+                
+                // --- remember v01 values and remove 0 edges
+                final int v[] = new int[size];
+                for (int k = 0; k < size; ++k) {
+                    final Object E = D[k];
+                    v[k] = ds.v(0, 1, E);
+                    ds.undefineOp(0, E);
                 }
                 
                 // --- add new elements for augmentation to array
@@ -282,7 +296,15 @@ public class FaceTransitive extends IteratorAdapter {
                         idx = 1 - idx;
                     }
                 }
-                //TODO continue here
+
+                // --- set v values
+                for (int k = 0; k < D.length; ++k) {
+                    final Object E = D[k];
+                    ds.redefineV(1, 2, E, 2 / ds.r(0, 1, E));
+                }
+                for (int k = 0; k < size; ++k) {
+                    ds.redefineV(0, 1, D[k], v[k]);
+                }
             }
             return new DSymbol(ds);
         }
