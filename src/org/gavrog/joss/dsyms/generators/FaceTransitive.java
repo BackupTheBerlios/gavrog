@@ -42,7 +42,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.26 2006/12/09 00:57:29 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.27 2006/12/09 06:41:53 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 
@@ -51,12 +51,14 @@ public class FaceTransitive extends IteratorAdapter {
      */
     public static class Faces extends IteratorAdapter {
 		final private int minVert;
+		final private int minFace;
         final Iterator sets;
         int v;
         DynamicDSymbol currentSet = null;
         
-        public Faces(final int size, int minVert) {
+        public Faces(final int size, int minFace, int minVert) {
         	this.minVert = minVert;
+        	this.minFace = minFace;
             if (size % 2 == 1) {
                 final DynamicDSymbol ds = new DynamicDSymbol(1);
                 final List elms = ds.grow(size);
@@ -103,7 +105,7 @@ public class FaceTransitive extends IteratorAdapter {
                     final Object D = ds.elements().next();
                     ds.redefineV(0, 1, D, this.v);
                     ++this.v;
-                    if (ds.m(0, 1, D) < 3) {
+                    if (ds.m(0, 1, D) < this.minFace) {
                     	continue;
                     }
                     if (this.minVert >= 3 && ds.m(0, 1, D) > 5) {
@@ -344,28 +346,6 @@ public class FaceTransitive extends IteratorAdapter {
         }
 
         /**
-         * Determines the type of 1-dimensional symbol. The type is -1 for a
-         * cycle and coincides with the number of 1-loops for a chain.
-         * 
-         * @param face the 1-dimensional input symbol.
-         * @return the type of the input symbol.
-         */
-        private int type(final DSymbol face) {
-            if (face.isLoopless()) {
-                return -1;
-            } else {
-                int oneLoops = 0;
-                for (final Iterator elms = face.elements(); elms.hasNext();) {
-                    final Object D = elms.next();
-                    if (face.op(1, D).equals(D)) {
-                        ++oneLoops;
-                    }
-                }
-                return oneLoops;
-            }
-        }
-        
-        /**
          * Determines a list of 1-dimensional symbols such that every
          * 2-dimensional symbol extending the given 1-dimensional can be
          * obtained by introducing degree 2 vertices into a 2-dimensional
@@ -380,8 +360,8 @@ public class FaceTransitive extends IteratorAdapter {
                 results.add(face);
             } else {
                 final int v = face.v(0, 1, face.elements().next());
-                final int type = type(face);
-                final int d = v * (type >= 0 ? 2 : 1);
+                final boolean loopless = face.isLoopless();
+                final int d = v * (loopless ? 1 : 2);
                 for (int n = 4; n <= 10; n += 2) {
                     if (n % d != 0) {
                         continue;
@@ -390,11 +370,11 @@ public class FaceTransitive extends IteratorAdapter {
                     if (size > face.size()) {
                         continue;
                     }
-                    for (final Iterator iter = new Faces(size, 3); iter
+                    for (final Iterator iter = new Faces(size, 2, 3); iter
                             .hasNext();) {
                         final DSymbol ds = (DSymbol) iter.next();
                         if (ds.v(0, 1, ds.elements().next()) == v
-                                && type(ds) == type) {
+                                && ds.isLoopless() == loopless) {
                             results.add(ds);
                         }
                     }
@@ -411,6 +391,7 @@ public class FaceTransitive extends IteratorAdapter {
         protected Object findNext() throws NoSuchElementException {
             while (true) {
                 if (this.augmented.hasNext()) {
+                	// TODO remove augmented tiles with the wrong face
                     return this.augmented.next();
                 } else if (this.baseTiles.hasNext()) {
                     final DSymbol tile = (DSymbol) this.baseTiles.next();
@@ -494,7 +475,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.preTiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
-                    this.tiles = new DefineBranching2d(ds, 3, minVert, minCurv);
+                    this.tiles = new DefineBranching2d(ds, 2, minVert, minCurv);
                 } else {
                     time4SingleFaced.stop();
                     throw new NoSuchElementException("at end");
@@ -769,9 +750,9 @@ public class FaceTransitive extends IteratorAdapter {
             } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
             	++this.type;
                 if (this.type == 0) {
-                    this.faces = new Faces(this.size, minVert);
+                    this.faces = new Faces(this.size, 3, minVert);
                 } else {
-                    this.faces = new Faces(this.size / 2, minVert);
+                    this.faces = new Faces(this.size / 2, 3, minVert);
                 }
             } else if (this.maxSize < 1 || this.size < this.maxSize) {
                 ++this.size;
