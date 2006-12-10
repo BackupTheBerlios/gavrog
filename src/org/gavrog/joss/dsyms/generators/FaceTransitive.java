@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.28 2006/12/10 06:13:54 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.29 2006/12/10 06:16:08 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private List idcsFace2d = new IndexList(0, 1);
@@ -336,6 +336,7 @@ public class FaceTransitive extends IteratorAdapter {
      * #BaseSingleFaceTiles}
      */
     private class SingleFaceTiles extends IteratorAdapter {
+    	//TODO time this class
     	final private DSymbol inputFace;
         final private int minVert;
         final private int targetSize;
