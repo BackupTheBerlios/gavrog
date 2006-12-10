@@ -38,13 +38,19 @@ import org.gavrog.jane.numbers.Rational;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.27 2006/12/09 06:41:53 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.28 2006/12/10 06:13:54 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
+	final static private List idcsFace2d = new IndexList(0, 1);
+	final static private List idcsEdge2d = new IndexList(0, 2);
+	final static private List idcsVert2d = new IndexList(1, 2);
+	final static private List idcsFace3d = new IndexList(0, 1, 3);
+	final static private List idcsVert3d = new IndexList(1, 2, 3);
 
     /**
      * Generates all feasible 1-dimensional symbols of a given size.
@@ -149,12 +155,11 @@ public class FaceTransitive extends IteratorAdapter {
             this.currentSize = base.size();
             
             // --- collect (0,2)-orbits
-            final List idcs = new IndexList(0, 2);
             final List orbits = new ArrayList();
-            for (final Iterator reps = base.orbitRepresentatives(idcs); reps
-                    .hasNext();) {
-                final Object D = reps.next();
-                final List orbit = Iterators.asList(base.orbit(idcs, D));
+            for (final Iterator reps = base.orbitRepresentatives(idcsEdge2d); reps
+					.hasNext();) {
+				final Object D = reps.next();
+				final List orbit = Iterators.asList(base.orbit(idcsEdge2d, D));
                 orbits.add(orbit);
             }
 
@@ -321,7 +326,7 @@ public class FaceTransitive extends IteratorAdapter {
     }
     
     // --- used by SingleFaceTiles
-    final static Map bases = new HashMap();
+    final static private Map bases = new HashMap();
 
     /**
      * Generates all feasible 2-dimensional symbols extending a given
@@ -331,6 +336,7 @@ public class FaceTransitive extends IteratorAdapter {
      * #BaseSingleFaceTiles}
      */
     private class SingleFaceTiles extends IteratorAdapter {
+    	final private DSymbol inputFace;
         final private int minVert;
         final private int targetSize;
         final private Iterator baseFaces;
@@ -338,6 +344,7 @@ public class FaceTransitive extends IteratorAdapter {
         private Iterator augmented;
         
         public SingleFaceTiles(final DSymbol face, final int minVert) {
+        	this.inputFace = face;
             this.minVert = minVert;
             this.targetSize = face.size();
             this.baseFaces = baseFaces(face).iterator();
@@ -391,8 +398,13 @@ public class FaceTransitive extends IteratorAdapter {
         protected Object findNext() throws NoSuchElementException {
             while (true) {
                 if (this.augmented.hasNext()) {
-                	// TODO remove augmented tiles with the wrong face
-                    return this.augmented.next();
+                	final DSymbol ds = (DSymbol) this.augmented.next();
+                	final Object D = ds.elements().next();
+                	final DSymbol face = new DSymbol(new Subsymbol(ds,
+							idcsFace2d, D));
+                	if (face.equals(this.inputFace)) {
+                		return ds;
+                	}
                 } else if (this.baseTiles.hasNext()) {
                     final DSymbol tile = (DSymbol) this.baseTiles.next();
                     if (this.minVert >= 3) {
@@ -425,9 +437,8 @@ public class FaceTransitive extends IteratorAdapter {
          * @return the minimum vertex degree for the input tile.
          */
         private int minVert(final DSymbol tile) {
-            final List idcs = new IndexList(1, 2);
             int min = Integer.MAX_VALUE;
-            for (final Iterator iter = tile.orbitRepresentatives(idcs); iter
+            for (final Iterator iter = tile.orbitRepresentatives(idcsVert2d); iter
                     .hasNext();) {
                 min = Math.min(min, tile.m(1, 2, iter.next()));
             }
@@ -646,7 +657,6 @@ public class FaceTransitive extends IteratorAdapter {
 	 * symbols made from two copies of a given 1-dimensional symbol.
 	 */
     private class DOUBLE extends IteratorAdapter {
-    	final List idcs = new IndexList(0, 1, 3);
     	Iterator tiles = Iterators.empty();
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
@@ -676,7 +686,8 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.preTilings.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTilings.next();
-                    if (ds.numberOfOrbits(idcs) == 1 && !hasTrivialVertices(ds)) {
+                    if (ds.numberOfOrbits(idcsFace3d) == 1
+							&& !hasTrivialVertices(ds)) {
                         time4Final.start();
                         this.tilings = new DefineBranching3d(ds);
                         time4Final.stop();
@@ -764,12 +775,10 @@ public class FaceTransitive extends IteratorAdapter {
     }
     
 	private boolean hasTrivialVertices(final DSymbol ds) {
-        final List idcs = new IndexList(1, 2, 3);
-
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+        for (final Iterator reps = ds.orbitRepresentatives(idcsVert3d); reps
                 .hasNext();) {
             boolean bad = true;
-            for (final Iterator elms = ds.orbit(idcs, reps.next()); elms
+            for (final Iterator elms = ds.orbit(idcsVert3d, reps.next()); elms
                     .hasNext();) {
                 if (ds.m(1, 2, elms.next()) > 2) {
                     bad = false;
