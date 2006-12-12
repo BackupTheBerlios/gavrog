@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.29 2006/12/10 06:16:08 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.30 2006/12/12 06:13:29 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private List idcsFace2d = new IndexList(0, 1);
@@ -336,7 +336,6 @@ public class FaceTransitive extends IteratorAdapter {
      * #BaseSingleFaceTiles}
      */
     private class SingleFaceTiles extends IteratorAdapter {
-    	//TODO time this class
     	final private DSymbol inputFace;
         final private int minVert;
         final private int targetSize;
@@ -345,12 +344,14 @@ public class FaceTransitive extends IteratorAdapter {
         private Iterator augmented;
         
         public SingleFaceTiles(final DSymbol face, final int minVert) {
+        	time4SingleFaced.start();
         	this.inputFace = face;
             this.minVert = minVert;
             this.targetSize = face.size();
             this.baseFaces = baseFaces(face).iterator();
             this.baseTiles = Iterators.empty();
             this.augmented = Iterators.empty();
+            time4SingleFaced.stop();
         }
 
         /**
@@ -397,6 +398,7 @@ public class FaceTransitive extends IteratorAdapter {
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
         protected Object findNext() throws NoSuchElementException {
+        	time4SingleFaced.start();
             while (true) {
                 if (this.augmented.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.augmented.next();
@@ -404,6 +406,8 @@ public class FaceTransitive extends IteratorAdapter {
                 	final DSymbol face = new DSymbol(new Subsymbol(ds,
 							idcsFace2d, D));
                 	if (face.equals(this.inputFace)) {
+                		time4SingleFaced.stop();
+                		++countSingleFaced;
                 		return ds;
                 	}
                 } else if (this.baseTiles.hasNext()) {
@@ -426,6 +430,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                     this.baseTiles = ((List) bases.get(invariant)).iterator();
                 } else {
+                	time4SingleFaced.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -459,10 +464,10 @@ public class FaceTransitive extends IteratorAdapter {
         Iterator tiles = Iterators.empty();
 
         public BaseSingleFaceTiles(final DSymbol face, final int minVert) {
-            time4SingleFaced.start();
+            time4BaseSingleFaced.start();
             this.minVert = minVert;
             this.preTiles = new CombineTiles(face);
-            time4SingleFaced.stop();
+            time4BaseSingleFaced.stop();
         }
 
         /*
@@ -471,7 +476,7 @@ public class FaceTransitive extends IteratorAdapter {
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
         protected Object findNext() throws NoSuchElementException {
-            time4SingleFaced.start();
+            time4BaseSingleFaced.start();
             while (true) {
                 if (this.tiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.tiles.next();
@@ -480,8 +485,8 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                     for (final Iterator elms = ds.elements(); elms.hasNext();) {
                         if (ds.m(1, 2, elms.next()) > 2) {
-                            time4SingleFaced.stop();
-                            ++countSingleFaced;
+                            time4BaseSingleFaced.stop();
+                            ++countBaseSingleFaced;
                             return ds;
                         }
                     }
@@ -489,7 +494,7 @@ public class FaceTransitive extends IteratorAdapter {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 2, minVert, minCurv);
                 } else {
-                    time4SingleFaced.stop();
+                    time4BaseSingleFaced.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -715,6 +720,7 @@ public class FaceTransitive extends IteratorAdapter {
     private int badVertices = 0;
     private int nonMinimal = 0;
     private int nonEuclidean = 0;
+	private int countBaseSingleFaced = 0;
 	private int countSingleFaced = 0;
 	private int countDoubleFaced = 0;
     
@@ -723,6 +729,7 @@ public class FaceTransitive extends IteratorAdapter {
     private Stopwatch time4Two = new Stopwatch();
     private Stopwatch time4Double = new Stopwatch();
     private Stopwatch time4SingleFaced = new Stopwatch();
+    private Stopwatch time4BaseSingleFaced = new Stopwatch();
     private Stopwatch time4DoubleFaced = new Stopwatch();
     private Stopwatch time4Final = new Stopwatch();
 
@@ -826,6 +833,10 @@ public class FaceTransitive extends IteratorAdapter {
 		return this.countDoubleFaced;
 	}
 
+	public int getCountBaseSingleFaced() {
+		return this.countBaseSingleFaced;
+	}
+
 	public int getCountSingleFaced() {
 		return this.countSingleFaced;
 	}
@@ -844,6 +855,10 @@ public class FaceTransitive extends IteratorAdapter {
     
     public String timeForCaseDouble() {
         return this.time4Double.format();
+    }
+    
+    public String timeForBaseSingleFacedTiles() {
+        return this.time4BaseSingleFaced.format();
     }
     
     public String timeForSingleFacedTiles() {
@@ -909,6 +924,9 @@ public class FaceTransitive extends IteratorAdapter {
         System.out.println("#     Used " + symbols.timeForCaseDouble()
                 + " for case DOUBLE.");
         System.out.println("#");
+        System.out.println("#     Used " + symbols.timeForBaseSingleFacedTiles()
+				+ " to generate " + symbols.getCountBaseSingleFaced()
+				+ " single-faced base tiles.");
         System.out.println("#     Used " + symbols.timeForSingleFacedTiles()
 				+ " to generate " + symbols.getCountSingleFaced()
 				+ " single-faced tiles.");
