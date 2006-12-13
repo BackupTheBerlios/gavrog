@@ -18,6 +18,7 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.31 2006/12/13 01:27:26 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.32 2006/12/13 22:40:05 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private List idcsFace2d = new IndexList(0, 1);
@@ -417,7 +418,7 @@ public class FaceTransitive extends IteratorAdapter {
         final private DSymbol inputFace;
         final private int minVert;
         final private int targetSize;
-        final private Iterator baseFaces;
+        final private Iterator baseFacePairs;
         private Iterator baseTiles;
         private Iterator augmented;
         
@@ -427,9 +428,11 @@ public class FaceTransitive extends IteratorAdapter {
             this.minVert = minVert;
             this.targetSize = 2 * face.size();
             if (minVert >= 3) {
-                this.baseFaces = Iterators.singleton(face);
+                this.baseFacePairs = Iterators.singleton(Arrays
+                        .asList(new Object[] { face, face }));
             } else {
-                this.baseFaces = baseFaces(face).iterator();
+                this.baseFacePairs = Iterators.selections(baseFaces(face)
+                        .toArray(), 2);
             }
             this.baseTiles = Iterators.empty();
             this.augmented = Iterators.empty();
@@ -473,11 +476,16 @@ public class FaceTransitive extends IteratorAdapter {
                     } else {
                         this.augmented = new Augmenter(tile, this.targetSize);
                     }
-                } else if (this.baseFaces.hasNext()) {
-                    final DSymbol face = (DSymbol) this.baseFaces.next();
-                    final List invariant = face.invariant();
+                } else if (this.baseFacePairs.hasNext()) {
+                    final List item = (List) this.baseFacePairs.next();
+                    final DSymbol f1 = (DSymbol) item.get(0);
+                    final DSymbol f2 = (DSymbol) item.get(1);
+                    final DynamicDSymbol tmp = new DynamicDSymbol(f1);
+                    tmp.append(f2);
+                    final DSymbol ds = new DSymbol(tmp);
+                    final List invariant = ds.invariant();
                     if (!doubleBases.containsKey(invariant)) {
-                        final Iterator tiles = new BaseDoubleFaceTiles(face, 3);
+                        final Iterator tiles = new BaseDoubleFaceTiles(ds, 3);
                         doubleBases.put(invariant, Iterators.asList(tiles));
                     }
                     this.baseTiles = ((List) doubleBases.get(invariant)).iterator();
@@ -548,12 +556,10 @@ public class FaceTransitive extends IteratorAdapter {
         Iterator preTiles = Iterators.empty();
         Iterator tiles = Iterators.empty();
         
-        public BaseDoubleFaceTiles(final DSymbol face, final int minVert) {
+        public BaseDoubleFaceTiles(final DSymbol ds, final int minVert) {
             time4BaseDoubleFaced.start();
         	this.minVert = minVert;
-            final DynamicDSymbol ds = new DynamicDSymbol(face);
-            ds.append(face);
-            this.preTiles = new CombineTiles(new DSymbol(ds));
+            this.preTiles = new CombineTiles(ds);
             time4BaseDoubleFaced.stop();
         }
 
