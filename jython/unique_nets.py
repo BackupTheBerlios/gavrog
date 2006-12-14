@@ -128,7 +128,7 @@ while 1:
     finder = SpaceGroupFinder(spacegroup)
     system = finder.crystalSystem
     special_angle = ((system == CrystalSystem.TRIGONAL)
-                    or (system == CrystalSystem.HEXAGONAL))
+                    or (system == CrystalSystem.HEXAGONAL_3D))
     print "\tUnit cell parameters:"
     print "\t\t1 1 1 90 90",
     if special_angle:
