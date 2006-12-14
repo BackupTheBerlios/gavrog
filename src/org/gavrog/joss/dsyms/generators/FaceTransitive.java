@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.33 2006/12/14 09:15:51 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.34 2006/12/14 21:48:42 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private List idcsFace2d = new IndexList(0, 1);
@@ -583,7 +583,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.preTiles.hasNext()) {
                     final DSymbol ds = (DSymbol) this.preTiles.next();
-                    this.tiles = new DefineBranching2d(ds, 1, minVert, minCurv);
+                    this.tiles = new DefineBranching2d(ds, 2, minVert, minCurv);
                 } else {
                     time4BaseDoubleFaced.stop();
                     throw new NoSuchElementException("at end");
@@ -847,7 +847,7 @@ public class FaceTransitive extends IteratorAdapter {
         final int v = face.v(0, 1, face.elements().next());
         final boolean loopless = face.isLoopless();
         final int d = v * (loopless ? 1 : 2);
-        for (int n = 2; n <= 10; n += 2) {
+        for (int n = 4; n <= 10; n += 2) {
             if (n % d != 0) {
                 continue;
             }
@@ -855,7 +855,7 @@ public class FaceTransitive extends IteratorAdapter {
             if (size > face.size()) {
                 continue;
             }
-            for (final Iterator iter = new Faces(size, 1, 3); iter.hasNext();) {
+            for (final Iterator iter = new Faces(size, 2, 3); iter.hasNext();) {
                 final DSymbol ds = (DSymbol) iter.next();
                 if (ds.v(0, 1, ds.elements().next()) == v
                         && ds.isLoopless() == loopless) {
