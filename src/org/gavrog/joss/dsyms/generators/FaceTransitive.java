@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.35 2006/12/15 01:06:14 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.36 2006/12/15 22:47:25 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private List idcsFace2d = new IndexList(0, 1);
@@ -765,8 +765,6 @@ public class FaceTransitive extends IteratorAdapter {
             while (tiles.hasNext()) {
                 testTiles.add(((DSymbol) tiles.next()));
             }
-            System.out.println("#!!! Generated " + testTiles.size()
-                    + " double face tiles with face " + face);
             //@@@ End test code
             
             time4Double.start();
@@ -912,7 +910,7 @@ public class FaceTransitive extends IteratorAdapter {
         final int v = face.v(0, 1, face.elements().next());
         final boolean loopless = face.isLoopless();
         final int d = v * (loopless ? 1 : 2);
-        for (int n = 4; n <= 10; n += 2) {
+        for (int n = 4; n <= 12; n += 2) {
             if (n % d != 0) {
                 continue;
             }
