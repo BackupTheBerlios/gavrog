@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.36 2006/12/15 22:47:25 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.37 2006/12/16 01:15:26 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private List idcsFace2d = new IndexList(0, 1);
@@ -809,7 +809,14 @@ public class FaceTransitive extends IteratorAdapter {
                     // @@@ Start test code
                     for (final Iterator iter = this.testTiles.iterator(); iter
                             .hasNext();) {
-                        System.out.println("#!!! Missed: " + iter.next());
+                        final DSymbol ds = (DSymbol) iter.next();
+                        System.out.println("#!!! Missed: " + ds);
+                        final DSymbol base = baseTile(ds);
+                        final DynamicDSymbol key = new DynamicDSymbol(1, base);
+                        if (((List) doubleBases.get(key)).contains(base)) {
+                            System.out.println("#!!!   (but base " + base
+                                    + " found.)");
+                        }
                     }
                     // @@@ End test code
                     throw new NoSuchElementException("at end");
@@ -818,6 +825,19 @@ public class FaceTransitive extends IteratorAdapter {
 		}
     }
 
+    final static DSymbol baseTile(final DSymbol tile) {
+        final DynamicDSymbol ds = new DynamicDSymbol(tile);
+        final List reps = Iterators.asList(ds.orbitRepresentatives(idcsVert2d));
+        for (final Iterator iter = reps.iterator(); iter.hasNext();) {
+            final Object D = iter.next();
+            if (ds.m(1, 2, D) == 2) {
+                ds.redefineV(1, 2, D, 1);
+                ds.collapse(Iterators.asList(ds.orbit(idcsVert2d, D)), 1);
+            }
+        }
+        return new DSymbol(ds);
+    }
+    
     final private int maxSize;
     final private int minVert;
 
