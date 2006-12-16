@@ -44,9 +44,10 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.37 2006/12/16 01:15:26 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.38 2006/12/16 08:09:24 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
+	final static private boolean TEST = true;
 	final static private List idcsFace2d = new IndexList(0, 1);
 	final static private List idcsEdge2d = new IndexList(0, 2);
 	final static private List idcsVert2d = new IndexList(1, 2);
@@ -57,14 +58,12 @@ public class FaceTransitive extends IteratorAdapter {
      * Generates all feasible 1-dimensional symbols of a given size.
      */
     public static class Faces extends IteratorAdapter {
-		final private int minVert;
 		final private int minFace;
         final Iterator sets;
         int v;
         DynamicDSymbol currentSet = null;
         
-        public Faces(final int size, int minFace, int minVert) {
-        	this.minVert = minVert;
+        public Faces(final int size, int minFace) {
         	this.minFace = minFace;
             if (size % 2 == 1) {
                 final DynamicDSymbol ds = new DynamicDSymbol(1);
@@ -113,9 +112,6 @@ public class FaceTransitive extends IteratorAdapter {
                     ds.redefineV(0, 1, D, this.v);
                     ++this.v;
                     if (ds.m(0, 1, D) < this.minFace) {
-                    	continue;
-                    }
-                    if (this.minVert >= 3 && ds.m(0, 1, D) > 5) {
                     	continue;
                     }
                     return new DSymbol(ds);
@@ -754,18 +750,18 @@ public class FaceTransitive extends IteratorAdapter {
         Iterator preTilings = Iterators.empty();
         Iterator tilings = Iterators.empty();
         
-        //@@@ Start test code
-        final Set testTiles;
-        //@@@ End test code
+        final Set testTiles; //@@@ for test purposes only
         
     	public DOUBLE(final DSymbol face, final int minVert) {
-    	    //@@@ Start test code
-            final Iterator tiles = new SimpleDoubleFaceTiles(face, minVert);
-            testTiles = new HashSet();
-            while (tiles.hasNext()) {
-                testTiles.add(((DSymbol) tiles.next()));
-            }
-            //@@@ End test code
+    	    if (TEST) {
+				final Iterator tiles = new SimpleDoubleFaceTiles(face, minVert);
+				testTiles = new HashSet();
+				while (tiles.hasNext()) {
+					testTiles.add(((DSymbol) tiles.next()));
+				}
+			} else {
+				testTiles = null;
+			}
             
             time4Double.start();
     		this.tiles = new DoubleFaceTiles(face, minVert);
@@ -800,25 +796,26 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
-                    //@@@ Start test code
-                    this.testTiles.remove(ds);
-                    //@@@ End test code
+                    if (TEST) {
+                    	this.testTiles.remove(ds);
+                    }
                 	this.preTilings = new CombineTiles(ds);
                 } else {
                     time4Double.stop();
-                    // @@@ Start test code
-                    for (final Iterator iter = this.testTiles.iterator(); iter
-                            .hasNext();) {
-                        final DSymbol ds = (DSymbol) iter.next();
-                        System.out.println("#!!! Missed: " + ds);
-                        final DSymbol base = baseTile(ds);
-                        final DynamicDSymbol key = new DynamicDSymbol(1, base);
-                        if (((List) doubleBases.get(key)).contains(base)) {
-                            System.out.println("#!!!   (but base " + base
-                                    + " found.)");
-                        }
-                    }
-                    // @@@ End test code
+                    if (TEST) {
+						for (final Iterator iter = this.testTiles.iterator(); iter
+								.hasNext();) {
+							final DSymbol ds = (DSymbol) iter.next();
+							System.out.println("#!!! Missed: " + ds);
+							final DSymbol base = baseTile(ds);
+							final DynamicDSymbol key = new DynamicDSymbol(1,
+									base);
+							if (((List) doubleBases.get(key)).contains(base)) {
+								System.out.println("#!!!   (but base " + base
+										+ " found.)");
+							}
+						}
+					}
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -903,9 +900,9 @@ public class FaceTransitive extends IteratorAdapter {
             } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
             	++this.type;
                 if (this.type == 0) {
-                    this.faces = new Faces(this.size, 3, minVert);
+                    this.faces = new Faces(this.size, 3);
                 } else {
-                    this.faces = new Faces(this.size / 2, 3, minVert);
+                    this.faces = new Faces(this.size / 2, 3);
                 }
             } else if (this.maxSize < 1 || this.size < this.maxSize) {
                 ++this.size;
@@ -930,7 +927,13 @@ public class FaceTransitive extends IteratorAdapter {
         final int v = face.v(0, 1, face.elements().next());
         final boolean loopless = face.isLoopless();
         final int d = v * (loopless ? 1 : 2);
-        for (int n = 4; n <= 12; n += 2) {
+        if (TEST) {
+        	if (face.size() == 6 && d == 2 && !face.isLoopless()) {
+        		System.out.println("#!!! Making base faces for " + face);
+        	}
+        }
+        //TODO find reasonable limit for n
+        for (int n = 4; n <= face.size() * d; n += 2) {
             if (n % d != 0) {
                 continue;
             }
@@ -938,10 +941,15 @@ public class FaceTransitive extends IteratorAdapter {
             if (size > face.size()) {
                 continue;
             }
-            for (final Iterator iter = new Faces(size, 2, 3); iter.hasNext();) {
+            for (final Iterator iter = new Faces(size, 2); iter.hasNext();) {
                 final DSymbol ds = (DSymbol) iter.next();
                 if (ds.v(0, 1, ds.elements().next()) == v
                         && ds.isLoopless() == loopless) {
+                    if (TEST) {
+                    	if (face.size() == 6 && d == 2 && !face.isLoopless()) {
+                    		System.out.println("#!!!    " + ds);
+                    	}
+                    }
                     results.add(ds);
                 }
             }
