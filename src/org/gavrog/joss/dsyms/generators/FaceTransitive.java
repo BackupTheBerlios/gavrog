@@ -44,10 +44,10 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.38 2006/12/16 08:09:24 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.39 2006/12/16 21:17:35 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
-	final static private boolean TEST = true;
+	final static private boolean TEST = false;
 	final static private List idcsFace2d = new IndexList(0, 1);
 	final static private List idcsEdge2d = new IndexList(0, 2);
 	final static private List idcsVert2d = new IndexList(1, 2);
@@ -927,11 +927,6 @@ public class FaceTransitive extends IteratorAdapter {
         final int v = face.v(0, 1, face.elements().next());
         final boolean loopless = face.isLoopless();
         final int d = v * (loopless ? 1 : 2);
-        if (TEST) {
-        	if (face.size() == 6 && d == 2 && !face.isLoopless()) {
-        		System.out.println("#!!! Making base faces for " + face);
-        	}
-        }
         //TODO find reasonable limit for n
         for (int n = 4; n <= face.size() * d; n += 2) {
             if (n % d != 0) {
@@ -945,11 +940,6 @@ public class FaceTransitive extends IteratorAdapter {
                 final DSymbol ds = (DSymbol) iter.next();
                 if (ds.v(0, 1, ds.elements().next()) == v
                         && ds.isLoopless() == loopless) {
-                    if (TEST) {
-                    	if (face.size() == 6 && d == 2 && !face.isLoopless()) {
-                    		System.out.println("#!!!    " + ds);
-                    	}
-                    }
                     results.add(ds);
                 }
             }
