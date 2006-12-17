@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.39 2006/12/16 21:17:35 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.40 2006/12/17 00:14:22 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private boolean TEST = false;
@@ -507,15 +507,19 @@ public class FaceTransitive extends IteratorAdapter {
         public BaseSingleFaceTiles(final DSymbol face, final int minVert) {
             time4BaseSingleFaced.start();
             this.minVert = minVert;
-            this.preTiles = new CombineTiles(face);
-            time4BaseSingleFaced.stop();
-        }
+			if (minVert >= 3 && face.m(0, 1, face.elements().next()) > 5) {
+				this.preTiles = Iterators.empty();
+			} else {
+				this.preTiles = new CombineTiles(face);
+			}
+			time4BaseSingleFaced.stop();
+		}
 
         /*
-         * (non-Javadoc)
-         * 
-         * @see org.gavrog.box.collections.IteratorAdapter#findNext()
-         */
+		 * (non-Javadoc)
+		 * 
+		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+		 */
         protected Object findNext() throws NoSuchElementException {
             time4BaseSingleFaced.start();
             while (true) {
@@ -555,7 +559,18 @@ public class FaceTransitive extends IteratorAdapter {
         public BaseDoubleFaceTiles(final DSymbol ds, final int minVert) {
             time4BaseDoubleFaced.start();
         	this.minVert = minVert;
-            this.preTiles = new CombineTiles(ds);
+        	boolean good = false;
+        	for (final Iterator reps = ds.orbitRepresentatives(idcsFace2d); reps
+					.hasNext();) {
+        		if (ds.m(0, 1, reps.next()) <= 5) {
+        			good = true;
+        		}
+			}
+        	if (good) {
+        		this.preTiles = new CombineTiles(ds);
+        	} else {
+        		this.preTiles = Iterators.empty();
+        	}
             time4BaseDoubleFaced.stop();
         }
 
@@ -927,7 +942,6 @@ public class FaceTransitive extends IteratorAdapter {
         final int v = face.v(0, 1, face.elements().next());
         final boolean loopless = face.isLoopless();
         final int d = v * (loopless ? 1 : 2);
-        //TODO find reasonable limit for n
         for (int n = 4; n <= face.size() * d; n += 2) {
             if (n % d != 0) {
                 continue;
