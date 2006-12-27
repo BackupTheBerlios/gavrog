@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.40 2006/12/17 00:14:22 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.41 2006/12/27 17:37:45 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private boolean TEST = false;
@@ -644,6 +644,102 @@ public class FaceTransitive extends IteratorAdapter {
             }
         }
     }
+
+    private class Glue extends IteratorAdapter {
+    	final DSymbol ds;
+		final Object D0;
+		final Iterator targets;
+		final Set seen = new HashSet();
+
+		public Glue(final DSymbol ds) {
+			this.ds = ds;
+			final Iterator reps = ds.orbitRepresentatives(idcsFace2d);
+			final Object firstRep = reps.next();
+			final Object targetRep = (reps.hasNext() ? reps.next() : firstRep);
+			if (ds.orbitIsLoopless(idcsFace2d, firstRep)) {
+				this.D0 = firstRep;
+				this.targets = ds.orbit(idcsFace2d, targetRep);
+			} else {
+				final List loops0 = new ArrayList();
+				final List loops1 = new ArrayList();
+				for (final Iterator orb = ds.orbit(idcsFace2d, firstRep); orb
+						.hasNext();) {
+					final Object D = orb.next();
+					if (D.equals(ds.op(0, D))) {
+						loops0.add(D);
+					} else if (D.equals(ds.op(1, D))) {
+						loops1.add(D);
+					}
+				}
+				final int type = loops0.size();
+				if (type > 0) {
+					this.D0 = loops0.get(0);
+				} else {
+					this.D0 = loops1.get(0);
+				}
+				loops0.clear();
+				loops1.clear();
+				for (final Iterator orb = ds.orbit(idcsFace2d, targetRep); orb
+						.hasNext();) {
+					final Object D = orb.next();
+					if (D.equals(ds.op(0, D))) {
+						loops0.add(D);
+					} else if (D.equals(ds.op(1, D))) {
+						loops1.add(D);
+					}
+				}
+				if (type > 0) {
+					this.targets = loops0.iterator();
+				} else {
+					this.targets = loops1.iterator();
+				}
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
+		 */
+		protected Object findNext() throws NoSuchElementException {
+			while (true) {
+				if (this.targets.hasNext()) {
+					final Object E0 = this.targets.next();
+					final DynamicDSymbol tmp = new DynamicDSymbol(3);
+					tmp.append(this.ds);
+					Object D = D0;
+					Object E = E0;
+					do {
+						for (int k = 0; k <= 1; ++k) {
+							tmp.redefineOp(3, D, E);
+							D = tmp.op(k, D);
+							E = tmp.op(k, E);
+						}
+					} while (!D.equals(D0));
+					boolean bad = false;
+					for (final Iterator elms = tmp.elements(); elms.hasNext();) {
+						if (!tmp.definesOp(3, elms.next())) {
+							bad = true;
+							break;
+						}
+					}
+					if (bad) {
+						continue;
+					}
+					final DSymbol res = new DSymbol(tmp);
+					if (this.seen.contains(res)) {
+						continue;
+					}
+					this.seen.add(res);
+					if (Utils.mayBecomeLocallyEuclidean3D(res)) {
+						return res;
+					}
+				} else {
+					throw new NoSuchElementException("at end");
+				}
+			}
+		}
+    }
     
     /**
 	 * Generates all minimal, euclidean, 3-dimensional symbols extending a given
@@ -687,7 +783,7 @@ public class FaceTransitive extends IteratorAdapter {
                     }
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = (DSymbol) this.tiles.next();
-                	this.preTilings = new CombineTiles(ds);
+                	this.preTilings = new Glue(ds);
                 } else {
                     time4One.stop();
                     throw new NoSuchElementException("at end");
@@ -747,7 +843,7 @@ public class FaceTransitive extends IteratorAdapter {
                 	}
                 	final DynamicDSymbol ds = new DynamicDSymbol(t1);
                 	ds.append(t2);
-                	this.preTilings = new CombineTiles(new DSymbol(ds));
+                	this.preTilings = new Glue(new DSymbol(ds));
                 } else {
                     time4Two.stop();
                     throw new NoSuchElementException("at end");
@@ -814,7 +910,7 @@ public class FaceTransitive extends IteratorAdapter {
                     if (TEST) {
                     	this.testTiles.remove(ds);
                     }
-                	this.preTilings = new CombineTiles(ds);
+                	this.preTilings = new Glue(ds);
                 } else {
                     time4Double.stop();
                     if (TEST) {
