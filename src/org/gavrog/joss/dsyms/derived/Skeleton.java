@@ -47,7 +47,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * Represents a periodic graph derived as the 1-skeleton of a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Skeleton.java,v 1.1 2006/09/18 21:07:56 odf Exp $
+ * @version $Id: Skeleton.java,v 1.2 2006/12/30 15:25:18 odf Exp $
  */
 public class Skeleton extends PeriodicGraph {
     final private Map edgeToWord;
@@ -82,7 +82,7 @@ public class Skeleton extends PeriodicGraph {
         final FundamentalGroup FG = new FundamentalGroup(cov);
         this.edgeToWord = FG.getEdgeToWord();
         final FpGroup G = FG.getPresentation();
-        final Matrix N = LinearAlgebra.columnNullSpace(G.relatorMatrix(), false);
+        final Matrix N = LinearAlgebra.columnNullSpace(G.relatorMatrix(), true);
         if (N.numberOfColumns() != this.dimension) {
         	final String msg = "problem computing translations - probably a bug";
         	throw new RuntimeException(msg);
