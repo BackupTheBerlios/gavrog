@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.41 2006/12/27 17:37:45 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.42 2006/12/30 15:24:45 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private boolean TEST = false;
@@ -956,6 +956,7 @@ public class FaceTransitive extends IteratorAdapter {
 
     private int badVertices = 0;
     private int nonMinimal = 0;
+    private int badInvariant = 0;
     private int nonEuclidean = 0;
     private int countSingleFaced = 0;
     private int countDoubleFaced = 0;
@@ -965,6 +966,7 @@ public class FaceTransitive extends IteratorAdapter {
     private int countTWO = 0;
     private int countDOUBLE = 0;
     
+    private Stopwatch time4invar = new Stopwatch();
     private Stopwatch time4euclid = new Stopwatch();
     private Stopwatch time4One = new Stopwatch();
     private Stopwatch time4Two = new Stopwatch();
@@ -1090,10 +1092,17 @@ public class FaceTransitive extends IteratorAdapter {
         }
         return false;
     }
-        
+
     private boolean isGood(final DSymbol ds) {
         if (!ds.isMinimal()) {
             ++this.nonMinimal;
+            return false;
+        }
+        this.time4invar.start();
+        final boolean ok = EuclidicityTester.invariantOkay(ds);
+        this.time4invar.stop();
+        if (!ok) {
+        	++this.badInvariant;
             return false;
         }
         this.time4euclid.start();
@@ -1111,6 +1120,10 @@ public class FaceTransitive extends IteratorAdapter {
         return this.badVertices;
     }
 
+	public int getBadInvariant() {
+    	return this.badInvariant;
+    }
+    
     public int getNonEuclidean() {
         return this.nonEuclidean;
     }
@@ -1147,6 +1160,10 @@ public class FaceTransitive extends IteratorAdapter {
         return this.countDOUBLE;
     }
 
+    public String timeForInvariantTest() {
+    	return this.time4invar.format();
+    }
+    
     public String timeForEuclidicityTest() {
         return this.time4euclid.format();
     }
@@ -1219,12 +1236,16 @@ public class FaceTransitive extends IteratorAdapter {
 		System.out.println("# Rejected " + symbols.getBadVertices()
 				+ " symbols with trivial vertices,");
 		System.out.println("#          " + symbols.getNonMinimal()
-				+ " non-minimal symbols and");
+				+ " non-minimal symbols,");
+		System.out.println("#          " + symbols.getBadInvariant()
+				+ " symbols with non-Euclidean orbifold invariants and");
 		System.out.println("#          " + symbols.getNonEuclidean()
-				+ " non-Euclidean symbols");
+				+ " further non-Euclidean symbols");
 		System.out.println("# Execution time was " + total.format() + ".");
+        System.out.println("#     Used " + symbols.timeForInvariantTest()
+                + " for invariant tests.");
         System.out.println("#     Used " + symbols.timeForEuclidicityTest()
-                + " for Euclidicity tests.");
+                + " for other Euclidicity tests.");
         System.out.println("#");
         System.out.println("#     Used " + symbols.timeForCaseOne()
                 + " for case ONE producing " + symbols.getCountONE()
