@@ -76,7 +76,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.62 2006/09/18 21:07:57 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.63 2007/01/16 21:54:50 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -120,7 +120,6 @@ public class SystreGUI extends BFrame {
     // --- options
     private boolean singleWrite = false;
     private boolean readArchivesAsInput = false;
-
     
     /**
      * Constructs an instance.
@@ -216,7 +215,7 @@ public class SystreGUI extends BFrame {
 		invokeAndWait(new Runnable() {
 			public void run() {
 				statusBar.setText("<html><font color=\"green\">&nbsp;" + text
-						+ "</font></html>");
+						 + "</font></html>");
 			}
 		});
 	}
@@ -377,6 +376,8 @@ public class SystreGUI extends BFrame {
 					SpaceGroupCatalogue.class, "preferHexagonal"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
 					"relaxPositions"));
+			column.add(new OptionSpinnerBox("Importance Of Equal Edge Lengths",
+					this.systre, "relaxPasses"));
 			column.add(new OptionCheckBox("Output Complete Unit Cell Contents",
 					this.systre, "outputFullCell"));
 			column.add(new OptionCheckBox("Save only last net finished", this,

@@ -59,7 +59,6 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
-import org.gavrog.joss.pgraphs.embed.IEmbedder;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
@@ -69,7 +68,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.55 2006/09/12 23:04:13 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.56 2007/01/16 21:54:50 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -92,6 +91,7 @@ public class SystreCmdline extends EventSource {
     
     // --- options
     private boolean relaxPositions = true;
+    private int relaxPasses = 3;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
     private boolean duplicateIsError = false;
@@ -500,11 +500,12 @@ public class SystreCmdline extends EventSource {
         	status("Computing an embedding...");
         	
             // --- relax the structure from the barycentric embedding
-            IEmbedder embedder = new AmoebaEmbedder(G);
+            AmoebaEmbedder embedder = new AmoebaEmbedder(G);
             try {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);
                 embedder.setRelaxPositions(relaxPositions && pass == 0);
+                embedder.setPasses(this.relaxPasses);
                 embedder.go(1000);
             } catch (Exception ex) {
                 out.println("==================================================");
@@ -886,6 +887,14 @@ public class SystreCmdline extends EventSource {
 
 	public void setRelaxPositions(boolean relax) {
 		this.relaxPositions = relax;
+	}
+
+	public int getRelaxPasses() {
+		return this.relaxPasses;
+	}
+
+	public void setRelaxPasses(int relaxPasses) {
+		this.relaxPasses = relaxPasses;
 	}
 
 	public boolean getDuplicateIsError() {

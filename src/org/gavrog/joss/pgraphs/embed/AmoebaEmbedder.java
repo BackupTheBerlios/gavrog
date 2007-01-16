@@ -41,7 +41,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AmoebaEmbedder.java,v 1.16 2006/04/04 22:11:38 odf Exp $
+ * @version $Id: AmoebaEmbedder.java,v 1.17 2007/01/16 21:54:50 odf Exp $
  */
 public class AmoebaEmbedder extends EmbedderAdapter {
     final static boolean DEBUG = false;
@@ -81,6 +81,9 @@ public class AmoebaEmbedder extends EmbedderAdapter {
     
     double volumeWeight;
     double p[];
+    
+    // --- Options:
+    private  int passes = 3;
     
     /**
      * Constructs an instance.
@@ -560,12 +563,11 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         
         // --- here's the relaxation procedure
         double p[] = this.p;
-        final int nPasses = 3;
         
         if (DEBUG) {
             System.out.println("energy before optimization: " + energy.evaluate(p));
         }
-        for (int pass = 0; pass < nPasses; ++pass) {
+        for (int pass = 0; pass < Math.max(1, this.passes); ++pass) {
             this.volumeWeight = Math.pow(10, -pass);
             p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
             if (DEBUG) {
@@ -582,4 +584,12 @@ public class AmoebaEmbedder extends EmbedderAdapter {
         this._cellRelaxed = true;
         return steps;
     }
+
+	public int getPasses() {
+		return this.passes;
+	}
+
+	public void setPasses(int relaxPasses) {
+		this.passes = relaxPasses;
+	}
 }
