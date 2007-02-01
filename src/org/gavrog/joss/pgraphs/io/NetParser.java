@@ -57,7 +57,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.82 2006/08/02 22:01:22 odf Exp $
+ * @version $Id: NetParser.java,v 1.83 2007/02/01 02:57:37 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -914,165 +914,173 @@ public class NetParser extends GenericParser {
             		"connected.");
         }
         
-        // TODO if explicit edges are given, use only those 
-        
-        // --- construct a Dirichlet domain for the translation group
-        final Vector basis[] = Vector.rowVectors(Matrix.one(group.getDimension()));
-        if (DEBUG) {
-            System.err.println("Computing Dirichlet vectors...");
-        }
-        final Vector dirichletVectors[] = Lattices.dirichletVectors(basis, cellGram);
-        if (DEBUG) {
-            for (int i = 0; i < dirichletVectors.length; ++i) {
-                System.err.println("  " + dirichletVectors[i]);
-            }
-        }
-        
-        // --- shift generated nodes into the Dirichlet domain
-        for (final Iterator iter = nodeToPosition.keySet().iterator(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            final Point p = (Point) nodeToPosition.get(v);
-            // --- shift into Dirichlet domain
-            if (DEBUG) {
-                System.err.println("Shifting " + p + " into Dirichlet domain...");
-            }
-            final Vector shift = Lattices.dirichletShifts(p, dirichletVectors, cellGram,
-					1)[0];
-            if (DEBUG) {
-                System.err.println("  shift is " + shift);
-            }
-            nodeToPosition.put(v, p.plus(shift));
-            G.shiftNode(v, shift);
-            if (DEBUG) {
-                System.err.println("  shifting done");
-            }
-        }
-        
-        // --- compute nodes in two times extended Dirichlet domain
-        final List extended = new ArrayList();
-        final Map addressToPosition = new HashMap();
-        for (final Iterator iter = G.nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            final Point pv = (Point) nodeToPosition.get(v);
-            if (DEBUG) {
-                System.err.println();
-                System.err.println("Extending " + v + " at " + pv);
-            }
-            extended.add(new Pair(v, zero));
-            addressToPosition.put(new Pair(v, zero), pv);
-            for (int i = 0; i < dirichletVectors.length; ++i) {
-                final Vector vec = dirichletVectors[i];
-                if (DEBUG) {
-                    System.err.println("  shifting by " + vec);
-                }
-                final Point p = (Point) pv.plus(vec);
-                final Vector shifts[] = Lattices.dirichletShifts(p, dirichletVectors,
-						cellGram, 2);
-                if (DEBUG) {
-                    System.err
-                            .println("    induced " + shifts.length + " further shifts");
-                }
-                for (int k = 0; k < shifts.length; ++k) {
-                    final Vector shift = shifts[k];
-                    if (DEBUG) {
-                        System.err.println("      added with shift " + shift);
-                    }
-                    final Pair adr = new Pair(v, vec.plus(shift));
-                    extended.add(adr);
-                    addressToPosition.put(adr, p.plus(shift));
-                }
-            }
-        }
-        
-        if (DEBUG) {
-            System.err.println();
-            System.err.println("Generated " + extended.size()
-                               + " nodes in extended Dirichlet domain.");
-        }
-        
-        // --- compute potential edges
-        final List edges = new ArrayList();
-        for (final Iterator iter = G.nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
-            final Pair adr0 = new Pair(v, zero);
-            final Point pv = (Point) nodeToPosition.get(v);
-            final List distances = new ArrayList();
-            for (int i = 0; i < extended.size(); ++i) {
-                final Pair adr = (Pair) extended.get(i);
-                if (adr.equals(adr0)) {
-                    continue;
-                }
-    			final INode w = (INode) adr.getFirst();
-                final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
-                final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
-                if (descV.isEdgeCenter && descW.isEdgeCenter) {
-                	continue;
-                }
-                
-                final Point pos = (Point) addressToPosition.get(adr);
-                final Vector diff0 = (Vector) pos.minus(pv);
-                final Matrix diff = diff0.getCoordinates();
-                final IArithmetic dist = LinearAlgebra.dotRows(diff, diff, cellGram);
-                distances.add(new Pair(dist, new Integer(i)));
-            }
-            Collections.sort(distances);
-            
-            for (int i = 0; i < descV.connectivity; ++i) {
-            	final Pair entry = (Pair) distances.get(i);
-            	final IArithmetic dist = (IArithmetic) entry.getFirst();
-            	final Integer k = (Integer) entry.getSecond();
-                edges.add(new Pair(dist, new Pair(v, k)));
-            }
-        }
+        if (edgeDescriptors.size() == 0) {
+			// --- construct a Dirichlet domain for the translation group
+			final Vector basis[] = Vector.rowVectors(Matrix.one(group
+					.getDimension()));
+			if (DEBUG) {
+				System.err.println("Computing Dirichlet vectors...");
+			}
+			final Vector dirichletVectors[] = Lattices.dirichletVectors(basis,
+					cellGram);
+			if (DEBUG) {
+				for (int i = 0; i < dirichletVectors.length; ++i) {
+					System.err.println("  " + dirichletVectors[i]);
+				}
+			}
 
-        // --- sort potential edges by length
-        Collections.sort(edges, new Comparator() {
-			public int compare(final Object o1, final Object o2) {
-				final IArithmetic d1 = (IArithmetic) ((Pair) o1).getFirst();
-				final IArithmetic d2 = (IArithmetic) ((Pair) o2).getFirst();
-				return d1.compareTo(d2);
+			// --- shift generated nodes into the Dirichlet domain
+			for (final Iterator iter = nodeToPosition.keySet().iterator(); iter
+					.hasNext();) {
+				final INode v = (INode) iter.next();
+				final Point p = (Point) nodeToPosition.get(v);
+				// --- shift into Dirichlet domain
+				if (DEBUG) {
+					System.err.println("Shifting " + p
+							+ " into Dirichlet domain...");
+				}
+				final Vector shift = Lattices.dirichletShifts(p,
+						dirichletVectors, cellGram, 1)[0];
+				if (DEBUG) {
+					System.err.println("  shift is " + shift);
+				}
+				nodeToPosition.put(v, p.plus(shift));
+				G.shiftNode(v, shift);
+				if (DEBUG) {
+					System.err.println("  shifting done");
+				}
 			}
-        });
-        
-        // --- add eges shortest to longest until all nodes are saturated
-        for (final Iterator iter = edges.iterator(); iter.hasNext();) {
-        	final Pair edge = (Pair) iter.next();
-        	final double dist = ((Real) edge.getFirst()).doubleValue();
-        	final Pair ends = (Pair) edge.getSecond();
-        	final INode v = (INode) ends.getFirst();
-        	final int index = ((Integer) ends.getSecond()).intValue();
-			final Pair adr = (Pair) extended.get(index);
-			final INode w = (INode) adr.getFirst();
-			final Vector s = (Vector) adr.getSecond();
-			
-            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
-            final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
-            final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
-            
-            if (v.degree() >= descV.connectivity || w.degree() >= descW.connectivity) {
-				continue;
+
+			// --- compute nodes in two times extended Dirichlet domain
+			final List extended = new ArrayList();
+			final Map addressToPosition = new HashMap();
+			for (final Iterator iter = G.nodes(); iter.hasNext();) {
+				final INode v = (INode) iter.next();
+				final Point pv = (Point) nodeToPosition.get(v);
+				if (DEBUG) {
+					System.err.println();
+					System.err.println("Extending " + v + " at " + pv);
+				}
+				extended.add(new Pair(v, zero));
+				addressToPosition.put(new Pair(v, zero), pv);
+				for (int i = 0; i < dirichletVectors.length; ++i) {
+					final Vector vec = dirichletVectors[i];
+					if (DEBUG) {
+						System.err.println("  shifting by " + vec);
+					}
+					final Point p = (Point) pv.plus(vec);
+					final Vector shifts[] = Lattices.dirichletShifts(p,
+							dirichletVectors, cellGram, 2);
+					if (DEBUG) {
+						System.err.println("    induced " + shifts.length
+								+ " further shifts");
+					}
+					for (int k = 0; k < shifts.length; ++k) {
+						final Vector shift = shifts[k];
+						if (DEBUG) {
+							System.err.println("      added with shift "
+									+ shift);
+						}
+						final Pair adr = new Pair(v, vec.plus(shift));
+						extended.add(adr);
+						addressToPosition.put(adr, p.plus(shift));
+					}
+				}
 			}
-			if (dist < minEdgeLength) {
-				final String msg = "Found points closer than minimal edge length of ";
-				throw new DataFormatException(msg + minEdgeLength);
+
+			if (DEBUG) {
+				System.err.println();
+				System.err.println("Generated " + extended.size()
+						+ " nodes in extended Dirichlet domain.");
 			}
-			if (G.getEdge(v, w, s) == null) {
-				G.newEdge(v, w, s);
+
+			// --- compute potential edges
+			final List edges = new ArrayList();
+			for (final Iterator iter = G.nodes(); iter.hasNext();) {
+				final INode v = (INode) iter.next();
+				final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+				final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
+				final Pair adr0 = new Pair(v, zero);
+				final Point pv = (Point) nodeToPosition.get(v);
+				final List distances = new ArrayList();
+				for (int i = 0; i < extended.size(); ++i) {
+					final Pair adr = (Pair) extended.get(i);
+					if (adr.equals(adr0)) {
+						continue;
+					}
+					final INode w = (INode) adr.getFirst();
+					final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
+					final NodeDescriptor descW = (NodeDescriptor) adrW
+							.getFirst();
+					if (descV.isEdgeCenter && descW.isEdgeCenter) {
+						continue;
+					}
+
+					final Point pos = (Point) addressToPosition.get(adr);
+					final Vector diff0 = (Vector) pos.minus(pv);
+					final Matrix diff = diff0.getCoordinates();
+					final IArithmetic dist = LinearAlgebra.dotRows(diff, diff,
+							cellGram);
+					distances.add(new Pair(dist, new Integer(i)));
+				}
+				Collections.sort(distances);
+
+				for (int i = 0; i < descV.connectivity; ++i) {
+					final Pair entry = (Pair) distances.get(i);
+					final IArithmetic dist = (IArithmetic) entry.getFirst();
+					final Integer k = (Integer) entry.getSecond();
+					edges.add(new Pair(dist, new Pair(v, k)));
+				}
 			}
-			if (v.degree() > descV.connectivity) {
-				final String msg = "Too many neighbors found for node " + v
-						+ " (should be " + descV.connectivity + ")";
-				throw new DataFormatException(msg);
+
+			// --- sort potential edges by length
+			Collections.sort(edges, new Comparator() {
+				public int compare(final Object o1, final Object o2) {
+					final IArithmetic d1 = (IArithmetic) ((Pair) o1).getFirst();
+					final IArithmetic d2 = (IArithmetic) ((Pair) o2).getFirst();
+					return d1.compareTo(d2);
+				}
+			});
+
+			// --- add eges shortest to longest until all nodes are saturated
+			for (final Iterator iter = edges.iterator(); iter.hasNext();) {
+				final Pair edge = (Pair) iter.next();
+				final double dist = ((Real) edge.getFirst()).doubleValue();
+				final Pair ends = (Pair) edge.getSecond();
+				final INode v = (INode) ends.getFirst();
+				final int index = ((Integer) ends.getSecond()).intValue();
+				final Pair adr = (Pair) extended.get(index);
+				final INode w = (INode) adr.getFirst();
+				final Vector s = (Vector) adr.getSecond();
+
+				final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+				final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
+				final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
+				final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+
+				if (v.degree() >= descV.connectivity
+						|| w.degree() >= descW.connectivity) {
+					continue;
+				}
+				if (dist < minEdgeLength) {
+					final String msg = "Found points closer than minimal edge length of ";
+					throw new DataFormatException(msg + minEdgeLength);
+				}
+				if (G.getEdge(v, w, s) == null) {
+					G.newEdge(v, w, s);
+				}
+				if (v.degree() > descV.connectivity) {
+					final String msg = "Too many neighbors found for node " + v
+							+ " (should be " + descV.connectivity + ")";
+					throw new DataFormatException(msg);
+				}
+				if (w.degree() > descW.connectivity) {
+					final String msg = "Too many neighbors found for node " + w
+							+ " (should be " + descW.connectivity + ")";
+					throw new DataFormatException(msg);
+				}
 			}
-			if (w.degree() > descW.connectivity) {
-				final String msg = "Too many neighbors found for node " + w
-						+ " (should be " + descW.connectivity + ")";
-				throw new DataFormatException(msg);
-			}
-        }
+		}
         
         // TODO check to see if all nodes have the right number of neighbors
         

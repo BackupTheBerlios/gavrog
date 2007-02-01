@@ -26,7 +26,15 @@ For Systre 1.1 (maybe):
 
 =====================================================
 
-Recently done:
+CHANGELOG:
+
+Systre 1.1:
+
+- Error conditions, such as OutOfMemoryError, are now caught by the GUI version.
+- If explicit edges are given, no more are computed using nearest neighbors.
+- Importance of equal edge lengths can be set numerically in options dialog.
+
+Systre 1.0:
 
 - Show mapping of input nodes to output nodes.
 - Report coordinates of edge centers (optional).

@@ -19,13 +19,13 @@ package org.gavrog.systre;
 public class Version {
 	final public static int major = 1;
 
-	final public static int minor = 0;
+	final public static int minor = 1;
 
-	final public static int patchLevel = 1;
+	final public static int patchLevel = 0;
 
 	final public static String maturity = "beta";
 
-	final public static String date = "061118";
+	final public static String date = "070131";
 
 	final public static String extension = (maturity == null ? "" : " " + maturity)
 			+ (date == null ? "" : " " + date);
