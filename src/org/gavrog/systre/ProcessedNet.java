@@ -37,7 +37,7 @@ import org.gavrog.joss.pgraphs.embed.IEmbedder;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.11 2006/09/13 22:41:17 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.12 2007/02/02 01:14:41 odf Exp $
  */
 class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -209,6 +209,9 @@ class ProcessedNet {
 						+ fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
 				out.println("       alpha = " + fmtReal4.format(alpha) + ", beta = "
 						+ fmtReal4.format(beta) + ", gamma = " + fmtReal4.format(gamma));
+				out.println("   Cell volume: "
+						+ ((Real) Vector.volume3D(x, y, z)).doubleValue()
+						* Math.sqrt(((Real) gram.determinant()).doubleValue()));
 			}
 		} else if (d == 2){
 			// --- the cell vectors in the embedder's coordinate system
