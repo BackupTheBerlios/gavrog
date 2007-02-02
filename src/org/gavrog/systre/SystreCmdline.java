@@ -68,7 +68,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.56 2007/01/16 21:54:50 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.57 2007/02/02 00:53:13 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -92,6 +92,7 @@ public class SystreCmdline extends EventSource {
     // --- options
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
+    private int relaxSteps = 1000;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
     private boolean duplicateIsError = false;
@@ -506,7 +507,7 @@ public class SystreCmdline extends EventSource {
                 embedder.go(500);
                 embedder.setRelaxPositions(relaxPositions && pass == 0);
                 embedder.setPasses(this.relaxPasses);
-                embedder.go(1000);
+                embedder.go(relaxSteps);
             } catch (Exception ex) {
                 out.println("==================================================");
                 final String msg = "!!! WARNING (INTERNAL) - Could not relax - ";
@@ -895,6 +896,14 @@ public class SystreCmdline extends EventSource {
 
 	public void setRelaxPasses(int relaxPasses) {
 		this.relaxPasses = relaxPasses;
+	}
+
+	public int getRelaxSteps() {
+		return this.relaxSteps;
+	}
+
+	public void setRelaxSteps(int relaxSteps) {
+		this.relaxSteps = relaxSteps;
 	}
 
 	public boolean getDuplicateIsError() {

@@ -30,6 +30,7 @@ CHANGELOG:
 
 Systre 1.1:
 
+- Relaxation step limit (per phase) can now be set in options dialog.
 - Error conditions, such as OutOfMemoryError, are now caught by the GUI version.
 - If explicit edges are given, no more are computed using nearest neighbors.
 - Importance of equal edge lengths can be set numerically in options dialog.

@@ -76,7 +76,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.64 2007/02/01 02:57:36 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.65 2007/02/02 00:53:13 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -378,6 +378,8 @@ public class SystreGUI extends BFrame {
 					"relaxPositions"));
 			column.add(new OptionSpinnerBox("Importance Of Equal Edge Lengths",
 					this.systre, "relaxPasses"));
+			column.add(new OptionSpinnerBox("Relaxation Step Limit",
+					this.systre, "relaxSteps"));
 			column.add(new OptionCheckBox("Output Complete Unit Cell Contents",
 					this.systre, "outputFullCell"));
 			column.add(new OptionCheckBox("Save only last net finished", this,
