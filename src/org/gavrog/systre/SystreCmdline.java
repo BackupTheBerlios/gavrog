@@ -58,7 +58,8 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
+import org.gavrog.joss.pgraphs.embed.Embedder;
+import org.gavrog.joss.pgraphs.embed.ProcessedNet;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
@@ -68,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.57 2007/02/02 00:53:13 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.58 2007/02/04 04:22:21 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -501,7 +502,7 @@ public class SystreCmdline extends EventSource {
         	status("Computing an embedding...");
         	
             // --- relax the structure from the barycentric embedding
-            AmoebaEmbedder embedder = new AmoebaEmbedder(G);
+            Embedder embedder = new Embedder(G);
             try {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);

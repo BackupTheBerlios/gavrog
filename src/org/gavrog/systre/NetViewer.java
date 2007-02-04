@@ -84,8 +84,7 @@ import org.gavrog.joss.pgraphs.basic.IGraph;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
-import org.gavrog.joss.pgraphs.embed.IEmbedder;
+import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
@@ -114,7 +113,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.37 2006/05/13 01:41:08 odf Exp $
+ * @version $Id: NetViewer.java,v 1.38 2007/02/04 04:22:21 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -149,7 +148,7 @@ public class NetViewer extends Applet {
     private PeriodicGraph net;
     
     // --- embedder used to find node positions and metric
-    private IEmbedder embedder;
+    private Embedder embedder;
     
     // --- the default radius for a new net
     private int defaultRadius = 2;
@@ -634,14 +633,14 @@ public class NetViewer extends Applet {
         
         // --- relax the structure from the barycentric embedding
         boolean error = false;
-        final IEmbedder embedder;
+        final Embedder embedder;
         if (this.embedder != null) {
         	embedder = this.embedder;
         	if (!relax) {
         		embedder.reset();
         	}
         } else {
-        	embedder = new AmoebaEmbedder(G);
+        	embedder = new Embedder(G);
         }
         try {
             embedder.setRelaxPositions(relax);
@@ -674,7 +673,7 @@ public class NetViewer extends Applet {
 
     private void setRadius(final int radius) {
         busy();
-        final IEmbedder relaxer = this.embedder;
+        final Embedder relaxer = this.embedder;
         // --- construct an embedded portion of the net using the relaxed
         // configuration
         final Map pos = relaxer.getPositions();

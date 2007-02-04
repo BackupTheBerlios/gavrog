@@ -52,6 +52,12 @@ public class Net extends PeriodicGraph {
 		return (String) this.nodeToName.get(v);
 	}
 	
+	public Map getNodeToNameMap() {
+		final Map res = new HashMap();
+		res.putAll(this.nodeToName);
+		return res;
+	}
+	
 	public INode newNode() {
 		final INode v = super.newNode();
 		this.nodeToName.put(v, "#" + v.id());

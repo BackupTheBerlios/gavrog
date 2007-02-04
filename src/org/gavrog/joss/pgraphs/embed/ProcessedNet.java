@@ -1,4 +1,4 @@
-package org.gavrog.systre;
+package org.gavrog.joss.pgraphs.embed;
 
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -30,16 +30,14 @@ import org.gavrog.joss.pgraphs.basic.Cover;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.embed.AmoebaEmbedder;
-import org.gavrog.joss.pgraphs.embed.IEmbedder;
 
 /**
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.12 2007/02/02 01:14:41 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.1 2007/02/04 04:22:22 odf Exp $
  */
-class ProcessedNet {
+public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
     private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
     
@@ -111,11 +109,11 @@ class ProcessedNet {
     private final String name;
     private final Map node2name;
     private final SpaceGroupFinder finder;
-    private final IEmbedder embedder;
+    private final Embedder embedder;
 
     public ProcessedNet(
 			final PeriodicGraph G, final String name, final Map node2name,
-			final SpaceGroupFinder finder, final IEmbedder embedder) {
+			final SpaceGroupFinder finder, final Embedder embedder) {
         this.graph = G;
         this.name = name;
         this.node2name = node2name;
@@ -434,10 +432,10 @@ class ProcessedNet {
                     + fmtReal5.format(smallestNonBondedDistance(graph, embedder)));
             
             // --- write the degrees of freedom as found by the embedder
-            if (embedder instanceof AmoebaEmbedder) {
+            if (embedder instanceof Embedder) {
                 out.println();
                 out.println("   Degrees of freedom: "
-                        + ((AmoebaEmbedder) embedder).degreesOfFreedom());
+                        + ((Embedder) embedder).degreesOfFreedom());
             }
         }
         out.flush();
@@ -532,7 +530,7 @@ class ProcessedNet {
         final int dim = a.getDimension();
         if (dim != 3) {
             final String msg = "Method called with incorrect dimension";
-            throw new SystreException(SystreException.INTERNAL, msg);
+            throw new RuntimeException(msg);
         }
         
         // --- little helper class
@@ -602,7 +600,7 @@ class ProcessedNet {
                 to = new Vector[] { a, b, c };
             } else {
                 final String msg = "Cannot handle monoclinic space group " + name + ".";
-                throw new SystreException(SystreException.INTERNAL, msg);
+                throw new RuntimeException(msg);
             }
             
             if (Vector.dot(to[0], to[2], gram).isPositive()) {
@@ -630,7 +628,7 @@ class ProcessedNet {
      * @return the smallest distance between nodes that are not connected.
      */
     private double smallestNonBondedDistance(final PeriodicGraph G,
-            final IEmbedder embedder) {
+            final Embedder embedder) {
         // --- get some data about the embedding
         final Matrix gram = embedder.getGramMatrix();
         final Map pos = embedder.getPositions();

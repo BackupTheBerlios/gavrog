@@ -49,6 +49,7 @@ import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.embed.ProcessedNet;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
@@ -76,7 +77,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.65 2007/02/02 00:53:13 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.66 2007/02/04 04:22:21 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
