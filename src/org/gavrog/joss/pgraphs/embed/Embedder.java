@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Partition;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.jane.algorithms.Amoeba;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -47,7 +48,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.1 2007/02/04 04:22:22 odf Exp $
+ * @version $Id: Embedder.java,v 1.2 2007/02/04 07:08:18 odf Exp $
  */
 public class Embedder {
     protected class Angle {
@@ -857,6 +858,12 @@ public class Embedder {
 	
 	public static void main(final String args[]) {
 		try {
+			System.out.print("# Parameters:");
+			for (int i = 0; i < args.length; ++i) {
+				System.out.print(" " + args[i]);
+			}
+			System.out.println();
+			
 			final NetParser parser = new NetParser(args[0]);
 			final Net G = parser.parseNet();
 			final Embedder embedder = new Embedder(G);
@@ -864,7 +871,12 @@ public class Embedder {
 			embedder.go(500);
 			embedder.setRelaxPositions(true);
 			embedder.setPasses(Integer.parseInt(args[1]));
-			embedder.go(Integer.parseInt(args[2]));
+			final Stopwatch time = new Stopwatch();
+			time.start();
+			embedder.go(Integer.parseInt(args[2]) / embedder.getPasses());
+			time.stop();
+			System.out.println("# Time for main relaxation: " + time.format());
+			System.out.println();
 			embedder.normalize();
 
 			final SpaceGroupFinder finder = new SpaceGroupFinder(G
