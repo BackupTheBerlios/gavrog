@@ -49,7 +49,7 @@ public class ExtensionFilter extends FileFilter {
 		final String name = f.getName();
 		final int i = name.lastIndexOf('.');
 		final String ext = name.substring(i+1);
-		return extensions.contains(ext);
+		return extensions.contains(ext.toLowerCase());
 	}
 
 	public String getDescription() {
