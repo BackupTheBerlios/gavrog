@@ -77,13 +77,13 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.66 2007/02/04 04:22:21 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.67 2007/02/06 00:03:09 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
 			+ "<font color=#202060>Version " + Version.full + "<br>"
-			+ "by Olaf Delgado-Friedrichs, 2001-2006</font></html>";
+			+ "by Olaf Delgado-Friedrichs, 2001-2007</font></html>";
 	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);

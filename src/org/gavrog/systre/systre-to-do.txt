@@ -6,16 +6,17 @@ In progress:
 
 =====================================================
 
-For Systre 1.0 (bug fixes):
+Open bugs:
 
-- Allow file name extensions in capital letters (e.g. '.CGD' insted of '.cgd')
 - Fix problems reading archive files as regular input.
+
+
+Planned/requested features:
+
 - Make SystreGUI accept command line arguments.
-
-
-For Systre 1.1 (maybe):
-- Keyboard shortcuts.
-- Optionally report alternate monoclinic settings where better than first setting.
+- Make SystreGUI options available for SystreCmdline.
+- Introduce keyboard shortcuts.
+- Optionally report alternate monoclinic settings if better than first setting.
 - Link to online databases.
 - Support more output options (e.g. CrystalMaker).
 - If net is not connected, process components individually.
@@ -30,6 +31,7 @@ CHANGELOG:
 
 Systre 1.1:
 
+- File name extensions are now case insensitive (so ".CGD" works like ".cgd").
 - Unit cell volume is now reported.
 - Relaxation step limit (per phase) can now be set in options dialog.
 - Error conditions, such as OutOfMemoryError, are now caught by the GUI version.
@@ -52,7 +54,7 @@ Systre 1.0:
 - Add option for writing complete unit cell data.
 - Revise cell vectors for monoclinic and triclinic nets after cell relaxation.
 - Add the "false" -z nets to the archive.
-- Let user pick default origin choice (1st vs. 2nd). Same for hexagonal vs. rhombohedral.
+- Default origin choice (1st vs. 2nd) and H vs. R setting are now options.
 - Pop up a message box in case of an exception.
 - Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
 - Have all edges starting from one of the vertices listed.

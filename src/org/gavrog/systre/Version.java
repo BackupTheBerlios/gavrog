@@ -25,7 +25,7 @@ public class Version {
 
 	final public static String maturity = "beta";
 
-	final public static String date = "070203";
+	final public static String date = "070205";
 
 	final public static String extension = (maturity == null ? "" : " " + maturity)
 			+ (date == null ? "" : " " + date);
