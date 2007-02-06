@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
  * 
  * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.8 2006/12/30 15:26:17 odf Exp $
+ * @version $Id: EuclidicityTester.java,v 1.9 2007/02/06 23:58:50 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;
@@ -102,6 +102,7 @@ public class EuclidicityTester {
     
     final private DelaneySymbol ds;
     final private boolean useInvariant;
+    final private int choicesFactor;
     
     private boolean done = false;
     private boolean good = false;
@@ -116,13 +117,15 @@ public class EuclidicityTester {
      * @param ds the Delaney symbol to test.
      * @param useInvars if true, orbifold invariants are compared first
      */
-    public EuclidicityTester(final DelaneySymbol ds, final boolean useInvars) {
+    public EuclidicityTester(final DelaneySymbol ds, final boolean useInvars,
+            final int factor) {
         if (ds.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
             throw new UnsupportedOperationException(s);
         }
         this.ds = ds;
         this.useInvariant = useInvars;
+        this.choicesFactor = factor;
     }
     
     /**
@@ -131,7 +134,7 @@ public class EuclidicityTester {
      * @param ds the Delaney symbol to test.
      */
     public EuclidicityTester(final DelaneySymbol ds) {
-    	this(ds, true);
+    	this(ds, true, 10000);
     }
     
     /**
@@ -422,8 +425,8 @@ public class EuclidicityTester {
         int count = 0;
         final SmallActionsIterator actions = new SmallActionsIterator(G, index, false);
 
-        // --- allow an average of 10000 choice moves per expected result
-        actions.setMaximalNumberOfChoices(expected * 10000);
+        // --- restrict the number of average choice moves per expected result
+        actions.setMaximalNumberOfChoices(expected * this.choicesFactor);
         
         while (true) {
             try {

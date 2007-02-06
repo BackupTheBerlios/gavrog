@@ -28,12 +28,13 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.3 2006/11/18 08:18:06 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.4 2007/02/06 23:58:50 odf Exp $
  */
 public class FilterEuclidean {
 
     public static void main(String[] args) {
         final String filename = args[0];
+        final int f = (args.length > 1 ? Integer.parseInt(args[1]) : 10000);
 
         final List good = new LinkedList();
         final List ambiguous = new LinkedList();
@@ -44,7 +45,7 @@ public class FilterEuclidean {
             final DSymbol ds = (DSymbol) input.next();
             ++count;
 
-            final EuclidicityTester tester = new EuclidicityTester(ds);
+            final EuclidicityTester tester = new EuclidicityTester(ds, true, f);
             if (tester.isGood()) {
                 System.out.println("#Symbol " + count + " is good: " + tester.getCause());
                 good.add(new Integer(count));
@@ -69,7 +70,7 @@ public class FilterEuclidean {
         System.out.println("### " + ambiguous.size() + " ambiguous symbols:");
         for (final Iterator iter = ambiguous.iterator(); iter.hasNext();) {
             final Pair pair = (Pair) iter.next();
-            System.out.println("  " + pair.getFirst() + " - " + pair.getSecond());
+            System.out.println("#  " + pair.getFirst() + " - " + pair.getSecond());
         }
         System.out.println("### Running time was " + (after - before) / 1000
         		+ " seconds.");
