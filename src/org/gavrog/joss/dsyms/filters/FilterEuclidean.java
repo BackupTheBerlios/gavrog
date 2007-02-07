@@ -21,14 +21,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
+import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.4 2007/02/06 23:58:50 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.5 2007/02/07 23:59:52 odf Exp $
  */
 public class FilterEuclidean {
 
@@ -70,7 +72,11 @@ public class FilterEuclidean {
         System.out.println("### " + ambiguous.size() + " ambiguous symbols:");
         for (final Iterator iter = ambiguous.iterator(); iter.hasNext();) {
             final Pair pair = (Pair) iter.next();
-            System.out.println("#  " + pair.getFirst() + " - " + pair.getSecond());
+            final int n = ((Integer) pair.getFirst()).intValue();
+            final DSymbol ds = (DSymbol) pair.getSecond();
+            final FpGroup G = new FundamentalGroup(ds).getPresentation();
+            System.out.println("#   " + n + ":  " + ds.canonical());
+            System.out.println("#       " + G);
         }
         System.out.println("### Running time was " + (after - before) / 1000
         		+ " seconds.");
