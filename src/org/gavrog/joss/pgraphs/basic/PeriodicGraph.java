@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.57 2006/05/19 21:04:42 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.58 2007/02/15 20:46:05 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -82,6 +82,7 @@ public class PeriodicGraph extends UndirectedGraph {
     protected static final CacheKey IS_CONNECTED = new CacheKey();
     protected static final CacheKey BARYCENTRIC_PLACEMENT = new CacheKey();
     protected static final CacheKey IS_LOCALLY_STABLE = new CacheKey();
+    protected static final CacheKey IS_LADDER = new CacheKey();
     protected static final CacheKey CHARACTERISTIC_BASES = new CacheKey();
     protected static final CacheKey SYMMETRIES = new CacheKey();
     protected static final CacheKey INVARIANT = new CacheKey();
@@ -905,6 +906,51 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         cache.put(IS_LOCALLY_STABLE, new Boolean(true));
         return true;
+    }
+    
+    /**
+     * Checks if the graph is a ladder, meaning a locally stable graph with a
+     * non-trivial automorphism which geometrically maps to the identity via
+     * barycentric positions.
+     * 
+     * @return true is the graph is a ladder.
+     */
+    public boolean isLadder() {
+        final Boolean cached = (Boolean) cache.get(IS_LADDER);
+        if (cached != null) {
+            return cached.booleanValue();
+        }
+        
+        // --- check prerequisites
+        if (!isConnected()) {
+            throw new UnsupportedOperationException("graph must be connected");
+        }
+        if (isStable() || !isLocallyStable()) {
+            cache.put(IS_LADDER, new Boolean(false));
+            return false;
+        }
+        
+        // --- find equivalence classes w.r.t. ladder translations
+        final Operator I = Operator.identity(getDimension());
+        final Iterator iter = nodes();
+        final INode start = (INode) iter.next();
+        final Map pos = barycentricPlacement();
+        final Point pos0 = (Point) pos.get(start);
+        
+        while (iter.hasNext()) {
+            final INode v = (INode) iter.next();
+            final Point posv = (Point) pos.get(v);
+            if (((Vector) posv.minus(pos0)).modZ().isZero()) {
+                try {
+                    new Morphism(start, v, I);
+                    cache.put(IS_LADDER, new Boolean(true));
+                    return true;
+                } catch (Morphism.NoSuchMorphismException ex) {
+                }
+            }
+        }
+        cache.put(IS_LADDER, new Boolean(false));
+        return false;
     }
     
     /**

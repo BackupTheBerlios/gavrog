@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.36 2006/05/19 05:07:26 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.37 2007/02/15 20:46:04 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -348,17 +348,21 @@ public class TestPeriodicGraph extends TestCase {
         assertTrue(cds.isBarycentric(cds.barycentricPlacement()));
     }
     
-    public void testIsStableAndIsLocallyStable() {
+    public void testStabilityAndLadderness() {
         assertTrue(G.isStable());
         assertTrue(dia.isStable());
         assertTrue(cds.isStable());
         assertTrue(G.isLocallyStable());
         assertTrue(dia.isLocallyStable());
         assertTrue(cds.isLocallyStable());
+        assertFalse(G.isLadder());
+        assertFalse(dia.isLadder());
+        assertFalse(cds.isLadder());
         
         final PeriodicGraph H = doubleHexGrid();
         assertFalse(H.isStable());
         assertTrue(H.isLocallyStable());
+        assertTrue(H.isLadder());
         
         final PeriodicGraph H2 = new PeriodicGraph(2);
         final INode w1 = H2.newNode();
@@ -366,12 +370,22 @@ public class TestPeriodicGraph extends TestCase {
         final INode w3 = H2.newNode();
         H2.newEdge(w1, w1, new int[] {1,0});
         H2.newEdge(w1, w2, new int[] {0,0});
-        H2.newEdge(w1, w2, new int[] {0,1});
+        final IEdge e1 = H2.newEdge(w1, w2, new int[] {0,1});
         H2.newEdge(w1, w3, new int[] {0,0});
-        H2.newEdge(w1, w3, new int[] {0,1});
-        H2.newEdge(w2, w3, new int[] {0,0});
+        final IEdge e2 = H2.newEdge(w1, w3, new int[] {0,1});
+        final IEdge e3 = H2.newEdge(w2, w3, new int[] {0,0});
         assertFalse(H2.isStable());
         assertFalse(H2.isLocallyStable());
+        assertFalse(H2.isLadder());
+        
+        H2.delete(e1);
+        H2.delete(e2);
+        H2.delete(e3);
+        H2.newEdge(w1, w2, new int[] {1,1});
+        H2.newEdge(w1, w3, new int[] {-1,1});
+        assertFalse(H2.isStable());
+        assertTrue(H2.isLocallyStable());
+        assertFalse(H2.isLadder());
     }
     
     public void testTranslationalEquivalenceClasses() {
