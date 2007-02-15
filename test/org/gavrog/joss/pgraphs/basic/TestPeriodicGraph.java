@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.37 2007/02/15 20:46:04 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.38 2007/02/15 21:55:27 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -386,6 +386,17 @@ public class TestPeriodicGraph extends TestCase {
         assertFalse(H2.isStable());
         assertTrue(H2.isLocallyStable());
         assertFalse(H2.isLadder());
+        
+        final PeriodicGraph H3 = new PeriodicGraph(3);
+        final INode u1 = H3.newNode();
+        final INode u2 = H3.newNode();
+        H3.newEdge(u1, u1, new int[] {1,0,0});
+        H3.newEdge(u1, u1, new int[] {0,1,0});
+        H3.newEdge(u2, u2, new int[] {0,0,1});
+        H3.newEdge(u1, u2, new int[] {0,0,0});
+        assertFalse(H3.isStable());
+        assertTrue(H3.isLocallyStable());
+        assertFalse(H3.isLadder());
     }
     
     public void testTranslationalEquivalenceClasses() {
