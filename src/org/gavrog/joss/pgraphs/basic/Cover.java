@@ -37,7 +37,7 @@ import org.gavrog.joss.geometry.Vector;
  * Represents a cover of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: Cover.java,v 1.3 2006/07/25 05:32:37 odf Exp $
+ * @version $Id: Cover.java,v 1.4 2007/02/15 23:41:50 odf Exp $
  */
 public class Cover extends PeriodicGraph {
     final private Morphism coverMorphism;
@@ -109,41 +109,45 @@ public class Cover extends PeriodicGraph {
         final List transformedNodes = new ArrayList();
         for (final Iterator iter = image.nodes(); iter.hasNext();) {
             final INode v = (INode) iter.next();
-            transformedNodes.add(((Point) pos.get(v)).times(C));
+            transformedNodes.add(new Pair(v, ((Point) pos.get(v)).times(C)));
         }
-        final List transformedEdges = new ArrayList();
+        final Map transformedEdges = new HashMap();
         for (final Iterator iter = image.edges(); iter.hasNext();) {
             final IEdge e = (IEdge) iter.next();
             final Point p = (Point) pos.get(e.source());
             final Point q = (Point) pos.get(e.target());
             final Point src = (Point) p.times(C);
             final Point dst = (Point) q.plus(image.getShift(e)).times(C);
-            transformedEdges.add(new Pair(src, dst));
+            transformedEdges.put(e, new Pair(src, dst));
         }
 
         // --- extend the system of representatives to the new unit cell
         final List coverNodes = new ArrayList();
         
         for (final Iterator iter = transformedNodes.iterator(); iter.hasNext();) {
-            final Point p = (Point) iter.next();
+            final Pair vp = (Pair) iter.next();
+            final INode v = (INode) vp.getFirst();
+            final Point p = (Point) vp.getSecond();
             for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
-                final Vector v = (Vector) shifts.next();
-                final Point pv = (Point) p.plus(v);
-                coverNodes.add(pv.modZ());
+                final Vector s = (Vector) shifts.next();
+                final Point pv = (Point) p.plus(s);
+                coverNodes.add(new Pair(v, pv.modZ()));
             }
         }
         
         final List coverEdges = new ArrayList();
-        for (final Iterator iter = transformedEdges.iterator(); iter.hasNext();) {
-            final Pair e = (Pair) iter.next();
-            final Point p = (Point) e.getFirst();
-            final Point q = (Point) e.getSecond();
+        for (final Iterator iter = transformedEdges.keySet().iterator(); iter
+                .hasNext();) {
+            final IEdge e = (IEdge) iter.next();
+            final Pair pq = (Pair) transformedEdges.get(e);
+            final Point p = (Point) pq.getFirst();
+            final Point q = (Point) pq.getSecond();
             for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
                 final Vector v = (Vector) shifts.next();
                 final Point pv = (Point) p.plus(v);
                 final Point qv = (Point) q.plus(v);
                 final Point rv = pv.modZ();
-                coverEdges.add(new Pair(rv, qv.minus(pv).plus(rv)));
+                coverEdges.add(new Pair(e, new Pair(rv, qv.minus(pv).plus(rv))));
             }
         }
 
@@ -151,19 +155,21 @@ public class Cover extends PeriodicGraph {
         final Map pos2node = new HashMap();
         final Map node2pos = new HashMap();
         for (final Iterator iter = coverNodes.iterator(); iter.hasNext();) {
-            final Point p = (Point) iter.next();
-            final INode v = newNode();
-            pos2node.put(p, v);
-            node2pos.put(v, p);
+            final Pair vp = (Pair) iter.next();
+            final INode w = newNode();
+            pos2node.put(vp, w);
+            node2pos.put(w, vp.getSecond());
         }
         for (final Iterator iter = coverEdges.iterator(); iter.hasNext();) {
-            final Pair e = (Pair) iter.next();
-            final Point p = (Point) e.getFirst();
-            final Point q = (Point) e.getSecond();
+            final Pair epq = (Pair) iter.next();
+            final IEdge e = (IEdge) epq.getFirst();
+            final Pair pq = (Pair) epq.getSecond();
+            final Point p = (Point) pq.getFirst();
+            final Point q = (Point) pq.getSecond();
             final Point r = q.modZ();
             final Vector s = (Vector) q.minus(r);
-            final INode v = (INode) pos2node.get(p);
-            final INode w = (INode) pos2node.get(r);
+            final INode v = (INode) pos2node.get(new Pair(e.source(), p));
+            final INode w = (INode) pos2node.get(new Pair(e.target(), r));
             newEdge(v, w, s);
         }
         
