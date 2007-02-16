@@ -69,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.58 2007/02/04 04:22:21 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.59 2007/02/16 00:22:59 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -210,13 +210,19 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- test if it is Systre-compatible
-        if (!G.isConnected()) {
-            final String msg = "Structure is not connected";
+        if (!G.isLocallyStable()) {
+            final String msg = "Structure is not locally stable";
+            throw new SystreException(SystreException.STRUCTURE, msg);
+        }
+        if (G.isLadder()) {
+            final String msg = "Structure is non-crystallographic (a 'ladder')";
             throw new SystreException(SystreException.STRUCTURE, msg);
         }
         if (!G.isStable()) {
-            final String msg = "Structure has collisions";
-            throw new SystreException(SystreException.STRUCTURE, msg);
+            final String msg = "!!! WARNING (STRUCTURE) - "
+                + "Structure has collisions. Output embedding may be incorrect.";
+            out.println(msg);
+            out.println();
         }
         
         quitIfCancelled();
@@ -348,12 +354,6 @@ public class SystreCmdline extends EventSource {
         
         quitIfCancelled();
         
-        // --- bail out - for now - if not a 3d structure
-//        if (d != 3) {
-//            final String msg = "No further support yet for dimension " + d;
-//            throw new SystreException(SystreException.STRUCTURE, msg);
-//        }
-
         // --- find the space group name and conventional settings
     	status("Looking up the space group and transforming to a standard setting...");
     	
@@ -572,15 +572,17 @@ public class SystreCmdline extends EventSource {
             final String cgdString = cgdStringWriter.toString();
 			boolean success = false;
             try {
-            	status("Consistency test: reading output back in...");
-                final PeriodicGraph test = NetParser.stringToNet(cgdString);
-                
-                quitIfCancelled();
-                
-            	status("Consistency test: comparing with original net...");
-                if (!test.minimalImage().equals(G)) {
-                    final String msg = "Output does not match original graph.";
-                    throw new RuntimeException(msg);
+                if (G.isStable()) {
+                    status("Consistency test: reading output back in...");
+                    final PeriodicGraph test = NetParser.stringToNet(cgdString);
+
+                    quitIfCancelled();
+
+                    status("Consistency test: comparing with original net...");
+                    if (!test.minimalImage().equals(G)) {
+                        final String msg = "Output does not match original graph.";
+                        throw new RuntimeException(msg);
+                    }
                 }
                 out.println();
                 success = true;
@@ -597,8 +599,9 @@ public class SystreCmdline extends EventSource {
                         out.println("   Falling back to barycentric positions.");
                     }
                 } else {
-                    final String msg = "Could not verify output data";
-                    throw new SystreException(SystreException.INTERNAL, msg, ex);
+                    out.println("Could not verify output:");
+                    out.println(cgdString);
+                    throw new RuntimeException(ex);
                 }
             }
             
