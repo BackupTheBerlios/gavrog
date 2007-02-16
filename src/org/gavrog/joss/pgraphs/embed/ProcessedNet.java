@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.1 2007/02/04 04:22:22 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.2 2007/02/16 00:22:33 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -194,22 +194,27 @@ public class ProcessedNet {
 			}
 
 			if (cgdFormat) {
-				out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b)
-						+ " " + fmtReal5.format(c) + " " + fmtReal4.format(alpha) + " "
-						+ fmtReal4.format(beta) + " " + fmtReal4.format(gamma));
+				out.println("  CELL " + fmtReal5.format(a) + " "
+                        + fmtReal5.format(b) + " " + fmtReal5.format(c) + " "
+                        + fmtReal4.format(alpha) + " " + fmtReal4.format(beta)
+                        + " " + fmtReal4.format(gamma));
 			} else {
 				if (fullCell) {
-					out.println("   Coordinates below are given for a full conventional cell.");
+					out.println("   Coordinates below are given for a full "
+                            + "conventional cell.");
 				}
 				out.println("   " + (cellRelaxed ? "R" : "Unr")
-						+ "elaxed cell parameters:");
-				out.println("       a = " + fmtReal5.format(a) + ", b = "
-						+ fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
-				out.println("       alpha = " + fmtReal4.format(alpha) + ", beta = "
-						+ fmtReal4.format(beta) + ", gamma = " + fmtReal4.format(gamma));
+                        + "elaxed cell parameters:");
+                out.println("       a = " + fmtReal5.format(a) + ", b = "
+                        + fmtReal5.format(b) + ", c = " + fmtReal5.format(c));
+                out.println("       alpha = " + fmtReal4.format(alpha)
+                        + ", beta = " + fmtReal4.format(beta) + ", gamma = "
+                        + fmtReal4.format(gamma));
 				out.println("   Cell volume: "
-						+ ((Real) Vector.volume3D(x, y, z)).doubleValue()
-						* Math.sqrt(((Real) gram.determinant()).doubleValue()));
+                        + fmtReal5.format(((Real) Vector.volume3D(x, y, z))
+                                .doubleValue()
+                                * Math.sqrt(((Real) gram.determinant())
+                                        .doubleValue())));
 			}
 		} else if (d == 2){
 			// --- the cell vectors in the embedder's coordinate system
