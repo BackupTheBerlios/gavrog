@@ -29,7 +29,10 @@ Planned/requested features:
 
 CHANGELOG:
 
-Systre 1.1:
+Systre 1.1.1:
+- Locally stable crystallographic nets are now accepted.
+
+Systre 1.1.0:
 
 - File name extensions are now case insensitive (so ".CGD" works like ".cgd").
 - Unit cell volume is now reported.
@@ -38,7 +41,7 @@ Systre 1.1:
 - If explicit edges are given, no more are computed using nearest neighbors.
 - Importance of equal edge lengths can be set numerically in options dialog.
 
-Systre 1.0:
+Systre 1.0.0:
 
 - Show mapping of input nodes to output nodes.
 - Report coordinates of edge centers (optional).
