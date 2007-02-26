@@ -69,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.59 2007/02/16 00:22:59 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.60 2007/02/26 22:47:35 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -93,7 +93,7 @@ public class SystreCmdline extends EventSource {
     // --- options
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
-    private int relaxSteps = 1000;
+    private int relaxSteps = 10000;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
     private boolean duplicateIsError = false;
