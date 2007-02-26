@@ -1,9 +1,11 @@
 package org.gavrog.joss.pgraphs.io;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -24,7 +26,18 @@ public class Net extends PeriodicGraph {
 	}
 
 	public Net(final PeriodicGraph graph, final String name, final String group) {
-		super(graph);
+        super(graph.getDimension());
+        final Map old2new = new HashMap();
+        for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            old2new.put(v, newNode());
+        }
+        for (final Iterator edges = graph.edges(); edges.hasNext();) {
+            final IEdge e = (IEdge) edges.next();
+            final INode v = (INode) old2new.get(e.source());
+            final INode w = (INode) old2new.get(e.target());
+            newEdge(v, w, graph.getShift(e));
+        }
 		this.name = name;
 		this.givenGroup = group;
 	}
@@ -60,7 +73,7 @@ public class Net extends PeriodicGraph {
 	
 	public INode newNode() {
 		final INode v = super.newNode();
-		this.nodeToName.put(v, "#" + v.id());
+		this.nodeToName.put(v, "V" + v.id());
 		return v;
 	}
 	
