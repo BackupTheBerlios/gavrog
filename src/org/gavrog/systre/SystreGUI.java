@@ -77,7 +77,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.67 2007/02/06 00:03:09 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.68 2007/02/26 23:14:10 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -570,6 +570,7 @@ public class SystreGUI extends BFrame {
 					return new Net(graph, entry.getName(), group);
 				}
         	};
+            return true;
 		} else {
 			reportException(null, "FILE", "Unrecognized extension " + extension, false);
 		}
