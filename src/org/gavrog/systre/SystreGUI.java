@@ -77,7 +77,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.68 2007/02/26 23:14:10 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.69 2007/02/26 23:51:38 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -337,7 +337,12 @@ public class SystreGUI extends BFrame {
     
     private void writeStructure(final String extension, final BufferedWriter writer,
 			final ProcessedNet net, final String transcript) throws IOException {
-        if (net != null) {
+        if ("out".equals(extension)) {
+            final String lineSeparator = System.getProperty("line.separator");
+            // --- write the full transcript
+            writer.write(transcript.replaceAll(lineSeparator, "\n"));
+            writer.write("\n");
+        } else if (net != null) {
             if ("arc".equals(extension)) {
             	// --- write archive entry
 				final String txt = new Archive.Entry(net.getGraph(), net.getName())
@@ -351,11 +356,6 @@ public class SystreGUI extends BFrame {
             	// --- write abstract, unembedded periodic graph
                 Output.writePGR(writer, net.getGraph().canonical(), net.getName());
 				writer.write("\n");
-            } else {
-            	final String lineSeparator = System.getProperty("line.separator");
-            	// --- write the full transcript
-                writer.write(transcript.replaceAll(lineSeparator, "\n"));
-                writer.write("\n");
             }
         }
     }
@@ -454,6 +454,13 @@ public class SystreGUI extends BFrame {
         final class BailOut extends Throwable {}
         
         try {
+            ++this.count;
+            // --- some blank lines as separators
+            out.println();
+            if (this.count > 1) {
+                out.println();
+                out.println();
+            }
             // --- read the next net
             try {
             	G = getNextNet();
@@ -466,13 +473,6 @@ public class SystreGUI extends BFrame {
             if (G == null) {
                 reportException(problem, "INPUT", null, false);
                 throw new BailOut();
-            }
-            ++this.count;
-            // --- some blank lines as separators
-            out.println();
-            if (this.count > 1) {
-                out.println();
-                out.println();
             }
             final String archiveName;
             final String displayName;
@@ -503,11 +503,18 @@ public class SystreGUI extends BFrame {
             out.println();
             out.println("Finished structure #" + this.count + displayName + ".");
             this.lastFinishedTranscript = this.currentTranscript.toString();
+            final ProcessedNet tmp;
             if (success) {
-                final ProcessedNet tmp = this.systre.getLastStructure();
-                this.bufferedNets.add(new Pair(tmp, this.lastFinishedTranscript));
+                tmp = this.systre.getLastStructure();
             }
+            else {
+                tmp = null;
+            }
+            this.bufferedNets.add(new Pair(tmp, this.lastFinishedTranscript));
         } catch (BailOut ex) {
+            out.println();
+            out.println("Skipping structure #" + this.count
+                    + " due to error in input.");
         }
         if (!moreNets()) {
             finishFile();
