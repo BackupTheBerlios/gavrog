@@ -1,10 +1,12 @@
 Systre 1.1.1:
+
 - Archives and Delaney symbol files as input now work in command line version.
 - The command line version now accepts most of the options available via GUI.
 - The output for nets with errors is no longer left out from the ".out" file.
 - Archive and Delaney symbol files can again be processed as regular input.
 - The default relaxation step limit is now 10000 (instead of 1000).
-- Locally stable crystallographic nets are now accepted.
+- Locally stable crystallographic nets are now accepted (EXPERIMENTAL).
+
 
 Systre 1.1.0:
 
@@ -14,6 +16,7 @@ Systre 1.1.0:
 - Error conditions, such as OutOfMemoryError, are now caught by the GUI version.
 - If explicit edges are given, no more are computed using nearest neighbors.
 - Importance of equal edge lengths can be set numerically in options dialog.
+
 
 Systre 1.0.0:
 
