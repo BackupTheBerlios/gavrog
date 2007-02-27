@@ -1,14 +1,24 @@
 package org.gavrog.joss.pgraphs.io;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.derived.Skeleton;
+import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.systre.Archive;
 
 /**
  * Encapsulates a net with extra information picked up by the parser.
@@ -87,4 +97,61 @@ public class Net extends PeriodicGraph {
 		this.nodeToName.remove(x);
 		super.delete(x);
 	}
+    
+    public static class IllegalFileNameException extends RuntimeException {
+        public IllegalFileNameException(final String msg) {
+            super(msg);
+        }
+    }
+    
+    public static Iterator iterator(final String filePath)
+            throws FileNotFoundException {
+        
+        final String extension = filePath
+                .substring(filePath.lastIndexOf('.') + 1);
+
+        final BufferedReader reader;
+        reader = new BufferedReader(new FileReader(filePath));
+
+        if ("cgd".equals(extension) || "pgr".equals(extension)) {
+            final NetParser parser = new NetParser(reader);
+
+            return new IteratorAdapter() {
+                protected Object findNext() throws NoSuchElementException {
+                    if (parser.atEnd()) {
+                        throw new NoSuchElementException("at end");
+                    } else {
+                        return parser.parseNet();
+                    }
+                }
+            };
+        } else if ("ds".equals(extension)) {
+            return new FilteredIterator(new InputIterator(reader)) {
+                public Object filter(Object x) {
+                    final DelaneySymbol ds = (DelaneySymbol) x;
+                    final PeriodicGraph graph = new Skeleton(ds);
+                    final String group = (ds.dim() == 3) ? "P1" : "p1";
+                    return new Net(graph, null, group);
+                }
+            };
+        } else if ("arc".equals(extension)) {
+            return new IteratorAdapter() {
+                protected Object findNext() throws NoSuchElementException {
+                    final Archive.Entry entry = Archive.Entry.read(reader);
+                    if (entry == null) {
+                        throw new NoSuchElementException("at end");
+                    }
+                    final String key = entry.getKey();
+                    final PeriodicGraph graph = PeriodicGraph
+                            .fromInvariantString(key);
+                    final String group = (graph.getDimension() == 3) ? "P1"
+                            : "p1";
+                    return new Net(graph, entry.getName(), group);
+                }
+            };
+        } else {
+            throw new IllegalFileNameException("Unrecognized extension \"."
+                    + extension + "\"");
+        }
+    }
 }
