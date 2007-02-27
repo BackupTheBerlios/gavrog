@@ -69,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.60 2007/02/26 22:47:35 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.61 2007/02/27 02:20:27 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -157,7 +157,8 @@ public class SystreCmdline extends EventSource {
         }
     }
     
-    public void processGraph(final Net graph, final String name, final String givenGroup) {
+    public void processGraph(final Net graph, final String name,
+			final String givenGroup) {
 
     	status("Initializing...");
     	
@@ -498,7 +499,26 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- compute an embedding
-        for (int pass = 0; pass <= 1; ++pass) {
+        embedGraph(G, name, node2name, finder);
+    }
+
+    private void writeEntry(final PrintStream out, final Archive.Entry entry) {
+        out.println("       Name:\t\t" + entry.getName());
+        if (entry.getDescription() != null) {
+            out.println("       Description:\t" + entry.getDescription());
+        }
+        if (entry.getReference() != null) {
+            out.println("       Reference:\t" + entry.getReference());
+        }
+        if (entry.getURL() != null) {
+            out.println("       URL:\t\t" + entry.getURL());
+        }
+    }
+    
+    private void embedGraph(final PeriodicGraph G, final String name,
+			final Map node2name, final SpaceGroupFinder finder) {
+
+    	for (int pass = 0; pass <= 1; ++pass) {
         	status("Computing an embedding...");
         	
             // --- relax the structure from the barycentric embedding
@@ -615,19 +635,6 @@ public class SystreCmdline extends EventSource {
                 status("Done!");
                 break;
             }
-        }
-    }
-
-    private void writeEntry(final PrintStream out, final Archive.Entry entry) {
-        out.println("       Name:\t\t" + entry.getName());
-        if (entry.getDescription() != null) {
-            out.println("       Description:\t" + entry.getDescription());
-        }
-        if (entry.getReference() != null) {
-            out.println("       Reference:\t" + entry.getReference());
-        }
-        if (entry.getURL() != null) {
-            out.println("       URL:\t\t" + entry.getURL());
         }
     }
     

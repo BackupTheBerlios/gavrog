@@ -25,10 +25,10 @@ public class Version {
 
 	final public static String maturity = "beta";
 
-	final public static String date = "070215";
+	final public static String date = "2007/02/26";
 
 	final public static String extension = (maturity == null ? "" : " " + maturity)
-			+ (date == null ? "" : " " + date);
+			+ (date == null ? "" : " as of " + date);
 
 	final public static String full = major + "." + minor + "." + patchLevel + extension;
 }
