@@ -69,7 +69,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.61 2007/02/27 02:20:27 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.62 2007/02/27 20:03:11 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -801,19 +801,46 @@ public class SystreCmdline extends EventSource {
         
         for (int i = 0; i < args.length; ++i) {
             final String s = args[i];
-            if (s.equals("-b")) {
+            if (s.equals("-b")
+                    || s.equalsIgnoreCase("--barycentric")
+                    || s.equalsIgnoreCase("-barycentric")) {
                 setRelaxPositions(false);
             } else if (s.equals("-d")) {
             	setDuplicateIsError(true);
             } else if (s.equals("-a")) {
                 if (i == args.length - 1) {
-                    out.println("!!! WARNING (USAGE) - Argument missing for \"-a\".");
+                    out.println("!!! WARNING (USAGE) - Argument missing for \""
+                            + s + "\".");
                 } else {
                     outputArchiveFileName = args[++i];
                 }
-            } else if (s.equalsIgnoreCase("--nobuiltin")
-                    || s.equalsIgnoreCase("-nobuiltin")) {
+            } else if (s.equalsIgnoreCase("--noBuiltin")
+                    || s.equalsIgnoreCase("-noBuiltin")) {
                 setUseBuiltinArchive(false);
+            } else if (s.equalsIgnoreCase("--firstOrigin")
+                    || s.equalsIgnoreCase("-firstOrigin")) {
+                SpaceGroupCatalogue.setPreferSecondOrigin(false);
+            } else if (s.equalsIgnoreCase("--rhombohedral")
+                    || s.equalsIgnoreCase("-rhombohedral")) {
+                SpaceGroupCatalogue.setPreferHexagonal(false);
+            } else if (s.equals("-e")
+                    || s.equalsIgnoreCase("--equalEdges")
+                    || s.equalsIgnoreCase("-equalEdges")) {
+                if (i == args.length - 1) {
+                    out.println("!!! WARNING (USAGE) - Argument missing for \""
+                            + s + "\".");
+                } else {
+                    this.relaxPasses = Integer.parseInt(args[++i]);
+                }
+            } else if (s.equals("-s")
+                    ||s.equalsIgnoreCase("--steps")
+                    || s.equalsIgnoreCase("-steps")) {
+                if (i == args.length - 1) {
+                    out.println("!!! WARNING (USAGE) - Argument missing for \""
+                            + s + "\".");
+                } else {
+                    this.relaxSteps = Integer.parseInt(args[++i]);
+                }
             } else {
                 files.add(args[i]);
             }
