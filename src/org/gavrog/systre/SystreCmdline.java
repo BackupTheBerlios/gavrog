@@ -37,6 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
@@ -69,7 +70,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.62 2007/02/27 20:03:11 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.63 2007/02/27 22:02:10 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -646,13 +647,15 @@ public class SystreCmdline extends EventSource {
 	 */
     public void processDataFile(final String filePath) {
         // --- set up a parser for reading input from the given file
-        NetParser parser = null;
+        Iterator inputs = null;
         int count = 0;
         try {
-            parser = new NetParser(new FileReader(filePath));
+            inputs = Net.iterator(filePath);
         } catch (FileNotFoundException ex) {
             out.println("!!! ERROR (FILE) - Could not find file \"" + filePath + "\".");
             return;
+        } catch (Net.IllegalFileNameException ex) {
+            out.println("!!! ERROR (FILE) - " + ex.getMessage());
         }
         this.lastFileNameWithoutExtension = new File(filePath).getName().replaceFirst(
                 "\\..*$", "");
@@ -666,14 +669,11 @@ public class SystreCmdline extends EventSource {
             // --- read the next net
             status("Reading...");
             try {
-                G = parser.parseNet();
+                G = (Net) inputs.next();
+            } catch (NoSuchElementException ex) {
+                break;
             } catch (Exception ex) {
                 problem = ex;
-            }
-            if (G == null) {
-            	if (problem == null) {
-            		break;
-            	}
             }
             ++count;
             
@@ -687,7 +687,7 @@ public class SystreCmdline extends EventSource {
             // --- process the graph
             String name = null;
             try {
-                name = parser.getName();
+                name = G.getName();
             } catch (Exception ex) {
                 if (problem == null) {
                     problem = ex;
@@ -797,6 +797,8 @@ public class SystreCmdline extends EventSource {
      */
     public void run(final String args[]) {
         final List files = new LinkedList();
+        final List archives = new LinkedList();
+        boolean archivesAsInput = false;
         String outputArchiveFileName = null;
         
         for (int i = 0; i < args.length; ++i) {
@@ -841,8 +843,17 @@ public class SystreCmdline extends EventSource {
                 } else {
                     this.relaxSteps = Integer.parseInt(args[++i]);
                 }
+            } else if (s.equalsIgnoreCase("--arcAsInput")
+                    || s.equalsIgnoreCase("-arcAsInput")) {
+                archivesAsInput = true;
+            } else if (s.equals("-x")) {
+                archivesAsInput = !archivesAsInput;
             } else {
-                files.add(args[i]);
+                if (args[i].endsWith(".arc") && !archivesAsInput) {
+                    archives.add(args[i]);
+                } else {
+                    files.add(args[i]);
+                }
             }
         }
         
@@ -861,19 +872,20 @@ public class SystreCmdline extends EventSource {
             }
         }
         
+        for (final Iterator iter = archives.iterator(); iter.hasNext();) {
+            final String filename = (String) iter.next();
+            this.processArchive(filename);
+        }
+        
         for (final Iterator iter = files.iterator(); iter.hasNext();) {
             final String filename = (String) iter.next();
-            if (filename.endsWith(".arc")) {
-                this.processArchive(filename);
-            } else {
-                ++count;
-                if (count > 1) {
-                    out.println();
-                    out.println();
-                    out.println();
-                }
-               this.processDataFile(filename);
+            ++count;
+            if (count > 1) {
+                out.println();
+                out.println();
+                out.println();
             }
+            this.processDataFile(filename);
         }
         
         if (this.outputArchive != null) {
