@@ -1,0 +1,27 @@
+=====================================================
+
+In progress:
+
+(none)
+
+=====================================================
+
+Open bugs:
+
+(none)
+
+Planned/requested features:
+
+- Make SystreGUI accept command line arguments.
+- Make SystreGUI options available for SystreCmdline.
+- Introduce keyboard shortcuts.
+- Optionally report alternate monoclinic settings if better than first setting.
+- Link to online databases.
+- Support more output options (e.g. CrystalMaker).
+- If net is not connected, process components individually.
+- Check for edge intersections and similar problems.
+- If graph has collisions, try to refine anyway.
+- Plot the quotient graph.
+- Compute vertex symbols.
+
+=====================================================
