@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,26 +31,18 @@ import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.gavrog.box.collections.FilteredIterator;
-import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.derived.Skeleton;
-import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
-import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.ProcessedNet;
 import org.gavrog.joss.pgraphs.io.Net;
-import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Output;
 
 import buoy.event.CommandEvent;
@@ -77,7 +68,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.69 2007/02/26 23:51:38 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.70 2007/02/27 20:01:39 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -527,61 +518,30 @@ public class SystreGUI extends BFrame {
         this.netsToProcess = null;
         this.count = 0;
         
-        final BufferedReader reader;
-        try {
-            reader = new BufferedReader(new FileReader(filePath));
-        } catch (FileNotFoundException ex) {
-            reportException(ex, "FILE", null, false);
-            return false;
-        }
         this.fullFileName = filePath;
         this.strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
-        final String extension = filePath.substring(filePath.lastIndexOf('.') + 1);
-        out.println("Data file \"" + filePath + "\".");
         this.bufferedNets.clear();
         this.inputException = null;
 
-        if ("cgd".equals(extension) || "pgr".equals(extension)) {
-			final NetParser parser = new NetParser(reader);
-
-			this.netsToProcess = new IteratorAdapter() {
-				protected Object findNext() throws NoSuchElementException {
-					if (parser.atEnd()) {
-						throw new NoSuchElementException("at end");
-					} else {
-						return parser.parseNet();
-					}
-				}
-			};
-			return true;
-        } else if ("ds".equals(extension)) {
-        	this.netsToProcess = new FilteredIterator(new InputIterator(reader)) {
-				public Object filter(Object x) {
-					final DelaneySymbol ds = (DelaneySymbol) x;
-					final PeriodicGraph graph = new Skeleton(ds);
-					final String group = (ds.dim() == 3) ? "P1" : "p1";
-					return new Net(graph, null, group);
-				}
-        	};
-        	return true;
-        } else if ("arc".equals(extension)) {
-        	this.netsToProcess = new IteratorAdapter() {
-				protected Object findNext() throws NoSuchElementException {
-					final Archive.Entry entry = Archive.Entry.read(reader);
-					if (entry == null) {
-						throw new NoSuchElementException("at end");
-					}
-					final String key = entry.getKey();
-					final PeriodicGraph graph = PeriodicGraph.fromInvariantString(key);
-					final String group = (graph.getDimension() == 3) ? "P1" : "p1";
-					return new Net(graph, entry.getName(), group);
-				}
-        	};
+        try {
+            this.netsToProcess = Net.iterator(filePath);
+        } catch (FileNotFoundException ex) {
+            reportException(ex, "FILE", null, false);
+            return false;
+        } catch (Net.IllegalFileNameException ex) {
+            reportException(ex, "FILE", null, false);
+            return false;
+        } catch (Exception ex) {
+            reportException(ex, "INTERNAL", "Unexpected exception", true);
+        } catch (Error ex) {
+            reportException(ex, "EXECUTION", "Runtime problem", true);
+        }
+        if (this.netsToProcess == null) {
+            return false;
+        } else {
+            out.println("Data file \"" + filePath + "\".");
             return true;
-		} else {
-			reportException(null, "FILE", "Unrecognized extension " + extension, false);
-		}
-		return false;
+        }
 	}
 
     private void finishFile() {
