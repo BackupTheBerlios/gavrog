@@ -52,10 +52,11 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.58 2007/02/15 20:46:05 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.59 2007/03/01 23:35:50 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
+
     public final String invariantVersion = "1.0";
 
     protected static class CacheKey {
@@ -439,6 +440,57 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
+     * Represents a translational lattice of connected components of this
+     * periodic graph.
+     */
+    public class Component {
+        private PeriodicGraph graph;
+        private Matrix basis;
+        private int dimension;
+        private int multiplicity;
+    
+        /**
+         * Constructs an instance.
+         * @param graph the component as a connected periodic graph
+         * @param basis describes the embedding into the containing graph
+         */
+        public Component(final PeriodicGraph graph, final Matrix basis) {
+            this.graph = graph;
+            this.basis = basis;
+            this.dimension = basis.rank();
+            this.multiplicity = ((Whole) basis.determinant()).intValue();
+        }
+    
+        /**
+         * @return the basis
+         */
+        public Matrix getBasis() {
+            return this.basis;
+        }
+    
+        /**
+         * @return the dimension
+         */
+        public int getDimension() {
+            return this.dimension;
+        }
+    
+        /**
+         * @return the graph
+         */
+        public PeriodicGraph getGraph() {
+            return this.graph;
+        }
+    
+        /**
+         * @return the multiplicity
+         */
+        public int getMultiplicity() {
+            return this.multiplicity;
+        }
+    }
+
+    /**
      * @return Returns the dimension.
      */
     public int getDimension() {
@@ -671,6 +723,86 @@ public class PeriodicGraph extends UndirectedGraph {
                 return new Integer(currentShell.size());
             }
         };
+    }
+    
+    /**
+     * Determines the connected components of the periodic graph.
+     * @return the list of components.
+     */
+    public List connectedComponents() {
+        final int dim = getDimension();
+        final Set seen = new HashSet();
+        final Map adjustment = new HashMap();
+        final List componentsTmp = new ArrayList();
+        
+        for (final Iterator nodes = nodes(); nodes.hasNext();) {
+            final INode start = (INode) nodes.next();
+            if (seen.contains(start)) {
+                continue;
+            }
+            final List translations = new ArrayList();
+            final LinkedList queue = new LinkedList();
+            final List componentNodes = new ArrayList();
+            queue.addLast(start);
+            seen.add(start);
+            componentNodes.add(start);
+            adjustment.put(start, Vector.zero(dim));
+            
+            while (queue.size() > 0) {
+                final INode v = (INode) queue.removeFirst();
+                final Vector av = (Vector) adjustment.get(v);
+                for (final Iterator edges = v.incidences(); edges.hasNext();) {
+                    final IEdge e = (IEdge) edges.next();
+                    final INode w = e.target();
+                    final Vector s = getShift(e);
+                    if (!seen.contains(w)) {
+                        queue.addLast(w);
+                        seen.add(w);
+                        componentNodes.add(w);
+                        adjustment.put(w, av.minus(s));
+                    } else {
+                        final Vector aw = (Vector) adjustment.get(w);
+                        translations.add(s.plus(aw).minus(av));
+                    }
+                }
+            }
+            componentsTmp.add(new Pair(componentNodes, translations));
+        }
+        
+        final List components = new ArrayList();
+        for (final Iterator iter = componentsTmp.iterator(); iter.hasNext();) {
+            final Pair entry = (Pair) iter.next();
+            final List thisNodes = (List) entry.getFirst();
+            final List thisTrans = (List) entry.getSecond();
+            final Matrix A = Vector.toMatrix(thisTrans).mutableClone();
+            Matrix.triangulate(A, null, true, true);
+            final Matrix thisBasis = A.getSubMatrix(0, 0, dim, dim);
+            final int thisDim = thisBasis.rank();
+            //TODO fix this for the case that component has lower dimension
+            final CoordinateChange C = new CoordinateChange(thisBasis);
+            
+            final PeriodicGraph thisGraph = new PeriodicGraph(thisDim);
+            final Map old2new = new HashMap();
+            for (final Iterator nodes = thisNodes.iterator(); nodes.hasNext();) {
+                final INode v = (INode) nodes.next();
+                old2new.put(v, thisGraph.newNode());
+            }
+            for (final Iterator edges = edges(); edges.hasNext();) {
+                final IEdge e = (IEdge) edges.next();
+                final INode v = (INode) old2new.get(e.source());
+                final INode w = (INode) old2new.get(e.target());
+                if (v == null || w == null) {
+                    continue;
+                }
+                final Vector s = getShift(e);
+                final Vector av = (Vector) adjustment.get(v);
+                final Vector aw = (Vector) adjustment.get(w);
+                thisGraph.newEdge(v, w, (Vector) s.plus(aw).minus(av).times(C));
+            }
+            components.add(new Component(thisGraph, thisBasis));
+        }
+        
+        return components;
     }
     
     /**
