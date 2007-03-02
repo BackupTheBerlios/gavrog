@@ -32,7 +32,7 @@ import org.gavrog.jane.numbers.Whole;
  * or/origin.
  * 
  * @author Olaf Delgado
- * @version $Id: CoordinateChange.java,v 1.6 2006/04/12 23:26:27 odf Exp $
+ * @version $Id: CoordinateChange.java,v 1.7 2007/03/02 06:48:28 odf Exp $
  */
 public class CoordinateChange extends ArithmeticBase implements IArithmetic {
     final Matrix left;
@@ -47,12 +47,10 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
      * @param origin the new origin.
      */
     public CoordinateChange(final Matrix basis, final Point origin) {
-        final int d = basis.numberOfRows();
-        if (basis.numberOfColumns() != d) {
-            throw new IllegalArgumentException("bad shape");
-        }
+    	final Matrix B = extendedToBasis(basis);
+        final int d = B.numberOfRows();
         this.left = new Matrix(d+1, d+1);
-        this.left.setSubMatrix(0, 0, basis);
+        this.left.setSubMatrix(0, 0, B);
         this.left.setSubMatrix(d, 0, origin.getCoordinates());
         this.left.setSubMatrix(0, d, Matrix.zero(d, 1));
         this.left.set(d, d, Whole.ONE);
@@ -67,17 +65,7 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
      * @param basis the d x d matrix representing the new basis.
      */
     public CoordinateChange(final Matrix basis) {
-        final int d = basis.numberOfRows();
-        if (basis.numberOfColumns() != d) {
-            throw new IllegalArgumentException("bad shape");
-        }
-        this.left = new Matrix(d+1, d+1);
-        this.left.setSubMatrix(0, 0, basis);
-        this.left.setSubMatrix(d, 0, Matrix.zero(1, d));
-        this.left.setSubMatrix(0, d, Matrix.zero(d, 1));
-        this.left.set(d, d, Whole.ONE);
-        this.right = (Matrix) this.left.inverse();
-        this.dimension = d;
+    	this(basis, new Point(Matrix.zero(1, basis.numberOfColumns())));
     }
 
     /**
@@ -105,9 +93,46 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
         this.dimension = d;
     }
     
-    /* (non-Javadoc)
-     * @see org.gavrog.jane.numbers.ArithmeticBase#isExact()
+    /**
+     * Checks if the non-zero rows in the given matrix are linearly independent
+     * and if so, extend them to a basis of the total space.
+     * @param basis a list of row vectors given as a matrix.
+     * @return a matrix containing a basis of row vectors.
      */
+    private Matrix extendedToBasis(final Matrix basis) {
+    	final int d = basis.numberOfColumns();
+    	final int m = basis.numberOfRows();
+    	int r = basis.rank();
+    	if (!basis.getSubMatrix(r, 0, m-r, d).isZero()) {
+    		final String msg = "matrix does not represent a subspace basis";
+    		throw new IllegalArgumentException(msg);
+    	}
+    	final Matrix B;
+		if (r < d) {
+			B = new Matrix(d, d);
+			B.setSubMatrix(0, 0, basis.getSubMatrix(0, 0, r, d));
+			B.setSubMatrix(r, 0, Matrix.zero(d - r, d));
+			final Matrix I = Matrix.one(d);
+			for (int k = 0; k < d; ++k) {
+				B.setRow(r, I.getRow(k));
+				if (B.rank() > r) {
+					++r;
+					if (r >= d) {
+						break;
+					}
+				}
+			}
+		} else {
+			B = basis;
+		}
+    	return B;
+    }
+    
+    /*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.gavrog.jane.numbers.ArithmeticBase#isExact()
+	 */
     public boolean isExact() {
         return this.left.isExact();
     }
