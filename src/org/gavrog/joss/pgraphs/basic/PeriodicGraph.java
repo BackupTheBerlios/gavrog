@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.59 2007/03/01 23:35:50 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.60 2007/03/02 21:40:47 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -81,6 +81,7 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     protected static final CacheKey IS_CONNECTED = new CacheKey();
+    protected static final CacheKey CONNECTED_COMPONENTS = new CacheKey();
     protected static final CacheKey BARYCENTRIC_PLACEMENT = new CacheKey();
     protected static final CacheKey IS_LOCALLY_STABLE = new CacheKey();
     protected static final CacheKey IS_LADDER = new CacheKey();
@@ -444,10 +445,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * periodic graph.
      */
     public class Component {
-        private PeriodicGraph graph;
-        private Matrix basis;
-        private int dimension;
-        private int multiplicity;
+        final private PeriodicGraph graph;
+        final private Matrix basis;
+        final private int multiplicity;
     
         /**
          * Constructs an instance.
@@ -457,8 +457,11 @@ public class PeriodicGraph extends UndirectedGraph {
         public Component(final PeriodicGraph graph, final Matrix basis) {
             this.graph = graph;
             this.basis = basis;
-            this.dimension = basis.rank();
-            this.multiplicity = ((Whole) basis.determinant()).intValue();
+            if (graph.getDimension() == PeriodicGraph.this.getDimension()) {
+            	this.multiplicity = ((Whole) basis.determinant()).intValue();
+            } else {
+            	this.multiplicity = 0;
+            }
         }
     
         /**
@@ -472,7 +475,7 @@ public class PeriodicGraph extends UndirectedGraph {
          * @return the dimension
          */
         public int getDimension() {
-            return this.dimension;
+            return this.graph.getDimension();
         }
     
         /**
@@ -730,6 +733,11 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the list of components.
      */
     public List connectedComponents() {
+        final List cached = (List) cache.get(CONNECTED_COMPONENTS);
+        if (cached != null) {
+            return cached;
+        }
+        
         final int dim = getDimension();
         final Set seen = new HashSet();
         final Map adjustment = new HashMap();
@@ -776,9 +784,8 @@ public class PeriodicGraph extends UndirectedGraph {
             final List thisTrans = (List) entry.getSecond();
             final Matrix A = Vector.toMatrix(thisTrans).mutableClone();
             Matrix.triangulate(A, null, true, true);
-            final Matrix thisBasis = A.getSubMatrix(0, 0, dim, dim);
-            final int thisDim = thisBasis.rank();
-            //TODO fix this for the case that component has lower dimension
+            final int thisDim = A.rank();
+            final Matrix thisBasis = A.getSubMatrix(0, 0, thisDim, dim);
             final CoordinateChange C = new CoordinateChange(thisBasis);
             
             final PeriodicGraph thisGraph = new PeriodicGraph(thisDim);
@@ -797,11 +804,15 @@ public class PeriodicGraph extends UndirectedGraph {
                 final Vector s = getShift(e);
                 final Vector av = (Vector) adjustment.get(v);
                 final Vector aw = (Vector) adjustment.get(w);
-                thisGraph.newEdge(v, w, (Vector) s.plus(aw).minus(av).times(C));
+                final Vector t = (Vector) s.plus(aw).minus(av).times(C);
+                final Matrix c = t.getCoordinates().getSubMatrix(0, 0, 1,
+						thisDim);
+                thisGraph.newEdge(v, w, new Vector(c));
             }
             components.add(new Component(thisGraph, thisBasis));
         }
         
+        cache.put(CONNECTED_COMPONENTS, components);
         return components;
     }
     
