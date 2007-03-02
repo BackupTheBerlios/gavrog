@@ -24,7 +24,7 @@ import org.gavrog.jane.compounds.Matrix;
  * Unit tests for {@link org.gavrog.joss.geometry.CoordinateChange}.
  * 
  * @author Olaf Delgado
- * @version $Id: TestCoordinateChange.java,v 1.4 2007/03/02 06:47:59 odf Exp $
+ * @version $Id: TestCoordinateChange.java,v 1.5 2007/03/02 21:21:19 odf Exp $
  */
 public class TestCoordinateChange extends TestCase {
     final Matrix M = new Matrix(new int[][] { { 0, 2, 0 }, { 0, 0, 1 }, { 1, 0, 0 } });
@@ -148,5 +148,18 @@ public class TestCoordinateChange extends TestCase {
     public void testConstructorWithoutOriginChange() {
     	final Point z = new Point(new int[] { 0, 0, 0 });
     	assertEquals(new CoordinateChange(M), new CoordinateChange(M, z));
+    }
+    
+    public void testPartialBasis() {
+    	final int A[][] = new int[][] { { 1, 1, 1 }, { -1, 1, 1 } };
+    	final CoordinateChange C = new CoordinateChange(new Matrix(A));
+    	final Point p = new Point(new int[] { 1, 1, 1 });
+    	final Point pC = new Point(new int[] { 1, 0, 0 });
+    	final Point q = new Point(new int[] { -1, 1, 1 });
+    	final Point qC = new Point(new int[] { 0, 1, 0 });
+    	assertEquals(pC, p.times(C));
+    	assertEquals(qC, q.times(C));
+    	assertEquals(C.one(), C.times(C.inverse()));
+    	assertEquals(C.one(), C.inverse().times(C));
     }
 }
