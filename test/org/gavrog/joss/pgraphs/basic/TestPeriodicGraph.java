@@ -46,7 +46,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.38 2007/02/15 21:55:27 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.39 2007/03/03 01:03:54 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -340,6 +340,38 @@ public class TestPeriodicGraph extends TestCase {
         H.delete(e);
         H.newEdge(v1, v2, new int[] {0,0,0});
         assertTrue(H.isConnected());
+    }
+    
+    public void testConnectedComponents() {
+    	final PeriodicGraph P = new PeriodicGraph(0);
+    	P.newNode();
+        final PeriodicGraph H = new PeriodicGraph(3);
+        final INode v1 = H.newNode();
+        final INode v2 = H.newNode();
+        List components = H.connectedComponents();
+        assertEquals(2, components.size());
+        PeriodicGraph.Component c = (PeriodicGraph.Component) components.get(0);
+        assertEquals(0, c.getDimension());
+        assertEquals(0,	c.getMultiplicity());
+        assertEquals(P, c.getGraph());
+        
+        H.newEdge(v1, v2, new int[] {1,0,0});
+        H.newEdge(v1, v2, new int[] {0,1,0});
+        H.newEdge(v1, v2, new int[] {0,0,1});
+        components = H.connectedComponents();
+        assertEquals(1, components.size());
+        c = (PeriodicGraph.Component) components.get(0);
+        assertEquals(2, c.getDimension());
+        assertEquals(0, c.getMultiplicity());
+        assertEquals(hexGrid(), c.getGraph());
+        
+        H.newEdge(v1, v2, new int[] {2,1,0});
+        components = H.connectedComponents();
+        assertEquals(1, components.size());
+        c = (PeriodicGraph.Component) components.get(0);
+        assertEquals(3, c.getDimension());
+        assertEquals(2, c.getMultiplicity());
+        assertEquals(diamond(), c.getGraph());
     }
     
     public void testBarycentricPositions() {
