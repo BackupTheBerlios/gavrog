@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.62 2007/03/03 02:04:02 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.63 2007/03/03 02:05:00 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
