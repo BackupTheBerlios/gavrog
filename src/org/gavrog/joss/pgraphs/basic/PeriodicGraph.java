@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.61 2007/03/03 01:03:29 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.62 2007/03/03 02:04:02 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1451,7 +1451,7 @@ public class PeriodicGraph extends UndirectedGraph {
             protected Object findNext() throws NoSuchElementException {
                 while (!perms.hasNext()) {
                     int k;
-                    if (a[1] == 0) {
+                    if (d > 1 && a[1] == 0) {
                         for (int i = 0; i < d; ++i) {
                             a[i] = i;
                         }
