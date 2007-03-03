@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.63 2007/03/03 02:05:00 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.64 2007/03/03 02:42:42 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -80,7 +80,6 @@ public class PeriodicGraph extends UndirectedGraph {
         }
     }
     
-    protected static final CacheKey IS_CONNECTED = new CacheKey();
     protected static final CacheKey CONNECTED_COMPONENTS = new CacheKey();
     protected static final CacheKey BARYCENTRIC_PLACEMENT = new CacheKey();
     protected static final CacheKey IS_LOCALLY_STABLE = new CacheKey();
@@ -823,89 +822,32 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return true if the periodic graph is connected.
      */
     public boolean isConnected() {
-        final Boolean cached = (Boolean) cache.get(IS_CONNECTED);
-        if (cached != null) {
-            return cached.booleanValue();
-        }
-        
-        // --- an empty graph is considered connected
-        if (!nodes().hasNext()) {
-            cache.put(IS_CONNECTED, new Boolean(true));
-            return true;
-        }
-        
-        // --- start node for traversing the representation graph
-        final CoverNode start = new CoverNode((INode) nodes().next());
-        
-        // --- make a breadth first traversal on the representation graph,
-        //     determining reachable vertex classes and reachable translations
-        final Map repSeen = new HashMap();
-        final LinkedList queue = new LinkedList();
-        final List shifts = new ArrayList();
-        
-        repSeen.put(start.getOrbitNode(), start);
-        queue.addLast(start);
-        
-        while (queue.size() > 0) {
-            final CoverNode v = (CoverNode) queue.removeFirst();
-            for (final Iterator edges = v.incidences(); edges.hasNext();) {
-                final CoverEdge e = (CoverEdge) edges.next();
-                final CoverNode w = (CoverNode) e.target();
-                final CoverNode rw = (CoverNode) repSeen.get(w.getOrbitNode());
-                if (rw != null) {
-                    final Vector d = (Vector) w.getShift().minus(rw.getShift());
-                    if (!d.isZero()) {
-                        shifts.add(d);
-                    }
-                } else {
-                    repSeen.put(w.getOrbitNode(), w);
-                    queue.addLast(w);
-                }
-            }
-        }
-
-        // --- check if all vertex representatives have been reached
-        for (final Iterator iter = nodes(); iter.hasNext();) {
-            if (!repSeen.containsKey(iter.next())) {
-                cache.put(IS_CONNECTED, new Boolean(false));
-                return false;
-            }
-        }
-        
-        // --- check if the reachable translations found generate all translations
-        Matrix M = Vector.toMatrix(shifts).mutableClone();
-        Matrix.triangulate(M, null, true, true);
-        final int dim = getDimension();
-        if (M.getSubMatrix(0, 0, dim, dim).isOne() == false) {
-            cache.put(IS_CONNECTED, new Boolean(false));
-            return false;
-        }
-        
-        // --- at this point, the graph must be connected
-        cache.put(IS_CONNECTED, new Boolean(true));
-        return true;
-    }
+		final List components = connectedComponents();
+		final int n = components.size();
+		return n == 0
+				|| (n == 1 && ((Component) components.get(0)).getMultiplicity() == 1);
+	}
     
     /**
-     * Computes a barycentric placement for the nodes. Nodes are in barycentric
-     * positions if each node is in the center of gravity of its neighbors. In
-     * other words, each coordinate for its position is the average of the
-     * corresponding coordinates for its neighbors. The barycentric positions
-     * are, of course, with respect to the periodic graph. In particular, shifts
-     * are taken into account. The returned map, however, contains only the
-     * positions for the node representatives.
-     * 
-     * The barycentric placement of connected graph are unique up to affine
-     * transformations, i.e., general basis and origin changes. This method
-     * computes coordinates expressed in terms of the basis used for edge shift
-     * vectors in this graph. Moreover, the first vertex, as produced by the
-     * iterator returned by nodes(), is placed at the origin.
-     * 
-     * The graph in question must, for now, be connected as for multiple
-     * components the barycentric placement is no longer unique.
-     * 
-     * @return a map giving barycentric positions for the node representatives.
-     */
+	 * Computes a barycentric placement for the nodes. Nodes are in barycentric
+	 * positions if each node is in the center of gravity of its neighbors. In
+	 * other words, each coordinate for its position is the average of the
+	 * corresponding coordinates for its neighbors. The barycentric positions
+	 * are, of course, with respect to the periodic graph. In particular, shifts
+	 * are taken into account. The returned map, however, contains only the
+	 * positions for the node representatives.
+	 * 
+	 * The barycentric placement of connected graph are unique up to affine
+	 * transformations, i.e., general basis and origin changes. This method
+	 * computes coordinates expressed in terms of the basis used for edge shift
+	 * vectors in this graph. Moreover, the first vertex, as produced by the
+	 * iterator returned by nodes(), is placed at the origin.
+	 * 
+	 * The graph in question must, for now, be connected as for multiple
+	 * components the barycentric placement is no longer unique.
+	 * 
+	 * @return a map giving barycentric positions for the node representatives.
+	 */
     public Map barycentricPlacement() {
         if (!isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
