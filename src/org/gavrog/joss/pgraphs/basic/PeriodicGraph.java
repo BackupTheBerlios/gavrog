@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.60 2007/03/02 21:40:47 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.61 2007/03/03 01:03:29 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -802,9 +802,9 @@ public class PeriodicGraph extends UndirectedGraph {
                     continue;
                 }
                 final Vector s = getShift(e);
-                final Vector av = (Vector) adjustment.get(v);
-                final Vector aw = (Vector) adjustment.get(w);
-                final Vector t = (Vector) s.plus(aw).minus(av).times(C);
+                final Vector av = (Vector) adjustment.get(e.source());
+                final Vector aw = (Vector) adjustment.get(e.target());
+                final Vector t = (Vector) (Vector) s.plus(aw).minus(av).times(C);
                 final Matrix c = t.getCoordinates().getSubMatrix(0, 0, 1,
 						thisDim);
                 thisGraph.newEdge(v, w, new Vector(c));
@@ -1440,7 +1440,7 @@ public class PeriodicGraph extends UndirectedGraph {
     private Iterator goodCombinations(final List edges, final Map pos) {
         final int d = getDimension();
         final int n = edges.size();
-        if (n < d) {
+        if (n < d || d == 0) {
             return Iterators.empty();
         }
 
@@ -2137,13 +2137,16 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- consistency test
-        final Matrix B1 = (Matrix) bestBasis.inverse().times(
-                basisChange.getBasis().inverse());
-        try {
-            new Morphism(bestStart, nodes[1], B1);
-        } catch (Morphism.NoSuchMorphismException ex) {
-            throw new RuntimeException("internal error - please contact author");
-        }
+        if (bestBasis != null) {
+			final Matrix B1 = (Matrix) bestBasis.inverse().times(
+					basisChange.getBasis().inverse());
+			try {
+				new Morphism(bestStart, nodes[1], B1);
+			} catch (Morphism.NoSuchMorphismException ex) {
+				throw new RuntimeException(
+						"internal error - please contact author");
+			}
+		}
 
         // --- cache the results
         this.cache.put(INVARIANT, new NiceIntList(invariant));
