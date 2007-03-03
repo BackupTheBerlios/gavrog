@@ -1,5 +1,6 @@
 Systre 1.1.1:
 
+- Interlocking nets are now processed component-wise (EXPERIMENTAL).
 - Archives and Delaney symbol files as input now work in command line version.
 - The command line version now accepts most of the options available via GUI.
 - The output for nets with errors is no longer left out from the ".out" file.
