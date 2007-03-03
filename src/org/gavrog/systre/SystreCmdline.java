@@ -70,7 +70,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.63 2007/02/27 22:02:10 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.64 2007/03/03 02:43:43 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -158,8 +158,7 @@ public class SystreCmdline extends EventSource {
         }
     }
     
-    public void processGraph(final Net graph, final String name,
-			final String givenGroup) {
+    public void processGraph(final Net graph, String name, final boolean embed) {
 
     	status("Initializing...");
     	
@@ -172,6 +171,7 @@ public class SystreCmdline extends EventSource {
         setLastStructure(null);
         PeriodicGraph G = graph;
         final int d = G.getDimension();
+        final String givenGroup = graph.getGivenGroup();
         
         if (DEBUG) {
             out.println("\t\t@@@ Graph is " + G);
@@ -188,8 +188,8 @@ public class SystreCmdline extends EventSource {
 
         // --- test if the net is connected
         if (!G.isConnected()) {
-        	final String msg = "Structure is not connected";
-        	throw new SystreException(SystreException.STRUCTURE, msg);
+        	processDisconnectedGraph(graph, name);
+        	return;
         }
         // --- get and check the barycentric placement
     	status("Computing barycentric placement...");
@@ -503,7 +503,38 @@ public class SystreCmdline extends EventSource {
         embedGraph(G, name, node2name, finder);
     }
 
-    private void writeEntry(final PrintStream out, final Archive.Entry entry) {
+    /**
+     * Processes the components of a disconnected graph.
+     * 
+	 * @param graph the graph to process.
+	 * @param name the name to use for archiving.
+	 */
+	private void processDisconnectedGraph(final Net graph, final String name) {
+		out.println();
+		out.println("   Structure is not connected.");
+		out.println("   Processing components separately.");
+		out.println();
+		out.println("   ==========");
+		final List components = graph.connectedComponents();
+		for (int i = 0; i < components.size(); ++i) {
+			final PeriodicGraph.Component c = (PeriodicGraph.Component) components
+					.get(i);
+			out.println("   Processing component " + i + ":");
+			if (c.getDimension() < graph.getDimension()) {
+				out.println("      dimension = " + c.getDimension());
+			} else {
+				out.println("      multiplicity = " + c.getMultiplicity());
+			}
+			final String cName = name + "_component_" + i;
+			processGraph(new Net(c.getGraph(), cName, "P1"), cName, false);
+			out.println();
+			out.println("   Finished component " + i + ".");
+			out.println();
+			out.println("   ==========");
+		}
+	}
+
+	private void writeEntry(final PrintStream out, final Archive.Entry entry) {
         out.println("       Name:\t\t" + entry.getName());
         if (entry.getDescription() != null) {
             out.println("       Description:\t" + entry.getDescription());
@@ -716,7 +747,7 @@ public class SystreCmdline extends EventSource {
             	}
             } else {
                 try {
-                    processGraph(G, archiveName, G.getGivenGroup());
+                    processGraph(G, archiveName, true);
                 } catch (SystreException ex) {
                     out.println("==================================================");
                     out.println("!!! ERROR (" + ex.getType() + ") - " + ex.getMessage()
