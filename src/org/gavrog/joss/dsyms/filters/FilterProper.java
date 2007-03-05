@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.8 2006/12/27 17:36:58 odf Exp $
+ * @version $Id: FilterProper.java,v 1.9 2007/03/05 07:04:55 odf Exp $
  */
 public class FilterProper {
 
@@ -48,6 +48,7 @@ public class FilterProper {
 			boolean unique = false;
 			boolean canonical = false;
 			boolean dualize = false;
+			boolean verbose = false;
 			
 	        int i = 0;
 	        while (i < args.length && args[i].startsWith("-")) {
@@ -57,6 +58,8 @@ public class FilterProper {
 	        		unique = !unique;
 	        	} else if (args[i].equalsIgnoreCase("-d")){
 	        		dualize = !dualize;
+	        	} else if (args[i].equalsIgnoreCase("-v")) {
+	        		verbose = !verbose;
 	        	} else {
 	        		System.err.println("Unknown option '" + args[i] + "'");
 	        	}
@@ -91,14 +94,37 @@ public class FilterProper {
 					final DSymbol cov = new DSymbol(Covers
 							.pseudoToroidalCover3D(min));
 					final PeriodicGraph gr = new Skeleton(cov);
-					if (!gr.isStable() || !gr.isMinimal()) {
+					if (!gr.isStable()) {
+						if (verbose) {
+							System.err.print("# --- Symbol " + inCount
+									+ " is not stable.\n");
+						}
+						continue;
+					}
+					if (!gr.isMinimal()) {
+						if (verbose) {
+							System.err.print("# --- Symbol " + inCount
+									+ " is not proper.\n");
+						}
 						continue;
 					}
 					if (unique && seen.contains(gr.invariant())) {
+						if (verbose) {
+							System.err.print("# --- Symbol " + inCount
+									+ " is a duplicate.\n");
+						}
 						continue;
 					}
 					if (gr.symmetries().size() != cov.size() / min.size()) {
+						if (verbose) {
+							System.err.print("# --- Symbol " + inCount
+									+ " is not proper.\n");
+						}
 						continue;
+					}
+					if (verbose) {
+						System.err.print("# +++ Symbol " + inCount
+								+ " is proper.\n");
 					}
 					++outCount;
 					if (canonical) {
