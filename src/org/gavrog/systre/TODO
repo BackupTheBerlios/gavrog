@@ -12,6 +12,7 @@ Open bugs:
 
 Planned/requested features:
 
+- Add option to omit coordination sequence computation.
 - Issue a warning if computed coordination number does not match given.
 - Print parametric positions for nodes and edge centers.
 - Make SystreGUI accept command line arguments.
