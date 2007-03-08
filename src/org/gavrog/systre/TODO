@@ -12,6 +12,7 @@ Open bugs:
 
 Planned/requested features:
 
+- Print parametric positions for nodes and edge centers.
 - Make SystreGUI accept command line arguments.
 - Make SystreGUI options available for SystreCmdline.
 - Introduce keyboard shortcuts.
