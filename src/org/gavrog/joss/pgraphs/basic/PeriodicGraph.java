@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.64 2007/03/03 02:42:42 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.65 2007/03/10 00:20:17 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -446,7 +446,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public class Component {
         final private PeriodicGraph graph;
         final private Matrix basis;
-        final private int multiplicity;
+        final private Whole multiplicity;
     
         /**
          * Constructs an instance.
@@ -457,9 +457,9 @@ public class PeriodicGraph extends UndirectedGraph {
             this.graph = graph;
             this.basis = basis;
             if (graph.getDimension() == PeriodicGraph.this.getDimension()) {
-            	this.multiplicity = ((Whole) basis.determinant()).intValue();
+            	this.multiplicity = (Whole) basis.determinant();
             } else {
-            	this.multiplicity = 0;
+            	this.multiplicity = Whole.ZERO;
             }
         }
     
@@ -487,7 +487,7 @@ public class PeriodicGraph extends UndirectedGraph {
         /**
          * @return the multiplicity
          */
-        public int getMultiplicity() {
+        public Whole getMultiplicity() {
             return this.multiplicity;
         }
     }
@@ -825,7 +825,8 @@ public class PeriodicGraph extends UndirectedGraph {
 		final List components = connectedComponents();
 		final int n = components.size();
 		return n == 0
-				|| (n == 1 && ((Component) components.get(0)).getMultiplicity() == 1);
+                || (n == 1 && ((Component) components.get(0)).getMultiplicity()
+                        .equals(Whole.ONE));
 	}
     
     /**

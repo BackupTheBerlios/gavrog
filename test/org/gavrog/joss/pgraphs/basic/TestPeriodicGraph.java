@@ -35,6 +35,7 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
@@ -46,7 +47,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.39 2007/03/03 01:03:54 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.40 2007/03/10 00:20:13 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -352,7 +353,7 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(2, components.size());
         PeriodicGraph.Component c = (PeriodicGraph.Component) components.get(0);
         assertEquals(0, c.getDimension());
-        assertEquals(0,	c.getMultiplicity());
+        assertEquals(Whole.ZERO, c.getMultiplicity());
         assertEquals(P, c.getGraph());
         
         H.newEdge(v1, v2, new int[] {1,0,0});
@@ -362,7 +363,7 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(1, components.size());
         c = (PeriodicGraph.Component) components.get(0);
         assertEquals(2, c.getDimension());
-        assertEquals(0, c.getMultiplicity());
+        assertEquals(Whole.ZERO, c.getMultiplicity());
         assertEquals(hexGrid(), c.getGraph());
         
         H.newEdge(v1, v2, new int[] {2,1,0});
@@ -370,7 +371,7 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(1, components.size());
         c = (PeriodicGraph.Component) components.get(0);
         assertEquals(3, c.getDimension());
-        assertEquals(2, c.getMultiplicity());
+        assertEquals(new Whole(2), c.getMultiplicity());
         assertEquals(diamond(), c.getGraph());
     }
     
