@@ -70,7 +70,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.64 2007/03/03 02:43:43 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.65 2007/03/10 00:21:28 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -321,6 +321,7 @@ public class SystreCmdline extends EventSource {
     	
         out.println("   Coordination sequences:");
         int cum = 0;
+        boolean cs_complete = true;
         for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
             final Set orbit = (Set) orbits.next();
             final INode v = (INode) orbit.iterator().next();
@@ -334,12 +335,17 @@ public class SystreCmdline extends EventSource {
             for (int i = 0; i < 10; ++i) {
             	final int x = ((Integer) cs.next()).intValue();
                 out.print(" " + x);
+                out.flush();
                 sum += x;
                 if (givenCS != null && i < givenCS.size()) {
                 	final int y = ((Whole) givenCS.get(i)).intValue();
                 	if (x != y) {
                 		mismatch = true;
                 	}
+                }
+                if (sum > 10000) {
+                    cs_complete = false;
+                    break;
                 }
             }
             out.println();
@@ -350,8 +356,11 @@ public class SystreCmdline extends EventSource {
             }
         }
         out.println();
-        out.println("   TD10 = " + fmtReal4.format(((double) cum) / G.numberOfNodes()));
-        out.println();
+        if (cs_complete) {
+            out.println("   TD10 = "
+                    + fmtReal4.format(((double) cum) / G.numberOfNodes()));
+            out.println();
+        }
         out.flush();
         
         quitIfCancelled();
@@ -516,9 +525,9 @@ public class SystreCmdline extends EventSource {
 		out.println();
 		out.println("   ==========");
 		final List components = graph.connectedComponents();
-		for (int i = 0; i < components.size(); ++i) {
+		for (int i = 1; i <= components.size(); ++i) {
 			final PeriodicGraph.Component c = (PeriodicGraph.Component) components
-					.get(i);
+					.get(i-1);
 			out.println("   Processing component " + i + ":");
 			if (c.getDimension() < graph.getDimension()) {
 				out.println("      dimension = " + c.getDimension());
