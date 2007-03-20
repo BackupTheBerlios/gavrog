@@ -52,7 +52,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.65 2007/03/10 00:20:17 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.66 2007/03/20 19:20:01 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -457,7 +457,11 @@ public class PeriodicGraph extends UndirectedGraph {
             this.graph = graph;
             this.basis = basis;
             if (graph.getDimension() == PeriodicGraph.this.getDimension()) {
-            	this.multiplicity = (Whole) basis.determinant();
+            	if (graph.getDimension() == 0) {
+            		this.multiplicity = Whole.ONE;
+            	} else {
+            		this.multiplicity = (Whole) basis.determinant();
+            	}
             } else {
             	this.multiplicity = Whole.ZERO;
             }
