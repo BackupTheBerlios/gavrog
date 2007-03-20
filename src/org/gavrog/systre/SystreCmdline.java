@@ -70,7 +70,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.65 2007/03/10 00:21:28 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.66 2007/03/20 19:20:27 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -178,6 +178,7 @@ public class SystreCmdline extends EventSource {
         }
         
         // --- print some information on net as given
+        out.println("   Structure of dimension " + d + ".");
         out.println("   Given space group is " + givenGroup + ".");
         out.flush();
         final int n = G.numberOfNodes();
