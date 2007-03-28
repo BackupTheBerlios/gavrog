@@ -21,11 +21,11 @@ public class Version {
 
 	final public static int minor = 1;
 
-	final public static int patchLevel = 1;
+	final public static int patchLevel = 2;
 
 	final public static String maturity = "beta";
 
-	final public static String date = "2007/03/03";
+	final public static String date = "2007/03/28";
 
 	final public static String extension = (maturity == null ? "" : " " + maturity)
 			+ (date == null ? "" : " as of " + date);

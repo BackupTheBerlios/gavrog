@@ -35,6 +35,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
+import org.gavrog.box.simple.TaskController;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Fraction;
@@ -52,7 +53,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.66 2007/03/20 19:20:01 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.67 2007/03/28 05:13:22 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1462,6 +1463,8 @@ public class PeriodicGraph extends UndirectedGraph {
             throw new UnsupportedOperationException("graph must be locally stable");
         }
         
+        final TaskController taskController = TaskController.getInstance();
+        
         final List generators = new LinkedList();
         final int d = getDimension();
         final List bases = characteristicBases();
@@ -1471,6 +1474,8 @@ public class PeriodicGraph extends UndirectedGraph {
         final Matrix B0 = differenceMatrix(basis0);
         
         for (int i = 0; i < bases.size(); ++i) {
+        	taskController.bailOutIfCancelled();
+        	
             final List b = (List) bases.get(i);
             final INode v = ((IEdge) b.get(0)).source();
             final Matrix B = differenceMatrix(b);
@@ -1835,6 +1840,8 @@ public class PeriodicGraph extends UndirectedGraph {
             throw new UnsupportedOperationException("graph must be locally stable");
         }
         
+        final TaskController taskController = TaskController.getInstance();
+        
         final int d = getDimension();
         final int m = numberOfEdges();
         final List bases = characteristicBases();
@@ -1893,6 +1900,8 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         for (int i = 0; i < bases.size(); ++i) {
+        	taskController.bailOutIfCancelled();
+        	
             final List b = (List) bases.get(i);
             if (DEBUG) {
                 System.out.println("  Checking basis " + b);

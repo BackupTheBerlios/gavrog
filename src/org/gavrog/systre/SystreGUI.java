@@ -40,6 +40,8 @@ import javax.swing.SwingUtilities;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
+import org.gavrog.box.simple.TaskController;
+import org.gavrog.box.simple.TaskStoppedException;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.embed.ProcessedNet;
 import org.gavrog.joss.pgraphs.io.Net;
@@ -68,7 +70,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.71 2007/03/03 02:43:43 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.72 2007/03/28 05:13:22 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -108,10 +110,12 @@ public class SystreGUI extends BFrame {
     private String lastFinishedTranscript = null;
     private List bufferedNets = new LinkedList();
     private int count;
+	private TaskController taskController = null;
     
     // --- options
     private boolean singleWrite = false;
     private boolean readArchivesAsInput = false;
+
     
     /**
      * Constructs an instance.
@@ -431,6 +435,8 @@ public class SystreGUI extends BFrame {
     }
     
     public void nextNet() {
+    	this.taskController = TaskController.getInstance();
+    	
         if (!moreNets()) {
             finishFile();
             return;
@@ -483,6 +489,11 @@ public class SystreGUI extends BFrame {
                 try {
                     this.systre.processGraph(G, archiveName, true);
                     success = true;
+                } catch (TaskStoppedException ex) {
+                	reportException(new SystreException(
+							SystreException.CANCELLED,
+							"Execution stopped for this structure"),
+							"CANCELLED", null, false);
                 } catch (SystreException ex) {
                     reportException(ex, ex.getType().toString(), null, false);
                 } catch (Exception ex) {
@@ -510,6 +521,8 @@ public class SystreGUI extends BFrame {
         if (!moreNets()) {
             finishFile();
         }
+        
+        this.taskController = null;
     }
     
     private boolean openFile(final String filePath) {
@@ -685,7 +698,10 @@ public class SystreGUI extends BFrame {
     }
     
     public void doCancel() {
-        this.systre.cancel();
+		this.systre.cancel();
+    	if (this.taskController != null) {
+    		this.taskController.cancel();
+    	}
     }
     
     public void doQuit() {
