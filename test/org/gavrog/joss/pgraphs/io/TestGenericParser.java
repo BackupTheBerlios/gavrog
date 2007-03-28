@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestGenericParser.java,v 1.2 2005/11/17 07:36:58 odf Exp $
+ * @version $Id: TestGenericParser.java,v 1.3 2007/03/28 22:25:14 odf Exp $
  */
 public class TestGenericParser extends TestCase {
     public void testParseBlock() {
@@ -38,8 +38,8 @@ public class TestGenericParser extends TestCase {
             + "VOID\n"
             + "END\n");
         final GenericParser emptyParser = new GenericParser(empty);
-        emptyParser.parseDataBlock();
-        assertEquals(0, emptyParser.getDataEntries().length);
+        GenericParser.Block block = emptyParser.parseDataBlock();
+        assertEquals(0, block.getEntries().length);
         assertEquals("void", emptyParser.getDataType());
         assertEquals(2, emptyParser.getLineNumber());
         
@@ -56,8 +56,8 @@ public class TestGenericParser extends TestCase {
         synonyms.put("trash", "junk");
         final GenericParser parser = new GenericParser(test);
         parser.setSynonyms(synonyms);
-        parser.parseDataBlock();
-        final GenericParser.Entry entries[] = parser.getDataEntries();
+        block = parser.parseDataBlock();
+        final GenericParser.Entry entries[] = block.getEntries();
         assertEquals(4, entries.length);
 
         List row;
@@ -91,8 +91,8 @@ public class TestGenericParser extends TestCase {
         assertEquals(1, row.size());
         assertEquals("1/2.3", row.get(0));
         
-        assertEquals(2, parser.getKeys().size());
-        assertEquals(3, parser.getDataEntries("junk").size());
-        assertEquals(1, parser.getDataEntries("void").size());
+        assertEquals(2, block.getKeys().size());
+        assertEquals(3, block.getEntries("junk").size());
+        assertEquals(1, block.getEntries("void").size());
     }
 }

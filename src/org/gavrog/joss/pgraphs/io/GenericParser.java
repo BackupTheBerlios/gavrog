@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,17 +36,15 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.6 2006/04/20 02:18:56 odf Exp $
+ * @version $Id: GenericParser.java,v 1.7 2007/03/28 22:25:11 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
     protected Map synonyms;
     protected String defaultKey;
     private int lineno;
-    private String dataType;
-    private Entry dataEntries[];
-    private Map entriesByKey;
     private LinkedList bufferedLine = null;
+    private Block block;
 
     public class Entry {
         public final int lineNumber;
@@ -57,6 +55,82 @@ public class GenericParser {
             this.lineNumber = lineNumber;
             this.key = key;
             this.values = values;
+        }
+    }
+    
+    public class Block {
+        private final String type;
+        private final Entry entries[];
+        private final Map byKey;
+        
+        public Block(final String type, final Entry entries[], final Map byKey) {
+            this.type = type;
+            this.entries = entries;
+            this.byKey = byKey;
+        }
+
+        public Map getByKey() {
+            return this.byKey;
+        }
+
+        public Entry[] getEntries() {
+            return this.entries;
+        }
+
+        public String getType() {
+            return this.type;
+        }
+
+        /**
+         * Retrieves entries for a specific key only.
+         * 
+         * @param key the key to look up.
+         * @return the entries for the given key.
+         */
+        public List getEntries(final String key) {
+            final List entries = (List) getByKey().get(key);
+            if (entries == null) {
+                return null;
+            } else {
+                return Collections.unmodifiableList(entries);
+            }
+        }
+        
+        /**
+         * Retrieves entries for a specific key as a single string.
+         * 
+         * @param key the key to look up.
+         * @return the entries concatenated into a single string.
+         */
+        public String getEntriesAsString(final String key) {
+            final List entries = getEntries(key);
+            if (entries == null) {
+                return null;
+            } else {
+                final StringBuffer buf = new StringBuffer(20);
+                for  (int i = 0; i < entries.size(); ++i) {
+                    final Entry entry = (Entry) entries.get(i);
+                    final List values = entry.values;
+                    if (i > 0) {
+                        buf.append("; ");
+                    }
+                    for (int j = 0; j < values.size(); ++j) {
+                        if (j > 0) {
+                            buf.append(" ");
+                        }
+                        buf.append(String.valueOf(values.get(j)));
+                    }
+                }
+                return buf.toString();
+            }
+        }
+        
+        /**
+         * Retrieves all keys present in this data block.
+         * @return the set of keys.
+         */
+        public Set getKeys() {
+            return getByKey().keySet();
         }
     }
     
@@ -144,15 +218,12 @@ public class GenericParser {
         }
     }
     
-    public void parseDataBlock() {
-        this.dataEntries = null;
-        this.entriesByKey = null;
-        
+    public Block parseDataBlock() {
         final LinkedList fields0 = nextLineChopped();
         if (fields0 == null) {
-            return;
+            return null;
         }
-        this.dataType = ((String) fields0.getFirst()).toLowerCase();
+        final String type = ((String) fields0.getFirst()).toLowerCase();
         final List result = new LinkedList();
         final Map byKey = new HashMap();
         String key = this.defaultKey;
@@ -230,16 +301,17 @@ public class GenericParser {
             }
         }
         
-        this.dataEntries = new Entry[result.size()];
-        result.toArray(this.dataEntries);
-        this.entriesByKey = byKey;
+        final Entry entries[] = new Entry[result.size()];
+        result.toArray(entries);
+        this.block = new Block(type, entries, byKey);
+        return this.block;
     }
     
     /**
      * @return the type of the block last parsed.
      */
     public String getDataType() {
-        return this.dataType;
+        return this.block.getType();
     }
 
     /**
@@ -281,65 +353,6 @@ public class GenericParser {
      */
     public void setDefaultKey(String defaultKey) {
         this.defaultKey = defaultKey;
-    }
-    
-    /**
-     * @return the data entries as they occur in the current block.
-     */
-    public Entry[] getDataEntries() {
-        return dataEntries;
-    }
-    
-    /**
-     * Retrieves entries for a specific key only.
-     * 
-     * @param key the key to look up.
-     * @return the entries for the given key.
-     */
-    public List getDataEntries(final String key) {
-        final List entries = (List) entriesByKey.get(key);
-        if (entries == null) {
-            return null;
-        } else {
-            return Collections.unmodifiableList((List) entriesByKey.get(key));
-        }
-    }
-    
-    /**
-     * Retrieves entries for a specific key as a single string.
-     * 
-     * @param key the key to look up.
-     * @return the entries for the given key, concatenated into a single string.
-     */
-    public String getDataEntriesAsString(final String key) {
-        final List entries = getDataEntries(key);
-        if (entries == null) {
-            return null;
-        } else {
-            final StringBuffer buf = new StringBuffer(20);
-            for  (int i = 0; i < entries.size(); ++i) {
-                final Entry entry = (Entry) entries.get(i);
-                final List values = entry.values;
-                if (i > 0) {
-                    buf.append("; ");
-                }
-                for (int j = 0; j < values.size(); ++j) {
-                    if (j > 0) {
-                        buf.append(" ");
-                    }
-                    buf.append(String.valueOf(values.get(j)));
-                }
-            }
-            return buf.toString();
-        }
-    }
-    
-    /**
-     * Retrieves all keys present in the current data block.
-     * @return the set of keys.
-     */
-    public Set getKeys() {
-        return this.entriesByKey.keySet();
     }
     
     /**

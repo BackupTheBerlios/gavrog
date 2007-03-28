@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
-import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.DataFormatException;
+import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -57,7 +57,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.83 2007/02/01 02:57:37 odf Exp $
+ * @version $Id: NetParser.java,v 1.84 2007/03/28 22:25:11 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -116,6 +116,9 @@ public class NetParser extends GenericParser {
             return "Edge(" + source + ", " + target + ", " + shift + ")";
         }
     }
+
+    // The last block that was processed.
+    private Block lastBlock;
     
     /**
      * Constructs an instance.
@@ -191,18 +194,28 @@ public class NetParser extends GenericParser {
     }
     
     /**
-     * Parses the input stream as specified in the constructor and returns the net
-     * specified by it.
+     * Parses the input stream as specified in the constructor and returns the
+     * net specified by it.
      * 
      * @return the periodic net constructed from the input.
      */
     public Net parseNet() {
-        parseDataBlock();
-        final Entry entries[] = getDataEntries();
+        return parseNet(parseDataBlock());
+    }
+    
+    /**
+     * Parses a pre-parsed data block and returns the net specified by it.
+     * 
+     * @param block the data block to parse.
+     * @return the periodic net constructed from the input.
+     */
+    public Net parseNet(final GenericParser.Block block) {
+        final Entry entries[] = block.getEntries();
         if (entries == null) {
             return null;
         }
-        final String type = getDataType().toLowerCase();
+        final String type = block.getType().toLowerCase();
+        this.lastBlock = block;
         final Net result;
         if (type.equals("periodic_graph")) {
             result = parsePeriodicGraph(entries);
@@ -222,17 +235,17 @@ public class NetParser extends GenericParser {
      * 
      * @return everything present under the "name" or "id" key.
      */
-    public String getName() {
-        return getDataEntriesAsString("name");
+    private String getName() {
+        return lastBlock.getEntriesAsString("name");
     }
     
     /**
-     * Retrieves the specgroup given for the net last read, if any.
+     * Retrieves the spacegroup given for the net last read, if any.
      * 
      * @return everything present under the "name" of "id" key.
      */
     private String getSpaceGroup() {
-        final String group = getDataEntriesAsString("group");
+        final String group = lastBlock.getEntriesAsString("group");
         if (group == null) {
             return "P1";
         } else {
