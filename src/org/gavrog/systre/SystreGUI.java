@@ -70,7 +70,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.72 2007/03/28 05:13:22 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.73 2007/03/29 01:00:51 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -430,11 +430,14 @@ public class SystreGUI extends BFrame {
     		this.inputException = null;
     		throw ex;
     	} else {
-    		return (Net) this.netsToProcess.next();
+    		final Net result = (Net) this.netsToProcess.next();
+            this.taskController.bailOutIfCancelled();
+            return result;
     	}
     }
     
     public void nextNet() {
+        final String stopped = "Execution stopped for this structure";
     	this.taskController = TaskController.getInstance();
     	
         if (!moreNets()) {
@@ -461,6 +464,11 @@ public class SystreGUI extends BFrame {
             // --- read the next net
             try {
             	G = getNextNet();
+            } catch (TaskStoppedException ex) {
+                reportException(new SystreException(
+                        SystreException.CANCELLED, stopped), "CANCELLED",
+                        null, false);
+                throw new BailOut();
             } catch (DataFormatException ex) {
                 problem = ex;
             } catch (Exception ex) {
@@ -490,10 +498,9 @@ public class SystreGUI extends BFrame {
                     this.systre.processGraph(G, archiveName, true);
                     success = true;
                 } catch (TaskStoppedException ex) {
-                	reportException(new SystreException(
-							SystreException.CANCELLED,
-							"Execution stopped for this structure"),
-							"CANCELLED", null, false);
+                    reportException(new SystreException(
+                            SystreException.CANCELLED, stopped), "CANCELLED",
+                            null, false);
                 } catch (SystreException ex) {
                     reportException(ex, ex.getType().toString(), null, false);
                 } catch (Exception ex) {
@@ -588,7 +595,7 @@ public class SystreGUI extends BFrame {
                 out.print(Misc.stackTrace(ex));
                 out.println("==================================================");
             } else {
-                out.println(ex.getMessage() + ".");
+                out.println((ex != null ? " - " + ex.getMessage() : "") + ".");
             }
         }
         
