@@ -16,6 +16,7 @@
 
 package org.gavrog.jane.compounds;
 
+import org.gavrog.box.simple.TaskController;
 import org.gavrog.jane.numbers.ArithmeticBase;
 import org.gavrog.jane.numbers.Complex;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -456,6 +457,9 @@ public class Matrix extends ArithmeticBase {
     public static int triangulate(final Matrix A, final Matrix B,
             boolean useTruncatedDivision, final boolean clearAboveDiagonal) {
 
+    	// --- used for answering external cancel request
+    	final TaskController controller = TaskController.getInstance();
+    	
         // --- verify arguments
         if (!A.isMutable()) {
             throw new IllegalArgumentException("first argument must be mutable");
@@ -476,6 +480,7 @@ public class Matrix extends ArithmeticBase {
 
         // --- try to annihilate one entry at a time
         while (row < A.nrows && col < A.ncols) {
+        	controller.bailOutIfCancelled();
             if (DEBUG) {
                 System.err.println(A);
             }
