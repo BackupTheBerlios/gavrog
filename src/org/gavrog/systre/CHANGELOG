@@ -1,3 +1,8 @@
+Systre 1.1.2:
+
+- The program is now more responsive to the cancel button.
+
+
 Systre 1.1.1:
 
 - The computation of coordination sequences now stops at 10000 nodes.

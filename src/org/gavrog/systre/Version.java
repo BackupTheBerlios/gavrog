@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,10 +25,12 @@ public class Version {
 
 	final public static String maturity = "beta";
 
-	final public static String date = "2007/03/28";
+	final public static String date = "2007/03/29";
 
-	final public static String extension = (maturity == null ? "" : " " + maturity)
-			+ (date == null ? "" : " as of " + date);
+	final public static String extension = (maturity == null ? "" : " "
+            + maturity)
+            + (date == null ? "" : " as of " + date);
 
-	final public static String full = major + "." + minor + "." + patchLevel + extension;
+    final public static String full = major + "." + minor + "." + patchLevel
+            + extension;
 }
