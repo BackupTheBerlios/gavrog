@@ -36,6 +36,7 @@ import java.util.Set;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.NamedConstant;
+import org.gavrog.box.simple.TaskController;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.FloatingPoint;
@@ -57,7 +58,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.84 2007/03/28 22:25:11 odf Exp $
+ * @version $Id: NetParser.java,v 1.85 2007/03/29 04:50:08 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -968,6 +969,7 @@ public class NetParser extends GenericParser {
 			final List extended = new ArrayList();
 			final Map addressToPosition = new HashMap();
 			for (final Iterator iter = G.nodes(); iter.hasNext();) {
+				TaskController.getInstance().bailOutIfCancelled();
 				final INode v = (INode) iter.next();
 				final Point pv = (Point) nodeToPosition.get(v);
 				if (DEBUG) {
@@ -1010,6 +1012,7 @@ public class NetParser extends GenericParser {
 			// --- compute potential edges
 			final List edges = new ArrayList();
 			for (final Iterator iter = G.nodes(); iter.hasNext();) {
+				TaskController.getInstance().bailOutIfCancelled();
 				final INode v = (INode) iter.next();
 				final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
 				final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
@@ -1017,6 +1020,7 @@ public class NetParser extends GenericParser {
 				final Point pv = (Point) nodeToPosition.get(v);
 				final List distances = new ArrayList();
 				for (int i = 0; i < extended.size(); ++i) {
+					TaskController.getInstance().bailOutIfCancelled();
 					final Pair adr = (Pair) extended.get(i);
 					if (adr.equals(adr0)) {
 						continue;
