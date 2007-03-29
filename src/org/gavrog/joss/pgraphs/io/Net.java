@@ -115,14 +115,18 @@ public class Net extends PeriodicGraph {
 
         if ("cgd".equals(extension) || "pgr".equals(extension)) {
             final NetParser parser = new NetParser(reader);
+            
+            return new Iterator() {
+                public boolean hasNext() {
+                    return !parser.atEnd();
+                }
 
-            return new IteratorAdapter() {
-                protected Object findNext() throws NoSuchElementException {
-                    if (parser.atEnd()) {
-                        throw new NoSuchElementException("at end");
-                    } else {
-                        return parser.parseNet();
-                    }
+                public Object next() {
+                    return parser.parseNet();
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException("not supported");
                 }
             };
         } else if ("ds".equals(extension)) {
