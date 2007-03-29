@@ -8057,6 +8057,23 @@ alias P2/c P12/c1
 alias P21/c P121/c1
 alias C2/c C12/c1
 
+alias Pm3 Pm-3
+alias Pn3 Pn-3
+alias Fm3 Fm-3
+alias Fd3 Fd-3
+alias Im3 Im-3
+alias Pa3 Pa-3
+alias Ia3 Ia-3
+alias Pm3m Pm-3m
+alias Pn3n Pn-3n
+alias Pm3n Pm-3n
+alias Pn3m Pn-3m
+alias Fm3m Fm-3m
+alias Fm3c Fm-3c
+alias Fd3m Fd-3m
+alias Fd3c Fd-3c
+alias Im3m Im-3m
+alias Ia3d Ia-3d
 
 # Lookup settings for use by the SpaceGroupFinder class.
 
