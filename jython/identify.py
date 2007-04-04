@@ -36,11 +36,14 @@ archive_read(archive, "org/gavrog/systre/zeolites.arc")
 # ============================================================
 
 for G in Net.iterator(sys.argv[1]):
-    found = archive.get(G.minimalImage().systreKey)
-    if found:
-        print "%s" % found.name
+    if not G.isLocallyStable():
+        print ">>>unstable<<<"
     else:
-        print ">>>unknown<<<"
+        found = archive.get(G.minimalImage().systreKey)
+        if found:
+            print "%s" % found.name
+        else:
+            print ">>>unknown<<<"
 
 # ============================================================
 #   EOF
