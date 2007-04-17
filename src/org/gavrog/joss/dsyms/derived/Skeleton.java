@@ -47,7 +47,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * Represents a periodic graph derived as the 1-skeleton of a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Skeleton.java,v 1.2 2006/12/30 15:25:18 odf Exp $
+ * @version $Id: Skeleton.java,v 1.3 2007/04/17 00:10:29 odf Exp $
  */
 public class Skeleton extends PeriodicGraph {
     final private Map edgeToWord;
@@ -89,6 +89,18 @@ public class Skeleton extends PeriodicGraph {
         }
         // --- extract the translation vectors
         this.L = Vector.fromMatrix(N);
+        
+        // --- construct the graph
+        makeGraph(cov);
+    }
+     
+    /**
+     * Constructs the graph.
+     * 
+     * @param cov a Delaney symbol with only translational symmetries.
+     */
+    protected void makeGraph(final DelaneySymbol cov) {
+        final int dim = cov.dim();
         
         // --- set up index lists
         final List nodeIdcs = new LinkedList();
