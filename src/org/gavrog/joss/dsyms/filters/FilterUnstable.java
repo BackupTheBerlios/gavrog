@@ -19,15 +19,15 @@ package org.gavrog.joss.dsyms.filters;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.dsyms.generators.InputIterator;
+import org.gavrog.joss.tilings.Skeleton;
 
 
 /**
  * Extracts tilings the graphs of which have collisions.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterUnstable.java,v 1.2 2006/09/18 21:07:56 odf Exp $
+ * @version $Id: FilterUnstable.java,v 1.3 2007/04/18 20:07:10 odf Exp $
  */
 public class FilterUnstable {
 

@@ -12,12 +12,12 @@ import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.Skeleton;
 import org.gavrog.systre.Archive;
 
 /**

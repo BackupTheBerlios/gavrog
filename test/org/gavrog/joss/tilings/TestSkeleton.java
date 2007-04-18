@@ -14,17 +14,17 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.derived;
+package org.gavrog.joss.tilings;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
-import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.Skeleton;
 
 import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestSkeleton.java,v 1.2 2007/04/18 04:18:16 odf Exp $
+ * @version $Id: TestSkeleton.java,v 1.1 2007/04/18 20:07:13 odf Exp $
  */
 public class TestSkeleton extends TestCase {
 	final private DSymbol ds1 = new DSymbol("1 3:1,1,1,1:4,3,4");

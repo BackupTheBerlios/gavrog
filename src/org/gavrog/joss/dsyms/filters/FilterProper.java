@@ -30,16 +30,16 @@ import java.util.Set;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.Skeleton;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.Skeleton;
 
 
 /**
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.9 2007/03/05 07:04:55 odf Exp $
+ * @version $Id: FilterProper.java,v 1.10 2007/04/18 20:07:12 odf Exp $
  */
 public class FilterProper {
 
