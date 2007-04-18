@@ -36,7 +36,7 @@ import junit.framework.TestCase;
  * Unit test for class Iterators.
  * 
  * @author Olaf Delgado
- * @version $Id: TestIterators.java,v 1.1 2005/07/22 19:44:34 odf Exp $
+ * @version $Id: TestIterators.java,v 1.2 2007/04/18 22:42:39 odf Exp $
  */
 public class TestIterators extends TestCase {
     private Object x;
@@ -217,6 +217,6 @@ public class TestIterators extends TestCase {
             throw new RuntimeException(ex);
         }
         assertEquals(4, count);
-        assertEquals("3, 4, 5, 6", out.toString());
+        assertEquals("3, 4, 5, 6, ", out.toString());
     }
 }

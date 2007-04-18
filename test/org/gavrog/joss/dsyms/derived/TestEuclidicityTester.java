@@ -35,7 +35,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestEuclidicityTester.java,v 1.3 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: TestEuclidicityTester.java,v 1.4 2007/04/18 22:42:39 odf Exp $
  */
 public class TestEuclidicityTester extends TestCase {
 
@@ -72,7 +72,7 @@ public class TestEuclidicityTester extends TestCase {
                 + "4 3 11 12 16 15 19 20 17 18,16 15 14 13 12 11 20 19 18 17:"
                 + "5 5,3 6 3 3,4 4 4"));
         Assert.assertTrue(tester.isBad());
-        Assert.assertEquals("bad subgroups for cover", tester.getCause());
+        Assert.assertEquals("orbifold invariants do not match", tester.getCause());
     }
     
     public void test04() {
@@ -84,7 +84,7 @@ public class TestEuclidicityTester extends TestCase {
                                 + "2 8 7 6 10 16 15 14 18 24 23 22 33 34 35 36 37 38 39 40 42 48 47 46:"
                                 + "4 4 4 4 4 4,3 3 3 3 3 3 3 3,4 6 4 4 12 6"));
         Assert.assertTrue(tester.isBad());
-        Assert.assertEquals("bad subgroups for cover", tester.getCause());
+        Assert.assertEquals("orbifold invariants do not match", tester.getCause());
     }
 
     public void test05() {
@@ -93,7 +93,7 @@ public class TestEuclidicityTester extends TestCase {
                                 + "8 3 5 7 12 11 16 15 20 19 24 23,9 10 13 14 17 18 21 22 16 23 20 24,"
                                 + "6 5 4 8 10 12 18 17 20 19 22 24:4 4 4 4 4,3 3 3 3,6 8 6 3"));
         Assert.assertTrue(tester.isBad());
-        Assert.assertEquals("bad subgroups for cover", tester.getCause());
+        Assert.assertEquals("orbifold invariants do not match", tester.getCause());
     }
     
     public void test06() {
@@ -105,7 +105,7 @@ public class TestEuclidicityTester extends TestCase {
                         + "2 8 7 6 13 14 15 16 18 24 23 22 34 33 40 39 38 37 36 35 46 45 44 48:"
                         + "4 4 4 4 4 4,3 3 3 3 3 3 3 3,8 6 6 4 3 3"));
         Assert.assertTrue(tester.isBad());
-        Assert.assertEquals("bad subgroups for cover", tester.getCause());
+        Assert.assertEquals("orbifold invariants do not match", tester.getCause());
     }
     
     public void test07() {
@@ -114,7 +114,7 @@ public class TestEuclidicityTester extends TestCase {
                 + "4 7 8 12 11 9 10 19 20 16 21 22 24,1 2 3 4 5 6 13 14 15 16 17 18 19 20 21 22 23 24:"
                 + "3 3 3 3 3,3 3 3 3 3,6 4 4 12 12 4 4"));
         Assert.assertTrue(tester.isBad());
-        Assert.assertEquals("cover is a lens space", tester.getCause());
+        Assert.assertEquals("orbifold invariants do not match", tester.getCause());
     }
     
     public void test08() {
