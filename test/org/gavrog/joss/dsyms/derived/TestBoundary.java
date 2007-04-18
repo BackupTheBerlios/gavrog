@@ -21,18 +21,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.gavrog.joss.dsyms.basic.DSymbol;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.derived.Boundary;
-import org.gavrog.joss.dsyms.derived.Face;
-
 import junit.framework.Assert;
 import junit.framework.TestCase;
+
+import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.derived.Boundary.Face;
 
 /**
  * Unit test for class Boundary.
  * @author Olaf Delgado
- * @version $Id: TestBoundary.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestBoundary.java,v 1.2 2007/04/18 20:19:07 odf Exp $
  */
 public class TestBoundary extends TestCase {
     private DelaneySymbol ds;

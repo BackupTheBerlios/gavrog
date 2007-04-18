@@ -29,13 +29,58 @@ import org.gavrog.joss.dsyms.basic.DSPair;
  * Represents the boundary complex of a topological realization of a Delaney
  * symbol with facet identifications only performed partially.
  * @author Olaf Delgado
- * @version $Id: Boundary.java,v 1.2 2007/04/18 04:17:48 odf Exp $
+ * @version $Id: Boundary.java,v 1.3 2007/04/18 20:19:08 odf Exp $
  */
 public class Boundary {
     private DelaneySymbol ds;
     private HashSet onBoundary;
     private HashMap neighbor;
     private HashMap count;
+    
+    static class Face {
+        int i;
+        int j;
+        Object D;
+        
+        public Face(int i, Object D, int j) {
+            this.i = i;
+            this.D = D;
+            this.j = j;
+        }
+        
+        public Face(int i, Object D) {
+            this(i, D, -1);
+        }
+        
+        public Face(Face k, int j) {
+            this(k.i, k.D, j);
+        }
+        
+        public int getFirstIndex() {
+            return i;
+        }
+        
+        public Object getElement() {
+            return D;
+        }
+        
+        public int getSecondIndex() {
+            return j;
+        }
+        
+        public int hashCode() {
+            return (i * 37 + D.hashCode()) * 37 + j; 
+        }
+        
+        public boolean equals(Object other) {
+            if (other instanceof Face) {
+                Face k = (Face) other;
+                return this.D.equals(k.D) && this.i == k.i && this.j == k.j;
+            } else {
+                return false;
+            }
+        }
+    }
     
     /**
      * Constructs a boundary complex with no identifications.
