@@ -28,10 +28,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -49,13 +49,39 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.1 2007/04/18 20:36:59 odf Exp $
+ * @version $Id: Tiling.java,v 1.2 2007/04/18 21:18:05 odf Exp $
  */
 public class Tiling {
+    protected static class CacheKey {
+        private static int nextId = 1;
+        final private int id;
+        
+        public CacheKey() {
+            this.id = nextId++;
+        }
+        
+        public int hashCode() {
+            return id;
+        }
+        
+        public int compareTo(final Object other) {
+            if (other instanceof CacheKey) {
+                return this.id - ((CacheKey) other).id;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    private static final CacheKey TRANSLATION_GROUP = new CacheKey();
+    private static final CacheKey TRANSLATION_VECTORS = new CacheKey();
+    
+    // === IMPORTANT: always assert non-null return value of a cache.get() ===
+    protected Map cache = new WeakHashMap();
+
+    
     final private DelaneySymbol ds;
     final private DelaneySymbol cov;
-	final private Map edgeToWord;
-	final private Vector L[];
 
 	/**
 	 * Constructs an instance.
@@ -63,6 +89,15 @@ public class Tiling {
 	 * @param ds the Delaney symbol for the tiling.
 	 */
 	public Tiling(final DelaneySymbol ds) {
+        // --- check basic properties
+        if (!ds.isComplete()) {
+            throw new IllegalArgumentException("symbol must be complete");
+        }
+        if (!ds.isConnected()) {
+            throw new IllegalArgumentException("symbol must be connected");
+        }
+        
+        // --- remember the input symbol
         this.ds = ds;
         
 		// --- shortcut
@@ -74,31 +109,60 @@ public class Tiling {
 		} else if (dim == 3) {
 			this.cov = Covers.pseudoToroidalCover3D(ds);
 		} else {
-			throw new UnsupportedOperationException(
-					"only dimensions 2 and 3 work");
+            final String msg = "symbol must be 2- or 3-dimensional";
+			throw new UnsupportedOperationException(msg);
 		}
 
 		if (this.cov == null) {
 			throw new IllegalArgumentException("symbol is not euclidean");
 		}
-
-		// --- find a translation representation for the fundamental group
-		final FundamentalGroup FG = new FundamentalGroup(this.cov);
-		this.edgeToWord = FG.getEdgeToWord();
-		final FpGroup G = FG.getPresentation();
-		final Matrix N = LinearAlgebra.columnNullSpace(G.relatorMatrix(), true);
-		if (N.numberOfColumns() != dim) {
-			final String msg = "problem computing translations - probably a bug";
-			throw new RuntimeException(msg);
-		}
-		// --- extract the translation vectors
-		this.L = Vector.fromMatrix(N);
 	}
 
+    /**
+     * @return the toroidal or pseudo-toroidal cover.
+     */
+    public DelaneySymbol getCover() {
+        return this.cov;
+    }
+    
+    /**
+     * @return the fundamental group of the toroidal or pseudo-toroidal cover.
+     */
+    public FundamentalGroup getTranslationGroup() {
+        final FundamentalGroup cached = (FundamentalGroup) this.cache
+                .get(TRANSLATION_GROUP);
+        if (cached != null) {
+            return cached;
+        } else {
+            final FundamentalGroup fg = new FundamentalGroup(getCover());
+            this.cache.put(TRANSLATION_GROUP, fg);
+            return fg;
+        }
+    }
+    
+    /**
+     * @return the generators of the translation group as vectors.
+     */
+    public Vector[] getTranslationVectors() {
+        final Vector[] cached = (Vector[]) this.cache.get(TRANSLATION_VECTORS);
+        if (cached != null) {
+            return cached;
+        } else {
+            final Matrix N = LinearAlgebra.columnNullSpace(
+                    getTranslationGroup().getPresentation().relatorMatrix(),
+                    true);
+            if (N.numberOfColumns() != this.ds.dim()) {
+                final String msg = "could not compute translations";
+                throw new RuntimeException(msg);
+            }
+            final Vector[] result = Vector.fromMatrix(N);
+            cache.put(TRANSLATION_VECTORS, result);
+            return result;
+        }
+    }
+    
 	/**
-	 * Constructs the graph.
-	 * 
-	 * @param cov a Delaney symbol with only translational symmetries.
+	 * @return the skeleton graph of the tiling.
 	 */
 	public PeriodicGraph getSkeleton() {
 		final int dim = this.cov.dim();
@@ -161,7 +225,7 @@ public class Tiling {
 	}
 
 	/**
-	 * Constructs the skeleton graph for the barycentric subdivision.
+	 * @return the skeleton graph of the barycentric subdivision.
 	 */
 	public PeriodicGraph getBarycentricSkeleton() {
 		final int dim = this.cov.dim();
@@ -238,8 +302,10 @@ public class Tiling {
 	 * @return the translation vector associated to the edge.
 	 */
 	private Vector edgeTranslation(final int idx, final Object D) {
-		final FreeWord word = (FreeWord) edgeToWord.get(new DSPair(idx, D));
-		Vector s = Vector.zero(this.ds.dim());
+        final Vector[] L = getTranslationVectors();
+		final FreeWord word = (FreeWord) getTranslationGroup().getEdgeToWord()
+                .get(new DSPair(idx, D));
+        Vector s = Vector.zero(this.ds.dim());
 		for (int i = 0; i < word.length(); ++i) {
 			final int k = word.getLetter(i) - 1;
 			final int sign = word.getSign(i);
@@ -252,6 +318,11 @@ public class Tiling {
 		return s;
 	}
 
+	/**
+     * Main method for testing purposes.
+     * 
+	 * @param args command line arguments.
+	 */
 	public static void main(String[] args) {
 		try {
 			final Reader in;
