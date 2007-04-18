@@ -20,14 +20,14 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.generators.InputIterator;
-import org.gavrog.joss.tilings.Skeleton;
+import org.gavrog.joss.tilings.Tiling;
 
 
 /**
  * Extracts tilings the graphs of which have collisions.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterUnstable.java,v 1.3 2007/04/18 20:07:10 odf Exp $
+ * @version $Id: FilterUnstable.java,v 1.4 2007/04/18 23:06:22 odf Exp $
  */
 public class FilterUnstable {
 
@@ -53,7 +53,7 @@ public class FilterUnstable {
     private static boolean isUnstable(final DSymbol ds) {
         final DelaneySymbol cov = Covers.pseudoToroidalCover3D(ds.minimal());
         try {
-            return !new Skeleton(cov).isLocallyStable();
+            return !new Tiling(cov).getSkeleton().isLocallyStable();
         } catch (final Exception ex) {
             System.out.println("??? " + ds);
             return false;

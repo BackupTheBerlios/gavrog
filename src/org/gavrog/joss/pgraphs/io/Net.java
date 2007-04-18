@@ -17,7 +17,7 @@ import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.tilings.Skeleton;
+import org.gavrog.joss.tilings.Tiling;
 import org.gavrog.systre.Archive;
 
 /**
@@ -133,7 +133,7 @@ public class Net extends PeriodicGraph {
             return new FilteredIterator(new InputIterator(reader)) {
                 public Object filter(Object x) {
                     final DelaneySymbol ds = (DelaneySymbol) x;
-                    final PeriodicGraph graph = new Skeleton(ds);
+                    final PeriodicGraph graph = new Tiling(ds).getSkeleton();
                     final String group = (ds.dim() == 3) ? "P1" : "p1";
                     return new Net(graph, null, group);
                 }
