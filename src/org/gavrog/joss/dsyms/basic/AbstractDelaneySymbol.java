@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.5 2006/11/15 02:03:45 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.6 2007/04/18 04:17:48 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 
@@ -318,7 +318,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
     	Traversal trav = new Traversal(this, indices, elements());
     	int count = 0;
     	while (trav.hasNext()) {
-    		Edge e = (Edge) trav.next();
+    		DSPair e = (DSPair) trav.next();
     		if (e.getIndex() < 0) {
     			++count;
     		}
@@ -339,7 +339,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
     public Iterator orbitRepresentatives(List indices) {
 		return new FilteredIterator(new Traversal(this, indices, elements())) {
 			public Object filter(Object x) {
-				Edge e = (Edge) x;
+				DSPair e = (DSPair) x;
 				if (e.getIndex() < 0) {
 					return e.getElement();
 				} else {
@@ -355,7 +355,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
     public Iterator orbit(List indices, Object seed) {
     	return new FilteredIterator(new Traversal(this, indices, seed)) {
     		public Object filter(Object x) {
-    			return ((Edge) x).getElement();
+    			return ((DSPair) x).getElement();
     		}
     	};
     }
@@ -372,7 +372,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
         Traversal trav = new Traversal(this, indices, seeds);
         HashMap or = new HashMap();
         while (trav.hasNext()) {
-            Edge e = (Edge) trav.next();
+            DSPair e = (DSPair) trav.next();
             int i = e.getIndex();
             Object D = e.getElement();
             if (i < 0) {
@@ -571,7 +571,7 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
             int k = 0;
             while (trav.hasNext()) {
             	/* --- Retrieve the next edge. */
-                Edge e = (Edge) trav.next();
+                DSPair e = (DSPair) trav.next();
                 Object D = e.getElement();
                 int i = e.getIndex();
                 

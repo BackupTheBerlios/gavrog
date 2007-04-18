@@ -22,14 +22,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 
 
 /**
  * Represents the boundary complex of a topological realization of a Delaney
  * symbol with facet identifications only performed partially.
  * @author Olaf Delgado
- * @version $Id: Boundary.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Boundary.java,v 1.2 2007/04/18 04:17:48 odf Exp $
  */
 public class Boundary {
     private DelaneySymbol ds;
@@ -108,7 +108,7 @@ public class Boundary {
      * Perform a specific identification.
      * @param e the edge at which to identify.
      */
-    public void glue(Edge e) {
+    public void glue(DSPair e) {
         glue(e.getIndex(), e.getElement());
     }
     

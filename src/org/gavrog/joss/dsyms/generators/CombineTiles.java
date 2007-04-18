@@ -31,7 +31,7 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
@@ -46,7 +46,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.5 2006/11/03 22:03:20 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.6 2007/04/18 04:17:48 odf Exp $
  */
 public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
@@ -628,7 +628,7 @@ public class CombineTiles extends IteratorAdapter {
             int nextE = 1;
             while (trav.hasNext()) {
                 // --- retrieve the next edge
-                final Edge e = (Edge) trav.next();
+                final DSPair e = (DSPair) trav.next();
                 final Object D = e.getElement();
 
                 // --- determine a running number E for the target element D

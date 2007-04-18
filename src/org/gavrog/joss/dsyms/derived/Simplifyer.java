@@ -30,7 +30,7 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Traversal;
 
@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * groups.
  * 
  * @author Olaf Delgado
- * @version $Id: Simplifyer.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: Simplifyer.java,v 1.3 2007/04/18 04:17:48 odf Exp $
  */
 public class Simplifyer {
     private static final int LOGGING_LEVEL = 0;
@@ -162,7 +162,7 @@ public class Simplifyer {
                 disposable.clear();
                 final Iterator fund = new FundamentalEdges(ds);
                 while (fund.hasNext()) {
-                    final Edge e = (Edge) fund.next();
+                    final DSPair e = (DSPair) fund.next();
                     final int i = e.getIndex();
                     if (i == 3) {
                         final Object D = e.getElement();
@@ -207,7 +207,7 @@ public class Simplifyer {
                 final Traversal trav = new Traversal(ds, idcs, ds.elements());
                 final Iterator fund = new FundamentalEdges(ds, trav);
                 while (fund.hasNext()) {
-                    final Edge e = (Edge) fund.next();
+                    final DSPair e = (DSPair) fund.next();
                     final int i = e.getIndex();
                     if (i == 0) {
                         final Object D = e.getElement();

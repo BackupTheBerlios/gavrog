@@ -33,7 +33,7 @@ import org.gavrog.box.collections.Partition;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
@@ -48,7 +48,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.7 2006/10/30 22:07:52 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.8 2007/04/18 04:17:48 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // TODO test symbols (unfinished and finished) for being locally euclidean
@@ -653,7 +653,7 @@ public class ExtendTo3d extends IteratorAdapter {
             int nextE = 1;
             while (trav.hasNext()) {
                 // --- retrieve the next edge
-                final Edge e = (Edge) trav.next();
+                final DSPair e = (DSPair) trav.next();
                 final Object D = e.getElement();
 
                 // --- determine a running number E for the target element D

@@ -21,7 +21,7 @@ import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.Traversal;
 
 
@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * edges of one possible abstract fundamental domain for the symbol.
  * 
  * @author Olaf Delgado
- * @version $Id: FundamentalEdges.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: FundamentalEdges.java,v 1.3 2007/04/18 04:17:48 odf Exp $
  */
 public class FundamentalEdges extends IteratorAdapter {
 	final private DelaneySymbol ds;
@@ -80,11 +80,11 @@ public class FundamentalEdges extends IteratorAdapter {
             }
             if (boundary.glueCountAtRidge(i, D, j) == 2 * ds.m(i, j, D)) {
                 boundary.glueAndEnqueue(i, D, Q);
-                return new Edge(i, D);
+                return new DSPair(i, D);
             }
         }
         while (traversal.hasNext()) {
-            final Edge e = (Edge) traversal.next();
+            final DSPair e = (DSPair) traversal.next();
             final Object D = e.getElement();
             final int i = e.getIndex();
             if (i < 0) {
@@ -94,7 +94,7 @@ public class FundamentalEdges extends IteratorAdapter {
                 throw new RuntimeException("this should not happen");
             }
             boundary.glueAndEnqueue(i, D, Q);
-            return new Edge(i, D);
+            return new DSPair(i, D);
         }
         throw new NoSuchElementException("at end");
     }

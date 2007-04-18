@@ -31,7 +31,7 @@ import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.jane.fpgroups.PrefixAlphabet;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
 
 
@@ -39,7 +39,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * The fundamental group of a {@link org.gavrog.joss.dsyms.basic.DelaneySymbol}.
  * 
  * @author Olaf Delgado
- * @version $Id: FundamentalGroup.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: FundamentalGroup.java,v 1.3 2007/04/18 04:17:48 odf Exp $
  */
 public class FundamentalGroup {
 
@@ -71,7 +71,7 @@ public class FundamentalGroup {
         // --- glue fundamental ("inner") edges
         final FundamentalEdges fund = new FundamentalEdges(ds);
         while (fund.hasNext()) {
-            final Edge e = (Edge) fund.next();
+            final DSPair e = (DSPair) fund.next();
             boundary.glue(e);
             edgeToWord.put(e, IdWord);
         }
@@ -83,7 +83,7 @@ public class FundamentalGroup {
             for (final Iterator idcs = ds.indices(); idcs.hasNext();) {
                 final int i0 = ((Integer) idcs.next()).intValue();
                 if (boundary.isOnBoundary(i0, D0)) {
-                    final Edge e0 = new Edge(i0, D0);
+                    final DSPair e0 = new DSPair(i0, D0);
                     final LinkedList Q = new LinkedList();
                     final FreeWord gen = new FreeWord(A, ++nrGens);
                     boundary.glueAndEnqueue(i0, D0, Q);
@@ -100,7 +100,7 @@ public class FundamentalGroup {
                         }
                         if (boundary.glueCountAtRidge(i, D, j) == 2 * ds.m(i,
                                 j, D)) {
-                            final Edge e = new Edge(i, D);
+                            final DSPair e = new DSPair(i, D);
                             final FreeWord w = traceWord(ds, f, edgeToWord);
                             edgeToWord.put(e, w.inverse());
                             boundary.glueAndEnqueue(i, D, Q);
@@ -115,7 +115,7 @@ public class FundamentalGroup {
         final Set edges = new HashSet(edgeToWord.keySet());
         final Iterator edgeIter = edges.iterator();
         while (edgeIter.hasNext()) {
-            final Edge e = (Edge) edgeIter.next();
+            final DSPair e = (DSPair) edgeIter.next();
             final FreeWord w = (FreeWord) edgeToWord.get(e);
             edgeToWord.put(e, new FreeWord(B, w));
             if (!e.equals(e.reverse(ds))) {
@@ -127,7 +127,7 @@ public class FundamentalGroup {
         final Set oldGens = new HashSet(generatorToEdge.keySet());
         for (final Iterator iter = oldGens.iterator(); iter.hasNext();) {
             final FreeWord gen = (FreeWord) iter.next();
-            final Edge e = (Edge) generatorToEdge.get(gen);
+            final DSPair e = (DSPair) generatorToEdge.get(gen);
             generatorToEdge.remove(gen);
             generatorToEdge.put(new FreeWord(B, gen), e);
         }
@@ -162,7 +162,7 @@ public class FundamentalGroup {
         final Set gens = new HashSet(generatorToEdge.keySet());
         for (final Iterator gensIter = gens.iterator(); gensIter.hasNext();) {
             final FreeWord gen = (FreeWord) gensIter.next();
-            final Edge e = (Edge) generatorToEdge.get(gen);
+            final DSPair e = (DSPair) generatorToEdge.get(gen);
             final int i = e.getIndex();
             final Object D = e.getElement();
             if (ds.op(i, D).equals(D)) {
@@ -192,8 +192,8 @@ public class FundamentalGroup {
         int k = i;
         while (true) {
             final Object Ek = ds.op(k, E);
-            final FreeWord u = (FreeWord) edgeToWord.get(new Edge(k, E));
-            final FreeWord uinv = (FreeWord) edgeToWord.get(new Edge(k, Ek));
+            final FreeWord u = (FreeWord) edgeToWord.get(new DSPair(k, E));
+            final FreeWord uinv = (FreeWord) edgeToWord.get(new DSPair(k, Ek));
             final FreeWord factor;
             if (u != null) {
                 factor = u;

@@ -32,7 +32,7 @@ import org.gavrog.box.collections.Iterators;
  * There is also an option to have every edge visited exactly once.
  * 
  * @author Olaf Delgado
- * @version $Id: Traversal.java,v 1.2 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: Traversal.java,v 1.3 2007/04/18 04:17:48 odf Exp $
  */
 public class Traversal extends IteratorAdapter {
 
@@ -144,13 +144,13 @@ public class Traversal extends IteratorAdapter {
 								buffer[m].addLast(ds.op(j, D));
 							}
 						}
-						return new Edge(i, D);
+						return new DSPair(i, D);
 					} else if (visitAllEdges) {
 						int E = ((Integer) elm2num.get(D)).intValue();
 						int Ei = ((Integer) elm2num.get(ds.op(i, D)))
 								.intValue();
 						if (Ei <= E) {
-							return new Edge(i, D);
+							return new DSPair(i, D);
 						}
 					}
 				}
@@ -165,7 +165,7 @@ public class Traversal extends IteratorAdapter {
 					int i = ((Integer) indices.get(k)).intValue();
 					buffer[k].addLast(ds.op(i, D));
 				}
-				return new Edge(-1, D);
+				return new DSPair(-1, D);
 			}
 		}
 		throw new NoSuchElementException("at end");

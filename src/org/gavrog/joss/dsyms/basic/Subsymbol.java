@@ -26,7 +26,7 @@ import org.gavrog.box.collections.Iterators;
 /**
  * Represents subsymbols of Delaney symbols.
  * @author Olaf Delgado
- * @version $Id: Subsymbol.java,v 1.2 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: Subsymbol.java,v 1.3 2007/04/18 04:17:48 odf Exp $
  */
 public class Subsymbol extends AbstractDelaneySymbol {
 	private DelaneySymbol ds;
@@ -43,7 +43,7 @@ public class Subsymbol extends AbstractDelaneySymbol {
 		this.elements = new TreeSet();
 		Iterator elms = new Traversal(ds, indices, Iterators.singleton(seed));
 		while (elms.hasNext()) {
-			this.elements.add(((Edge) elms.next()).getElement());
+			this.elements.add(((DSPair) elms.next()).getElement());
 		}
 		this.size = this.elements.size();
 	}

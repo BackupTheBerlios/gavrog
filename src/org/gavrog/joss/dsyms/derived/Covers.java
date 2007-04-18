@@ -37,7 +37,7 @@ import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.Cover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
 
 
@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.3 2006/09/14 03:41:42 odf Exp $
+ * @version $Id: Covers.java,v 1.4 2007/04/18 04:17:48 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;
@@ -72,7 +72,7 @@ public class Covers {
 
         return new Cover(ds) {
             public Object targetLayer(int i, Object D) {
-                final Edge e = new Edge(i, getImage(D));
+                final DSPair e = new DSPair(i, getImage(D));
                 final FreeWord g = (FreeWord) edge2word.get(e);
                 return action.apply(getLayer(D), g);
             }
@@ -137,7 +137,7 @@ public class Covers {
         for (int i = 0; i <= dim; ++i) {
             for (int D = 1; D <= nOld; ++D) {
                 final int Di = ((Integer) ds.op(i, new Integer(D))).intValue();
-                final FreeWord g = (FreeWord) edge2word.get(new Edge(i, new Integer(D)));
+                final FreeWord g = (FreeWord) edge2word.get(new DSPair(i, new Integer(D)));
                 for (int k = 0; k < nLayers; ++k) {
                     op[i][D + nOld * k] = Di + nOld
                             * ((Integer) flatAction.apply(new Integer(k), g)).intValue();

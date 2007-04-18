@@ -21,11 +21,11 @@ import org.gavrog.box.collections.Pair;
 /**
  * This class represents edges in a Delaney symbol.
  * @author Olaf Delgado
- * @version $Id: Edge.java,v 1.2 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: DSPair.java,v 1.1 2007/04/18 04:17:48 odf Exp $
  */
-public class Edge extends Pair {
+public class DSPair extends Pair {
 
-	public Edge(int i, Object D) {
+	public DSPair(int i, Object D) {
 		super(new Integer(i), D);
     }
     
@@ -37,10 +37,10 @@ public class Edge extends Pair {
         return getSecond();
     }
     
-    public Edge reverse(final DelaneySymbol ds) {
+    public DSPair reverse(final DelaneySymbol ds) {
         final int i = getIndex();
         final Object D = getElement();
-        return new Edge(i, ds.op(i, D));
+        return new DSPair(i, ds.op(i, D));
     }
 }
 

@@ -26,7 +26,7 @@ import org.gavrog.jane.fpgroups.FiniteAlphabet;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 
 
@@ -36,7 +36,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FundamentalGroup.
  * @author Olaf Delgado
- * @version $Id: TestFundamentalGroup.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: TestFundamentalGroup.java,v 1.3 2007/04/18 04:17:47 odf Exp $
  */
 public class TestFundamentalGroup extends TestCase {
     
@@ -115,10 +115,10 @@ public class TestFundamentalGroup extends TestCase {
     public void testGetEdgeToWord() {
         final Object D1 = new Integer(1);
         final Object D9 = new Integer(9);
-        final Edge e0 = new Edge(0, D1);
-        final Edge e1 = new Edge(1, D1);
-        final Edge e2 = new Edge(2, D1);
-        final Edge e3 = new Edge(3, D1);
+        final DSPair e0 = new DSPair(0, D1);
+        final DSPair e1 = new DSPair(1, D1);
+        final DSPair e2 = new DSPair(2, D1);
+        final DSPair e3 = new DSPair(3, D1);
         
         final Map e2w1 = fg1.getEdgeToWord();
         Assert.assertEquals(new FreeWord(al1, "g_1"), e2w1.get(e0));
@@ -131,15 +131,15 @@ public class TestFundamentalGroup extends TestCase {
         Assert.assertEquals(new FreeWord(al2, ""), e2w2.get(e0));
         Assert.assertEquals(al2g1, e2w2.get(e3));
         Assert.assertEquals(al2g1.inverse(), e2w2.get(e3.reverse(ds2)));
-        Assert.assertEquals(new FreeWord(al2, "g_2"), e2w2.get(new Edge(3, D9)));
+        Assert.assertEquals(new FreeWord(al2, "g_2"), e2w2.get(new DSPair(3, D9)));
     }
     
     public void testGetGeneratorToEdge() {
         final Object D1 = new Integer(1);
-        final Edge e0 = new Edge(0, D1);
-        final Edge e1 = new Edge(1, D1);
-        final Edge e2 = new Edge(2, D1);
-        final Edge e3 = new Edge(3, D1);
+        final DSPair e0 = new DSPair(0, D1);
+        final DSPair e1 = new DSPair(1, D1);
+        final DSPair e2 = new DSPair(2, D1);
+        final DSPair e3 = new DSPair(3, D1);
         
         final Map g2e1 = fg1.getGeneratorToEdge();
         Assert.assertEquals(e0, g2e1.get(new FreeWord(al1, "g_1")));

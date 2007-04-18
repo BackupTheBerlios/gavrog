@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.Edge;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.FundamentalEdges;
@@ -33,7 +33,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for class FundamentalEdges.
  * @author Olaf Delgado
- * @version $Id: TestFundamentalEdges.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestFundamentalEdges.java,v 1.2 2007/04/18 04:17:47 odf Exp $
  */
 public class TestFundamentalEdges extends TestCase {
     final static private Integer one = new Integer(1);
@@ -78,17 +78,17 @@ public class TestFundamentalEdges extends TestCase {
             edges.add(iter.next());
         }
         Assert.assertTrue(edges.size() == 6);
-        Assert.assertTrue(edges.contains(new Edge(1, one))
-                || edges.contains(new Edge(1, two)));
-        Assert.assertTrue(edges.contains(new Edge(1, three))
-                || edges.contains(new Edge(1, four)));
-        Assert.assertTrue(edges.contains(new Edge(0, two))
-                || edges.contains(new Edge(0, three)));
-        Assert.assertTrue(edges.contains(new Edge(0, five))
-                || edges.contains(new Edge(0, six)));
-        Assert.assertTrue(edges.contains(new Edge(2, two))
-                || edges.contains(new Edge(2, five)));
-        Assert.assertTrue(edges.contains(new Edge(2, three))
-                || edges.contains(new Edge(2, six)));
+        Assert.assertTrue(edges.contains(new DSPair(1, one))
+                || edges.contains(new DSPair(1, two)));
+        Assert.assertTrue(edges.contains(new DSPair(1, three))
+                || edges.contains(new DSPair(1, four)));
+        Assert.assertTrue(edges.contains(new DSPair(0, two))
+                || edges.contains(new DSPair(0, three)));
+        Assert.assertTrue(edges.contains(new DSPair(0, five))
+                || edges.contains(new DSPair(0, six)));
+        Assert.assertTrue(edges.contains(new DSPair(2, two))
+                || edges.contains(new DSPair(2, five)));
+        Assert.assertTrue(edges.contains(new DSPair(2, three))
+                || edges.contains(new DSPair(2, six)));
     }
 }
