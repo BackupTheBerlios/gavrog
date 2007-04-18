@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.2 2007/04/18 21:18:05 odf Exp $
+ * @version $Id: Tiling.java,v 1.3 2007/04/18 23:01:32 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -75,6 +75,7 @@ public class Tiling {
 
     private static final CacheKey TRANSLATION_GROUP = new CacheKey();
     private static final CacheKey TRANSLATION_VECTORS = new CacheKey();
+    private static final CacheKey EDGE_TRANSLATIONS = new CacheKey();
     
     // === IMPORTANT: always assert non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
@@ -161,6 +162,51 @@ public class Tiling {
         }
     }
     
+    /**
+     * @return a mapping of cover-edges to their associated translations
+     */
+    public Map getEdgeTranslations() {
+        final Map cached = (Map) this.cache.get(EDGE_TRANSLATIONS);
+        if (cached != null) {
+            return cached;
+        } else {
+            final int dim = this.ds.dim();
+            final Vector[] t = getTranslationVectors();
+            final Map e2w = (Map) getTranslationGroup().getEdgeToWord();
+            final Map e2t = new HashMap();
+            for (Iterator edges = e2w.keySet().iterator(); edges.hasNext();) {
+                final Object e = edges.next();
+                final FreeWord w = (FreeWord) e2w.get(e);
+                Vector s = Vector.zero(dim);
+                for (int i = 0; i < w.length(); ++i) {
+                    final int k = w.getLetter(i) - 1;
+                    final int sign = w.getSign(i);
+                    if (sign > 0) {
+                        s = (Vector) s.plus(t[k]);
+                    } else {
+                        s = (Vector) s.minus(t[k]);
+                    }
+                }
+                e2t.put(e, s);
+            }
+            
+            cache.put(EDGE_TRANSLATIONS, e2t);
+            return e2t;
+        }
+    }
+    
+    /**
+     * Determines the translation associated to an edge in the toroidal or
+     * pseudo-toroidal cover.
+     * 
+     * @param i the index of the edge.
+     * @param D the source element of the edge.
+     * @return the translation vector associated to the edge.
+     */
+    private Vector edgeTranslation(final int i, final Object D) {
+        return (Vector) getEdgeTranslations().get(new DSPair(i, D));
+    }
+
 	/**
 	 * @return the skeleton graph of the tiling.
 	 */
@@ -180,21 +226,23 @@ public class Tiling {
 			}
 		}
 
-		// --- create nodes of the graph and maps between nodes and Delaney chambers
+		// --- create nodes of the graph and map Delaney chambers to nodes
 		final Map ch2v = new HashMap();
 		for (final Iterator iter = this.cov.orbitRepresentatives(nodeIdcs); iter
 				.hasNext();) {
 			final Object D = iter.next();
 			final INode v = G.newNode();
-			for (final Iterator orbit = this.cov.orbit(nodeIdcs, D); orbit.hasNext();) {
-				ch2v.put(orbit.next(), v);
-			}
-		}
+			for (final Iterator orbit = this.cov.orbit(nodeIdcs, D); orbit
+                    .hasNext();) {
+                ch2v.put(orbit.next(), v);
+            }
+        }
 
-		// --- map chambers to translations w.r.t. node orbit representatives
-		final Traversal trav = new Traversal(this.cov, nodeIdcs, this.cov.elements());
-		final HashMap trans = new HashMap();
-		while (trav.hasNext()) {
+        // --- map chambers to translations w.r.t. node orbit representatives
+        final Traversal trav = new Traversal(this.cov, nodeIdcs, this.cov
+                .elements());
+        final HashMap trans = new HashMap();
+        while (trav.hasNext()) {
 			final DSPair e = (DSPair) trav.next();
 			int i = e.getIndex();
 			final Object D = e.getElement();
@@ -241,16 +289,19 @@ public class Tiling {
 					idcs.add(new Integer(j));
 				}
 			}
-			for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter.hasNext();) {
-				final Object D = iter.next();
-				final INode v = G.newNode();
-				for (final Iterator orbit = this.cov.orbit(idcs, D); orbit.hasNext();) {
-					corner2node.put(new DSPair(i, orbit.next()), v);
-				}
-			}
-			// --- map chamber corners to translations w.r.t. orbit representatives
-			final Traversal trav = new Traversal(this.cov, idcs, this.cov.elements());
-			while (trav.hasNext()) {
+			for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter
+                    .hasNext();) {
+                final Object D = iter.next();
+                final INode v = G.newNode();
+                for (final Iterator orbit = this.cov.orbit(idcs, D); orbit
+                        .hasNext();) {
+                    corner2node.put(new DSPair(i, orbit.next()), v);
+                }
+            }
+            // --- map chamber corners to translations
+            final Traversal trav = new Traversal(this.cov, idcs, this.cov
+                    .elements());
+            while (trav.hasNext()) {
 				final DSPair e = (DSPair) trav.next();
 				final int k = e.getIndex();
 				final Object D = e.getElement();
@@ -274,8 +325,8 @@ public class Tiling {
 						idcs.add(new Integer(k));
 					}
 				}
-				for (final Iterator iter = this.cov.orbitRepresentatives(idcs); iter
-						.hasNext();) {
+				for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter
+                        .hasNext();) {
 					final Object D = iter.next();
 					final DSPair iCorner = new DSPair(i, D);
 					final DSPair jCorner = new DSPair(j, D);
@@ -291,31 +342,6 @@ public class Tiling {
 		}
         
         return G;
-	}
-
-	/**
-	 * Helper method for computing the translation associated to an edge in the
-	 * covering Delaney symbol.
-	 * 
-	 * @param idx the index of the edge.
-	 * @param D   the source element of the edge.
-	 * @return the translation vector associated to the edge.
-	 */
-	private Vector edgeTranslation(final int idx, final Object D) {
-        final Vector[] L = getTranslationVectors();
-		final FreeWord word = (FreeWord) getTranslationGroup().getEdgeToWord()
-                .get(new DSPair(idx, D));
-        Vector s = Vector.zero(this.ds.dim());
-		for (int i = 0; i < word.length(); ++i) {
-			final int k = word.getLetter(i) - 1;
-			final int sign = word.getSign(i);
-			if (sign > 0) {
-				s = (Vector) s.plus(L[k]);
-			} else {
-				s = (Vector) s.minus(L[k]);
-			}
-		}
-		return s;
 	}
 
 	/**
@@ -340,7 +366,7 @@ public class Tiling {
 
 			int count = 0;
 
-			for (final Iterator input = new InputIterator(in); input.hasNext();) {
+			for (Iterator input = new InputIterator(in); input.hasNext();) {
 				final DSymbol ds = (DSymbol) input.next();
 				++count;
 				final PeriodicGraph G = new Tiling(ds).getSkeleton();
