@@ -49,7 +49,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.3 2007/04/18 23:01:32 odf Exp $
+ * @version $Id: Tiling.java,v 1.4 2007/04/19 05:25:02 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -76,6 +76,9 @@ public class Tiling {
     private static final CacheKey TRANSLATION_GROUP = new CacheKey();
     private static final CacheKey TRANSLATION_VECTORS = new CacheKey();
     private static final CacheKey EDGE_TRANSLATIONS = new CacheKey();
+    private static final CacheKey CORNER_SHIFTS = new CacheKey();
+    private static final CacheKey SKELETON = new CacheKey();
+    private static final CacheKey BARYCENTRIC_SKELETON = new CacheKey();
     
     // === IMPORTANT: always assert non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
@@ -203,14 +206,69 @@ public class Tiling {
      * @param D the source element of the edge.
      * @return the translation vector associated to the edge.
      */
-    private Vector edgeTranslation(final int i, final Object D) {
+    public Vector edgeTranslation(final int i, final Object D) {
         return (Vector) getEdgeTranslations().get(new DSPair(i, D));
     }
 
+    /**
+     * @return shifts to obtain chamber corner positions from node positions.
+     */
+    public Map getCornerShifts() {
+    	final Map cached = (Map) this.cache.get(CORNER_SHIFTS);
+    	if (cached != null) {
+    		return cached;
+    	} else {
+    		final int dim = this.ds.dim();
+    		final HashMap c2s = new HashMap();
+    		for (int i = 0; i <= dim; ++i) {
+    			final List idcs = new LinkedList();
+    			for (int j = 0; j <= dim; ++j) {
+    				if (j != i) {
+    					idcs.add(new Integer(j));
+    				}
+    			}
+                final Traversal trav = new Traversal(this.cov, idcs, this.cov
+                        .elements());
+                while (trav.hasNext()) {
+    				final DSPair e = (DSPair) trav.next();
+    				final int k = e.getIndex();
+    				final Object D = e.getElement();
+    				if (k < 0) {
+    					c2s.put(new DSPair(i, D), Vector.zero(dim));
+    				} else {
+    					final Object Dk = this.cov.op(k, D);
+    					final Vector v = (Vector) c2s.get(new DSPair(i, Dk));
+    					c2s.put(new DSPair(i, D), v.plus(edgeTranslation(k, Dk)));
+    				}
+    			}
+
+    		}
+    		cache.put(CORNER_SHIFTS, c2s);
+    		return c2s;
+    	}
+    }
+    
+    /**
+     * Returns the necessary shift to obtain the position of a chamber corner
+     * from the node position associated to it in the barycentric skeleton.
+     * 
+     * @param i index of the corner.
+     * @param D the chamber the corner belongs to.
+     * @return shifts for this corner.
+     */
+    public Vector cornerShift(final int i, final Object D) {
+    	return (Vector) getCornerShifts().get(new DSPair(i, D));
+    }
+    
 	/**
 	 * @return the skeleton graph of the tiling.
 	 */
 	public PeriodicGraph getSkeleton() {
+		final PeriodicGraph cached = (PeriodicGraph) this.cache.get(SKELETON);
+		if (cached != null) {
+			return cached;
+		}
+		
 		final int dim = this.cov.dim();
         final PeriodicGraph G = new PeriodicGraph(dim);
 
@@ -238,23 +296,6 @@ public class Tiling {
             }
         }
 
-        // --- map chambers to translations w.r.t. node orbit representatives
-        final Traversal trav = new Traversal(this.cov, nodeIdcs, this.cov
-                .elements());
-        final HashMap trans = new HashMap();
-        while (trav.hasNext()) {
-			final DSPair e = (DSPair) trav.next();
-			int i = e.getIndex();
-			final Object D = e.getElement();
-			if (i < 0) {
-				trans.put(D, Vector.zero(dim));
-			} else {
-				final Object Di = this.cov.op(i, D);
-				final Vector v = (Vector) trans.get(Di);
-				trans.put(D, v.plus(edgeTranslation(i, Di)));
-			}
-		}
-
 		// --- create the edges
 		for (final Iterator iter = this.cov.orbitRepresentatives(edgeIdcs); iter
 				.hasNext();) {
@@ -262,13 +303,14 @@ public class Tiling {
 			final Object D0 = this.cov.op(0, D);
 			final INode v = (INode) ch2v.get(D);
 			final INode w = (INode) ch2v.get(D0);
-			final Vector s = (Vector) edgeTranslation(0, D).plus(trans.get(D0))
-					.minus(trans.get(D));
+			final Vector s = (Vector) edgeTranslation(0, D).plus(
+					cornerShift(0, D0)).minus(cornerShift(0, D));
 			if (G.getEdge(v, w, s) == null) {
 				G.newEdge(v, w, s);
 			}
 		}
         
+		this.cache.put(SKELETON, G);
         return G;
 	}
 
@@ -276,11 +318,16 @@ public class Tiling {
 	 * @return the skeleton graph of the barycentric subdivision.
 	 */
 	public PeriodicGraph getBarycentricSkeleton() {
+		final PeriodicGraph cached = (PeriodicGraph) this.cache
+				.get(BARYCENTRIC_SKELETON);
+		if (cached != null) {
+			return cached;
+		}
+		
 		final int dim = this.cov.dim();
         final PeriodicGraph G = new PeriodicGraph(dim);
-		final HashMap trans = new HashMap();
 
-		// --- create nodes and auxiliary info
+		// --- create nodes and maps to chamber corners to nodes
 		final Map corner2node = new HashMap();
 		for (int i = 0; i <= dim; ++i) {
 			final List idcs = new LinkedList();
@@ -298,22 +345,6 @@ public class Tiling {
                     corner2node.put(new DSPair(i, orbit.next()), v);
                 }
             }
-            // --- map chamber corners to translations
-            final Traversal trav = new Traversal(this.cov, idcs, this.cov
-                    .elements());
-            while (trav.hasNext()) {
-				final DSPair e = (DSPair) trav.next();
-				final int k = e.getIndex();
-				final Object D = e.getElement();
-				if (k < 0) {
-					trans.put(new DSPair(i, D), Vector.zero(dim));
-				} else {
-					final Object Dk = this.cov.op(k, D);
-					final Vector v = (Vector) trans.get(new DSPair(i, Dk));
-					trans.put(new DSPair(i, D), v.plus(edgeTranslation(k, Dk)));
-				}
-			}
-
 		}
 
 		// --- create the edges
@@ -328,12 +359,10 @@ public class Tiling {
 				for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter
                         .hasNext();) {
 					final Object D = iter.next();
-					final DSPair iCorner = new DSPair(i, D);
-					final DSPair jCorner = new DSPair(j, D);
-					final INode v = (INode) corner2node.get(iCorner);
-					final INode w = (INode) corner2node.get(jCorner);
-					final Vector s = (Vector) ((Vector) trans.get(jCorner))
-							.minus(trans.get(iCorner));
+					final INode v = (INode) corner2node.get(new DSPair(i, D));
+					final INode w = (INode) corner2node.get(new DSPair(j, D));
+					final Vector s = (Vector) (cornerShift(j, D))
+							.minus(cornerShift(i, D));
 					if (G.getEdge(v, w, s) == null) {
 						G.newEdge(v, w, s);
 					}
@@ -341,6 +370,7 @@ public class Tiling {
 			}
 		}
         
+		this.cache.put(BARYCENTRIC_SKELETON, G);
         return G;
 	}
 
