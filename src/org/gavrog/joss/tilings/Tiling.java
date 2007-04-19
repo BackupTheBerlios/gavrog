@@ -26,7 +26,6 @@ import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -37,6 +36,7 @@ import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
@@ -52,7 +52,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.5 2007/04/19 22:50:16 odf Exp $
+ * @version $Id: Tiling.java,v 1.6 2007/04/19 23:08:00 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -86,7 +86,7 @@ public class Tiling {
     // === IMPORTANT: always assert non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
 
-    
+    // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
     final private DelaneySymbol ds;
     final private DelaneySymbol cov;
 
@@ -126,6 +126,13 @@ public class Tiling {
 	}
 
     /**
+     * @return the original symbol.
+     */
+    public DelaneySymbol getSymbol() {
+        return this.ds;
+    }
+    
+    /**
      * @return the toroidal or pseudo-toroidal cover.
      */
     public DelaneySymbol getCover() {
@@ -158,7 +165,7 @@ public class Tiling {
             final Matrix N = LinearAlgebra.columnNullSpace(
                     getTranslationGroup().getPresentation().relatorMatrix(),
                     true);
-            if (N.numberOfColumns() != this.ds.dim()) {
+            if (N.numberOfColumns() != this.cov.dim()) {
                 final String msg = "could not compute translations";
                 throw new RuntimeException(msg);
             }
@@ -176,7 +183,7 @@ public class Tiling {
         if (cached != null) {
             return cached;
         } else {
-            final int dim = this.ds.dim();
+            final int dim = this.cov.dim();
             final Vector[] t = getTranslationVectors();
             final Map e2w = (Map) getTranslationGroup().getEdgeToWord();
             final Map e2t = new HashMap();
@@ -221,15 +228,10 @@ public class Tiling {
     	if (cached != null) {
     		return cached;
     	} else {
-    		final int dim = this.ds.dim();
+    		final int dim = this.cov.dim();
     		final HashMap c2s = new HashMap();
     		for (int i = 0; i <= dim; ++i) {
-    			final List idcs = new LinkedList();
-    			for (int j = 0; j <= dim; ++j) {
-    				if (j != i) {
-    					idcs.add(new Integer(j));
-    				}
-    			}
+                final List idcs = IndexList.except(this.cov, i);
                 final Traversal trav = new Traversal(this.cov, idcs, this.cov
                         .elements());
                 while (trav.hasNext()) {
@@ -274,7 +276,7 @@ public class Tiling {
          * @param dimension
          */
         private Skeleton() {
-            super(Tiling.this.ds.dim());
+            super(Tiling.this.cov.dim());
         }
         
         /**
@@ -346,20 +348,11 @@ public class Tiling {
 			return cached;
 		}
 		
-		final int dim = this.cov.dim();
         final Skeleton G = new Skeleton();
 
 		// --- set up index lists
-		final List nodeIdcs = new LinkedList();
-		final List edgeIdcs = new LinkedList();
-		for (int i = 0; i <= dim; ++i) {
-			if (i != 0) {
-				nodeIdcs.add(new Integer(i));
-			}
-			if (i != 1) {
-				edgeIdcs.add(new Integer(i));
-			}
-		}
+		final List nodeIdcs = IndexList.except(this.cov, 0);
+		final List edgeIdcs = IndexList.except(this.cov, 1);
 
 		// --- create nodes of the graph and map Delaney chambers to nodes
 		final Map ch2v = new HashMap();
@@ -407,12 +400,7 @@ public class Tiling {
 		// --- create nodes and maps to chamber corners to nodes
 		final Map corner2node = new HashMap();
 		for (int i = 0; i <= dim; ++i) {
-			final List idcs = new LinkedList();
-			for (int j = 0; j <= dim; ++j) {
-				if (j != i) {
-					idcs.add(new Integer(j));
-				}
-			}
+			final List idcs = IndexList.except(this.cov, i);
 			for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter
                     .hasNext();) {
                 final Object D = iter.next();
@@ -427,12 +415,7 @@ public class Tiling {
 		// --- create the edges
 		for (int i = 0; i < dim; ++i) {
 			for (int j = i + 1; j <= dim; ++j) {
-				final List idcs = new LinkedList();
-				for (int k = 0; k <= dim; ++k) {
-					if (k != j && k != i) {
-						idcs.add(new Integer(k));
-					}
-				}
+				final List idcs = IndexList.except(this.cov, i, j);
 				for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter
                         .hasNext();) {
 					final Object D = iter.next();
