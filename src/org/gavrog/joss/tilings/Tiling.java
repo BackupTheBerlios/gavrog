@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -41,6 +42,8 @@ import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.Output;
@@ -49,7 +52,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.4 2007/04/19 05:25:02 odf Exp $
+ * @version $Id: Tiling.java,v 1.5 2007/04/19 22:50:16 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -147,7 +150,7 @@ public class Tiling {
     /**
      * @return the generators of the translation group as vectors.
      */
-    public Vector[] getTranslationVectors() {
+    private Vector[] getTranslationVectors() {
         final Vector[] cached = (Vector[]) this.cache.get(TRANSLATION_VECTORS);
         if (cached != null) {
             return cached;
@@ -193,7 +196,7 @@ public class Tiling {
                 e2t.put(e, s);
             }
             
-            cache.put(EDGE_TRANSLATIONS, e2t);
+            cache.put(EDGE_TRANSLATIONS, Collections.unmodifiableMap(e2t));
             return e2t;
         }
     }
@@ -243,7 +246,7 @@ public class Tiling {
     			}
 
     		}
-    		cache.put(CORNER_SHIFTS, c2s);
+    		cache.put(CORNER_SHIFTS, Collections.unmodifiableMap(c2s));
     		return c2s;
     	}
     }
@@ -260,17 +263,91 @@ public class Tiling {
     	return (Vector) getCornerShifts().get(new DSPair(i, D));
     }
     
+    /**
+     * Class to represent a skeleton graph for this tiling.
+     */
+    public class Skeleton extends PeriodicGraph {
+        final Map node2corner = new HashMap();
+        
+        /**
+         * Constructs an instance.
+         * @param dimension
+         */
+        private Skeleton() {
+            super(Tiling.this.ds.dim());
+        }
+        
+        /**
+         * Creates a new node associated to a chamber corner.
+         * @param i the index of the corner.
+         * @param D the chamber the corner belongs to.
+         * @return the newly created node.
+         */
+        private INode newNode(final int i, final Object D) {
+            final INode v = super.newNode();
+            node2corner.put(v, new DSPair(i, D));
+            return v;
+        }
+
+        /**
+         * Creates a new edge associated to a chamber ridge.
+         * @param v source node.
+         * @param w target node.
+         * @param s shift vector associated to this edge.
+         * @param D chamber the ridge belongs to.
+         * @return the newly created edge.
+         */
+        private IEdge newEdge(final INode v, final INode w, final Vector s,
+                final Object D) {
+            return super.newEdge(v, w, s);
+        }
+        
+        /**
+         * Retrieves the chamber corner a node belongs to.
+         * @param v the node.
+         * @return a DSPair describing the corner associated to node v.
+         */
+        public DSPair cornerAtNode(final INode v) {
+            return (DSPair) this.node2corner.get(v);
+        }
+        
+        // --- we override the following to make skeleta immutable from outside
+        public void delete(IGraphElement element) {
+            throw new UnsupportedOperationException();
+        }
+
+        public IEdge newEdge(INode source, INode target, int[] shift) {
+            throw new UnsupportedOperationException();
+        }
+
+        public IEdge newEdge(INode source, INode target, Vector shift) {
+            throw new UnsupportedOperationException();
+        }
+
+        public IEdge newEdge(INode source, INode target) {
+            throw new UnsupportedOperationException();
+        }
+
+        public INode newNode() {
+            throw new UnsupportedOperationException();
+        }
+
+        public void shiftNode(INode node, Vector amount) {
+            throw new UnsupportedOperationException();
+        }
+    }
+    
 	/**
 	 * @return the skeleton graph of the tiling.
 	 */
-	public PeriodicGraph getSkeleton() {
-		final PeriodicGraph cached = (PeriodicGraph) this.cache.get(SKELETON);
+	public Skeleton getSkeleton() {
+		final Skeleton cached = (Skeleton) this.cache.get(SKELETON);
 		if (cached != null) {
 			return cached;
 		}
 		
 		final int dim = this.cov.dim();
-        final PeriodicGraph G = new PeriodicGraph(dim);
+        final Skeleton G = new Skeleton();
 
 		// --- set up index lists
 		final List nodeIdcs = new LinkedList();
@@ -289,7 +366,7 @@ public class Tiling {
 		for (final Iterator iter = this.cov.orbitRepresentatives(nodeIdcs); iter
 				.hasNext();) {
 			final Object D = iter.next();
-			final INode v = G.newNode();
+			final INode v = G.newNode(0, D);
 			for (final Iterator orbit = this.cov.orbit(nodeIdcs, D); orbit
                     .hasNext();) {
                 ch2v.put(orbit.next(), v);
@@ -306,7 +383,7 @@ public class Tiling {
 			final Vector s = (Vector) edgeTranslation(0, D).plus(
 					cornerShift(0, D0)).minus(cornerShift(0, D));
 			if (G.getEdge(v, w, s) == null) {
-				G.newEdge(v, w, s);
+				G.newEdge(v, w, s, D);
 			}
 		}
         
@@ -317,15 +394,15 @@ public class Tiling {
 	/**
 	 * @return the skeleton graph of the barycentric subdivision.
 	 */
-	public PeriodicGraph getBarycentricSkeleton() {
-		final PeriodicGraph cached = (PeriodicGraph) this.cache
+	public Skeleton getBarycentricSkeleton() {
+		final Skeleton cached = (Skeleton) this.cache
 				.get(BARYCENTRIC_SKELETON);
 		if (cached != null) {
 			return cached;
 		}
 		
 		final int dim = this.cov.dim();
-        final PeriodicGraph G = new PeriodicGraph(dim);
+        final Skeleton G = new Skeleton();
 
 		// --- create nodes and maps to chamber corners to nodes
 		final Map corner2node = new HashMap();
@@ -339,7 +416,7 @@ public class Tiling {
 			for (Iterator iter = this.cov.orbitRepresentatives(idcs); iter
                     .hasNext();) {
                 final Object D = iter.next();
-                final INode v = G.newNode();
+                final INode v = G.newNode(i, D);
                 for (final Iterator orbit = this.cov.orbit(idcs, D); orbit
                         .hasNext();) {
                     corner2node.put(new DSPair(i, orbit.next()), v);
@@ -364,7 +441,7 @@ public class Tiling {
 					final Vector s = (Vector) (cornerShift(j, D))
 							.minus(cornerShift(i, D));
 					if (G.getEdge(v, w, s) == null) {
-						G.newEdge(v, w, s);
+						G.newEdge(v, w, s, D);
 					}
 				}
 			}
@@ -399,7 +476,7 @@ public class Tiling {
 			for (Iterator input = new InputIterator(in); input.hasNext();) {
 				final DSymbol ds = (DSymbol) input.next();
 				++count;
-				final PeriodicGraph G = new Tiling(ds).getSkeleton();
+				final Skeleton G = new Tiling(ds).getSkeleton();
 				Output.writePGR(out, G, "T" + count);
 				out.flush();
 			}
