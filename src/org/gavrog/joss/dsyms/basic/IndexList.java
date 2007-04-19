@@ -22,32 +22,46 @@ import java.util.Iterator;
 /**
  * Convenience class to represent lists of Delaney symbol indices.
  * @author Olaf Delgado
- * @version $Id: IndexList.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: IndexList.java,v 1.2 2007/04/19 23:07:42 odf Exp $
  */
 public class IndexList extends ArrayList {
-	
-		public IndexList(DelaneySymbol ds) {
-			this(ds.indices());
-		}
-		
-		public IndexList(Iterator iter) {
-			while (iter.hasNext()) {
-				add(iter.next());
-			}
-		}
-		
-		public IndexList(final int i) {
-		    add(new Integer(i));
-		}
-        
-        public IndexList(final int i, final int j) {
-            add(new Integer(i));
-            add(new Integer(j));
+
+    public IndexList(final DelaneySymbol ds) {
+        this(ds.indices());
+    }
+
+    public IndexList(final Iterator iter) {
+        while (iter.hasNext()) {
+            add(iter.next());
         }
-        
-        public IndexList(final int i, final int j, final int k) {
-            add(new Integer(i));
-            add(new Integer(j));
-            add(new Integer(k));
-        }
+    }
+
+    public IndexList(final int i) {
+        add(new Integer(i));
+    }
+
+    public IndexList(final int i, final int j) {
+        add(new Integer(i));
+        add(new Integer(j));
+    }
+
+    public IndexList(final int i, final int j, final int k) {
+        add(new Integer(i));
+        add(new Integer(j));
+        add(new Integer(k));
+    }
+
+    public static IndexList except(final DelaneySymbol ds, final int i) {
+        final IndexList res = new IndexList(ds);
+        res.remove(new Integer(i));
+        return res;
+    }
+
+    public static IndexList except(final DelaneySymbol ds, final int i,
+            final int j) {
+        final IndexList res = new IndexList(ds);
+        res.remove(new Integer(i));
+        res.remove(new Integer(j));
+        return res;
+    }
 }
