@@ -26,6 +26,7 @@ import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -41,6 +42,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 import org.gavrog.joss.dsyms.generators.InputIterator;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
@@ -52,7 +54,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.8 2007/04/20 01:32:40 odf Exp $
+ * @version $Id: Tiling.java,v 1.9 2007/04/20 22:46:05 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -82,6 +84,7 @@ public class Tiling {
     private static final CacheKey CORNER_SHIFTS = new CacheKey();
     private static final CacheKey SKELETON = new CacheKey();
     private static final CacheKey BARYCENTRIC_SKELETON = new CacheKey();
+    private static final CacheKey BARYCENTRIC_POS_BY_VERTEX = new CacheKey();
     
     // === IMPORTANT: always assert non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
@@ -437,6 +440,49 @@ public class Tiling {
         return G;
 	}
 
+    public Map getBarycentricPositionsByVertices() {
+        final Map cached = (Map) cache.get(BARYCENTRIC_POS_BY_VERTEX);
+        if (cached != null) {
+            return cached;
+        } else {
+            final Map result = new HashMap();
+            final DelaneySymbol cover = getCover();
+            final Skeleton skel = getSkeleton();
+            final Map pos = skel.barycentricPlacement();
+            for (final Iterator elms = cover.elements(); elms.hasNext();) {
+                final Object D = elms.next();
+                final Point p = (Point) pos.get(skel.nodeForCorner(0, D));
+                final Vector t = cornerShift(0, D);
+                result.put(new DSPair(0, D), p.plus(t));
+            }
+            final int dim = cover.dim();
+            List idcs = new LinkedList();
+            for (int i = 1; i <= dim; ++i) {
+                idcs.add(new Integer(i-1));
+                for (final Iterator reps = cover.orbitRepresentatives(idcs); reps
+                        .hasNext();) {
+                    final Object D = reps.next();
+                    Matrix s = Point.origin(dim).getCoordinates();
+                    int n = 0;
+                    for (Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
+                        final Object E = orb.next();
+                        final Point p = (Point) result.get(new DSPair(0, E));
+                        final Vector t = cornerShift(i, E);
+                        final Point pt = (Point) p.minus(t);
+                        s = (Matrix) s.plus(pt.getCoordinates());
+                        ++n;
+                    }
+                    final Point p = new Point((Matrix) s.dividedBy(n));
+                    final Vector t = cornerShift(i, D);
+                    result.put(new DSPair(i, D), p.plus(t));
+                }
+            }
+            
+            cache.put(BARYCENTRIC_POS_BY_VERTEX, result);
+            return result;
+        }
+    }
+    
 	/**
      * Main method for testing purposes.
      * 
