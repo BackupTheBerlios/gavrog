@@ -52,7 +52,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.7 2007/04/20 01:19:34 odf Exp $
+ * @version $Id: Tiling.java,v 1.8 2007/04/20 01:32:40 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -291,10 +291,9 @@ public class Tiling {
             final DelaneySymbol cover = getCover();
             final INode v = super.newNode();
             this.node2corner.put(v, new DSPair(i, D));
-            final List idcs = IndexList.except(cov, i);
+            final List idcs = IndexList.except(cover, i);
             for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                final Object E = orb.next();
-                this.corner2node.put(new DSPair(i, E), v);
+                this.corner2node.put(new DSPair(i, orb.next()), v);
             }
             return v;
         }
@@ -370,8 +369,6 @@ public class Tiling {
         final Skeleton G = new Skeleton();
         List idcs;
 
-		// --- set up index lists
-
 		// --- create nodes of the graph and map Delaney chambers to nodes
         idcs = IndexList.except(dsym, 0);
         for (Iterator iter = dsym.orbitRepresentatives(idcs); iter.hasNext();) {
@@ -382,14 +379,14 @@ public class Tiling {
         idcs = IndexList.except(dsym, 1);
         for (Iterator iter = dsym.orbitRepresentatives(idcs); iter.hasNext();) {
             final Object D = iter.next();
-            final Object D0 = dsym.op(0, D);
+            final Object E = dsym.op(0, D);
             final INode v = G.nodeForCorner(0, D);
-			final INode w = G.nodeForCorner(0, D0);
-			final Vector s = (Vector) edgeTranslation(0, D).plus(
-                    cornerShift(0, D0)).minus(cornerShift(0, D));
-			if (G.getEdge(v, w, s) == null) {
-				G.newEdge(v, w, s, D);
-			}
+			final INode w = G.nodeForCorner(0, E);
+            final Vector t = edgeTranslation(0, D);
+            final Vector sD = cornerShift(0, D);
+            final Vector sE = cornerShift(0, E);
+			final Vector s = (Vector) t.plus(sE).minus(sD);
+			G.newEdge(v, w, s, D);
 		}
         
 		this.cache.put(SKELETON, G);
@@ -428,11 +425,10 @@ public class Tiling {
 					final Object D = iter.next();
 					final INode v = G.nodeForCorner(i, D);
 					final INode w = G.nodeForCorner(j, D);
-					final Vector s = (Vector) (cornerShift(j, D))
-							.minus(cornerShift(i, D));
-					if (G.getEdge(v, w, s) == null) {
-						G.newEdge(v, w, s, D);
-					}
+                    final Vector si = cornerShift(i, D);
+                    final Vector sj = cornerShift(j, D);
+					final Vector s = (Vector) sj.minus(si);
+					G.newEdge(v, w, s, D);
 				}
 			}
 		}
