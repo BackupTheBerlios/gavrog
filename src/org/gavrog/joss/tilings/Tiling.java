@@ -54,7 +54,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.10 2007/04/21 00:09:07 odf Exp $
+ * @version $Id: Tiling.java,v 1.11 2007/04/21 04:52:37 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -440,6 +440,13 @@ public class Tiling {
         return G;
 	}
 
+    /**
+     * Computes positions for chamber corners by first placing corners for
+     * vertices (index 0) barycentrically, then placing corners for edges etc.
+     * int the centers of their bounding vertices.
+     * 
+     * @return a mapping from corners to positions
+     */
     public Map getBarycentricPositionsByVertex() {
         final Map cached = (Map) cache.get(BARYCENTRIC_POS_BY_VERTEX);
         if (cached != null) {
@@ -484,6 +491,18 @@ public class Tiling {
             cache.put(BARYCENTRIC_POS_BY_VERTEX, result);
             return result;
         }
+    }
+    
+    /**
+	 * Returns the position for a corner as computed by
+	 * {@link #getBarycentricPositionsByVertex()}.
+	 * 
+	 * @param i the index for the corner.
+	 * @param D the chamber which the corner belongs to.
+	 * @return the position of the corner.
+	 */
+    public Point positionByVertex(final int i, final Object D) {
+    	return (Point) getBarycentricPositionsByVertex().get(new DSPair(i, D));
     }
     
 	/**
