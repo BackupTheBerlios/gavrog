@@ -54,7 +54,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.9 2007/04/20 22:46:05 odf Exp $
+ * @version $Id: Tiling.java,v 1.10 2007/04/21 00:09:07 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -440,7 +440,7 @@ public class Tiling {
         return G;
 	}
 
-    public Map getBarycentricPositionsByVertices() {
+    public Map getBarycentricPositionsByVertex() {
         final Map cached = (Map) cache.get(BARYCENTRIC_POS_BY_VERTEX);
         if (cached != null) {
             return cached;
@@ -473,8 +473,11 @@ public class Tiling {
                         ++n;
                     }
                     final Point p = new Point((Matrix) s.dividedBy(n));
-                    final Vector t = cornerShift(i, D);
-                    result.put(new DSPair(i, D), p.plus(t));
+                    for (Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
+                        final Object E = orb.next();
+                        final Vector t = cornerShift(i, E);
+                        result.put(new DSPair(i, E), p.plus(t));
+                    }
                 }
             }
             
