@@ -16,6 +16,12 @@
 
 package org.gavrog.joss.tilings;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import junit.framework.TestCase;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -23,12 +29,12 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.1 2007/04/18 23:00:12 odf Exp $
+ * @version $Id: TestTiling.java,v 1.2 2007/04/21 00:10:29 odf Exp $
  */
 public class TestTiling extends TestCase {
-	final private DSymbol ds1 = new DSymbol("1 3:1,1,1,1:4,3,4");
-	final private DSymbol ds2 = new DSymbol("2 3:2,1 2,1 2,2:6,3 2,6");
-	final private DSymbol ds3 = new DSymbol("1 2:1,1,1:4,4");
+	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
+	final private Tiling t2 = new Tiling(new DSymbol("2 3:2,1 2,1 2,2:6,3 2,6"));
+	final private Tiling t3 = new Tiling(new DSymbol("1 2:1,1,1:4,4"));
 	final private PeriodicGraph gr1 = PeriodicGraph.fromInvariantString("3"
 			+ "   1 1 1 0 0   1 1 0 1 0   1 1 0 0 1");
 	final private PeriodicGraph gr2 = PeriodicGraph.fromInvariantString("3"
@@ -39,13 +45,25 @@ public class TestTiling extends TestCase {
 			+ "   2 4 0 0   4 2 0 1   3 4 0 0   4 3 1 0");
     
     public void testSkeleton() {
-        final PeriodicGraph sk1 = new Tiling(ds1).getSkeleton();
-        final PeriodicGraph sk2 = new Tiling(ds2).getSkeleton();
-        final PeriodicGraph sk3 = new Tiling(ds3).getBarycentricSkeleton();
+        final PeriodicGraph sk1 = t1.getSkeleton();
+        final PeriodicGraph sk2 = t2.getSkeleton();
+        final PeriodicGraph sk3 = t3.getBarycentricSkeleton();
         assertEquals(gr1, sk1);
         assertEquals(gr2, sk2);
         assertEquals(gr3, sk3);
         assertFalse(gr1.equals(sk2));
         assertFalse(gr2.equals(sk1));
+    }
+    
+    public void testBarycentricPositionsByVertex() {
+        final Tiling til = new Tiling(t1.getCover().canonical());
+        System.out.println(til.getCover());
+        final Map pos = til.getBarycentricPositionsByVertex();
+        final List keys = new ArrayList(pos.keySet());
+        Collections.sort(keys);
+        for (Iterator iter = keys.iterator(); iter.hasNext();) {
+            final Object corner = iter.next();
+            System.out.println(corner + " => " + pos.get(corner));
+        }
     }
 }
