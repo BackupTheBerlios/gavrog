@@ -16,20 +16,19 @@
 
 package org.gavrog.joss.tilings;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import junit.framework.TestCase;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.2 2007/04/21 00:10:29 odf Exp $
+ * @version $Id: TestTiling.java,v 1.3 2007/04/21 04:52:14 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -56,14 +55,31 @@ public class TestTiling extends TestCase {
     }
     
     public void testBarycentricPositionsByVertex() {
-        final Tiling til = new Tiling(t1.getCover().canonical());
-        System.out.println(til.getCover());
-        final Map pos = til.getBarycentricPositionsByVertex();
-        final List keys = new ArrayList(pos.keySet());
-        Collections.sort(keys);
-        for (Iterator iter = keys.iterator(); iter.hasNext();) {
-            final Object corner = iter.next();
-            System.out.println(corner + " => " + pos.get(corner));
+    	testBarycentricPositionsByVertex(t1);
+    	testBarycentricPositionsByVertex(t2);
+    	testBarycentricPositionsByVertex(t3);
+    }
+    
+    public void testBarycentricPositionsByVertex(final Tiling til) {
+        final DelaneySymbol cover = til.getCover();
+        final int dim = cover.dim();
+        for (final Iterator elms = cover.elements(); elms.hasNext();) {
+        	final Object D = elms.next();
+        	for (int i = 0; i <= dim; ++i) {
+        		final Object Di = cover.op(i, D);
+        		final Vector t = til.edgeTranslation(i, D);
+        		if (i != cover.dim()) {
+        			assertEquals(Vector.zero(dim), t);
+        		}
+        		for (int j = 0; j < dim; ++j) {
+        			if (j == i) {
+        				continue;
+        			}
+            		final Point p = til.positionByVertex(j, D);
+            		final Point q = til.positionByVertex(j, Di);
+            		assertEquals(q, p.plus(t));
+        		}
+        	}
         }
     }
 }
