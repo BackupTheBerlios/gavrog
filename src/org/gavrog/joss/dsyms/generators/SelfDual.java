@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * Generates all minimal, self-dual euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: SelfDual.java,v 1.1 2006/09/09 05:17:35 odf Exp $
+ * @version $Id: SelfDual.java,v 1.2 2007/04/22 04:00:04 odf Exp $
  */
 public class SelfDual {
     /*
@@ -90,7 +90,7 @@ public class SelfDual {
                         }
                     } else if (actions.hasNext()) {
                         final GroupAction action = (GroupAction) actions.next();
-                        final DSymbol set = new DSymbol(Covers.cover(G, action));
+                        final DSymbol set = Covers.flatCover(G, action);
                         if (set.equals(set.dual())
                                 && Utils.mayBecomeLocallyEuclidean3D(set)) {
                             current = new DefineProperBranching(set);

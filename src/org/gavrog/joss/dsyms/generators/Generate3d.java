@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * Generates all minimal euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: Generate3d.java,v 1.3 2006/10/11 22:02:09 odf Exp $
+ * @version $Id: Generate3d.java,v 1.4 2007/04/22 04:00:04 odf Exp $
  */
 public class Generate3d extends IteratorAdapter {
     /*
@@ -111,7 +111,7 @@ public class Generate3d extends IteratorAdapter {
 				}
 			} else if (actions.hasNext()) {
 				final GroupAction action = (GroupAction) actions.next();
-				final DSymbol set = new DSymbol(Covers.cover(G, action));
+				final DSymbol set = Covers.flatCover(G, action);
 				if (this.edgeTransitive && set.numberOfOrbits(edgeIndices) > 1) {
 					continue;
 				}
