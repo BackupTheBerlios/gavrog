@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 /**
  * Test methods implemented in AbstractDelaneySymbol.
  * @author Olaf Delgado
- * @version $Id: TestAbstractDelaneySymbol.java,v 1.2 2006/11/15 02:03:46 odf Exp $
+ * @version $Id: TestAbstractDelaneySymbol.java,v 1.3 2007/04/22 04:51:01 odf Exp $
  */
 public class TestAbstractDelaneySymbol extends TestCase {
 	private String code;

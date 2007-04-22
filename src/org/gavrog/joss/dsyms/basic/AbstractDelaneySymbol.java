@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.7 2007/04/22 04:49:46 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.8 2007/04/22 04:51:02 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 
