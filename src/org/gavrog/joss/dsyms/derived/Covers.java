@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -45,51 +45,10 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.5 2007/04/22 03:59:35 odf Exp $
+ * @version $Id: Covers.java,v 1.6 2007/04/22 04:02:03 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;
-    
-    /**
-     * Returns a cover of a Delaney symbol induced by an action of its
-     * fundamental group. The fundamental group of the new symbol will be an
-     * element stabilizer w.r.t. the action.
-     * 
-     * @param G a fundamental group of a symbol.
-     * @param action an action of the fundamental group.
-     * 
-     * @return the newly constructed symbol.
-     */
-    public static DelaneySymbol cover(final FundamentalGroup G,
-            final GroupAction action) {
-        
-        if (action.getGroup() != G.getPresentation()) {
-            final String s = "the action must be by the same group";
-            throw new IllegalArgumentException(s);
-        }
-        final DelaneySymbol ds = G.getSymbol();
-        final Map edge2word = G.getEdgeToWord();
-
-        return new Cover(ds) {
-            public Object targetLayer(int i, Object D) {
-                final DSPair e = new DSPair(i, getImage(D));
-                final FreeWord g = (FreeWord) edge2word.get(e);
-                return action.apply(getLayer(D), g);
-            }
-
-            public int numberOfLayers() {
-                return action.size();
-            }
-
-            public Iterator layers() {
-                return action.domain();
-            }
-
-            public boolean hasLayer(Object x) {
-                return action.isDefinedOn(x);
-            }
-        };
-    }
     
     /**
      * Returns a (flat) cover of a Delaney symbol induced by an action of its
