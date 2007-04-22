@@ -34,18 +34,18 @@ import org.gavrog.jane.fpgroups.GroupActions;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.jane.fpgroups.Stabilizer;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.dsyms.basic.Cover;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.pgraphs.basic.Cover;
 
 
 /**
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.6 2007/04/22 04:02:03 odf Exp $
+ * @version $Id: Covers.java,v 1.7 2007/04/22 04:51:27 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;
