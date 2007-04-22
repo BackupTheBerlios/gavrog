@@ -27,13 +27,14 @@ import java.util.Map;
 import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: AbstractDelaneySymbol.java,v 1.6 2007/04/18 04:17:48 odf Exp $
+ * @version $Id: AbstractDelaneySymbol.java,v 1.7 2007/04/22 04:49:46 odf Exp $
  */
 public abstract class AbstractDelaneySymbol implements DelaneySymbol {
 
@@ -994,19 +995,73 @@ public abstract class AbstractDelaneySymbol implements DelaneySymbol {
         if (isOriented()) {
             return this;
         } else {
-            return new FiniteCover(this, 2) {
-                final private Map d = AbstractDelaneySymbol.this.partialOrientation();
+        	final DelaneySymbol base = this;
+            final Map d = AbstractDelaneySymbol.this.partialOrientation();
 
-                public Object targetLayer(final int i, final Object D) {
-                    final Object E = getImage(D);
-                    final Object Ei = base.op(i, E);
-                    final int L = ((Integer) getLayer(D)).intValue();
-                    if (d.get(E).equals(d.get(Ei))) {
-                        return new Integer(3 - L);
-                    } else {
-                        return new Integer(L);
-                    }
-                }
+            return new AbstractDelaneySymbol() {
+				public int dim() {
+					return base.dim();
+				}
+
+				public int size() {
+					return 2 * base.size();
+				}
+
+				public Iterator elements() {
+					return Iterators.cantorProduct(base.elements(), Iterators
+							.range(0, 2));
+				}
+
+				public boolean hasElement(Object D) {
+					if (D instanceof Pair) {
+						final Pair p = (Pair) D;
+						if (p.getSecond() instanceof Integer) {
+							final int n = ((Integer) p.getSecond()).intValue();
+							return (n == 0 || n == 1)
+									&& base.hasElement(p.getFirst());
+						}
+					}
+					return false;
+				}
+
+				public Iterator indices() {
+					return base.indices();
+				}
+
+				public boolean hasIndex(int i) {
+					return base.hasIndex(i);
+				}
+
+				public boolean definesOp(int i, Object D) {
+					return hasIndex(i) && hasElement(D)
+							&& base.definesOp(i, ((Pair) D).getFirst());
+				}
+
+				public Object op(int i, Object D) {
+					if (!definesOp(i, D)) {
+						throw new IllegalArgumentException("not defined");
+					}
+					final Pair p = (Pair) D;
+					final Object E = p.getFirst();
+					int layer = ((Integer) p.getSecond()).intValue();
+					final Object Ei = base.op(i, E);
+					if (d.get(E).equals(d.get(Ei))) {
+						layer = 1 - layer;
+					}
+					return new Pair(Ei, new Integer(layer));
+				}
+
+				public boolean definesV(int i, int j, Object D) {
+					return hasIndex(i) && hasIndex(j) && hasElement(D)
+							&& base.definesV(i, j, ((Pair) D).getFirst());
+				}
+
+				public int v(int i, int j, Object D) {
+					if (!definesV(i, j, D)) {
+						throw new IllegalArgumentException("not defined");
+					}
+					return base.v(i, j, ((Pair) D).getFirst());
+				}
             };
         }
     }
