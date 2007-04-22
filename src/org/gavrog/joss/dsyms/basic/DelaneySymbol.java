@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,333 +16,1053 @@
 
 package org.gavrog.joss.dsyms.basic;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.Pair;
+import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 
 
-
 /**
- * Rich interface for Delaney symbol (or D-symbol for short) classes.
- * 
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.4 2006/11/15 02:03:45 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.5 2007/04/22 06:31:43 odf Exp $
  */
+public abstract class DelaneySymbol implements Comparable {
 
-public interface DelaneySymbol extends Comparable {
+    private boolean vDefaultToOne = false;
+    
     /**
-     * Returns the dimension (one less than the number of indices) of this
-     * symbol.
-     * @return the dimension.
+     * Returns the value of vDefaultToOne.
+     * @return the current value of vDefaultToOne.
      */
-    public int dim();
+    public boolean isVDefaultToOne() {
+        return this.vDefaultToOne;
+    }
+    /**
+     * Sets vDefaultToOne.
+     * @param value the new value of vDefaultToOne.
+     */
+    public void setVDefaultToOne(boolean value) {
+        this.vDefaultToOne = value;
+    }
+    
+    /**
+     * Returns a normailized v result according to the current default.
+     * @param val the unnormalized v-value.
+     * @return the normalized v-value.
+     */
+    protected int normalizedV(final int val) {
+        if (val > 0) {
+            return val;
+        } else if (isVDefaultToOne()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    
+    /* --- The minimal set of methods each derived class must implement. */
+    
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#dim()
+     */
+    public abstract int dim();
 
-    /**
-     * Returns the size (the number of elements) of this symbol. This is only
-     * defined for finite symbols.
-     * @return the size.
-     * @throws UnsupportedOperationException if infinite or of unknown size.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#size()
      */
-    public int size() throws UnsupportedOperationException;
+    public abstract int size();
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#elements()
+     */
+    public abstract Iterator elements();
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isElement(java.lang.Object)
+     */
+    public abstract boolean hasElement(Object D);
     
-    /**
-     * @return an iterator over the elements of the symbol.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#indices()
      */
-    public Iterator elements();
+    public abstract Iterator indices();
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isIndex(int)
+     */
+    public abstract boolean hasIndex(int i);
     
-    /**
-     * Tests if an object is an element of this symbol.
-     * @param D the object to test.
-     * @return true if D is an element of this symbol.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#op(int, java.lang.Object)
      */
-    public boolean hasElement(Object D);
-    
-    /**
-     * @return an iterator over the valid neighbor indices for this symbol.
+    public abstract boolean definesOp(int i, Object D);
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#op(int, java.lang.Object)
      */
-    public Iterator indices();
-    
-    /**
-     * Tests if a number is a valid index for this symbol.
-     * @param i the number to test.
-     * @return true if i is a valid index for this symbol.
+    public abstract Object op(int i, Object D);
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#v(int, int, java.lang.Object)
      */
-    public boolean hasIndex(int i);
-    
-    /**
-     * Tests if the indices for this symbol run from 0 to dim() without gaps.
-     * @return true if indices run from 0 to dim() without gaps.
+    public abstract boolean definesV(int i, int j, Object D);
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#v(int, int, java.lang.Object)
      */
-    public boolean hasStandardIndexSet();
-    
-    /**
-     * Tests if a specific neighbor of an element exists.
-     * @param i the neighbor index.
-     * @param D the original element.
-     * @return true if the i-neighbor of D exists..
-     */
-    public boolean definesOp(int i, Object D);
-    
-    /**
-     * Returns a specific neighbor of an element.
-     * @param i the neighbor index.
-     * @param D the original element.
-     * @return the i-neighbor of D.
-     */
-    public Object op(int i, Object D);
-    
-    /**
-     * Tests if a certain branching number is defined..
-     * @param i the first index.
-     * @param j the second index.
-     * @param D the element.
-     * @return true if the (i,j) branching number of D exists.
-     */
-    public boolean definesV(int i, int j, Object D);
-    
-    /**
-     * Tests if op and v are defined for all feasible elements and indices.
-     * @return true if op and v are defined everywhere.
-     */
-    public boolean isComplete();
-    
-    /**
-     * Returns a specific branching number (aka branching limit).
-     * @param i the first index.
-     * @param j the second index.
-     * @param D the element.
-     * @return the (i,j) branching number (branching limit) of D.
-     */
-    public int v(int i, int j, Object D);
-    
-    /**
-     * Returns the smallest positive number of double steps which leads from
-     * an element back to itself via an alternating sequence of i- and
-     * j-neighbors.
-     * @param i the first index.
-     * @param j the second index.
-     * @param D the element.
-     * @return the smallest number of returning (i,h) double steps.
-     */
-    public int r(int i, int j, Object D);
-    
-    /**
-     * Returns the product of v and r.
-     * @param i the first index.
-     * @param j the second index.
-     * @param D the element.
-     * @return <code>v(i,j,D) * r(i,j,D)</code>
-     */
-    public int m(int i, int j, Object D);
+    public abstract int v(int i, int j, Object D);
+
+
+    /* --- Default implementations for the rest of the interface. */
 
     /**
-     * Counts the number of connected components (orbits) determined by the
-     * specified collection of indices.
-     * @param indices the indices to use.
-     * @return the number of orbits.
+     * Helper method: adjusts a string to a given length by filling from the
+     * left. If the string is already longer, it is returned unchanged.
+     * @param s the string to adjust.
+     * @param n the new length.
+     * @param fill the fill character to use. 
+     * @return the adjusted string.
      */
-    public int numberOfOrbits(List indices);
+    private String rjust(String s, int n, char fill) {
+        if (s.length() >= n) {
+            return s;
+        } else {
+            StringBuffer buf = new StringBuffer(n);
+            for (int i = n - s.length(); i > 0; --i) {
+                buf.append(fill);
+            }
+            buf.append(s);
+            return buf.toString();
+        }
+    }
     
     /**
-     * Determines if the symbol is connected.
-     * @return true if the symbol is connected.
+     * Helper method: adjusts a string to a given length by filling with blanks
+     * from the left. If the string is already longer, it is returned unchanged.
+     * @param s the string to adjust.
+     * @param n the new length.
+     * @return the adjusted string.
      */
-    public boolean isConnected();
+    private String rjust(String s, int n) {
+        return rjust(s, n, ' ');
+    }
     
-    /**
-     * Returns one element in each connected component (orbit) determined by
-     * the specified collection of indices.
-     * @param indices the indices to use.
-     * @return an iterator containing one representative for each orbit.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#tabularDisplay()
      */
-    public Iterator orbitRepresentatives(List indices);
+    public String tabularDisplay() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        
+        StringBuffer buf = new StringBuffer(500);
+        List idcs = new IndexList(this);
+        
+        int elmSize = 4;
+        int vSize = 4;
+        Iterator elms = elements();
+        while (elms.hasNext()) {
+            Object D = elms.next();
+            elmSize = Math.max(elmSize, D.toString().length());
+            for (int i = 0; i < dim(); ++i) {
+                int i1 = ((Integer) idcs.get(i)).intValue();
+                int i2 = ((Integer) idcs.get(i+1)).intValue();
+                vSize = Math.max(vSize, String.valueOf(v(i1, i2, D)).length());
+            }
+        }
+        
+        buf.append(rjust("D", elmSize));
+        buf.append(" |");
+
+        for (int i = 0; i <= dim(); ++i) {
+            buf.append(" ");
+            buf.append(rjust("op" + idcs.get(i), elmSize));
+        }
+        buf.append(" |");
+        for (int i = 0; i < dim(); ++i) {
+            buf.append(" ");
+            buf.append(rjust("v" + idcs.get(i) + idcs.get(i+1), vSize));
+        }
+        buf.append("\n");
+
+        buf.append(rjust("", elmSize, '-'));
+        buf.append("-+");
+        for (int i = 0; i <= dim(); ++i) {
+            buf.append(rjust("", elmSize+1, '-'));
+        }
+        buf.append("-+");
+        for (int i = 0; i < dim(); ++i) {
+            buf.append(rjust("", vSize+1, '-'));
+        }
+        buf.append("-\n");
+
+        elms = elements();
+        while (elms.hasNext()) {
+            Object D = elms.next();
+            buf.append(rjust(D.toString(), elmSize));
+            buf.append(" |");
+            for (int i = 0; i <= dim(); i++) {
+                Object Di = op(((Integer) idcs.get(i)).intValue(), D);
+                String s = (Di == null) ? "-" : Di.toString();
+                buf.append(" ");
+                buf.append(rjust(s, elmSize));
+            }
+            buf.append(" |");
+            for (int i = 0; i < dim(); i++) {
+                buf.append(" ");
+                int i1 = ((Integer) idcs.get(i)).intValue();
+                int i2 = ((Integer) idcs.get(i+1)).intValue();
+                int v = v(i1, i2, D);
+                String s = (v == 0) ? "-" : String.valueOf(v);
+                buf.append(rjust(s, vSize));
+            }
+            buf.append("\n");
+        }
+        return buf.toString();
+    }
     
-    /**
-     * Returns the elements of the connected component (orbit) determined by
-     * the given set of indices and the given seed.
-     * @param indices the indices to use.
-     * @param seed one element in the orbit.
-     * @return an iterator containing the elements of the orbit.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#hasStandardIndexSet()
      */
-    public Iterator orbit(List indices, Object seed);
+    public boolean hasStandardIndexSet() {
+    	List idcs = new IndexList(this);
+    	for (int i = 0; i < idcs.size(); ++i) {
+    		if (((Integer) idcs.get(i)).intValue() != i) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
     
-    /**
-     * Produces a map which assigns to every element of the symbol which is
-     * reached by a specific partial traversal a value of 1 or -1, where two
-     * elements connected by a traversal edge obtain different values.
-     * 
-     * @param indices the indices for the traversal.
-     * @param seeds the seeds for the traversal.
-     * @return the resulting orientation map.
+    /* (non-Javadoc)
+     * @see javaDSym.symbols.DelaneySymbol#isComplete()
      */
-    public Map partialOrientation(List indices, Iterator seeds);
+    public boolean isComplete() {
+        final List idcs = new IndexList(this);
+        for (final Iterator elms = elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            for (int i = 0; i < idcs.size()-1; ++i) {
+                final int ii = ((Integer) idcs.get(i)).intValue();
+                if (!definesOp(ii, D)) {
+                    return false;
+                }
+                for (int j = i+1; j < idcs.size(); ++j) {
+                    final int jj = ((Integer) idcs.get(j)).intValue();
+                    if (!definesV(ii, jj, D)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
     
-    /**
-     * This version uses a complete traversal.
-     * @return the orientation map.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#r(int, int, java.lang.Object)
      */
-    public Map partialOrientation();
-    
+    public int r(int i, int j, Object D) {
+        if (!hasElement(D)) {
+            throw new IllegalArgumentException("not an element: " + D);
+        }
+        if (!hasIndex(i)) {
+            throw new IllegalArgumentException("invalid index: " + i);
+        }
+        if (!hasIndex(j)) {
+            throw new IllegalArgumentException("invalid index: " + j);
+        }
+
+        Object Di = D;
+        int k = 0;
+        while (true) {
+            if (op(i, Di) != null) {
+                Di = op(i, Di);
+            }
+            if (op(j, Di) != null) {
+                Di = op(j, Di);
+            }
+            k++;
+            if (Di.equals(D)) {
+                break;
+            }
+        }
+        return k;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#m(int, int, java.lang.Object)
+     */
+    public int m(int i, int j, Object D) {
+        return v(i, j, D) * r(i, j, D);
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#numberOfOrbits(java.util.Collection)
+     */
+    public int numberOfOrbits(List indices) {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+    		throw new UnsupportedOperationException("symbol must be finite");
+    	}
+    	Traversal trav = new Traversal(this, indices, elements());
+    	int count = 0;
+    	while (trav.hasNext()) {
+    		DSPair e = (DSPair) trav.next();
+    		if (e.getIndex() < 0) {
+    			++count;
+    		}
+    	}
+    	return count;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isConnected()
+     */
+    public boolean isConnected() {
+    	return numberOfOrbits(new IndexList(this)) <= 1;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#orbitRepresentatives(java.util.List)
+     */
+    public Iterator orbitRepresentatives(List indices) {
+		return new FilteredIterator(new Traversal(this, indices, elements())) {
+			public Object filter(Object x) {
+				DSPair e = (DSPair) x;
+				if (e.getIndex() < 0) {
+					return e.getElement();
+				} else {
+					return null;
+				}
+			}
+		};
+	}
+
+    /* (non-Javadoc)
+	 * @see javaDSym.DelaneySymbol#elementsOfOrbit(java.util.List, java.lang.Object)
+	 */
+    public Iterator orbit(List indices, Object seed) {
+    	return new FilteredIterator(new Traversal(this, indices, seed)) {
+    		public Object filter(Object x) {
+    			return ((DSPair) x).getElement();
+    		}
+    	};
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#partialOrientation(java.util.List, java.util.Iterator)
+     */
+    public Map partialOrientation(List indices, Iterator seeds) {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+    		throw new UnsupportedOperationException("symbol must be finite");
+    	}
+        Traversal trav = new Traversal(this, indices, seeds);
+        HashMap or = new HashMap();
+        while (trav.hasNext()) {
+            DSPair e = (DSPair) trav.next();
+            int i = e.getIndex();
+            Object D = e.getElement();
+            if (i < 0) {
+                or.put(D, new Integer(1));
+            } else {
+                Object Di = op(i, D);
+                int x = ((Integer) or.get(Di)).intValue();
+                or.put(D, new Integer(-x));
+            }
+        }
+        return or;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#partialOrientation()
+     */
+    public Map partialOrientation() {
+        return partialOrientation(new IndexList(this), this.elements());
+    }
+
     /**
-     * Determines if a specified orbit is oriented. This is the case if the
-     * partial orientation has the property that for any pair of (possibly
-     * equal) elements in the orbit connected by one of the specified indices,
-     * the orientation values are different. In particular, an orbit is never
-     * oriented if it contains loops.
+     * Determines if an orbit is weakly oriented and/or loopless. Returns an
+     * number between 0 and 3 which is 2 or larger exactly if the orbit is
+     * weakly oriented and odd exactly if the orbit is loopless. In particular,
+     * the orbit is oriented exactly if the result returned is 3.
      * 
      * @param indices the indices to use.
      * @param seed the seed for the orbit.
-     * @return true if the orbit is oriented.
+     * @return an integer encoding the result.
      */
-    public boolean orbitIsOriented(List indices, Object seed);
-    
-    /**
-     * This method checks if the symbol as a whole is oriented.
-     * @return true if the symbol is oriented.
-     */
-    public boolean isOriented();
-    
-    /**
-     * Determines if a specified orbit is loopless. This means that no element
-     * of the orbit is connect to itself by one of the specified indices.
-     * 
-     * @param indices the indices to use.
-     * @param seed the seed for the orbit.
-     * @return true if the orbit is loopless.
-     */
-    public boolean orbitIsLoopless(List indices, Object seed);
-    
-    /**
-     * This method checks if the symbol as a whole is loopless.
-     * @return true if the symbol is loopless.
-     */
-    public boolean isLoopless();
-    
-    /**
-     * Determines if a specified orbit is weakly oriented. This is the case if
-     * the partial orientation has the property that for any pair of non-equal
-     * elements in the orbit connected by one of the specified indices, the
-     * orientation values are different.
-     * 
-     * @param indices the indices to use.
-     * @param seed the seed for the orbit.
-     * @return true if the orbit is weakly oriented.
-     */
-    public boolean orbitIsWeaklyOriented(List indices, Object seed);
-    
-    /**
-     * This method checks if the symbol as a whole is weakly oriented.
-     * @return true if the symbol is weakly oriented.
-     */
-    public boolean isWeaklyOriented();
-    
-    /**
-     * Produces a list of integers that is characteristic for this symbol. The
-     * result is identical to the invariant of another symbol if and only if
-     * the two symbols are isomorphic.
-     * @return the invariant integer list of this symbol.
-     */
-    public NiceIntList invariant();
-    
-    /**
-     * Produces canonical form for this symbol. A canonical form is a symbol
-     * which is isomorphic to the given one and has the property that any pair
-     * of isomorphic symbols will have identical canonical forms.
-     * @return the symbol in canonical form.
-     */
-    public DelaneySymbol canonical();
-    
-    /**
-     * Returns the mapping of elements which transforms this symbol into its
-     * canonical form. If there is more than one such mapping, the one with the
-     * earliest preimage of 1, with respect to the original order of elements,
-     * is returned.
-     * 
-     * @return the map from the original to the canonical symbol.
-     */
-    public Map getMapToCanonical();
-    
-    /**
-     * Tests if this symbol is minimal. A symbol is minimal if it has no non-trivial
-     * Delaney morphism image.
-     * 
-     * @return true is the symbol is minimal, false else.
-     */
-    public boolean isMinimal();
-    
-    /**
-     * Produces the minimal image of this symbol by Delaney symbol morphisms.
-     * @return the minimal image.
-     */
-    public DelaneySymbol minimal();
-    
-    /**
-     * Produces a symbol isomorphic to this and with the same order of elements
-     * and indices.
-     * 
-     * @return the new symbol.
-     */
-    public DelaneySymbol flat();
+    private int orbitOrientation(List indices, Object seed) {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        final Map or = partialOrientation(indices, Iterators.singleton(seed));
+        final Iterator elms = orbit(indices, seed);
+        boolean weaklyOriented = true;
+        boolean loopless = true;
+        while (elms.hasNext()) {
+            final Object D = elms.next();
+            for (int k = 0; k < indices.size(); ++k) {
+                final int i = ((Integer) indices.get(k)).intValue();
+                final Object Di = op(i, D);
+                if (Di.equals(D)) {
+                    loopless = false;
+                } else if (or.get(D).equals(or.get(Di))) {
+                    weaklyOriented = false;
+                }
+            }
+        }
+        return (weaklyOriented ? 2 : 0) + (loopless ? 1 : 0);
+    }
 
-    /**
-     * Computes the curvature of this symbol, which must be 2-dimensional.
-     * @return the curvature.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isOriented(java.util.List, java.lang.Object)
      */
-    public Rational curvature2D();
-    
-    /**
-     * Computes the size of the spherical symmetry group of the equivariant
-     * tiling corresponding to this symbol. This is only defined for
-     * 2-dimensional, spherical symbols.
-     * @return the symmetry group size.
-     */
-    public int sphericalGroupSize2D();
-    
-    /**
-     * Determines if this symbol is spherical. Only defined for 2-dimensional
-     * symbols.
-     * @return true if this symbol is spherical.
-     */
-    public boolean isSpherical2D();
-    
-    /**
-     * Determines if this symbol is locally euclidean (all 2-dimensional orbits
-     * are spherical). This is only defined for 3-dimensional symbols.
-     * @return true if this symbol is locally euclidean.
-     */
-    public boolean isLocallyEuclidean3D();
-    
-    /**
-     * Constructs the oriented cover for this symbol. For an oriented symbol,
-     * the cover is the symbol itself, otherwise it is a 2-fold cover which is
-     * oriented.
-     * @return the oriented cover.
-     */
-    public DelaneySymbol orientedCover();
-    
-    /**
-     * @return a string representation of the symbol.
-     */
-    public String toString();
+    public boolean orbitIsOriented(List indices, Object seed) {
+        return orbitOrientation(indices, seed) == 3;
+    }
 
-    /**
-     * Produces a string containing a tabular display of this symbol.
-     * @return a tabular display of the operations and branchings.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isOriented()
      */
-    public String tabularDisplay();
+    public boolean isOriented() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+    		throw new UnsupportedOperationException("symbol must be finite");
+    	}
+    	List idcs = new IndexList(this);
+        Iterator reps = this.orbitRepresentatives(idcs);
+        while (reps.hasNext()) {
+            if (!orbitIsOriented(idcs, reps.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isLoopless(java.util.List, java.lang.Object)
+     */
+    public boolean orbitIsLoopless(List indices, Object seed) {
+        return orbitOrientation(indices, seed) % 2 == 1;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isLoopless()
+     */
+    public boolean isLoopless() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        List idcs = new IndexList(this);
+        Iterator reps = this.orbitRepresentatives(idcs);
+        while (reps.hasNext()) {
+            if (!orbitIsLoopless(idcs, reps.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isWeaklyOriented(java.util.List,
+     *      java.lang.Object)
+     */
+    public boolean orbitIsWeaklyOriented(List indices, Object seed) {
+        return orbitOrientation(indices, seed) >= 2;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isWeaklyOriented()
+     */
+    public boolean isWeaklyOriented() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        List idcs = new IndexList(this);
+        Iterator reps = this.orbitRepresentatives(idcs);
+        while (reps.hasNext()) {
+            if (!orbitIsWeaklyOriented(idcs, reps.next())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // --- Caches for invariant and map from original to canonical element names
+    private NiceIntList _invariant = null;
+    private Map original2canonical;
+    
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#invariant()
+     */
+    public NiceIntList invariant() {
+    	if (this._invariant != null) {
+    		return this._invariant;
+    	}
+    	
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        
+        if (!isConnected()) {
+            // --- For non-connected symbols, collect invariants for components and sort.
+            final List invariants = new ArrayList();
+            final IndexList idcs = new IndexList(this);
+            for (final Iterator iter = this.orbitRepresentatives(idcs); iter.hasNext();) {
+                final DelaneySymbol sub = new Subsymbol(this, idcs, iter.next()).flat();
+                invariants.add(sub.invariant());
+            }
+            Collections.sort(invariants);
+            final List result = new LinkedList();
+            for (final Iterator iter = invariants.iterator(); iter.hasNext();) {
+                result.addAll((List) iter.next());
+            }
+            this._invariant = new NiceIntList(result);
+            return this._invariant;
+        }
+        
+        /* --- Preparations. */
+        int[] best = null;
+        int[] current = new int[(size() + 1) * (4 * dim() + 3)];
+        int bestk = 0;
+        List idcs = new IndexList(this);
+        Map bestMap = null;
+
+        /* --- Map indices. */
+        HashMap i2pos = new HashMap();
+        for (int i = 0; i <= dim(); ++i) {
+            i2pos.put(idcs.get(i), new Integer(i));
+        }
+        
+        /* --- Try each element in turn as the seed for a traversal. */
+        Iterator elms = elements();
+        while (elms.hasNext()) {
+            Object seed = elms.next();
+
+            /* --- Initialize the traversal. */
+            Traversal trav = new Traversal(this, idcs, seed, true);
+            
+            /* --- Elements will be numbered in the order they appear. */
+            HashMap old2new = new HashMap();
+            int nextE = 1;
+
+            /* --- Follow the traversal and create a protocol. */
+            int k = 0;
+            while (trav.hasNext()) {
+            	/* --- Retrieve the next edge. */
+                DSPair e = (DSPair) trav.next();
+                Object D = e.getElement();
+                int i = e.getIndex();
+                
+                /* --- Determine a running number E for the target element D. */
+                int E;
+                boolean elementIsNew;
+                Integer tmp = (Integer) old2new.get(D);
+                if (tmp == null) {
+                	/* --- Element D is encountered for the first time. */
+                    elementIsNew = true;
+                    E = nextE++;
+                    old2new.put(D, new Integer(E));
+                } else {
+                	/* --- Element D already has a number. */
+                    elementIsNew = false;
+                    E = tmp.intValue();
+                }
+                
+                /* --- Add the mapped edge index to the protocol. */
+                int ip = i;
+                if (i >= 0) {
+                    ip = ((Integer) i2pos.get(new Integer(i))).intValue();
+                }
+                if (best != null) {
+                    if (ip > best[k]) {
+                    	/* --- We've seen a better (smaller) protocol. */
+                        break;
+                    } else if (ip < best[k]) {
+                    	/* --- This protocol is smallest so far. Keeping it. */
+                        best = null;
+                    }
+                }
+                current[k++] = ip;
+                
+                /* --- If we're not at the seed, add the source element. */
+                if (i >= 0) {
+					int Ei = ((Integer) old2new.get(op(i, D))).intValue();
+					if (best != null) {
+						if (Ei > best[k]) {
+							break;
+						} else if (Ei < best[k]) {
+							best = null;
+						}
+					}
+					current[k++] = Ei;
+				}
+                
+                /* --- Add the target element. */
+				if (best != null) {
+					if (E > best[k]) {
+						break;
+					} else if (E < best[k]) {
+						best = null;
+					}
+				}
+                current[k++] = E;
+                
+                /* --- For unseen elements, add branching numbers to protocol. */
+                if (elementIsNew) {
+                    boolean bad = false;
+                    for (int m = 0; m < dim(); ++m) {
+                        int j0 = ((Integer) idcs.get(m)).intValue();
+                        int j1 = ((Integer) idcs.get(m + 1)).intValue();
+                        int v = definesV(j0, j1, D) ? v(j0, j1, D) : 0;
+                        if (best != null) {
+                            if (v > best[k] || (v == 0 && best[k] != 0)) {
+                                bad = true;
+                                break;
+                            } else if (v < best[k] || (v != 0 && best[k] == 0)) {
+                                best = null;
+                            }
+                        }
+                        current[k++] = v;
+                    }
+                    /* --- We've already seen a lexicographically smaller protocol. */
+                    if (bad) {
+                        break;
+                    }
+                }
+            }
+            
+            if (best == null) {
+                /* --- The new protocol is lexicographically smallest so far. */
+                best = (int[]) current.clone();
+                bestk = k;
+                bestMap = old2new;
+            }
+        }
+        
+        // --- remember the mapping from original to canonical
+        this.original2canonical = Collections.unmodifiableMap(bestMap);
+        
+        /* --- Convert the best protocol into a list. */
+        final ArrayList result = new ArrayList();
+        for (int i = 0; i < bestk; ++i) {
+            result.add(new Integer(best[i]));
+        }
+        
+        /* --- Cache and return it. */
+        this._invariant = new NiceIntList(result);
+        return this._invariant;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals()
+     */
+    public boolean equals(Object other) {
+    	if (other instanceof DelaneySymbol) {
+    	    final DelaneySymbol ds = (DelaneySymbol) other;
+    	    if (ds.dim() == this.dim() && ds.size() == this.size()) {
+    	        return this.invariant().equals(ds.invariant());
+    	    }
+    	}
+    	return false;
+    }
+    
+    /* (non-Javadoc)
+     * @see int java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo(final Object arg) {
+        if (!(arg instanceof DelaneySymbol)) {
+            throw new IllegalArgumentException("argument must be a DelaneySymbol");
+        }
+        final DelaneySymbol other = (DelaneySymbol) arg;
+        if (this.dim() != other.dim()) {
+            return this.dim() - other.dim();
+        } else {
+            return this.invariant().compareTo(other.invariant());
+        }
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        return this.invariant().hashCode();
+    }
+    
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#canonical()
+     */
+    public DelaneySymbol canonical() {
+    	int op[][] = new int[dim() + 1][size() + 1];
+    	int v[][] = new int[dim()][size() + 1];
+    	final List invariant = invariant();
+        int offset = 0;
+    	
+    	int maxD = 0;
+    	int k = 0;
+    	while (k < invariant.size()) {
+    		int i = ((Integer) invariant.get(k++)).intValue();
+            if (i < 0) {
+                offset = maxD;
+            }
+    		int D = ((Integer) invariant.get(k++)).intValue() + offset;
+    		int Di = 0;
+    		if (i >= 0) {
+    			Di = D;
+    			D = ((Integer) invariant.get(k++)).intValue() + offset;
+    			op[i][D] = Di;
+    			op[i][Di] = D;
+            }
+    		if (D > maxD) {
+    			for (i = 0; i < dim(); ++i) {
+    	    		v[i][D] = ((Integer) invariant.get(k++)).intValue();
+    	    		maxD = D;
+    			}
+    		}
+    	}
+    	return new DSymbol(op, v);
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.symbols.DelaneySymbol#getMapToCanonical()
+     */
+    public Map getMapToCanonical() {
+        if (!this.isConnected()) {
+            throw new UnsupportedOperationException("symbol must be connected");
+        }
+        this.invariant();
+        return this.original2canonical;
+    }
+    
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#minimal()
+     */
+    public boolean isMinimal() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        
+        /* --- Determine classes of elements to be mapped to a common one. */
+        TypedPartition P = new TypedPartition(this);
+
+        Object D0 = null;
+        for (final Iterator elms = elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            if (D0 == null) {
+                D0 = D;
+            } else {
+                if (P.unite(D0, D)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+        
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#minimal()
+     */
+    public DelaneySymbol minimal() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+        
+        /* --- Determine classes of elements to be mapped to a common one. */
+    	TypedPartition P = new TypedPartition(this);
+    	P.uniteAll();
+    	
+    	/* --- Map elements of old to elements of new symbol. */
+    	HashMap old2new = new HashMap();
+    	Object new2old[] = new Object[size() + 1];
+    	int k = 0;
+    	Iterator elms = elements();
+    	while (elms.hasNext()) {
+    		Object D = elms.next();
+    		Object E = P.find(D);
+    		if (!old2new.containsKey(E)) {
+    			++k;
+    			old2new.put(E, new Integer(k));
+    			new2old[k] = E;
+    		}
+    		old2new.put(D, old2new.get(E));
+    	}
+    	
+    	/** --- Specify operations for new symbol. */
+    	int newSize = k;
+    	int op[][] = new int[dim() + 1][newSize + 1];
+    	int v[][] = new int[dim()][newSize + 1];
+    	List idcs = new IndexList(this);
+   	
+    	for (int D = 1; D <= newSize; ++D) {
+    		Object E = new2old[D];
+    		for (int i = 0; i <= dim(); ++i) {
+    		    int ii = ((Integer) idcs.get(i)).intValue();
+    			op[i][D] = ((Integer) old2new.get(op(ii, E))).intValue();
+    			if (i < dim()) {
+    				v[i][D] = 1;
+    			}
+    		}
+    	}
+    	
+    	/** --- Specify branching limits for new symbol. */
+    	DSymbol tmp = new DSymbol(op, v);
+    	
+    	for (int i = 0; i < dim(); ++i) {
+    		List idcsI = new IndexList(i, i+1);
+    		Iterator reps = tmp.orbitRepresentatives(idcsI);
+    		while (reps.hasNext()) {
+    			Object D = reps.next();
+        		Object E = new2old[((Integer) D).intValue()];
+    		    int ii = ((Integer) idcs.get(i)).intValue();
+    		    int ii1 = ((Integer) idcs.get(i+1)).intValue();
+        		int m = this.m(ii, ii1, E);
+        		int r = tmp.r(i, i+1, D);
+        		int b = m / r;
+        		Iterator orb = tmp.orbit(idcsI, D);
+        		while (orb.hasNext()) {
+        			int C = ((Integer) orb.next()).intValue();
+        			v[i][C] = b;
+        		}
+    		}
+    	}
+    	
+    	/* --- make and return new symbol. */
+    	return new DSymbol(op, v);
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.symbols.DelaneySymbol#flat()
+     */
+    public DelaneySymbol flat() {
+        return new DSymbol(this);
+    }
     
     /**
-     * Determines if an undefined v-value is returned as 1 rather than 0.
-     * @param value if true, undefined v-values shall be assumed to be 1.
+     * Helper method. Computes curvature summands for an index pair.
+     * @param i first index.
+     * @param j second index.
+     * @return the sum of summands for this index pair.
      */
-    public void setVDefaultToOne(final boolean value);
+    private Rational curvatureSummands(int i, int j) {
+    	Rational result = new Fraction(0, 1);
+
+		Iterator reps = orbitRepresentatives(new IndexList(i, j));
+		while (reps.hasNext()) {
+			Object D = reps.next();
+			int s;
+			if (orbitIsOriented(new IndexList(i, j), D)) {
+				s = 2;
+			} else {
+				s = 1;
+			}
+			result = (Rational) result.plus(new Fraction(s, v(i, j, D)));
+		}
+		return result;
+    }
     
-    /**
-     * Checks if an undefined v-value would currently be returned as 1 rather than 0.
-     * @return true if undefined v-values are currently assumed to be 1.
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#curvature2D()
      */
-    public boolean isVDefaultToOne();
+    public Rational curvature2D() {
+    	if (dim() != 2) {
+    		String text = "symbol must be 2-dimensional";
+    		throw new UnsupportedOperationException(text);
+    	}
+    	
+    	Rational result = new Fraction(-size(), 1);
+    	Iterator idcs = indices();
+    	int i = ((Integer) idcs.next()).intValue();
+    	int j = ((Integer) idcs.next()).intValue();
+    	int k = ((Integer) idcs.next()).intValue();
+    	result = (Rational) result.plus(curvatureSummands(i, j));
+    	result = (Rational) result.plus(curvatureSummands(i, k));
+    	result = (Rational) result.plus(curvatureSummands(j, k));
+
+    	return result;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isSpherical2D()
+     */
+    public boolean isSpherical2D() {
+        if (dim() != 2) {
+            throw new IllegalArgumentException("symbol must be 2-dimensional");
+        }
+        if (!isConnected()) {
+            throw new IllegalArgumentException("symbol must be connected");
+        }
+        if (curvature2D().isPositive()) {
+            final DSymbol dso = new DSymbol(orientedCover());
+            final List degrees = new ArrayList();
+            for (int i = 0; i < 2; ++i) {
+                for (int j = i+1; j <= 2; ++j) {
+                    final Iterator reps = dso.orbitRepresentatives(new IndexList(i, j));
+                    while (reps.hasNext()) {
+                        final Object D = reps.next();
+                        final int v =dso.v(i, j, D);
+                        if (v > 1) {
+                            degrees.add(new Integer(v));
+                        }
+                    }
+                }
+            }
+            if (degrees.size() == 1) {
+                return false;
+            } else if (degrees.size() == 2) {
+                return degrees.get(0).equals(degrees.get(1));
+            } else if (degrees.size() == 3 || degrees.size() == 0) {
+                return true;
+            } else {
+                throw new RuntimeException("this should not happen");
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#sphericalGroupSize2D()
+     */
+    public int sphericalGroupSize2D() {
+        if (!isSpherical2D()) {
+            throw new NonSphericalException("symbol must be spherical");
+        }
+        final Rational size = (Rational) new Fraction(4, 1).dividedBy(curvature2D());
+        return size.numerator().intValue();
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#isLocallyEuclidean3D()
+     */
+    public boolean isLocallyEuclidean3D() {
+    	if (dim() != 3) {
+    		String text = "symbol must be 3-dimensional";
+    		throw new UnsupportedOperationException(text);
+    	}
+    	
+    	for (int k = 0; k <= dim(); ++k) {
+        	List idcs = new IndexList(this);
+    		idcs.remove(k);
+    		Iterator reps = orbitRepresentatives(idcs);
+    		while (reps.hasNext()) {
+    			DelaneySymbol sub = new Subsymbol(this, idcs, reps.next());
+    			if (! sub.isSpherical2D()) {
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
+
+    /* (non-Javadoc)
+     * @see javaDSym.DelaneySymbol#orientedCover()
+     */
+    public DelaneySymbol orientedCover() {
+        try {
+            size();
+        } catch (UnsupportedOperationException ex) {
+            throw new UnsupportedOperationException("symbol must be finite");
+        }
+
+        if (isOriented()) {
+            return this;
+        } else {
+        	final DelaneySymbol base = this;
+            final Map d = DelaneySymbol.this.partialOrientation();
+
+            return new DelaneySymbol() {
+				public int dim() {
+					return base.dim();
+				}
+
+				public int size() {
+					return 2 * base.size();
+				}
+
+				public Iterator elements() {
+					return Iterators.cantorProduct(base.elements(), Iterators
+							.range(0, 2));
+				}
+
+				public boolean hasElement(Object D) {
+					if (D instanceof Pair) {
+						final Pair p = (Pair) D;
+						if (p.getSecond() instanceof Integer) {
+							final int n = ((Integer) p.getSecond()).intValue();
+							return (n == 0 || n == 1)
+									&& base.hasElement(p.getFirst());
+						}
+					}
+					return false;
+				}
+
+				public Iterator indices() {
+					return base.indices();
+				}
+
+				public boolean hasIndex(int i) {
+					return base.hasIndex(i);
+				}
+
+				public boolean definesOp(int i, Object D) {
+					return hasIndex(i) && hasElement(D)
+							&& base.definesOp(i, ((Pair) D).getFirst());
+				}
+
+				public Object op(int i, Object D) {
+					if (!definesOp(i, D)) {
+						throw new IllegalArgumentException("not defined");
+					}
+					final Pair p = (Pair) D;
+					final Object E = p.getFirst();
+					int layer = ((Integer) p.getSecond()).intValue();
+					final Object Ei = base.op(i, E);
+					if (d.get(E).equals(d.get(Ei))) {
+						layer = 1 - layer;
+					}
+					return new Pair(Ei, new Integer(layer));
+				}
+
+				public boolean definesV(int i, int j, Object D) {
+					return hasIndex(i) && hasIndex(j) && hasElement(D)
+							&& base.definesV(i, j, ((Pair) D).getFirst());
+				}
+
+				public int v(int i, int j, Object D) {
+					if (!definesV(i, j, D)) {
+						throw new IllegalArgumentException("not defined");
+					}
+					return base.v(i, j, ((Pair) D).getFirst());
+				}
+            };
+        }
+    }
 }

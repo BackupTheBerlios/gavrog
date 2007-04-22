@@ -26,9 +26,9 @@ import org.gavrog.box.collections.Iterators;
 /**
  * Represents subsymbols of Delaney symbols.
  * @author Olaf Delgado
- * @version $Id: Subsymbol.java,v 1.3 2007/04/18 04:17:48 odf Exp $
+ * @version $Id: Subsymbol.java,v 1.4 2007/04/22 06:31:43 odf Exp $
  */
-public class Subsymbol extends AbstractDelaneySymbol {
+public class Subsymbol extends DelaneySymbol {
 	private DelaneySymbol ds;
 	private TreeSet indices;
 	private TreeSet elements;

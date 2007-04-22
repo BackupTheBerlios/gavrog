@@ -34,9 +34,9 @@ import org.gavrog.box.collections.Iterators;
  * sequence of elements produced by {@link #elements()} is strictly growing.
  * 
  * @author Olaf Delgado
- * @version $Id: DynamicDSymbol.java,v 1.2 2005/07/18 23:32:57 odf Exp $
+ * @version $Id: DynamicDSymbol.java,v 1.3 2007/04/22 06:31:43 odf Exp $
  */
-public class DynamicDSymbol extends AbstractDelaneySymbol {
+public class DynamicDSymbol extends DelaneySymbol {
     final private int dim;
     private int lastId = 0;
     final Map op;

@@ -25,9 +25,9 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.5 2006/11/03 22:02:49 odf Exp $
+ * @version $Id: DSymbol.java,v 1.6 2007/04/22 06:31:43 odf Exp $
  */
-public class DSymbol extends AbstractDelaneySymbol implements Cloneable {
+public class DSymbol extends DelaneySymbol implements Cloneable {
     
     private int dim;
     private int size;
