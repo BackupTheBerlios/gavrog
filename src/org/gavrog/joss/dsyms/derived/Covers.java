@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.4 2007/04/18 04:17:48 odf Exp $
+ * @version $Id: Covers.java,v 1.5 2007/04/22 03:59:35 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;
@@ -106,7 +106,7 @@ public class Covers {
      * 
      * @return the newly constructed symbol.
      */
-    public static DelaneySymbol flatCover(final FundamentalGroup G,
+    public static DSymbol flatCover(final FundamentalGroup G,
             final GroupAction action) {
 
         if (action.getGroup() != G.getPresentation()) {
