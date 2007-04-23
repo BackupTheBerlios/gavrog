@@ -14,7 +14,6 @@
    limitations under the License.
 */
 
-
 package org.gavrog.joss.dsyms.basic;
 
 import java.util.Iterator;
@@ -28,7 +27,7 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSCover.java,v 1.2 2007/04/23 21:32:38 odf Exp $
+ * @version $Id: DSCover.java,v 1.3 2007/04/23 22:12:27 odf Exp $
  */
 public class DSCover extends DSymbol {
     final private DSMorphism coverMorphism;
@@ -63,6 +62,20 @@ public class DSCover extends DSymbol {
                 d.imageOf1);
     }
 
+    /**
+     * Constructs an instance given explicit data.
+     * @param cover the covering symbol.
+     * @param image the image (base) symbol.
+     * @param imageOf1 the image of the cover element 1.
+     */
+    public DSCover(final DSymbol cover, final DelaneySymbol image,
+            final Object imageOf1) {
+        super(cover);
+        this.image = image;
+        this.coverMorphism = new DSMorphism(this, this.image, new Integer(1),
+                imageOf1);
+    }
+    
     /**
      * Constructs an instance induced by an action of the fundamental group of
      * the image symbol. See {@link #make(FundamentalGroup, GroupAction)} below
