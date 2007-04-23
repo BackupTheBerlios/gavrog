@@ -42,11 +42,9 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.8 2007/04/23 21:33:56 odf Exp $
+ * @version $Id: Covers.java,v 1.9 2007/04/23 21:35:53 odf Exp $
  */
 public class Covers {
-    final static private boolean LOGGING = false;
-    
     /**
      * Returns the universal cover of a Delaney symbol.
      * 
@@ -215,16 +213,9 @@ public class Covers {
         while (actions.hasNext()) {
             ++count;
             final GroupAction action = (GroupAction) actions.next();
-            if (LOGGING) {
-                System.out.println("looking at action #" + count + " of size "
-                                   + action.size());
-            }
             final GroupAction core = GroupActions.flat(GroupActions
                     .orbit(GroupActions.cover(action)));
             final int index = core.size();
-            if (LOGGING) {
-                System.out.println("  core has size " + core.size());
-            }
             
             if (index == 2) {
                 if (annihilatesAxes(core, o2Axes)) {
