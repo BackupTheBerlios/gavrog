@@ -21,23 +21,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.FundamentalGroup;
-
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 /**
  * Unit test for class Covers.
  * 
  * @author Olaf Delgado
- * @version $Id: TestCovers.java,v 1.2 2005/07/18 23:32:58 odf Exp $
+ * @version $Id: TestCovers.java,v 1.3 2007/04/23 22:45:23 odf Exp $
  */
 public class TestCovers extends TestCase {
     private List z2;
@@ -117,16 +115,17 @@ public class TestCovers extends TestCase {
     }
     
     private void testFiniteUniversalCover(final DelaneySymbol ds, final int n) {
-        final DelaneySymbol cov = Covers.finiteUniversalCover(ds);
-        Assert.assertEquals(n, cov.size());
+        final DSCover cov = Covers.finiteUniversalCover(ds);
+        assertEquals(n, cov.size());
         if (ds.dim() == 2 && ds.isSpherical2D()) {
             Assert.assertTrue(new Whole(4).equals(cov.curvature2D()));
         }
-        Assert.assertEquals(ds, cov.minimal());
+        assertEquals(ds, cov.minimal());
         final FpGroup G = new FundamentalGroup(cov).getPresentation();
-        Assert.assertEquals(0, G.getGenerators().size());
-        Assert.assertEquals(0, G.getRelators().size());
-        Assert.assertEquals(new LinkedList(), G.abelianInvariants());
+        assertEquals(0, G.getGenerators().size());
+        assertEquals(0, G.getRelators().size());
+        assertEquals(new LinkedList(), G.abelianInvariants());
+        assertEquals(ds.elements().next(), cov.image(cov.elements().next()));
     }
     
     private void testToroidalCover2D(final DelaneySymbol ds, final int n) {
@@ -137,26 +136,28 @@ public class TestCovers extends TestCase {
             } catch (UnsupportedOperationException success) {
             }
         } else {
-            final DelaneySymbol cov = Covers.toroidalCover2D(ds);
-            Assert.assertEquals(n, cov.size());
-            Assert.assertTrue(cov.curvature2D().isZero());
-            Assert.assertEquals(ds, cov.minimal());
+            final DSCover cov = Covers.toroidalCover2D(ds);
+            assertEquals(n, cov.size());
+            assertTrue(cov.curvature2D().isZero());
+            assertEquals(ds, cov.minimal());
             final FundamentalGroup G = new FundamentalGroup(cov);
-            Assert.assertEquals(0, G.getAxes().size());
-            Assert.assertEquals(z2, G.getPresentation().abelianInvariants());
+            assertEquals(0, G.getAxes().size());
+            assertEquals(z2, G.getPresentation().abelianInvariants());
+            assertEquals(ds.elements().next(), cov.image(cov.elements().next()));
         }
     }
     
     private void testPseudoToroidalCover3D(final DelaneySymbol ds, final int n) {
-        final DelaneySymbol cov = Covers.pseudoToroidalCover3D(ds);
+        final DSCover cov = Covers.pseudoToroidalCover3D(ds);
         if (n == 0) {
-            Assert.assertNull(cov);
+            assertNull(cov);
         } else {
-            Assert.assertEquals(n, cov.size());
-            Assert.assertEquals(ds, cov.minimal());
+            assertEquals(n, cov.size());
+            assertEquals(ds, cov.minimal());
             final FundamentalGroup G = new FundamentalGroup(cov);
-            Assert.assertEquals(0, G.getAxes().size());
-            Assert.assertEquals(z3, G.getPresentation().abelianInvariants());
+            assertEquals(0, G.getAxes().size());
+            assertEquals(z3, G.getPresentation().abelianInvariants());
+            assertEquals(ds.elements().next(), cov.image(cov.elements().next()));
         }
     }
 }
