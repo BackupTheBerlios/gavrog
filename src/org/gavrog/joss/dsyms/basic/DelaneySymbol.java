@@ -27,14 +27,13 @@ import java.util.Map;
 import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
-import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.5 2007/04/22 06:31:43 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.6 2007/04/23 22:11:48 odf Exp $
  */
 public abstract class DelaneySymbol implements Comparable {
 
@@ -982,8 +981,11 @@ public abstract class DelaneySymbol implements Comparable {
     	return true;
     }
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#orientedCover()
+    /**
+     * Returns the oriented cover as a flat symbol such that the covering
+     * morphism maps the first element of this symbol onto the element 1.
+     * 
+     * @return the oriented cover of this symbol.
      */
     public DelaneySymbol orientedCover() {
         try {
@@ -995,74 +997,38 @@ public abstract class DelaneySymbol implements Comparable {
         if (isOriented()) {
             return this;
         } else {
-        	final DelaneySymbol base = this;
-            final Map d = DelaneySymbol.this.partialOrientation();
+            final int n = size();
+            final int d = dim();
+            final int op[][] = new int[d + 1][2 * n + 1];
+            final int v[][] = new int[d][2 * n + 1];
+            final DSymbol ds = (DSymbol) this.flat();
+            final Map ori = ds.partialOrientation();
 
-            return new DelaneySymbol() {
-				public int dim() {
-					return base.dim();
-				}
-
-				public int size() {
-					return 2 * base.size();
-				}
-
-				public Iterator elements() {
-					return Iterators.cantorProduct(base.elements(), Iterators
-							.range(0, 2));
-				}
-
-				public boolean hasElement(Object D) {
-					if (D instanceof Pair) {
-						final Pair p = (Pair) D;
-						if (p.getSecond() instanceof Integer) {
-							final int n = ((Integer) p.getSecond()).intValue();
-							return (n == 0 || n == 1)
-									&& base.hasElement(p.getFirst());
-						}
-					}
-					return false;
-				}
-
-				public Iterator indices() {
-					return base.indices();
-				}
-
-				public boolean hasIndex(int i) {
-					return base.hasIndex(i);
-				}
-
-				public boolean definesOp(int i, Object D) {
-					return hasIndex(i) && hasElement(D)
-							&& base.definesOp(i, ((Pair) D).getFirst());
-				}
-
-				public Object op(int i, Object D) {
-					if (!definesOp(i, D)) {
-						throw new IllegalArgumentException("not defined");
-					}
-					final Pair p = (Pair) D;
-					final Object E = p.getFirst();
-					int layer = ((Integer) p.getSecond()).intValue();
-					final Object Ei = base.op(i, E);
-					if (d.get(E).equals(d.get(Ei))) {
-						layer = 1 - layer;
-					}
-					return new Pair(Ei, new Integer(layer));
-				}
-
-				public boolean definesV(int i, int j, Object D) {
-					return hasIndex(i) && hasIndex(j) && hasElement(D)
-							&& base.definesV(i, j, ((Pair) D).getFirst());
-				}
-
-				public int v(int i, int j, Object D) {
-					if (!definesV(i, j, D)) {
-						throw new IllegalArgumentException("not defined");
-					}
-					return base.v(i, j, ((Pair) D).getFirst());
-				}
-            };
+            for (int i = 0; i <= d; ++i) {
+                for (int k = 1; k <= n; ++k) {
+                    final Object D = new Integer(k);
+                    if (!ds.definesOp(i, D)) {
+                        continue;
+                    }
+                    final Object Di = ds.op(i, D);
+                    final int ki = ((Integer) Di).intValue();
+                    if (ori.get(D).equals(ori.get(Di))) {
+                        op[i][k] = ki + n;
+                        op[i][ki] = k + n;
+                        op[i][k + n] = ki;
+                        op[i][ki + n] = k;
+                    } else {
+                        op[i][k] = ki;
+                        op[i][ki] = k;
+                        op[i][k + n] = ki + n;
+                        op[i][ki + n] = k + n;
+                    }
+                    if (i < d) {
+                        v[i][k] = v[i][k + n] = ds.v(i, i+1, D);
+                    }
+                }
+            }
+            return new DSymbol(op, v);
         }
     }
 }
