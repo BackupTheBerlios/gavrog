@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.10 2007/04/23 22:13:51 odf Exp $
+ * @version $Id: Covers.java,v 1.11 2007/04/23 22:45:56 odf Exp $
  */
 public class Covers {
     /**
@@ -57,7 +57,7 @@ public class Covers {
      * @param ds a Delaney symbol.
      * @return the universal cover of ds.
      */
-    public static DelaneySymbol finiteUniversalCover(final DelaneySymbol ds) {
+    public static DSCover finiteUniversalCover(final DelaneySymbol ds) {
         if (ds.dim() == 2 && !ds.curvature2D().isPositive()) {
             // --- we can check for a finite cover in 2d
             throw new UnsupportedOperationException("result would be infinite");
@@ -114,7 +114,7 @@ public class Covers {
      * @param ds the original symbol.
      * @return the toroidal cover.
      */
-    public static DelaneySymbol toroidalCover2D(final DelaneySymbol ds) {
+    public static DSCover toroidalCover2D(final DelaneySymbol ds) {
         if (ds.dim() != 2) {
             final String s = "symbol must be 2-dimensional";
             throw new UnsupportedOperationException(s);
@@ -165,7 +165,7 @@ public class Covers {
      * @param ds a 3-dimensional Delaney symbol.
      * @return the pseudo-toroidal cover or null.
      */
-    public static DelaneySymbol pseudoToroidalCover3D(final DelaneySymbol ds) {
+    public static DSCover pseudoToroidalCover3D(final DelaneySymbol ds) {
         if (ds.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
             throw new UnsupportedOperationException(s);
