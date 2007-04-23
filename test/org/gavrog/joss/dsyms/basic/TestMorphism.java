@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.derived;
+package org.gavrog.joss.dsyms.basic;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,24 +24,24 @@ import java.util.Set;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.Morphism;
 
 import junit.framework.TestCase;
 
 /**
- * Unit test for class Morphism.
+ * Unit test for class DSMorphism.
  * 
  * @author Olaf Delgado
- * @version $Id: TestMorphism.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestMorphism.java,v 1.1 2007/04/23 20:57:07 odf Exp $
  */
 public class TestMorphism extends TestCase {
     private DelaneySymbol ds;
     private DelaneySymbol renumbered;
     private DelaneySymbol unconnected;
     private DelaneySymbol cover;
-    private Morphism map;
-    private Morphism iso;
+    private DSMorphism map;
+    private DSMorphism iso;
     
     private Object getImage(final Object x) {
         return new Integer((((Integer) x).intValue() - 1) % ds.size() + 1);
@@ -57,8 +57,8 @@ public class TestMorphism extends TestCase {
         unconnected = new DSymbol("4:1 2 3 4,1 3 4,2 3 4:6 4 3,3 3");
         assertEquals(ds, renumbered);
         cover = Covers.finiteUniversalCover(ds);
-        map = new Morphism(cover, ds);
-        iso = new Morphism(ds, renumbered, new Integer(1), new Integer(2));
+        map = new DSMorphism(cover, ds);
+        iso = new DSMorphism(ds, renumbered, new Integer(1), new Integer(2));
     }
 
     /*
@@ -75,55 +75,55 @@ public class TestMorphism extends TestCase {
     }
 
     /*
-     * Class under test for void Morphism(DelaneySymbol, DelaneySymbol, Object, Object)
+     * Class under test for void DSMorphism(DelaneySymbol, DelaneySymbol, Object, Object)
      */
     public void testMorphismDelaneySymbolDelaneySymbolObjectObject() {
-        final Morphism map = new Morphism(cover, ds, new Integer(ds.size() + 1), new Integer(1));
+        final DSMorphism map = new DSMorphism(cover, ds, new Integer(ds.size() + 1), new Integer(1));
         assertNotNull(map);
         for (final Iterator iter = cover.elements(); iter.hasNext();) {
             final Object x = iter.next();
             assertEquals(map.get(x), getImage(x));
         }
         try {
-            new Morphism(cover, ds, new Integer(2), new Integer(1));
+            new DSMorphism(cover, ds, new Integer(2), new Integer(1));
             fail("Should throw an IllegalArgumentException");
         } catch (IllegalArgumentException success) {
         }
         try {
-            new Morphism(ds, cover, new Integer(2), null);
+            new DSMorphism(ds, cover, new Integer(2), null);
             fail("Should throw an IllegalArgumentException");
         } catch (IllegalArgumentException success) {
         }
     }
 
     /*
-     * Class under test for void Morphism(DelaneySymbol, DelaneySymbol)
+     * Class under test for void DSMorphism(DelaneySymbol, DelaneySymbol)
      */
     public void testMorphismDelaneySymbolDelaneySymbol() {
-        final Morphism map = new Morphism(cover, ds);
+        final DSMorphism map = new DSMorphism(cover, ds);
         assertNotNull(map);
         for (final Iterator iter = cover.elements(); iter.hasNext();) {
             final Object x = iter.next();
             assertEquals(map.get(x), getImage(x));
         }
         try {
-            new Morphism(ds, cover);
+            new DSMorphism(ds, cover);
             fail("Should throw an IllegalArgumentException");
         } catch (IllegalArgumentException success) {
         }
-        new Morphism(ds, unconnected);
+        new DSMorphism(ds, unconnected);
         try {
-            new Morphism(unconnected, ds);
+            new DSMorphism(unconnected, ds);
             fail("Should throw an UnsupportedOperationException");
         } catch (UnsupportedOperationException success) {
         }
     }
 
     /*
-     * Class under test for void Morphism(Morphism)
+     * Class under test for void DSMorphism(DSMorphism)
      */
     public void testMorphismMorphism() {
-        final Morphism map = new Morphism(this.map);
+        final DSMorphism map = new DSMorphism(this.map);
         assertNotNull(map);
         for (final Iterator iter = cover.elements(); iter.hasNext();) {
             final Object x = iter.next();
@@ -132,7 +132,7 @@ public class TestMorphism extends TestCase {
     }
 
     public void testInverse() {
-        final Morphism inv = iso.inverse();
+        final DSMorphism inv = iso.inverse();
         for (final Iterator iter = ds.elements(); iter.hasNext();) {
             final Object x = iter.next();
             assertEquals(x, inv.get(iso.get(x)));
@@ -143,7 +143,7 @@ public class TestMorphism extends TestCase {
         } catch (IllegalArgumentException success) {
         }
         try {
-            new Morphism(ds, unconnected).inverse();
+            new DSMorphism(ds, unconnected).inverse();
             fail("should throw an IllegalArgumentException");
         } catch (IllegalArgumentException success) {
         }
@@ -152,7 +152,7 @@ public class TestMorphism extends TestCase {
     public void testIsIsomorphism() {
         assertTrue(iso.isIsomorphism());
         assertFalse(map.isIsomorphism());
-        assertFalse(new Morphism(ds, unconnected).isIsomorphism());
+        assertFalse(new DSMorphism(ds, unconnected).isIsomorphism());
     }
 
     public void testGetASource() {

@@ -36,9 +36,9 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
-import org.gavrog.joss.dsyms.derived.Morphism;
 
 
 /**
@@ -53,7 +53,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching3d.java,v 1.2 2006/10/11 00:48:21 odf Exp $
+ * @version $Id: DefineBranching3d.java,v 1.3 2007/04/23 20:57:06 odf Exp $
  */
 public class DefineBranching3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -170,7 +170,7 @@ public class DefineBranching3d extends IteratorAdapter {
         this.current = new DynamicDSymbol(new DSymbol(this.input.canonical()));
 
         // --- compute more auxiliary data
-        this.inputAutomorphisms = Morphism.automorphisms(this.current);
+        this.inputAutomorphisms = DSMorphism.automorphisms(this.current);
         
         // --- compute intitial deductions
         if (LOGGING) {
@@ -547,7 +547,7 @@ public class DefineBranching3d extends IteratorAdapter {
      */
     private boolean isCanonical() {
         for (final Iterator iter = this.inputAutomorphisms.iterator(); iter.hasNext();) {
-            final Morphism map = (Morphism) iter.next();
+            final DSMorphism map = (DSMorphism) iter.next();
             if (compareWithPermuted(this.current, map) > 0) {
                 return false;
             }
@@ -567,7 +567,7 @@ public class DefineBranching3d extends IteratorAdapter {
      * @param map the automorphism.
      * @return an integer indicating if the result.
      */
-    private static int compareWithPermuted(final DelaneySymbol ds, final Morphism map) {
+    private static int compareWithPermuted(final DelaneySymbol ds, final DSMorphism map) {
         for (final Iterator elms = ds.elements(); elms.hasNext();) {
             final Object D1 = elms.next();
             final Object D2 = map.getASource(D1);

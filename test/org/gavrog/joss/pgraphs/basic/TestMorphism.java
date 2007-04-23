@@ -29,7 +29,7 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestMorphism.java,v 1.5 2005/10/23 19:31:18 odf Exp $
+ * @version $Id: TestMorphism.java,v 1.6 2007/04/23 20:57:06 odf Exp $
  */
 public class TestMorphism extends TestCase {
     private PeriodicGraph cds, dia, x, y;
@@ -91,7 +91,7 @@ public class TestMorphism extends TestCase {
     }
 
     /*
-     * Class under test for void Morphism(INode, INode, Matrix)
+     * Class under test for void DSMorphism(INode, INode, Matrix)
      */
     public void testMorphismINodeINodeMatrix() {
         try {
@@ -108,7 +108,7 @@ public class TestMorphism extends TestCase {
     }
 
     /*
-     * Class under test for void Morphism(Morphism)
+     * Class under test for void DSMorphism(DSMorphism)
      */
     public void testMorphismMorphism() {
         final Morphism map = new Morphism(autoDia1);

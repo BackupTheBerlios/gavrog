@@ -35,9 +35,9 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
-import org.gavrog.joss.dsyms.derived.Morphism;
 
 /**
  * An iterator that takes a two-dimensional Delaney Symbol with spherical
@@ -48,7 +48,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.8 2007/04/18 04:17:48 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.9 2007/04/23 20:57:06 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // TODO test symbols (unfinished and finished) for being locally euclidean
@@ -594,7 +594,7 @@ public class ExtendTo3d extends IteratorAdapter {
                 }
                 final Map morphism;
                 try {
-                    morphism = new Morphism(ds, ds, first, D);
+                    morphism = new DSMorphism(ds, ds, first, D);
                 } catch (IllegalArgumentException ex) {
                     continue;
                 }

@@ -31,7 +31,7 @@ import org.gavrog.joss.algorithms.Move;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.derived.Morphism;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
 
 /**
  * An iterator that takes a 2-dimensional Delaney symbol with some undefined
@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.derived.Morphism;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.9 2006/11/01 22:26:20 odf Exp $
+ * @version $Id: DefineBranching2d.java,v 1.10 2007/04/23 20:57:06 odf Exp $
  * 
  */
 public class DefineBranching2d extends BranchAndCut {
@@ -97,7 +97,7 @@ public class DefineBranching2d extends BranchAndCut {
         this.current.setVDefaultToOne(false);
         
         // --- compute automorphisms for later use in {@link #isValid}.
-        this.inputAutomorphisms = Morphism.automorphisms(this.current);
+        this.inputAutomorphisms = DSMorphism.automorphisms(this.current);
 	}
 
 	/* (non-Javadoc)
@@ -204,7 +204,7 @@ public class DefineBranching2d extends BranchAndCut {
 			return false;
 		}
         for (final Iterator iter = this.inputAutomorphisms.iterator(); iter.hasNext();) {
-            final Morphism map = (Morphism) iter.next();
+            final DSMorphism map = (DSMorphism) iter.next();
             if (compareWithPermuted(this.current, map) > 0) {
                 return false;
             }
@@ -224,7 +224,7 @@ public class DefineBranching2d extends BranchAndCut {
      * @param map the automorphism.
      * @return an integer indicating if the result.
      */
-    private static int compareWithPermuted(final DelaneySymbol ds, final Morphism map) {
+    private static int compareWithPermuted(final DelaneySymbol ds, final DSMorphism map) {
         for (final Iterator elms = ds.elements(); elms.hasNext();) {
             final Object D1 = elms.next();
             final Object D2 = map.getASource(D1);

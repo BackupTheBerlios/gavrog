@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.derived;
+package org.gavrog.joss.dsyms.basic;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,8 +26,6 @@ import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.basic.IndexList;
 
 
 /**
@@ -36,10 +34,10 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * neighbor relations and m-values.
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.3 2006/08/31 05:07:59 odf Exp $
+ * @version $Id: DSMorphism.java,v 1.1 2007/04/23 20:57:06 odf Exp $
  */
 
-public class Morphism implements Map {
+public class DSMorphism implements Map {
     final private Map src2img;
     final Map img2src;
     final private boolean bijective;
@@ -52,7 +50,7 @@ public class Morphism implements Map {
      * @param srcBase a base element in the source symbol.
      * @param imgBase what to map the source base element to.
      */
-    public Morphism(final DelaneySymbol src, final DelaneySymbol img,
+    public DSMorphism(final DelaneySymbol src, final DelaneySymbol img,
             final Object srcBase, final Object imgBase) {
         try {
             src.size();
@@ -116,7 +114,7 @@ public class Morphism implements Map {
      * @param src the source symbol.
      * @param img the image symbol.
      */
-    public Morphism(final DelaneySymbol src, final DelaneySymbol img) {
+    public DSMorphism(final DelaneySymbol src, final DelaneySymbol img) {
         this(src, img, src.elements().next(), img.elements().next());
     }
     
@@ -126,7 +124,7 @@ public class Morphism implements Map {
      * @param morphism the model morphism.
      * @param inverse if true, try to construct the inverse.
      */
-    private Morphism(final Morphism morphism, final boolean inverse) {
+    private DSMorphism(final DSMorphism morphism, final boolean inverse) {
         if (inverse) {
             if (!morphism.isIsomorphism()) {
                 throw new IllegalArgumentException("not invertible");
@@ -146,7 +144,7 @@ public class Morphism implements Map {
      * Creates an instance after a given one.
      * @param model the model morphism.
      */
-    public Morphism(final Morphism model) {
+    public DSMorphism(final DSMorphism model) {
         this(model, false);
     }
     
@@ -154,8 +152,8 @@ public class Morphism implements Map {
      * Returns the inverse of a given morphism.
      * @return the morphism to invert.
      */
-    public Morphism inverse() {
-        return new Morphism(this, true);
+    public DSMorphism inverse() {
+        return new DSMorphism(this, true);
     }
     
     /**
@@ -289,12 +287,12 @@ public class Morphism implements Map {
         
         if (elms.hasNext()) {
             final Object first = elms.next();
-            result.add(new Morphism(ds, ds, first, first));
+            result.add(new DSMorphism(ds, ds, first, first));
             
             while (elms.hasNext()) {
                 final Object D = elms.next();
                 try {
-                    result.add(new Morphism(ds, ds, first, D));
+                    result.add(new DSMorphism(ds, ds, first, D));
                 } catch (IllegalArgumentException ex) {
                     continue;
                 }
