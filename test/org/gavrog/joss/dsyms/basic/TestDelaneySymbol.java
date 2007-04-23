@@ -34,9 +34,9 @@ import junit.framework.TestCase;
 /**
  * Test methods implemented in AbstractDelaneySymbol.
  * @author Olaf Delgado
- * @version $Id: TestAbstractDelaneySymbol.java,v 1.3 2007/04/22 04:51:01 odf Exp $
+ * @version $Id: TestDelaneySymbol.java,v 1.1 2007/04/23 22:10:43 odf Exp $
  */
-public class TestAbstractDelaneySymbol extends TestCase {
+public class TestDelaneySymbol extends TestCase {
 	private String code;
 	private DelaneySymbol ds1, ds2, ds3, ds4;
 	private DelaneySymbol sub;
