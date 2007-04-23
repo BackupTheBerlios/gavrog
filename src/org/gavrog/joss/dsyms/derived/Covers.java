@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -34,96 +33,19 @@ import org.gavrog.jane.fpgroups.GroupActions;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.jane.fpgroups.Stabilizer;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.dsyms.basic.DSPair;
-import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
-import org.gavrog.joss.pgraphs.basic.Cover;
 
 
 /**
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.7 2007/04/22 04:51:27 odf Exp $
+ * @version $Id: Covers.java,v 1.8 2007/04/23 21:33:56 odf Exp $
  */
 public class Covers {
     final static private boolean LOGGING = false;
-    
-    /**
-     * Returns a (flat) cover of a Delaney symbol induced by an action of its
-     * fundamental group. The fundamental group of the new symbol will be an
-     * element stabilizer w.r.t. the action. The covering morphism can be
-     * reconstructed as the on which maps the first element of the cover onto
-     * the first element of the base symbol. Calling this method is equivalent
-     * to <code>cover(G, action).flat()</code>, but the intermediate
-     * {@link Cover}object is eliminated, resulting in a much more efficient
-     * operation in case the resulting symbol will be large.
-     * 
-     * @param G a fundamental group of a symbol.
-     * @param action an action of the fundamental group.
-     * 
-     * @return the newly constructed symbol.
-     */
-    public static DSymbol flatCover(final FundamentalGroup G,
-            final GroupAction action) {
-
-        if (action.getGroup() != G.getPresentation()) {
-            final String s = "the action must be by the same group";
-            throw new IllegalArgumentException(s);
-        }
-        
-        if (!(G.getSymbol() instanceof DSymbol)) {
-            // TODO fix this
-            final String s = "only DSymbols are supported as base symbols";
-            throw new UnsupportedOperationException(s);
-        }
-        
-        // --- preliminaries
-        final DelaneySymbol ds = G.getSymbol();
-        final Map edge2word = G.getEdgeToWord();
-        final GroupAction flatAction = GroupActions.flat(action);
-        
-        final int dim = ds.dim();
-        final int nOld = ds.size();
-        final int nLayers = action.size();
-        final int nNew = nOld * nLayers;
-
-        final int op[][] = new int[dim + 1][nNew + 1];
-        final int v[][] = new int[dim][nNew + 1];
-    
-        // --- generate the neighbor definitions
-        for (int i = 0; i <= dim; ++i) {
-            for (int D = 1; D <= nOld; ++D) {
-                final int Di = ((Integer) ds.op(i, new Integer(D))).intValue();
-                final FreeWord g = (FreeWord) edge2word.get(new DSPair(i, new Integer(D)));
-                for (int k = 0; k < nLayers; ++k) {
-                    op[i][D + nOld * k] = Di + nOld
-                            * ((Integer) flatAction.apply(new Integer(k), g)).intValue();
-                }
-            }
-        }
-        
-        // --- make a temporary symbol in which to compute r-values
-        final DSymbol tmp = new DSymbol(op, v);
-
-        // --- generate the v-values for the final symbol
-        for (int i = 0; i < dim; ++i) {
-            final List idcs = new IndexList(i, i + 1);
-            for (final Iterator reps = tmp.orbitRepresentatives(idcs); reps.hasNext();) {
-                final Integer D = (Integer) reps.next();
-                final Integer E = new Integer((D.intValue() - 1) % nOld + 1);
-                final int m = ds.m(i, i + 1, E);
-                final int r = tmp.r(i, i + 1, D);
-                final int b = m / r;
-                for (final Iterator orb = tmp.orbit(idcs, D); orb.hasNext();) {
-                    v[i][((Integer) orb.next()).intValue()] = b;
-                }
-            }
-        }
-        
-        return new DSymbol(op, v);
-    }
     
     /**
      * Returns the universal cover of a Delaney symbol.
@@ -149,7 +71,7 @@ public class Covers {
             final int sz = ds.sphericalGroupSize2D();
             assert sz == n : "group size is " + n + ", but should be " + sz;
         }
-        return flatCover(fg, T);
+        return new DSCover(fg, T);
     }
     
     /**
@@ -181,7 +103,7 @@ public class Covers {
         
         return new IteratorAdapter() {
             protected Object findNext() throws NoSuchElementException {
-                return flatCover(F, (GroupAction) actions.next());
+                return new DSCover(F, (GroupAction) actions.next());
             }
         };
     }
@@ -223,7 +145,7 @@ public class Covers {
         while (actions.hasNext()) {
             final GroupAction action = (GroupAction) actions.next();
             if (annihilatesAxes(action, G.getAxes())) {
-                return flatCover(G, action);
+                return new DSCover(G, action);
             }
         }
         
@@ -376,7 +298,7 @@ public class Covers {
                 final Object base = action.domain().next();
                 final Stabilizer stab = new Stabilizer(action, base);
                 if (stab.getPresentation().abelianInvariants().equals(expected)) {
-                    return flatCover(G, action).flat();
+                    return new DSCover(G, action);
                 }
             }
         }

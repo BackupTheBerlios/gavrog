@@ -26,9 +26,9 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.GroupAction;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
+import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
-import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 
@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
  * Generates all minimal, self-dual euclidean Delaney symbols up to a given size.
  * 
  * @author Olaf Delgado
- * @version $Id: SelfDual.java,v 1.2 2007/04/22 04:00:04 odf Exp $
+ * @version $Id: SelfDual.java,v 1.3 2007/04/23 21:33:56 odf Exp $
  */
 public class SelfDual {
     /*
@@ -90,7 +90,7 @@ public class SelfDual {
                         }
                     } else if (actions.hasNext()) {
                         final GroupAction action = (GroupAction) actions.next();
-                        final DSymbol set = Covers.flatCover(G, action);
+                        final DSymbol set = new DSCover(G, action);
                         if (set.equals(set.dual())
                                 && Utils.mayBecomeLocallyEuclidean3D(set)) {
                             current = new DefineProperBranching(set);
