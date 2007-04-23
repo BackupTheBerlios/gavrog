@@ -34,6 +34,7 @@ import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.jane.fpgroups.Stabilizer;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSCover;
+import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 
@@ -42,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.9 2007/04/23 21:35:53 odf Exp $
+ * @version $Id: Covers.java,v 1.10 2007/04/23 22:13:51 odf Exp $
  */
 public class Covers {
     /**
@@ -136,14 +137,15 @@ public class Covers {
 			}
 		}
         
-        final DelaneySymbol dso = ds.orientedCover().flat();
+        final DelaneySymbol dso = ds.orientedCover();
         final FundamentalGroup G = new FundamentalGroup(dso);
         final Iterator actions = new SmallActionsIterator(G.getPresentation(),
                 deg, true);
         while (actions.hasNext()) {
             final GroupAction action = (GroupAction) actions.next();
             if (annihilatesAxes(action, G.getAxes())) {
-                return new DSCover(G, action);
+                final DSymbol cov = new DSCover(G, action);
+                return new DSCover(cov, ds, ds.elements().next());
             }
         }
         
@@ -188,7 +190,7 @@ public class Covers {
         final List lists[] =
             new List[] { z1, z2, z3, z4, v4, s3, z6, d4, d6, a4, s4 };
         
-        final DelaneySymbol dso = ds.orientedCover().flat();
+        final DelaneySymbol dso = ds.orientedCover();
         final FundamentalGroup G = new FundamentalGroup(dso);
         
         final Set allAxes = G.getAxes();
@@ -289,7 +291,8 @@ public class Covers {
                 final Object base = action.domain().next();
                 final Stabilizer stab = new Stabilizer(action, base);
                 if (stab.getPresentation().abelianInvariants().equals(expected)) {
-                    return new DSCover(G, action);
+                    final DSymbol cov = new DSCover(G, action);
+                    return new DSCover(cov, ds, ds.elements().next());
                 }
             }
         }
