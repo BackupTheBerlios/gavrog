@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,6 +35,7 @@ import java.util.WeakHashMap;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.fpgroups.FreeWord;
+import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
@@ -43,10 +45,12 @@ import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.io.Output;
 
@@ -54,7 +58,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.11 2007/04/21 04:52:37 odf Exp $
+ * @version $Id: Tiling.java,v 1.12 2007/04/24 01:19:58 odf Exp $
  */
 public class Tiling {
     protected static class CacheKey {
@@ -85,13 +89,14 @@ public class Tiling {
     private static final CacheKey SKELETON = new CacheKey();
     private static final CacheKey BARYCENTRIC_SKELETON = new CacheKey();
     private static final CacheKey BARYCENTRIC_POS_BY_VERTEX = new CacheKey();
+    private static final CacheKey SPACEGROUP = new CacheKey();
     
     // === IMPORTANT: always assert non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
 
     // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
     final private DelaneySymbol ds;
-    final private DelaneySymbol cov;
+    final private DSCover cov;
 
 	/**
 	 * Constructs an instance.
@@ -138,7 +143,7 @@ public class Tiling {
     /**
      * @return the toroidal or pseudo-toroidal cover.
      */
-    public DelaneySymbol getCover() {
+    public DSCover getCover() {
         return this.cov;
     }
     
@@ -447,7 +452,7 @@ public class Tiling {
      * 
      * @return a mapping from corners to positions
      */
-    public Map getBarycentricPositionsByVertex() {
+    public Map getVertexBarycentricPositions() {
         final Map cached = (Map) cache.get(BARYCENTRIC_POS_BY_VERTEX);
         if (cached != null) {
             return cached;
@@ -495,14 +500,79 @@ public class Tiling {
     
     /**
 	 * Returns the position for a corner as computed by
-	 * {@link #getBarycentricPositionsByVertex()}.
+	 * {@link #getVertexBarycentricPositions()}.
 	 * 
 	 * @param i the index for the corner.
 	 * @param D the chamber which the corner belongs to.
 	 * @return the position of the corner.
 	 */
-    public Point positionByVertex(final int i, final Object D) {
-    	return (Point) getBarycentricPositionsByVertex().get(new DSPair(i, D));
+    public Point vertexBarycentricPosition(final int i, final Object D) {
+    	return (Point) getVertexBarycentricPositions().get(new DSPair(i, D));
+    }
+    
+    /**
+     * Determines the space group of this tiling.
+     * 
+     * @return the space group.
+     */
+    public SpaceGroup getSpaceGroup() {
+        // --- see if the result is already cached
+        final SpaceGroup cached = (SpaceGroup) this.cache.get(SPACEGROUP);
+        if (cached != null) {
+            return cached;
+        }
+
+        // --- get the toroidal cover of the base symbol
+        final DSCover cover = getCover();
+
+        // --- find a chamber with nonzero volume
+        Object D0 = null;
+        for (final Iterator elms = cover.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            if (!spanningMatrix(D).determinant().isZero()) {
+                D0 = D;
+                break;
+            }
+        }
+        if (D0 == null) {
+            throw new RuntimeException("all chambers have zero volume");
+        }
+        
+        // --- compute affine maps from start chamber to its images
+        final List ops = new ArrayList();
+        final Object E = cover.image(D0);
+        final Skeleton skel = getSkeleton();
+        final INode v = skel.nodeForCorner(0, D0);
+        final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
+        for (final Iterator elms = cover.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            if (cover.image(D).equals(E)) {
+                final Matrix A = (Matrix) spanningMatrix(D).times(Minv);
+                final INode w = skel.nodeForCorner(0, D);
+                ops.add(new Morphism(v, w, A).getAffineOperator());
+            }
+        }
+        
+        // --- construct the group, cache and return it
+        final SpaceGroup group = new SpaceGroup(cover.dim(), ops);
+        this.cache.put(SPACEGROUP, group);
+        return group;
+    }
+    
+    /**
+     * Computes a matrix of chamber edge vectors. The i-th row contains the
+     * vector from the 0-corner to the (i+1)-corner.
+     * @param D a chamber.
+     * @return the matrix of edge vectors.
+     */
+    private Matrix spanningMatrix(final Object D) {
+        final int d = getCover().dim();
+        final Point p = vertexBarycentricPosition(0, D);
+        final Vector dif[] = new Vector[d];
+        for (int i = 0; i < d; ++i) {
+            dif[i] = (Vector) vertexBarycentricPosition(i + 1, D).minus(p);
+        }
+        return Vector.toMatrix(dif);
     }
     
 	/**
