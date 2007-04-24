@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.4 2007/04/24 01:20:14 odf Exp $
+ * @version $Id: TestTiling.java,v 1.5 2007/04/24 19:37:01 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -54,13 +54,13 @@ public class TestTiling extends TestCase {
         assertFalse(gr2.equals(sk1));
     }
     
-    public void testBarycentricPositionsByVertex() {
-    	testBarycentricPositionsByVertex(t1);
-    	testBarycentricPositionsByVertex(t2);
-    	testBarycentricPositionsByVertex(t3);
+    public void testVertexBarycentricPositions() {
+    	testVertexBarycentricPositions(t1);
+    	testVertexBarycentricPositions(t2);
+    	testVertexBarycentricPositions(t3);
     }
     
-    public void testBarycentricPositionsByVertex(final Tiling til) {
+    public void testVertexBarycentricPositions(final Tiling til) {
         final DelaneySymbol cover = til.getCover();
         final int dim = cover.dim();
         for (final Iterator elms = cover.elements(); elms.hasNext();) {
@@ -81,5 +81,15 @@ public class TestTiling extends TestCase {
         		}
         	}
         }
+    }
+    
+    public void testSpaceGroup() {
+        testSpaceGroup(t1, "Pm-3m");
+        testSpaceGroup(t2, "Fd-3m");
+        testSpaceGroup(t3, "p4mm");
+    }
+    
+    public void testSpaceGroup(final Tiling til, final String name) {
+        assertEquals(name, til.getSpaceGroup().getName());
     }
 }
