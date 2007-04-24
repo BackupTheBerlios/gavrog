@@ -48,7 +48,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.2 2007/02/04 07:08:18 odf Exp $
+ * @version $Id: Embedder.java,v 1.3 2007/04/24 01:19:15 odf Exp $
  */
 public class Embedder {
     protected class Angle {
@@ -137,9 +137,10 @@ public class Embedder {
      * @param graph
      * @param positions
      * @param gram
+     * @param spaceGroup TODO
      */
     public Embedder(final PeriodicGraph graph, final Map positions,
-            final Matrix gram) {
+            final Matrix gram, final SpaceGroup spaceGroup) {
         
         // --- generic initialization
         this.graph = graph;
@@ -198,8 +199,12 @@ public class Embedder {
         }
 
         // --- set up translation between parameter space and gram matrix entries
-        final SpaceGroup group = new SpaceGroup(graph.getDimension(), graph
-                .symmetryOperators());
+        final SpaceGroup group;
+        if (spaceGroup == null) {
+            group = graph.getSpaceGroup();
+        } else {
+            group = spaceGroup;
+        }
         this.gramSpace = group.configurationSpaceForGramMatrix();
         k = this.dimGramSpace = this.gramSpace.numberOfRows();
         
@@ -290,7 +295,11 @@ public class Embedder {
     }
 
     public Embedder(final PeriodicGraph G) {
-        this(G, G.barycentricPlacement(), defaultGramMatrix(G));
+        this(G, null, null, null);
+    }
+    
+    public Embedder(final PeriodicGraph G, final SpaceGroup group) {
+        this(G, null, null, group);
     }
     
     public int degreesOfFreedom() {
@@ -442,7 +451,10 @@ public class Embedder {
         }
     }
 
-    public void setPositions(final Map map) {
+    public void setPositions(Map map) {
+        if (map == null) {
+            map = this.graph.barycentricPlacement();
+        }
         for (final Iterator nodes = map.keySet().iterator(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
             setPosition(v, (Point) map.get(v));
@@ -487,7 +499,10 @@ public class Embedder {
         }
     }
 
-    public void setGramMatrix(final Matrix gramMatrix) {
+    public void setGramMatrix(Matrix gramMatrix) {
+        if (gramMatrix == null) {
+            gramMatrix = defaultGramMatrix(this.graph);
+        }
         setGramMatrix(gramMatrix, this.p);
     }
 
@@ -680,8 +695,8 @@ public class Embedder {
 	}
 
 	public void reset() {
-	    setPositions(getGraph().barycentricPlacement());
-	    setGramMatrix(defaultGramMatrix(getGraph()));
+	    setPositions(null);
+	    setGramMatrix(null);
 	    this._positionsRelaxed = false;
 	    this._cellRelaxed = false;
 	}
