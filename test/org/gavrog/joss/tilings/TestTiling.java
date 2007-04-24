@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.3 2007/04/21 04:52:14 odf Exp $
+ * @version $Id: TestTiling.java,v 1.4 2007/04/24 01:20:14 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -75,8 +75,8 @@ public class TestTiling extends TestCase {
         			if (j == i) {
         				continue;
         			}
-            		final Point p = til.positionByVertex(j, D);
-            		final Point q = til.positionByVertex(j, Di);
+            		final Point p = til.vertexBarycentricPosition(j, D);
+            		final Point q = til.vertexBarycentricPosition(j, Di);
             		assertEquals(q, p.plus(t));
         		}
         	}
