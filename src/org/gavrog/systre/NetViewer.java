@@ -78,6 +78,7 @@ import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.EmbeddedPortion;
 import org.gavrog.joss.pgraphs.basic.Embedding;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.IGraph;
@@ -113,7 +114,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.38 2007/02/04 04:22:21 odf Exp $
+ * @version $Id: NetViewer.java,v 1.39 2007/04/24 19:56:59 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants
@@ -159,7 +160,7 @@ public class NetViewer extends Applet {
     private boolean relax = false;
     
     // --- the currently displayed portion of the net
-    private PeriodicGraph.EmbeddedPortion graph;
+    private EmbeddedPortion graph;
     
     // --- maps pickable shapes to elements of the net
     final Map objectToGraphAdress = new HashMap();
@@ -681,10 +682,11 @@ public class NetViewer extends Applet {
         final CoordinateChange B = new CoordinateChange(A);
         
         final INode v0 = (INode) this.net.nodes().next();
-        final Embedding E = this.net.embeddedNeighborhood(v0, radius, pos, B);
+        final Embedding E = EmbeddedPortion.neighborhood(v0, radius,
+                pos, B);
         
         // --- store it for later reference
-        this.graph = (PeriodicGraph.EmbeddedPortion) E;
+        this.graph = (EmbeddedPortion) E;
         
         // --- remove the old model - see method destroy() above
         viewer.removeChild(0);

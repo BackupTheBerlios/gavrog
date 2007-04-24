@@ -47,7 +47,7 @@ import org.gavrog.systre.Archive;
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.40 2007/03/10 00:20:13 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.41 2007/04/24 19:56:59 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;
@@ -552,22 +552,6 @@ public class TestPeriodicGraph extends TestCase {
             final Matrix D = (Matrix) A.times(A.transposed());
             assertTrue(D.minus(I).norm().isLessThan(eps));
         }
-    }
-    
-    public void testEmbeddedNeighborhood() {
-        testEmbeddedNeighborhood(hexGrid(), 3, 19, 21);
-        testEmbeddedNeighborhood(dia, 3, 41, 52);
-    }
-    
-    public void testEmbeddedNeighborhood(final PeriodicGraph G, final int d, final int n,
-            final int m) {
-        final INode v = (INode) G.nodes().next();
-        final Map pos = G.barycentricPlacement();
-        final CoordinateChange basis = new CoordinateChange(G.symmetricBasis());
-        final Embedding E = G.embeddedNeighborhood(v, d, pos, basis);
-        final IGraph H = E.getGraph();
-        assertEquals(n, H.numberOfNodes());
-        assertEquals(m, H.numberOfEdges());
     }
     
     public void testNodeOrbits() {
