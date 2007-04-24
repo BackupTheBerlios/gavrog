@@ -1,3 +1,19 @@
+/*
+   Copyright 2007 Olaf Delgado-Friedrichs
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package org.gavrog.joss.pgraphs.basic;
 
 import java.util.HashMap;
@@ -11,18 +27,21 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 
 /**
- * Implements an embedded portion of the infinite graph with methods to
+ * Implements an embedded portion of an infinite graph with methods to
  * retrieve the addresses of elements in terms of the representation graph.
+ *
+ * @author Olaf Delgado
+ * @version $Id: EmbeddedPortion.java,v 1.2 2007/04/24 19:59:51 odf Exp $
  */
 public class EmbeddedPortion extends Embedding {
-    // ---
-    private final PeriodicGraph graph;
+    final private PeriodicGraph graph;
     final private Map elementIdToAddress = new HashMap();
     final private Map addressToElementId = new HashMap();
     final private Map placement;
     final private CoordinateChange basis;
     
-    public EmbeddedPortion(PeriodicGraph graph, final Map placement, final CoordinateChange basis) {
+    public EmbeddedPortion(final PeriodicGraph graph, final Map placement,
+            final CoordinateChange basis) {
         super(new UndirectedGraph());
         this.graph = graph;
         this.placement = placement;
