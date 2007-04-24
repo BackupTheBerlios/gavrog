@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.5 2007/04/24 19:37:01 odf Exp $
+ * @version $Id: TestTiling.java,v 1.6 2007/04/24 21:36:37 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -68,9 +68,11 @@ public class TestTiling extends TestCase {
         	for (int i = 0; i <= dim; ++i) {
         		final Object Di = cover.op(i, D);
         		final Vector t = til.edgeTranslation(i, D);
+                // --- make sure tiles stay connected
         		if (i != cover.dim()) {
         			assertEquals(Vector.zero(dim), t);
         		}
+                // --- make sure chambers fit together nicely
         		for (int j = 0; j < dim; ++j) {
         			if (j == i) {
         				continue;
