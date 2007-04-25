@@ -35,6 +35,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
+import org.gavrog.box.simple.TagSet;
 import org.gavrog.box.simple.TaskController;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -53,49 +54,30 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.68 2007/04/24 19:56:59 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.69 2007/04/25 21:17:55 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
 
     public final String invariantVersion = "1.0";
 
-    protected static class CacheKey {
-        private static int nextId = 1;
-        final private int id;
-        
-        public CacheKey() {
-            this.id = nextId++;
-        }
-        
-        public int hashCode() {
-            return id;
-        }
-        
-        public int compareTo(final Object other) {
-            if (other instanceof CacheKey) {
-                return this.id - ((CacheKey) other).id;
-            } else {
-                throw new IllegalArgumentException();
-            }
-        }
-    }
+    final protected static TagSet tagset = new TagSet();
     
-    protected static final CacheKey CONNECTED_COMPONENTS = new CacheKey();
-    protected static final CacheKey BARYCENTRIC_PLACEMENT = new CacheKey();
-    protected static final CacheKey IS_LOCALLY_STABLE = new CacheKey();
-    protected static final CacheKey IS_LADDER = new CacheKey();
-    protected static final CacheKey CHARACTERISTIC_BASES = new CacheKey();
-    protected static final CacheKey SYMMETRIES = new CacheKey();
-    protected static final CacheKey INVARIANT = new CacheKey();
-    protected static final CacheKey CONVENTIONAL_CELL = new CacheKey();
-    protected static final CacheKey TRANSLATIONAL_EQUIVALENCE_CLASSES = new CacheKey();
-    protected static final CacheKey MINIMAL_IMAGE_MAP = new CacheKey();
+    final protected static Object CONNECTED_COMPONENTS = tagset.newTag();
+    final protected static Object BARYCENTRIC_PLACEMENT = tagset.newTag();
+    final protected static Object IS_LOCALLY_STABLE = tagset.newTag();
+    final protected static Object IS_LADDER = tagset.newTag();
+    final protected static Object CHARACTERISTIC_BASES = tagset.newTag();
+    final protected static Object SYMMETRIES = tagset.newTag();
+    final protected static Object INVARIANT = tagset.newTag();
+    final protected static Object CONVENTIONAL_CELL = tagset.newTag();
+    final protected static Object TRANSLATIONAL_EQUIVALENCE_CLASSES = tagset.newTag();
+    final protected static Object MINIMAL_IMAGE_MAP = tagset.newTag();
 
-    private static final boolean DEBUG = false;
+    final protected static boolean DEBUG = false;
     
-    protected final int dimension;
-    protected final Map edgeIdToShift = new HashMap();
+    final protected int dimension;
+    final protected Map edgeIdToShift = new HashMap();
     // === IMPORTANT: always check for a non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
 

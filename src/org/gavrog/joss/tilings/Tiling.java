@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.gavrog.box.simple.TagSet;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.fpgroups.FreeWord;
@@ -58,45 +59,26 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.13 2007/04/24 19:38:13 odf Exp $
+ * @version $Id: Tiling.java,v 1.14 2007/04/25 21:17:55 odf Exp $
  */
 public class Tiling {
-    protected static class CacheKey {
-        private static int nextId = 1;
-        final private int id;
-        
-        public CacheKey() {
-            this.id = nextId++;
-        }
-        
-        public int hashCode() {
-            return id;
-        }
-        
-        public int compareTo(final Object other) {
-            if (other instanceof CacheKey) {
-                return this.id - ((CacheKey) other).id;
-            } else {
-                throw new IllegalArgumentException();
-            }
-        }
-    }
-
-    private static final CacheKey TRANSLATION_GROUP = new CacheKey();
-    private static final CacheKey TRANSLATION_VECTORS = new CacheKey();
-    private static final CacheKey EDGE_TRANSLATIONS = new CacheKey();
-    private static final CacheKey CORNER_SHIFTS = new CacheKey();
-    private static final CacheKey SKELETON = new CacheKey();
-    private static final CacheKey BARYCENTRIC_SKELETON = new CacheKey();
-    private static final CacheKey BARYCENTRIC_POS_BY_VERTEX = new CacheKey();
-    private static final CacheKey SPACEGROUP = new CacheKey();
+    final protected static TagSet tagset = new TagSet();
+    
+    final protected static Object TRANSLATION_GROUP = tagset.newTag();
+    final protected static Object TRANSLATION_VECTORS = tagset.newTag();
+    final protected static Object EDGE_TRANSLATIONS = tagset.newTag();
+    final protected static Object CORNER_SHIFTS = tagset.newTag();
+    final protected static Object SKELETON = tagset.newTag();
+    final protected static Object BARYCENTRIC_SKELETON = tagset.newTag();
+    final protected static Object BARYCENTRIC_POS_BY_VERTEX = tagset.newTag();
+    final protected static Object SPACEGROUP = tagset.newTag();
     
     // === IMPORTANT: always assert non-null return value of a cache.get() ===
     protected Map cache = new WeakHashMap();
 
     // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
-    final private DelaneySymbol ds;
-    final private DSCover cov;
+    final protected DelaneySymbol ds;
+    final protected DSCover cov;
 
 	/**
 	 * Constructs an instance.
