@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import org.gavrog.box.simple.TagSet;
+import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.fpgroups.FreeWord;
@@ -59,21 +59,19 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.14 2007/04/25 21:17:55 odf Exp $
+ * @version $Id: Tiling.java,v 1.15 2007/04/25 22:51:30 odf Exp $
  */
 public class Tiling {
-    final protected static TagSet tagset = new TagSet();
+    final protected static Object TRANSLATION_GROUP = new Tag();
+    final protected static Object TRANSLATION_VECTORS = new Tag();
+    final protected static Object EDGE_TRANSLATIONS = new Tag();
+    final protected static Object CORNER_SHIFTS = new Tag();
+    final protected static Object SKELETON = new Tag();
+    final protected static Object BARYCENTRIC_SKELETON = new Tag();
+    final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
+    final protected static Object SPACEGROUP = new Tag();
     
-    final protected static Object TRANSLATION_GROUP = tagset.newTag();
-    final protected static Object TRANSLATION_VECTORS = tagset.newTag();
-    final protected static Object EDGE_TRANSLATIONS = tagset.newTag();
-    final protected static Object CORNER_SHIFTS = tagset.newTag();
-    final protected static Object SKELETON = tagset.newTag();
-    final protected static Object BARYCENTRIC_SKELETON = tagset.newTag();
-    final protected static Object BARYCENTRIC_POS_BY_VERTEX = tagset.newTag();
-    final protected static Object SPACEGROUP = tagset.newTag();
-    
-    // === IMPORTANT: always assert non-null return value of a cache.get() ===
+    // === IMPORTANT: always check if cache.get() returns a non-null value ===
     protected Map cache = new WeakHashMap();
 
     // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
@@ -387,8 +385,7 @@ public class Tiling {
 	 * @return the skeleton graph of the barycentric subdivision.
 	 */
 	public Skeleton getBarycentricSkeleton() {
-		final Skeleton cached = (Skeleton) this.cache
-				.get(BARYCENTRIC_SKELETON);
+		final Skeleton cached = (Skeleton) this.cache.get(BARYCENTRIC_SKELETON);
 		if (cached != null) {
 			return cached;
 		}

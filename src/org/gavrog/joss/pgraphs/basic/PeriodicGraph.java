@@ -35,7 +35,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
-import org.gavrog.box.simple.TagSet;
+import org.gavrog.box.simple.Tag;
 import org.gavrog.box.simple.TaskController;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -54,31 +54,29 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.69 2007/04/25 21:17:55 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.70 2007/04/25 22:51:33 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
 
     public final String invariantVersion = "1.0";
 
-    final protected static TagSet tagset = new TagSet();
-    
-    final protected static Object CONNECTED_COMPONENTS = tagset.newTag();
-    final protected static Object BARYCENTRIC_PLACEMENT = tagset.newTag();
-    final protected static Object IS_LOCALLY_STABLE = tagset.newTag();
-    final protected static Object IS_LADDER = tagset.newTag();
-    final protected static Object CHARACTERISTIC_BASES = tagset.newTag();
-    final protected static Object SYMMETRIES = tagset.newTag();
-    final protected static Object INVARIANT = tagset.newTag();
-    final protected static Object CONVENTIONAL_CELL = tagset.newTag();
-    final protected static Object TRANSLATIONAL_EQUIVALENCE_CLASSES = tagset.newTag();
-    final protected static Object MINIMAL_IMAGE_MAP = tagset.newTag();
+    final protected static Object CONNECTED_COMPONENTS = new Tag();
+    final protected static Object BARYCENTRIC_PLACEMENT = new Tag();
+    final protected static Object IS_LOCALLY_STABLE = new Tag();
+    final protected static Object IS_LADDER = new Tag();
+    final protected static Object CHARACTERISTIC_BASES = new Tag();
+    final protected static Object SYMMETRIES = new Tag();
+    final protected static Object INVARIANT = new Tag();
+    final protected static Object CONVENTIONAL_CELL = new Tag();
+    final protected static Object TRANSLATIONAL_EQUIVALENCE_CLASSES = new Tag();
+    final protected static Object MINIMAL_IMAGE_MAP = new Tag();
 
     final protected static boolean DEBUG = false;
     
     final protected int dimension;
     final protected Map edgeIdToShift = new HashMap();
-    // === IMPORTANT: always check for a non-null return value of a cache.get() ===
+    // === IMPORTANT: always check if cache.get() returns a non-null value ===
     protected Map cache = new WeakHashMap();
 
     /**
