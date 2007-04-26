@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.Cache;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -59,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.19 2007/04/26 21:12:45 odf Exp $
+ * @version $Id: Tiling.java,v 1.20 2007/04/26 22:39:09 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -540,6 +541,7 @@ public class Tiling {
         final DelaneySymbol cover = getCover();
         final Skeleton skel = getSkeleton();
         final List idcs = IndexList.except(cover, 2);
+        final List idcsHE = IndexList.except(cover, 0, 1);
         final List faces = new ArrayList();
         for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
             final Object D = reps.next();
@@ -547,7 +549,8 @@ public class Tiling {
             Object E = D;
             do {
                 final IEdge e = skel.edgeForChamber(E);
-                if (skel.chamberAtEdge(e).equals(E)) {
+                final List orb = Iterators.asList(cover.orbit(idcsHE, E));
+                if (orb.contains(skel.chamberAtEdge(e))) {
                     f.add(e);
                 } else {
                     f.add(e.reverse());

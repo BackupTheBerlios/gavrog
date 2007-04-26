@@ -17,18 +17,23 @@
 package org.gavrog.joss.tilings;
 
 import java.util.Iterator;
+import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.8 2007/04/26 21:12:45 odf Exp $
+ * @version $Id: TestTiling.java,v 1.9 2007/04/26 22:39:12 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -82,6 +87,30 @@ public class TestTiling extends TestCase {
         	}
         }
     }
+
+    public void testFaces() {
+        testFaces(t1);
+        testFaces(t2);
+        testFaces(t3);
+    }
+    
+    public void testFaces(final Tiling til) {
+        final DelaneySymbol cov = til.getCover();
+        final Skeleton skel = til.getSkeleton();
+        final List faces = til.getFaces();
+        final int d = cov.dim();
+        final int n = Iterators.size(cov.orbitReps(IndexList.except(cov, 2)));
+        assertEquals(n, faces.size());
+        for (final Iterator iter = faces.iterator(); iter.hasNext();) {
+            final List f = (List) iter.next();
+            Vector sum = Vector.zero(d);
+            for (final Iterator edges = f.iterator(); edges.hasNext();) {
+                final IEdge e = (IEdge) edges.next();
+                sum = (Vector) sum.plus(skel.getShift(e));
+            }
+            assertEquals(Vector.zero(d), sum);
+        }
+    }
     
     public void testSpaceGroup() {
         testSpaceGroup(t1, "Pm-3m");
@@ -91,9 +120,5 @@ public class TestTiling extends TestCase {
     
     public void testSpaceGroup(final Tiling til, final String name) {
         assertEquals(name, til.getSpaceGroup().getName());
-    }
-    
-    public void testFaces() {
-        System.out.println(t3.getFaces());
     }
 }
