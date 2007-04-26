@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.WeakHashMap;
 
+import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiceIntList;
@@ -54,13 +54,15 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.70 2007/04/25 22:51:33 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.71 2007/04/26 00:59:32 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
 
-    public final String invariantVersion = "1.0";
-
+    // --- enables or disables debugging
+    final protected static boolean DEBUG = false;
+    
+    // --- the cache keys
     final protected static Object CONNECTED_COMPONENTS = new Tag();
     final protected static Object BARYCENTRIC_PLACEMENT = new Tag();
     final protected static Object IS_LOCALLY_STABLE = new Tag();
@@ -72,12 +74,17 @@ public class PeriodicGraph extends UndirectedGraph {
     final protected static Object TRANSLATIONAL_EQUIVALENCE_CLASSES = new Tag();
     final protected static Object MINIMAL_IMAGE_MAP = new Tag();
 
-    final protected static boolean DEBUG = false;
-    
+    private static final Object TRANSLATIONAL_EQUIVALENCES = null;
+
+    // --- cache for this instance
+    final protected Cache cache = new Cache();
+
+    // --- the Systre key version used
+    final public String invariantVersion = "1.0";
+
+    // --- other fixes fields
     final protected int dimension;
     final protected Map edgeIdToShift = new HashMap();
-    // === IMPORTANT: always check if cache.get() returns a non-null value ===
-    protected Map cache = new WeakHashMap();
 
     /**
      * Constructs an instance.
@@ -613,13 +620,14 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
             
-            // --- adjust barycentric placement, if any
-        final Map placement = (Map) cache.get(BARYCENTRIC_PLACEMENT);
-        if (placement != null) {
+        // --- adjust barycentric placement, if any
+        try {
+            final Map placement = (Map) cache.get(BARYCENTRIC_PLACEMENT);
             final Map tmp = new HashMap();
             tmp.putAll(placement);
             tmp.put(node, ((Point) tmp.get(node)).plus(amount));
             cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
+        } catch (Cache.NotFoundException ex) {
         }
     }
     
@@ -717,9 +725,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the list of components.
      */
     public List connectedComponents() {
-        final List cached = (List) cache.get(CONNECTED_COMPONENTS);
-        if (cached != null) {
-            return cached;
+        try {
+            return (List) this.cache.get(CONNECTED_COMPONENTS);
+        } catch (Cache.NotFoundException ex) {
         }
         
         final int dim = getDimension();
@@ -796,8 +804,7 @@ public class PeriodicGraph extends UndirectedGraph {
             components.add(new Component(thisGraph, thisBasis));
         }
         
-        cache.put(CONNECTED_COMPONENTS, components);
-        return components;
+        return (List) this.cache.put(CONNECTED_COMPONENTS, components);
     }
     
     /**
@@ -840,9 +847,9 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         // --- see if placement has already been computed
-        final Map cached = (Map) cache.get(BARYCENTRIC_PLACEMENT);
-        if (cached != null) {
-            return cached;
+        try {
+            return (Map) this.cache.get(BARYCENTRIC_PLACEMENT);
+        } catch (Cache.NotFoundException ex) {
         }
         
         // --- assign an integer index to each node representative
@@ -889,8 +896,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final Map result = Collections.unmodifiableMap(tmp);
         
         // --- cache and return the result
-        cache.put(BARYCENTRIC_PLACEMENT, result);
-        return result;
+        return (Map) this.cache.put(BARYCENTRIC_PLACEMENT, result);
     }
     
     /**
@@ -953,30 +959,28 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return true if the graph is locally stable.
      */
     public boolean isLocallyStable() {
-        final Boolean cached = (Boolean) cache.get(IS_LOCALLY_STABLE);
-        if (cached != null) {
-            return cached.booleanValue();
-        }
-        
-        final Map positions = barycentricPlacement();
-        for (final Iterator iter = nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            final Set positionsSeen = new HashSet();
-            for (final Iterator incident = v.incidences(); incident.hasNext();) {
-                final IEdge e = (IEdge) incident.next();
-                final Vector s = getShift(e);
-                final Point p0 = (Point) positions.get(e.target());
-                final Point p = (Point) p0.plus(s);
-                if (positionsSeen.contains(p)) {
-                    cache.put(IS_LOCALLY_STABLE, new Boolean(false));
-                    return false;
-                } else {
-                    positionsSeen.add(p);
+        try {
+            return this.cache.getBoolean(IS_LOCALLY_STABLE);
+        } catch (Cache.NotFoundException ex) {
+            final Map positions = barycentricPlacement();
+            for (final Iterator iter = nodes(); iter.hasNext();) {
+                final INode v = (INode) iter.next();
+                final Set positionsSeen = new HashSet();
+                for (final Iterator incident = v.incidences(); incident
+                        .hasNext();) {
+                    final IEdge e = (IEdge) incident.next();
+                    final Vector s = getShift(e);
+                    final Point p0 = (Point) positions.get(e.target());
+                    final Point p = (Point) p0.plus(s);
+                    if (positionsSeen.contains(p)) {
+                        return this.cache.put(IS_LOCALLY_STABLE, false);
+                    } else {
+                        positionsSeen.add(p);
+                    }
                 }
             }
+            return this.cache.put(IS_LOCALLY_STABLE, true);
         }
-        cache.put(IS_LOCALLY_STABLE, new Boolean(true));
-        return true;
     }
     
     /**
@@ -987,9 +991,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return true is the graph is a ladder.
      */
     public boolean isLadder() {
-        final Boolean cached = (Boolean) cache.get(IS_LADDER);
-        if (cached != null) {
-            return cached.booleanValue();
+        try {
+            return this.cache.getBoolean(IS_LADDER);
+        } catch (Cache.NotFoundException ex) {
         }
         
         // --- check prerequisites
@@ -997,8 +1001,7 @@ public class PeriodicGraph extends UndirectedGraph {
             throw new UnsupportedOperationException("graph must be connected");
         }
         if (isStable() || !isLocallyStable()) {
-            cache.put(IS_LADDER, new Boolean(false));
-            return false;
+            return cache.put(IS_LADDER, false);
         }
         
         // --- find equivalence classes w.r.t. ladder translations
@@ -1014,14 +1017,12 @@ public class PeriodicGraph extends UndirectedGraph {
             if (((Vector) posv.minus(pos0)).modZ().isZero()) {
                 try {
                     new Morphism(start, v, I);
-                    cache.put(IS_LADDER, new Boolean(true));
-                    return true;
+                    return cache.put(IS_LADDER, true);
                 } catch (Morphism.NoSuchMorphismException ex) {
                 }
             }
         }
-        cache.put(IS_LADDER, new Boolean(false));
-        return false;
+        return cache.put(IS_LADDER, false);
     }
     
     /**
@@ -1043,11 +1044,16 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return an iterator over the set of equivalence classes.
      */
     public Iterator translationalEquivalenceClasses() {
-        final List cached = (List) cache.get(TRANSLATIONAL_EQUIVALENCE_CLASSES);
-        if (cached != null) {
-            return cached.iterator();
-        }
-        
+        return translationalEquivalences().classes();
+    }
+    
+    /**
+     * Computes a partition object encoding the translational equivalence
+     * classes (see above).
+     * 
+     * @return the partition into translational equivalence classes.
+     */
+    public Partition translationalEquivalences() {
         // --- check prerequisites
         if (!isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -1056,31 +1062,31 @@ public class PeriodicGraph extends UndirectedGraph {
             throw new UnsupportedOperationException("graph must be locally stable");
         }
         
-        // --- find extra translations
-        final Operator I = Operator.identity(getDimension());
-        final Partition P = new Partition();
-        final Iterator iter = nodes();
-        final INode start = (INode) iter.next();
-        
-        while (iter.hasNext()) {
-            final INode v = (INode) iter.next();
-            if (!P.areEquivalent(start, v)) {
-                final Morphism iso;
-                try {
-                    iso = new Morphism(start, v, I);
-                } catch (Morphism.NoSuchMorphismException ex) {
-                    continue;
-                }
-                for (final Iterator it = nodes(); it.hasNext();) {
-                    final INode w = (INode) it.next();
-                    P.unite(w, iso.get(w));
+        try {
+            return (Partition) this.cache.get(TRANSLATIONAL_EQUIVALENCES);
+        } catch (Cache.NotFoundException ex) {
+            final Operator I = Operator.identity(getDimension());
+            final Partition P = new Partition();
+            final Iterator iter = nodes();
+            final INode start = (INode) iter.next();
+
+            while (iter.hasNext()) {
+                final INode v = (INode) iter.next();
+                if (!P.areEquivalent(start, v)) {
+                    final Morphism iso;
+                    try {
+                        iso = new Morphism(start, v, I);
+                    } catch (Morphism.NoSuchMorphismException ex1) {
+                        continue;
+                    }
+                    for (final Iterator it = nodes(); it.hasNext();) {
+                        final INode w = (INode) it.next();
+                        P.unite(w, iso.get(w));
+                    }
                 }
             }
+            return (Partition) this.cache.put(TRANSLATIONAL_EQUIVALENCES, P);
         }
-        
-        // --- cache and return the result
-        cache.put(TRANSLATIONAL_EQUIVALENCE_CLASSES, Iterators.asList(P.classes()));
-        return P.classes();
     }
     
     /**
@@ -1104,9 +1110,9 @@ public class PeriodicGraph extends UndirectedGraph {
 	 * @return a morphism from the original graph to its minimal image.
 	 */
     public Morphism minimalImageMap() {
-        final Morphism cached = (Morphism) cache.get(MINIMAL_IMAGE_MAP);
-        if (cached != null) {
-            return cached;
+        try {
+            return (Morphism) this.cache.get(MINIMAL_IMAGE_MAP);
+        } catch (Cache.NotFoundException ex) {
         }
         
         // --- some preparations
@@ -1119,8 +1125,7 @@ public class PeriodicGraph extends UndirectedGraph {
             // --- no extra translations, graph is minimal
         	final INode v0 = (INode) nodes().next();
         	final Morphism result = new Morphism(v0, v0, Operator.identity(d));
-        	cache.put(MINIMAL_IMAGE_MAP, result);
-            return result;
+        	return (Morphism) cache.put(MINIMAL_IMAGE_MAP, result);
         }
         
         // --- collect the translation vectors
@@ -1199,8 +1204,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final INode v0 = (INode) nodes().next();
         final INode w0 = (INode) old2new.get(v0);
         final Morphism result = new Morphism(v0, w0, basisChange.getOperator());
-        cache.put(MINIMAL_IMAGE_MAP, result);
-        return result;
+        return (Morphism) cache.put(MINIMAL_IMAGE_MAP, result);
     }
     
     /**
@@ -1238,9 +1242,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the set of characteristic bases, represented by edge lists.
      */
     public List characteristicBases() {
-        final List cached = (List) cache.get(CHARACTERISTIC_BASES);
-        if (cached != null) {
-            return cached;
+        try {
+            return (List) this.cache.get(CHARACTERISTIC_BASES);
+        } catch (Cache.NotFoundException ex) {
         }
         
         final List result = new LinkedList();
@@ -1315,8 +1319,8 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
         
-        cache.put(CHARACTERISTIC_BASES, result);
-        return result;
+        return (List) cache.put(CHARACTERISTIC_BASES, Collections
+                .unmodifiableList(result));
     }
 
     /**
@@ -1430,9 +1434,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the set of automorphisms, each expressed as a map between nodes
      */
     public Set symmetries() {
-        final Set cached = (Set) cache.get(SYMMETRIES);
-        if (cached != null) {
-            return cached;
+        try {
+            return (Set) this.cache.get(SYMMETRIES);
+        } catch (Cache.NotFoundException ex) {
         }
         
         // --- check prerequisites
@@ -1492,8 +1496,7 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
         
-        cache.put(SYMMETRIES, seen);
-        return seen;
+        return (Set) cache.put(SYMMETRIES, Collections.unmodifiableSet(seen));
     }
 
     /**
@@ -1661,9 +1664,9 @@ public class PeriodicGraph extends UndirectedGraph {
         if (DEBUG) {
             System.out.println("\nComputing invariant for " + this);
         }
-        final NiceIntList cached = (NiceIntList) cache.get(INVARIANT);
-        if (cached != null) {
-            return cached;
+        try {
+            return (NiceIntList) this.cache.get(INVARIANT);
+        } catch (Cache.NotFoundException ex) {
         }
         
         // --- check prerequisites
@@ -1939,9 +1942,7 @@ public class PeriodicGraph extends UndirectedGraph {
 		}
 
         // --- cache the results
-        this.cache.put(INVARIANT, new NiceIntList(invariant));
-        
-        return new NiceIntList(invariant);
+        return (NiceIntList) cache.put(INVARIANT, new NiceIntList(invariant));
     }
     
     /**
@@ -2056,34 +2057,33 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the covering periodic graph.
      */
     public Cover conventionalCellCover() {
-        final Object cached = cache.get(CONVENTIONAL_CELL);
-        if (cached != null) {
-            return (Cover) cached;
-        }
-
         // --- see if we can do this
         if (!isMinimal()) {
-            throw new UnsupportedOperationException("must start with minimal graph");
+            throw new UnsupportedOperationException("graph not minimal");
         }
-        
-        // --- construct a SpaceGroupFinder object for this graph's symmetry group
-        final SpaceGroupFinder finder = new SpaceGroupFinder(getSpaceGroup());
-        
-        // --- determine a coordinate mapping into a conventional cell
-        final CoordinateChange C = finder.getToStd();
-        
-        // --- express the new unit cell in terms of the old one
-        final int dim = getDimension();
-        final CoordinateChange Cinv = (CoordinateChange) C.inverse();
-        final Vector basis[] = new Vector[dim];
-        for (int i = 0; i < dim; ++i) {
-            basis[i] = (Vector)Vector.unit(dim, i).times(Cinv);
+
+        try {
+            return (Cover) this.cache.get(CONVENTIONAL_CELL);
+        } catch (Cache.NotFoundException ex) {
+            // --- construct a SpaceGroupFinder object for the symmetry group
+            final SpaceGroupFinder finder = new SpaceGroupFinder(
+                    getSpaceGroup());
+
+            // --- determine a coordinate mapping into a conventional cell
+            final CoordinateChange C = finder.getToStd();
+
+            // --- express the new unit cell in terms of the old one
+            final int dim = getDimension();
+            final CoordinateChange Cinv = (CoordinateChange) C.inverse();
+            final Vector basis[] = new Vector[dim];
+            for (int i = 0; i < dim; ++i) {
+                basis[i] = (Vector) Vector.unit(dim, i).times(Cinv);
+            }
+
+            // --- construct, cache and return the cover
+            final Cover cover = new Cover(this, basis);
+            return (Cover) cache.put(CONVENTIONAL_CELL, cover);
         }
-        
-        // --- construct, cache and return the cover
-        final Cover cover = new Cover(this, basis);
-        cache.put(CONVENTIONAL_CELL, cover);
-        return cover;
     }
         
     /*

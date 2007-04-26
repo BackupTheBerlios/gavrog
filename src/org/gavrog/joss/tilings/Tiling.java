@@ -30,8 +30,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 
+import org.gavrog.box.collections.Cache;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -59,9 +59,10 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.15 2007/04/25 22:51:30 odf Exp $
+ * @version $Id: Tiling.java,v 1.16 2007/04/26 00:59:32 odf Exp $
  */
 public class Tiling {
+    // --- the cache keys
     final protected static Object TRANSLATION_GROUP = new Tag();
     final protected static Object TRANSLATION_VECTORS = new Tag();
     final protected static Object EDGE_TRANSLATIONS = new Tag();
@@ -71,8 +72,8 @@ public class Tiling {
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
     
-    // === IMPORTANT: always check if cache.get() returns a non-null value ===
-    protected Map cache = new WeakHashMap();
+    // --- cache for this instance
+    final protected Cache cache = new Cache();
 
     // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
     final protected DelaneySymbol ds;
@@ -131,14 +132,11 @@ public class Tiling {
      * @return the fundamental group of the toroidal or pseudo-toroidal cover.
      */
     public FundamentalGroup getTranslationGroup() {
-        final FundamentalGroup cached = (FundamentalGroup) this.cache
-                .get(TRANSLATION_GROUP);
-        if (cached != null) {
-            return cached;
-        } else {
+        try {
+            return (FundamentalGroup) this.cache.get(TRANSLATION_GROUP);
+        } catch (Cache.NotFoundException ex) {
             final FundamentalGroup fg = new FundamentalGroup(getCover());
-            this.cache.put(TRANSLATION_GROUP, fg);
-            return fg;
+            return (FundamentalGroup) this.cache.put(TRANSLATION_GROUP, fg);
         }
     }
     
@@ -146,10 +144,9 @@ public class Tiling {
      * @return the generators of the translation group as vectors.
      */
     private Vector[] getTranslationVectors() {
-        final Vector[] cached = (Vector[]) this.cache.get(TRANSLATION_VECTORS);
-        if (cached != null) {
-            return cached;
-        } else {
+        try {
+            return (Vector[]) this.cache.get(TRANSLATION_VECTORS);
+        } catch (Cache.NotFoundException ex) {
             final Matrix N = LinearAlgebra.columnNullSpace(
                     getTranslationGroup().getPresentation().relatorMatrix(),
                     true);
@@ -158,8 +155,7 @@ public class Tiling {
                 throw new RuntimeException(msg);
             }
             final Vector[] result = Vector.fromMatrix(N);
-            cache.put(TRANSLATION_VECTORS, result);
-            return result;
+            return (Vector[]) this.cache.put(TRANSLATION_VECTORS, result);
         }
     }
     
@@ -167,10 +163,9 @@ public class Tiling {
      * @return a mapping of cover-edges to their associated translations
      */
     public Map getEdgeTranslations() {
-        final Map cached = (Map) this.cache.get(EDGE_TRANSLATIONS);
-        if (cached != null) {
-            return cached;
-        } else {
+        try {
+            return (Map) this.cache.get(EDGE_TRANSLATIONS);
+        } catch (Cache.NotFoundException ex) {
             final int dim = getCover().dim();
             final Vector[] t = getTranslationVectors();
             final Map e2w = (Map) getTranslationGroup().getEdgeToWord();
@@ -190,9 +185,8 @@ public class Tiling {
                 }
                 e2t.put(e, s);
             }
-            
-            cache.put(EDGE_TRANSLATIONS, Collections.unmodifiableMap(e2t));
-            return e2t;
+            return (Map) this.cache.put(EDGE_TRANSLATIONS, Collections
+                    .unmodifiableMap(e2t));
         }
     }
     
@@ -212,10 +206,9 @@ public class Tiling {
      * @return shifts to obtain chamber corner positions from node positions.
      */
     public Map getCornerShifts() {
-        final Map cached = (Map) this.cache.get(CORNER_SHIFTS);
-        if (cached != null) {
-            return cached;
-        } else {
+        try {
+            return (Map) this.cache.get(CORNER_SHIFTS);
+        } catch (Cache.NotFoundException ex) {
             final int dim = getCover().dim();
             final HashMap c2s = new HashMap();
             for (int i = 0; i <= dim; ++i) {
@@ -237,8 +230,8 @@ public class Tiling {
                 }
 
             }
-            cache.put(CORNER_SHIFTS, Collections.unmodifiableMap(c2s));
-            return c2s;
+            return (Map) cache.put(CORNER_SHIFTS, Collections
+                    .unmodifiableMap(c2s));
         }
     }
     
@@ -348,80 +341,79 @@ public class Tiling {
 	 * @return the skeleton graph of the tiling.
 	 */
 	public Skeleton getSkeleton() {
-		final Skeleton cached = (Skeleton) this.cache.get(SKELETON);
-		if (cached != null) {
-			return cached;
-		}
-		
-        final DelaneySymbol dsym = getCover();
-        final Skeleton G = new Skeleton();
-        List idcs;
+        try {
+            return (Skeleton) this.cache.get(SKELETON);
+        } catch (Cache.NotFoundException ex) {
 
-		// --- create nodes of the graph and map Delaney chambers to nodes
-        idcs = IndexList.except(dsym, 0);
-        for (Iterator iter = dsym.orbitRepresentatives(idcs); iter.hasNext();) {
-            G.newNode(0, iter.next());
+            final DelaneySymbol dsym = getCover();
+            final Skeleton G = new Skeleton();
+            List idcs;
+
+            // --- create nodes of the graph and map Delaney chambers to nodes
+            idcs = IndexList.except(dsym, 0);
+            for (final Iterator iter = dsym.orbitRepresentatives(idcs); iter
+                    .hasNext();) {
+                G.newNode(0, iter.next());
+            }
+
+            // --- create the edges
+            idcs = IndexList.except(dsym, 1);
+            for (final Iterator iter = dsym.orbitRepresentatives(idcs); iter
+                    .hasNext();) {
+                final Object D = iter.next();
+                final Object E = dsym.op(0, D);
+                final INode v = G.nodeForCorner(0, D);
+                final INode w = G.nodeForCorner(0, E);
+                final Vector t = edgeTranslation(0, D);
+                final Vector sD = cornerShift(0, D);
+                final Vector sE = cornerShift(0, E);
+                final Vector s = (Vector) t.plus(sE).minus(sD);
+                G.newEdge(v, w, s, D);
+            }
+
+            return (Skeleton) this.cache.put(SKELETON, G);
         }
-
-        // --- create the edges
-        idcs = IndexList.except(dsym, 1);
-        for (Iterator iter = dsym.orbitRepresentatives(idcs); iter.hasNext();) {
-            final Object D = iter.next();
-            final Object E = dsym.op(0, D);
-            final INode v = G.nodeForCorner(0, D);
-			final INode w = G.nodeForCorner(0, E);
-            final Vector t = edgeTranslation(0, D);
-            final Vector sD = cornerShift(0, D);
-            final Vector sE = cornerShift(0, E);
-			final Vector s = (Vector) t.plus(sE).minus(sD);
-			G.newEdge(v, w, s, D);
-		}
-        
-		this.cache.put(SKELETON, G);
-        return G;
-	}
+    }
 
 	/**
 	 * @return the skeleton graph of the barycentric subdivision.
 	 */
 	public Skeleton getBarycentricSkeleton() {
-		final Skeleton cached = (Skeleton) this.cache.get(BARYCENTRIC_SKELETON);
-		if (cached != null) {
-			return cached;
-		}
-		
-        final DelaneySymbol dsym = getCover();
-		final int dim = dsym.dim();
-        final Skeleton G = new Skeleton();
+        try {
+            return (Skeleton) this.cache.get(BARYCENTRIC_SKELETON);
+        } catch (Cache.NotFoundException ex) {
+            final DelaneySymbol dsym = getCover();
+            final int dim = dsym.dim();
+            final Skeleton G = new Skeleton();
 
-		// --- create nodes and maps to chamber corners to nodes
-		for (int i = 0; i <= dim; ++i) {
-            final List idcs = IndexList.except(dsym, i);
-            for (final Iterator iter = dsym.orbitRepresentatives(idcs); iter
-                    .hasNext();) {
-                G.newNode(i, iter.next());
-            }
-        }
-
-		// --- create the edges
-		for (int i = 0; i < dim; ++i) {
-			for (int j = i + 1; j <= dim; ++j) {
-				final List idcs = IndexList.except(dsym, i, j);
-				for (final Iterator iter = dsym.orbitRepresentatives(idcs); iter
+            // --- create nodes and maps to chamber corners to nodes
+            for (int i = 0; i <= dim; ++i) {
+                final List idcs = IndexList.except(dsym, i);
+                for (Iterator iter = dsym.orbitRepresentatives(idcs); iter
                         .hasNext();) {
-					final Object D = iter.next();
-					final INode v = G.nodeForCorner(i, D);
-					final INode w = G.nodeForCorner(j, D);
-                    final Vector si = cornerShift(i, D);
-                    final Vector sj = cornerShift(j, D);
-					final Vector s = (Vector) sj.minus(si);
-					G.newEdge(v, w, s, D);
-				}
-			}
-		}
-        
-		this.cache.put(BARYCENTRIC_SKELETON, G);
-        return G;
+                    G.newNode(i, iter.next());
+                }
+            }
+
+            // --- create the edges
+            for (int i = 0; i < dim; ++i) {
+                for (int j = i + 1; j <= dim; ++j) {
+                    final List idcs = IndexList.except(dsym, i, j);
+                    for (Iterator iter = dsym.orbitRepresentatives(idcs); iter
+                            .hasNext();) {
+                        final Object D = iter.next();
+                        final INode v = G.nodeForCorner(i, D);
+                        final INode w = G.nodeForCorner(j, D);
+                        final Vector si = cornerShift(i, D);
+                        final Vector sj = cornerShift(j, D);
+                        final Vector s = (Vector) sj.minus(si);
+                        G.newEdge(v, w, s, D);
+                    }
+                }
+            }
+
+            return (Skeleton) this.cache.put(BARYCENTRIC_SKELETON, G);
+        }
 	}
 
     /**
@@ -432,13 +424,11 @@ public class Tiling {
      * @return a mapping from corners to positions
      */
     public Map getVertexBarycentricPositions() {
-        final Map cached = (Map) cache.get(BARYCENTRIC_POS_BY_VERTEX);
-        if (cached != null) {
-            return cached;
-        } else {
+        try {
+            return (Map) this.cache.get(BARYCENTRIC_POS_BY_VERTEX);
+        } catch (Cache.NotFoundException ex) {
             final Map p = cornerPositions(getSkeleton().barycentricPlacement());
-            cache.put(BARYCENTRIC_POS_BY_VERTEX, p);
-            return p;
+            return (Map) cache.put(BARYCENTRIC_POS_BY_VERTEX, p);
         }
     }
     
@@ -507,47 +497,44 @@ public class Tiling {
      * @return the space group.
      */
     public SpaceGroup getSpaceGroup() {
-        // --- see if the result is already cached
-        final SpaceGroup cached = (SpaceGroup) this.cache.get(SPACEGROUP);
-        if (cached != null) {
-            return cached;
-        }
+        try {
+            return (SpaceGroup) this.cache.get(SPACEGROUP);
+        } catch (Cache.NotFoundException ex) {
+            // --- get the toroidal cover of the base symbol
+            final DSCover cover = getCover();
 
-        // --- get the toroidal cover of the base symbol
-        final DSCover cover = getCover();
+            // --- find a chamber with nonzero volume
+            Object D0 = null;
+            for (final Iterator elms = cover.elements(); elms.hasNext();) {
+                final Object D = elms.next();
+                if (!spanningMatrix(D).determinant().isZero()) {
+                    D0 = D;
+                    break;
+                }
+            }
+            if (D0 == null) {
+                throw new RuntimeException("all chambers have zero volume");
+            }
 
-        // --- find a chamber with nonzero volume
-        Object D0 = null;
-        for (final Iterator elms = cover.elements(); elms.hasNext();) {
-            final Object D = elms.next();
-            if (!spanningMatrix(D).determinant().isZero()) {
-                D0 = D;
-                break;
+            // --- compute affine maps from start chamber to its images
+            final List ops = new ArrayList();
+            final Object E = cover.image(D0);
+            final Skeleton skel = getSkeleton();
+            final INode v = skel.nodeForCorner(0, D0);
+            final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
+            for (final Iterator elms = cover.elements(); elms.hasNext();) {
+                final Object D = elms.next();
+                if (cover.image(D).equals(E)) {
+                    final Matrix A = (Matrix) Minv.times(spanningMatrix(D));
+                    final INode w = skel.nodeForCorner(0, D);
+                    ops.add(new Morphism(v, w, A).getAffineOperator());
+                }
             }
+
+            // --- construct the group, cache and return it
+            final SpaceGroup group = new SpaceGroup(cover.dim(), ops);
+            return (SpaceGroup) this.cache.put(SPACEGROUP, group);
         }
-        if (D0 == null) {
-            throw new RuntimeException("all chambers have zero volume");
-        }
-        
-        // --- compute affine maps from start chamber to its images
-        final List ops = new ArrayList();
-        final Object E = cover.image(D0);
-        final Skeleton skel = getSkeleton();
-        final INode v = skel.nodeForCorner(0, D0);
-        final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
-        for (final Iterator elms = cover.elements(); elms.hasNext();) {
-            final Object D = elms.next();
-            if (cover.image(D).equals(E)) {
-                final Matrix A = (Matrix) Minv.times(spanningMatrix(D));
-                final INode w = skel.nodeForCorner(0, D);
-                ops.add(new Morphism(v, w, A).getAffineOperator());
-            }
-        }
-        
-        // --- construct the group, cache and return it
-        final SpaceGroup group = new SpaceGroup(cover.dim(), ops);
-        this.cache.put(SPACEGROUP, group);
-        return group;
     }
     
     /**
