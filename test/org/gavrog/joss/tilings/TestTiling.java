@@ -22,6 +22,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
@@ -33,7 +34,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.9 2007/04/26 22:39:12 odf Exp $
+ * @version $Id: TestTiling.java,v 1.10 2007/04/26 23:25:29 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -102,7 +103,7 @@ public class TestTiling extends TestCase {
         final int n = Iterators.size(cov.orbitReps(IndexList.except(cov, 2)));
         assertEquals(n, faces.size());
         for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-            final List f = (List) iter.next();
+            final List f = (List) ((Pair) iter.next()).getFirst();
             Vector sum = Vector.zero(d);
             for (final Iterator edges = f.iterator(); edges.hasNext();) {
                 final IEdge e = (IEdge) edges.next();
@@ -110,6 +111,16 @@ public class TestTiling extends TestCase {
             }
             assertEquals(Vector.zero(d), sum);
         }
+    }
+    
+    public void testBodies() {
+        testBodies(t1);
+        testBodies(t2);
+        testBodies(t3);
+    }
+    
+    public void testBodies(final Tiling til) {
+        System.out.println(til.getBodies());
     }
     
     public void testSpaceGroup() {

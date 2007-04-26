@@ -33,6 +33,7 @@ import java.util.Map;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -42,6 +43,7 @@ import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
@@ -60,7 +62,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.20 2007/04/26 22:39:09 odf Exp $
+ * @version $Id: Tiling.java,v 1.21 2007/04/26 23:25:28 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -71,6 +73,8 @@ public class Tiling {
     final protected static Object SKELETON = new Tag();
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
+    final protected static Object FACES = new Tag();
+    final protected static Object BODIES = new Tag();
     
     // --- cache for this instance
     final protected Cache cache = new Cache();
@@ -538,28 +542,82 @@ public class Tiling {
      * @return the list of 2-dimensional constituents for this tiling.
      */
     public List getFaces() {
-        final DelaneySymbol cover = getCover();
-        final Skeleton skel = getSkeleton();
-        final List idcs = IndexList.except(cover, 2);
-        final List idcsHE = IndexList.except(cover, 0, 1);
-        final List faces = new ArrayList();
-        for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-            final Object D = reps.next();
-            final List f = new LinkedList();
-            Object E = D;
-            do {
-                final IEdge e = skel.edgeForChamber(E);
-                final List orb = Iterators.asList(cover.orbit(idcsHE, E));
-                if (orb.contains(skel.chamberAtEdge(e))) {
-                    f.add(e);
-                } else {
-                    f.add(e.reverse());
-                }
-                E = cover.op(1, cover.op(0, E));
-            } while (!E.equals(D));
-            faces.add(f);
+        try {
+            return (List) this.cache.get(FACES);
+        } catch (Cache.NotFoundException ex) {
+            final DelaneySymbol cover = getCover();
+            final Skeleton skel = getSkeleton();
+            final List idcs = IndexList.except(cover, 2);
+            final List idcsHE = IndexList.except(cover, 0, 1);
+            final List faces = new ArrayList();
+            for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
+                final Object D = reps.next();
+                final List f = new LinkedList();
+                Object E = D;
+                do {
+                    final IEdge e = skel.edgeForChamber(E);
+                    final List orb = Iterators.asList(cover.orbit(idcsHE, E));
+                    if (orb.contains(skel.chamberAtEdge(e))) {
+                        f.add(e);
+                    } else {
+                        f.add(e.reverse());
+                    }
+                    E = cover.op(1, cover.op(0, E));
+                } while (!E.equals(D));
+                faces.add(new Pair(f, D));
+            }
+            return (List) this.cache.put(FACES, faces);
         }
-        return faces;
+    }
+    
+    /**
+     * @return the list of 3-dimensional constituents for this tiling.
+     */
+    public List getBodies() {
+        try {
+            return (List) this.cache.get(BODIES);
+        } catch (Cache.NotFoundException ex) {
+        }
+        
+        final DelaneySymbol cover = getCover();
+        
+        // --- map each chamber to the face it belongs to
+        final Map ch2f = new HashMap();
+        final Map f2ch = new HashMap();
+        final List idcsF = IndexList.except(cover, 2);
+        for (final Iterator iter = getFaces().iterator(); iter.hasNext();) {
+            final Pair item = (Pair) iter.next();
+            final List f = (List) item.getFirst();
+            final Object D = item.getSecond();
+            f2ch.put(f, D);
+            for (final Iterator orb = cover.orbit(idcsF, D); orb.hasNext();) {
+                ch2f.put(orb.next(), f);
+            }
+        }
+
+        // --- construct the list of bodies
+        final List idcs = IndexList.except(cover, 3);
+        final List idcsHF = IndexList.except(cover, 2, 3);
+        final List bodies = new ArrayList();
+        for (final Iterator breps = cover.orbitReps(idcs); breps.hasNext();) {
+            final Object D = breps.next();
+            final List body = new ArrayList();
+            
+            // --- find all faces for this body
+            final DelaneySymbol sub = new Subsymbol(cover, idcs, D);
+            for (Iterator freps = sub.orbitReps(idcsHF); freps.hasNext();) {
+                final Object E = freps.next();
+                final List f = (List) ch2f.get(E);
+                final Object Ef = f2ch.get(f);
+                final Vector shift = (Vector) cornerShift(2, E).minus(
+                        cornerShift(2, Ef));
+                body.add(new Pair(f, shift));
+            }
+            bodies.add(body);
+        }
+        
+        // --- cache and return
+        return (List) this.cache.put(BODIES, bodies);
     }
     
 	/**
