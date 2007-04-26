@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.6 2007/04/24 21:36:37 odf Exp $
+ * @version $Id: TestTiling.java,v 1.7 2007/04/26 20:51:15 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -39,14 +39,12 @@ public class TestTiling extends TestCase {
 	final private PeriodicGraph gr2 = PeriodicGraph.fromInvariantString("3"
 			+ "   1 2 0 0 0   1 2 1 0 0   1 2 0 1 0   1 2 0 0 1");
 	final private PeriodicGraph gr3 = PeriodicGraph.fromInvariantString("2"
-			+ "   1 2 0 0   2 1 1 0   1 3 0 0   3 1 0 1"
-			+ "   1 4 0 0   4 1 1 0   4 1 0 1   4 1 1 1"
-			+ "   2 4 0 0   4 2 0 1   3 4 0 0   4 3 1 0");
+			+ "   1 1 1 0   1 1 0 1");
     
     public void testSkeleton() {
         final PeriodicGraph sk1 = t1.getSkeleton();
         final PeriodicGraph sk2 = t2.getSkeleton();
-        final PeriodicGraph sk3 = t3.getBarycentricSkeleton();
+        final PeriodicGraph sk3 = t3.getSkeleton();
         assertEquals(gr1, sk1);
         assertEquals(gr2, sk2);
         assertEquals(gr3, sk3);

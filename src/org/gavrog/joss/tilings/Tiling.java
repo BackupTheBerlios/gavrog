@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.17 2007/04/26 20:21:59 odf Exp $
+ * @version $Id: Tiling.java,v 1.18 2007/04/26 20:51:15 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -68,7 +68,6 @@ public class Tiling {
     final protected static Object EDGE_TRANSLATIONS = new Tag();
     final protected static Object CORNER_SHIFTS = new Tag();
     final protected static Object SKELETON = new Tag();
-    final protected static Object BARYCENTRIC_SKELETON = new Tag();
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
     
@@ -251,8 +250,10 @@ public class Tiling {
      * Class to represent a skeleton graph for this tiling.
      */
     public class Skeleton extends PeriodicGraph {
-        final private Map node2corner = new HashMap();
-        final private Map corner2node = new HashMap();
+        final private Map node2chamber = new HashMap();
+        final private Map chamber2node = new HashMap();
+        final private Map edge2chamber = new HashMap();
+        final private Map chamber2edge = new HashMap();
         
         /**
          * Constructs an instance.
@@ -264,17 +265,16 @@ public class Tiling {
         
         /**
          * Creates a new node associated to a chamber corner.
-         * @param i the index of the corner.
          * @param D the chamber the corner belongs to.
          * @return the newly created node.
          */
-        private INode newNode(final int i, final Object D) {
+        private INode newNode(final Object D) {
             final DelaneySymbol cover = getCover();
             final INode v = super.newNode();
-            this.node2corner.put(v, new DSPair(i, D));
-            final List idcs = IndexList.except(cover, i);
+            this.node2chamber.put(v, D);
+            final List idcs = IndexList.except(cover, 0);
             for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                this.corner2node.put(new DSPair(i, orb.next()), v);
+                this.chamber2node.put(orb.next(), v);
             }
             return v;
         }
@@ -289,26 +289,50 @@ public class Tiling {
          */
         private IEdge newEdge(final INode v, final INode w, final Vector s,
                 final Object D) {
-            return super.newEdge(v, w, s);
+            final DelaneySymbol cover = getCover();
+            final IEdge e = super.newEdge(v, w, s);
+            this.edge2chamber.put(e, D);
+            final List idcs = IndexList.except(cover, 1);
+            for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
+                this.chamber2edge.put(orb.next(), v);
+            }
+            return e;
         }
         
         /**
-         * Retrieves the chamber corner a node belongs to.
+         * Retrieves the chamber a node belongs to.
          * @param v the node.
-         * @return a DSPair describing the corner associated to node v.
+         * @return a chamber associated to node v.
          */
-        public DSPair cornerAtNode(final INode v) {
-            return (DSPair) this.node2corner.get(v);
+        public Object chamberAtNode(final INode v) {
+            return this.node2chamber.get(v);
         }
         
         /**
-         * Retrieves the node associated to a chamber corner.
-         * @param i the index for the corner.
-         * @param D the chamber to which the corner belongs.
-         * @return the node associated to the corner.
+         * Retrieves the node associated to a chamber.
+         * @param D the chamber.
+         * @return the node associated to the chamber D.
          */
-        public INode nodeForCorner(final int i, final Object D) {
-            return (INode) this.corner2node.get(new DSPair(i, D));
+        public INode nodeForChamber(final Object D) {
+            return (INode) this.chamber2node.get(D);
+        }
+        
+        /**
+         * Retrieves a chamber an edge touches.
+         * @param e the edge.
+         * @return a chamber associated to edge e.
+         */
+        public Object chamberAtEdge(final IEdge e) {
+            return this.edge2chamber.get(e);
+        }
+        
+        /**
+         * Retrieves the edge associated to a chamber.
+         * @param D the chamber.
+         * @return the edge associated to the chamber D.
+         */
+        public IEdge edgeForChamber(final Object D) {
+            return (IEdge) this.chamber2edge.get(D);
         }
         
         // --- we override the following to make skeleta immutable from outside
@@ -351,19 +375,17 @@ public class Tiling {
 
             // --- create nodes of the graph and map Delaney chambers to nodes
             idcs = IndexList.except(dsym, 0);
-            for (final Iterator iter = dsym.orbitReps(idcs); iter
-                    .hasNext();) {
-                G.newNode(0, iter.next());
+            for (final Iterator iter = dsym.orbitReps(idcs); iter.hasNext();) {
+                G.newNode(iter.next());
             }
 
             // --- create the edges
             idcs = IndexList.except(dsym, 1);
-            for (final Iterator iter = dsym.orbitReps(idcs); iter
-                    .hasNext();) {
+            for (final Iterator iter = dsym.orbitReps(idcs); iter.hasNext();) {
                 final Object D = iter.next();
                 final Object E = dsym.op(0, D);
-                final INode v = G.nodeForCorner(0, D);
-                final INode w = G.nodeForCorner(0, E);
+                final INode v = G.nodeForChamber(D);
+                final INode w = G.nodeForChamber(E);
                 final Vector t = edgeTranslation(0, D);
                 final Vector sD = cornerShift(0, D);
                 final Vector sE = cornerShift(0, E);
@@ -374,47 +396,6 @@ public class Tiling {
             return (Skeleton) this.cache.put(SKELETON, G);
         }
     }
-
-	/**
-	 * @return the skeleton graph of the barycentric subdivision.
-	 */
-	public Skeleton getBarycentricSkeleton() {
-        try {
-            return (Skeleton) this.cache.get(BARYCENTRIC_SKELETON);
-        } catch (Cache.NotFoundException ex) {
-            final DelaneySymbol dsym = getCover();
-            final int dim = dsym.dim();
-            final Skeleton G = new Skeleton();
-
-            // --- create nodes and maps to chamber corners to nodes
-            for (int i = 0; i <= dim; ++i) {
-                final List idcs = IndexList.except(dsym, i);
-                for (Iterator iter = dsym.orbitReps(idcs); iter
-                        .hasNext();) {
-                    G.newNode(i, iter.next());
-                }
-            }
-
-            // --- create the edges
-            for (int i = 0; i < dim; ++i) {
-                for (int j = i + 1; j <= dim; ++j) {
-                    final List idcs = IndexList.except(dsym, i, j);
-                    for (Iterator iter = dsym.orbitReps(idcs); iter
-                            .hasNext();) {
-                        final Object D = iter.next();
-                        final INode v = G.nodeForCorner(i, D);
-                        final INode w = G.nodeForCorner(j, D);
-                        final Vector si = cornerShift(i, D);
-                        final Vector sj = cornerShift(j, D);
-                        final Vector s = (Vector) sj.minus(si);
-                        G.newEdge(v, w, s, D);
-                    }
-                }
-            }
-
-            return (Skeleton) this.cache.put(BARYCENTRIC_SKELETON, G);
-        }
-	}
 
     /**
      * Computes positions for chamber corners by first placing corners for
@@ -447,7 +428,7 @@ public class Tiling {
 
         for (final Iterator elms = cover.elements(); elms.hasNext();) {
             final Object D = elms.next();
-            final Point p = (Point) nodePositions.get(skel.nodeForCorner(0, D));
+            final Point p = (Point) nodePositions.get(skel.nodeForChamber(D));
             final Vector t = cornerShift(0, D);
             result.put(new DSPair(0, D), p.plus(t));
         }
@@ -455,8 +436,7 @@ public class Tiling {
         List idcs = new LinkedList();
         for (int i = 1; i <= dim; ++i) {
             idcs.add(new Integer(i-1));
-            for (final Iterator reps = cover.orbitReps(idcs); reps
-                    .hasNext();) {
+            for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
                 final Object D = reps.next();
                 Matrix s = Point.origin(dim).getCoordinates();
                 int n = 0;
@@ -520,13 +500,13 @@ public class Tiling {
             final List ops = new ArrayList();
             final Object E = cover.image(D0);
             final Skeleton skel = getSkeleton();
-            final INode v = skel.nodeForCorner(0, D0);
+            final INode v = skel.nodeForChamber(D0);
             final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
             for (final Iterator elms = cover.elements(); elms.hasNext();) {
                 final Object D = elms.next();
                 if (cover.image(D).equals(E)) {
                     final Matrix A = (Matrix) Minv.times(spanningMatrix(D));
-                    final INode w = skel.nodeForCorner(0, D);
+                    final INode w = skel.nodeForChamber(D);
                     ops.add(new Morphism(v, w, A).getAffineOperator());
                 }
             }
@@ -555,11 +535,16 @@ public class Tiling {
     
     public List getFaces() {
         final DelaneySymbol cover = getCover();
-        final int d = cover.dim();
         final List idcs = IndexList.except(cover, 2);
         final List faces = new ArrayList();
         for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-            
+            final Object D0 = reps.next();
+            final List f = new LinkedList();
+            final Object E = D0;
+            while (true) {
+                final Object E1 = cover.op(1, E);
+                
+            }
         }
         return faces;
     }
