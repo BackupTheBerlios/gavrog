@@ -28,7 +28,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.7 2007/04/26 20:51:15 odf Exp $
+ * @version $Id: TestTiling.java,v 1.8 2007/04/26 21:12:45 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -91,5 +91,9 @@ public class TestTiling extends TestCase {
     
     public void testSpaceGroup(final Tiling til, final String name) {
         assertEquals(name, til.getSpaceGroup().getName());
+    }
+    
+    public void testFaces() {
+        System.out.println(t3.getFaces());
     }
 }

@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.18 2007/04/26 20:51:15 odf Exp $
+ * @version $Id: Tiling.java,v 1.19 2007/04/26 21:12:45 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -294,7 +294,7 @@ public class Tiling {
             this.edge2chamber.put(e, D);
             final List idcs = IndexList.except(cover, 1);
             for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                this.chamber2edge.put(orb.next(), v);
+                this.chamber2edge.put(orb.next(), e);
             }
             return e;
         }
@@ -533,18 +533,28 @@ public class Tiling {
         return Vector.toMatrix(dif);
     }
     
+    /**
+     * @return the list of 2-dimensional constituents for this tiling.
+     */
     public List getFaces() {
         final DelaneySymbol cover = getCover();
+        final Skeleton skel = getSkeleton();
         final List idcs = IndexList.except(cover, 2);
         final List faces = new ArrayList();
         for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-            final Object D0 = reps.next();
+            final Object D = reps.next();
             final List f = new LinkedList();
-            final Object E = D0;
-            while (true) {
-                final Object E1 = cover.op(1, E);
-                
-            }
+            Object E = D;
+            do {
+                final IEdge e = skel.edgeForChamber(E);
+                if (skel.chamberAtEdge(e).equals(E)) {
+                    f.add(e);
+                } else {
+                    f.add(e.reverse());
+                }
+                E = cover.op(1, cover.op(0, E));
+            } while (!E.equals(D));
+            faces.add(f);
         }
         return faces;
     }
