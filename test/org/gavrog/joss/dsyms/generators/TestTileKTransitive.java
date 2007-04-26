@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTileKTransitive.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
+ * @version $Id: TestTileKTransitive.java,v 1.2 2007/04/26 20:21:59 odf Exp $
  */
 public class TestTileKTransitive extends TestCase {
     public void testTetra2() {
@@ -45,7 +45,7 @@ public class TestTileKTransitive extends TestCase {
             final DSymbol out = (DSymbol) iter.next();
             assertTrue(out.isConnected());
             int countTiles = 0;
-            for (final Iterator reps = out.orbitRepresentatives(idcs); reps.hasNext();) {
+            for (final Iterator reps = out.orbitReps(idcs); reps.hasNext();) {
                 ++countTiles;
                 assertEquals(minimal, new Subsymbol(out, idcs, reps.next()).minimal());
             }

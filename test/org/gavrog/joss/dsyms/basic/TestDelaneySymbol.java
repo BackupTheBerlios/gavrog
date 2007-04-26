@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 /**
  * Test methods implemented in AbstractDelaneySymbol.
  * @author Olaf Delgado
- * @version $Id: TestDelaneySymbol.java,v 1.1 2007/04/23 22:10:43 odf Exp $
+ * @version $Id: TestDelaneySymbol.java,v 1.2 2007/04/26 20:21:58 odf Exp $
  */
 public class TestDelaneySymbol extends TestCase {
 	private String code;
@@ -125,7 +125,7 @@ public class TestDelaneySymbol extends TestCase {
 	}
 
 	public void testOrbitRepresentatives() {
-		Iterator iter = ds1.orbitRepresentatives(new IndexList(0, 1));
+		Iterator iter = ds1.orbitReps(new IndexList(0, 1));
 		HashSet reps = new HashSet();
 		while (iter.hasNext()) {
 			Object x = iter.next();

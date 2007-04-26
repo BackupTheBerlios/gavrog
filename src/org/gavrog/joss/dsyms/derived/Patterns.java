@@ -29,7 +29,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * Contains static method to recognize tilings or certain patterns in a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Patterns.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Patterns.java,v 1.2 2007/04/26 20:21:58 odf Exp $
  */
 public class Patterns {
     
@@ -62,7 +62,7 @@ public class Patterns {
         }
         final List iFace = new IndexList(0, 1, 3);
         final List iTile = new IndexList(0, 1, 2);
-        for (final Iterator reps = ds.orbitRepresentatives(iFace); reps.hasNext();) {
+        for (final Iterator reps = ds.orbitReps(iFace); reps.hasNext();) {
             final Object D = reps.next();
             final Object E = ds.op(3, D);
             if (ds.m(0, 1, ds.op(2, D)) == 4 && ds.m(0, 1, ds.op(2, E)) == 4) {
@@ -89,7 +89,7 @@ public class Patterns {
         }
         final List iHalfFace = new IndexList(0, 1);
         final List iTile = new IndexList(0, 1, 2);
-        for (final Iterator reps = ds.orbitRepresentatives(iHalfFace); reps.hasNext();) {
+        for (final Iterator reps = ds.orbitReps(iHalfFace); reps.hasNext();) {
             final Object D = reps.next();
             if (ds.m(0, 1, ds.op(2, D)) != 4) {
                 continue;

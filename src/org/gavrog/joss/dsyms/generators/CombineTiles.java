@@ -46,7 +46,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.7 2007/04/23 20:57:06 odf Exp $
+ * @version $Id: CombineTiles.java,v 1.8 2007/04/26 20:21:58 odf Exp $
  */
 public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
@@ -119,7 +119,7 @@ public class CombineTiles extends IteratorAdapter {
             throw new UnsupportedOperationException("symbol must be complete");
         }
         final List idcs = new IndexList(ds);
-        for (final Iterator orbs = ds.orbitRepresentatives(idcs); orbs
+        for (final Iterator orbs = ds.orbitReps(idcs); orbs
                 .hasNext();) {
             final DelaneySymbol sub = new Subsymbol(ds, idcs, orbs.next());
             if (this.dim == 3 && !sub.isSpherical2D()) {
@@ -474,7 +474,7 @@ public class CombineTiles extends IteratorAdapter {
             idcs.add(new Integer(i));
         }
 
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+        for (final Iterator reps = ds.orbitReps(idcs); reps
                 .hasNext();) {
             final Object D = reps.next();
             final DelaneySymbol face = new Subsymbol(ds, idcs, D);
@@ -510,7 +510,7 @@ public class CombineTiles extends IteratorAdapter {
     public static Map componentMultiplicities(final DelaneySymbol ds) {
         final Map type2number = new HashMap();
         final List idcs = new IndexList(ds);
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+        for (final Iterator reps = ds.orbitReps(idcs); reps
                 .hasNext();) {
             final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next())
                     .canonical();

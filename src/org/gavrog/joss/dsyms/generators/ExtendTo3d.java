@@ -48,7 +48,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: ExtendTo3d.java,v 1.9 2007/04/23 20:57:06 odf Exp $
+ * @version $Id: ExtendTo3d.java,v 1.10 2007/04/26 20:21:58 odf Exp $
  */
 public class ExtendTo3d extends IteratorAdapter {
     // TODO test symbols (unfinished and finished) for being locally euclidean
@@ -116,7 +116,7 @@ public class ExtendTo3d extends IteratorAdapter {
             throw new UnsupportedOperationException("symbol must be finite");
         }
         final List idcs = new IndexList(ds);
-        for (final Iterator orbs = ds.orbitRepresentatives(idcs); orbs
+        for (final Iterator orbs = ds.orbitReps(idcs); orbs
                 .hasNext();) {
             final DelaneySymbol sub = new Subsymbol(ds, idcs, orbs.next());
             if (!sub.isSpherical2D()) {
@@ -556,7 +556,7 @@ public class ExtendTo3d extends IteratorAdapter {
     public static Map componentMultiplicities(final DelaneySymbol ds) {
         final Map type2number = new HashMap();
         final List idcs = new IndexList(ds);
-        for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+        for (final Iterator reps = ds.orbitReps(idcs); reps
                 .hasNext();) {
             final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next())
                     .canonical();

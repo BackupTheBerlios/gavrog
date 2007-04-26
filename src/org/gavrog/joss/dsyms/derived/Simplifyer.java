@@ -45,7 +45,7 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * groups.
  * 
  * @author Olaf Delgado
- * @version $Id: Simplifyer.java,v 1.3 2007/04/18 04:17:48 odf Exp $
+ * @version $Id: Simplifyer.java,v 1.4 2007/04/26 20:21:58 odf Exp $
  */
 public class Simplifyer {
     private static final int LOGGING_LEVEL = 0;
@@ -94,7 +94,7 @@ public class Simplifyer {
         for (int i = 0; i < symbol.dim() - 1; ++i) {
             for (int j = i + 2; j <= symbol.dim(); ++j) {
                 final IndexList idcs = new IndexList(i, j);
-                final Iterator reps = symbol.orbitRepresentatives(idcs);
+                final Iterator reps = symbol.orbitReps(idcs);
                 while (reps.hasNext()) {
                     final Object D = reps.next();
                     final Object E1 = symbol.op(j, symbol.op(i, D));
@@ -109,7 +109,7 @@ public class Simplifyer {
         }
         for (int i = 0; i < symbol.dim(); ++i) {
             final IndexList idcs = new IndexList(i, i + 1);
-            final Iterator reps = symbol.orbitRepresentatives(idcs);
+            final Iterator reps = symbol.orbitReps(idcs);
             while (reps.hasNext()) {
                 if (symbol.v(i, i + 1, reps.next()) != 1) {
                     final String s = "symbol must be trivially branched";
@@ -182,7 +182,7 @@ public class Simplifyer {
             // --- remove edges of degree 2
             disposable.clear();
             idcs = new IndexList(2, 3);
-            for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+            for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
                 final Object D = reps.next();
                 if (ds.r(2, 3, D) == 2) {
                     disposable.add(D);
@@ -227,7 +227,7 @@ public class Simplifyer {
             // --- remove faces of degree 2
             disposable.clear();
             idcs = new IndexList(0, 1);
-            for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+            for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
                 final Object D = reps.next();
                 if (ds.r(0, 1, D) == 2) {
                     disposable.add(D);
@@ -247,7 +247,7 @@ public class Simplifyer {
             // --- remove vertex of local (i.e., 2d) degree 1
             if (!modified) {
                 final Iterator reps =
-                    ds.orbitRepresentatives(new IndexList(1, 2));
+                    ds.orbitReps(new IndexList(1, 2));
                 while (reps.hasNext()) {
                     final Object C = reps.next();
                     if (ds.m(1, 2, C) == 1) {
@@ -284,7 +284,7 @@ public class Simplifyer {
             // --- remove vertex of local (i.e., 2d) degree 2
             if (!modified) {
                 idcs = new IndexList(1, 2);
-                for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+                for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
                     final Object D = reps.next();
                     if (ds.r(1, 2, D) == 2) {
                         Object E = ds.op(3, ds.op(2, D));
@@ -324,7 +324,7 @@ public class Simplifyer {
                 final Map vert2rep = new HashMap();
                 
                 final IndexList idcsFace = new IndexList(0, 1);
-                final Iterator faceReps = ds.orbitRepresentatives(idcsFace);
+                final Iterator faceReps = ds.orbitReps(idcsFace);
                 while (faceReps.hasNext()) {
                     final Object D = faceReps.next();
                     final Iterator orb = ds.orbit(idcsFace, D);
@@ -334,7 +334,7 @@ public class Simplifyer {
                 }
                 
                 final IndexList idcsVert = new IndexList(1, 2);
-                final Iterator vertReps = ds.orbitRepresentatives(idcsVert);
+                final Iterator vertReps = ds.orbitReps(idcsVert);
                 while (vertReps.hasNext()) {
                     final Object D = vertReps.next();
                     final Iterator orb = ds.orbit(idcsVert, D);
@@ -443,7 +443,7 @@ public class Simplifyer {
         if (LOGGING_LEVEL >= 2) {
             int kfComplexity = 0;
             final Iterator reps = 
-                ds.orbitRepresentatives(new IndexList(0, 1, 3));
+                ds.orbitReps(new IndexList(0, 1, 3));
             while (reps.hasNext()) {
                 kfComplexity += ds.r(0, 1, reps.next()) - 2;
             }
@@ -473,7 +473,7 @@ public class Simplifyer {
      * @return the number of (i,j,k)-orbits.
      */
     private int countOrbits(final int i, final int j, final int k) {
-        return Iterators.size(ds.orbitRepresentatives(new IndexList(i, j, k)));
+        return Iterators.size(ds.orbitReps(new IndexList(i, j, k)));
     }
 
     /**
@@ -481,7 +481,7 @@ public class Simplifyer {
      * @return the number of connected components of the current symbol.
      */
     private int countComponents() {
-        return Iterators.size(ds.orbitRepresentatives(new IndexList(ds)));
+        return Iterators.size(ds.orbitReps(new IndexList(ds)));
     }
     
     /**
@@ -493,7 +493,7 @@ public class Simplifyer {
      * @return true if a 2-element orbit exists.
      */
     private boolean hasSize2Orbit(final int i, final int j) {
-        final Iterator reps = ds.orbitRepresentatives(new IndexList(i, j));
+        final Iterator reps = ds.orbitReps(new IndexList(i, j));
         while (reps.hasNext()) {
             final Object D = reps.next();
             if (ds.op(i, D).equals(ds.op(j, D))) {
@@ -612,7 +612,7 @@ public class Simplifyer {
         
         // --- collect the faces of the symbol
         final Object faces[] = new Object[n];
-        final Iterator faceReps = ds.orbitRepresentatives(idcsFace);
+        final Iterator faceReps = ds.orbitReps(idcsFace);
         for (int i = 0; i < n; ++i) {
             final Object D = faceReps.next();
             final Set f = new HashSet();

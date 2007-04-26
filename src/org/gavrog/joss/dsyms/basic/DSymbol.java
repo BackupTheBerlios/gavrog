@@ -25,7 +25,7 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.6 2007/04/22 06:31:43 odf Exp $
+ * @version $Id: DSymbol.java,v 1.7 2007/04/26 20:21:57 odf Exp $
  */
 public class DSymbol extends DelaneySymbol implements Cloneable {
     
@@ -126,7 +126,7 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
         if (buf.length() == 0) {
             for (int i = 0; i <= dim; ++i) {
                 for (int j = i + 2; j <= dim; ++j) {
-                    Iterator reps = orbitRepresentatives(new IndexList(i, j));
+                    Iterator reps = orbitReps(new IndexList(i, j));
                     while (reps.hasNext()) {
                         int D = ((Integer) reps.next()).intValue();
                         int E1 = op[j][op[i][D]];
@@ -307,7 +307,7 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
             final int j = num2idx[m+1];
             final IndexList idcs = new IndexList(i, j);
             for (Iterator iter = source
-                    .orbitRepresentatives(idcs); iter.hasNext();) {
+                    .orbitReps(idcs); iter.hasNext();) {
                 final Object D = iter.next();
                 if (source.definesV(i, j, D)) {
                     final int vD = source.v(i, j, D);

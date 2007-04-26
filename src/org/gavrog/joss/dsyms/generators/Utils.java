@@ -31,7 +31,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
  * A collection of utility methods to be used by the generator classes in this package.
  * 
  * @author Olaf Delgado
- * @version $Id: Utils.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * @version $Id: Utils.java,v 1.2 2007/04/26 20:21:58 odf Exp $
  */
 public class Utils {
     /**
@@ -57,7 +57,7 @@ public class Utils {
         for (int i = 0; i < 2; ++i) {
             for (int j = i+1; j <= 2; ++j) {
                 final List idcs = new IndexList(i, j);
-                for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+                for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
                     final Object D = reps.next();
                     if (ds.definesV(i, j, D)) {
                         final int v = ds.v(i, j, D);
@@ -103,7 +103,7 @@ public class Utils {
         for (int k = 0; k <= ds.dim(); ++k) {
             final List idcs = new IndexList(ds);
             idcs.remove(k);
-            for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+            for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
                 final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next());
                 if (!mayBecomeSpherical2D(sub)) {
                     return false;

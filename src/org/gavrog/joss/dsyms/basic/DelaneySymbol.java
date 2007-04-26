@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.6 2007/04/23 22:11:48 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.7 2007/04/26 20:21:56 odf Exp $
  */
 public abstract class DelaneySymbol implements Comparable {
 
@@ -336,7 +336,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#orbitRepresentatives(java.util.List)
      */
-    public Iterator orbitRepresentatives(List indices) {
+    public Iterator orbitReps(List indices) {
 		return new FilteredIterator(new Traversal(this, indices, elements())) {
 			public Object filter(Object x) {
 				DSPair e = (DSPair) x;
@@ -445,7 +445,7 @@ public abstract class DelaneySymbol implements Comparable {
     		throw new UnsupportedOperationException("symbol must be finite");
     	}
     	List idcs = new IndexList(this);
-        Iterator reps = this.orbitRepresentatives(idcs);
+        Iterator reps = this.orbitReps(idcs);
         while (reps.hasNext()) {
             if (!orbitIsOriented(idcs, reps.next())) {
                 return false;
@@ -471,7 +471,7 @@ public abstract class DelaneySymbol implements Comparable {
             throw new UnsupportedOperationException("symbol must be finite");
         }
         List idcs = new IndexList(this);
-        Iterator reps = this.orbitRepresentatives(idcs);
+        Iterator reps = this.orbitReps(idcs);
         while (reps.hasNext()) {
             if (!orbitIsLoopless(idcs, reps.next())) {
                 return false;
@@ -498,7 +498,7 @@ public abstract class DelaneySymbol implements Comparable {
             throw new UnsupportedOperationException("symbol must be finite");
         }
         List idcs = new IndexList(this);
-        Iterator reps = this.orbitRepresentatives(idcs);
+        Iterator reps = this.orbitReps(idcs);
         while (reps.hasNext()) {
             if (!orbitIsWeaklyOriented(idcs, reps.next())) {
                 return false;
@@ -529,7 +529,7 @@ public abstract class DelaneySymbol implements Comparable {
             // --- For non-connected symbols, collect invariants for components and sort.
             final List invariants = new ArrayList();
             final IndexList idcs = new IndexList(this);
-            for (final Iterator iter = this.orbitRepresentatives(idcs); iter.hasNext();) {
+            for (final Iterator iter = this.orbitReps(idcs); iter.hasNext();) {
                 final DelaneySymbol sub = new Subsymbol(this, idcs, iter.next()).flat();
                 invariants.add(sub.invariant());
             }
@@ -836,7 +836,7 @@ public abstract class DelaneySymbol implements Comparable {
     	
     	for (int i = 0; i < dim(); ++i) {
     		List idcsI = new IndexList(i, i+1);
-    		Iterator reps = tmp.orbitRepresentatives(idcsI);
+    		Iterator reps = tmp.orbitReps(idcsI);
     		while (reps.hasNext()) {
     			Object D = reps.next();
         		Object E = new2old[((Integer) D).intValue()];
@@ -873,7 +873,7 @@ public abstract class DelaneySymbol implements Comparable {
     private Rational curvatureSummands(int i, int j) {
     	Rational result = new Fraction(0, 1);
 
-		Iterator reps = orbitRepresentatives(new IndexList(i, j));
+		Iterator reps = orbitReps(new IndexList(i, j));
 		while (reps.hasNext()) {
 			Object D = reps.next();
 			int s;
@@ -923,7 +923,7 @@ public abstract class DelaneySymbol implements Comparable {
             final List degrees = new ArrayList();
             for (int i = 0; i < 2; ++i) {
                 for (int j = i+1; j <= 2; ++j) {
-                    final Iterator reps = dso.orbitRepresentatives(new IndexList(i, j));
+                    final Iterator reps = dso.orbitReps(new IndexList(i, j));
                     while (reps.hasNext()) {
                         final Object D = reps.next();
                         final int v =dso.v(i, j, D);
@@ -970,7 +970,7 @@ public abstract class DelaneySymbol implements Comparable {
     	for (int k = 0; k <= dim(); ++k) {
         	List idcs = new IndexList(this);
     		idcs.remove(k);
-    		Iterator reps = orbitRepresentatives(idcs);
+    		Iterator reps = orbitReps(idcs);
     		while (reps.hasNext()) {
     			DelaneySymbol sub = new Subsymbol(this, idcs, reps.next());
     			if (! sub.isSpherical2D()) {

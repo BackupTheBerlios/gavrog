@@ -40,7 +40,7 @@ import org.gavrog.joss.dsyms.derived.Boundary.Face;
  * The fundamental group of a {@link org.gavrog.joss.dsyms.basic.DelaneySymbol}.
  * 
  * @author Olaf Delgado
- * @version $Id: FundamentalGroup.java,v 1.4 2007/04/18 20:19:08 odf Exp $
+ * @version $Id: FundamentalGroup.java,v 1.5 2007/04/26 20:21:58 odf Exp $
  */
 public class FundamentalGroup {
 
@@ -144,7 +144,7 @@ public class FundamentalGroup {
                     continue;
                 }
                 final List idx = new IndexList(i, j);
-                final Iterator reps = ds.orbitRepresentatives(idx);
+                final Iterator reps = ds.orbitReps(idx);
                 while (reps.hasNext()) {
                     final Object D = reps.next();
                     final Face f = new Face(i, D, j);

@@ -53,7 +53,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * produced. The order or naming of elements is not preserved.
  * 
  * @author Olaf Delgado
- * @version $Id: DefineBranching3d.java,v 1.3 2007/04/23 20:57:06 odf Exp $
+ * @version $Id: DefineBranching3d.java,v 1.4 2007/04/26 20:21:58 odf Exp $
  */
 public class DefineBranching3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -179,7 +179,7 @@ public class DefineBranching3d extends IteratorAdapter {
         for (int i = 0; i < this.dim; ++i) {
             final int j = i+1;
             final List idcs = new IndexList(i, j);
-            for (final Iterator reps = this.current.orbitRepresentatives(idcs); reps.hasNext();) {
+            for (final Iterator reps = this.current.orbitReps(idcs); reps.hasNext();) {
                 final Object D = reps.next();
                 if (this.current.definesV(i, j, D)) {
                     final boolean success = performMove(new Move(i, ((Integer) D)
@@ -629,7 +629,7 @@ public class DefineBranching3d extends IteratorAdapter {
             for (int jj = ii+1; jj <= 2; ++jj) {
                 final int j = ((Integer) allIndices.get(jj)).intValue();
                 final List idcs = new IndexList(i, j);
-                for (final Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+                for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
                     final Object D = reps.next();
                     final boolean twice = !oriented && ds.orbitIsOriented(idcs, D);
                     if (ds.definesV(i, j, D)) {

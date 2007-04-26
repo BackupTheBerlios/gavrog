@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.16 2007/04/26 00:59:32 odf Exp $
+ * @version $Id: Tiling.java,v 1.17 2007/04/26 20:21:59 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -251,8 +251,8 @@ public class Tiling {
      * Class to represent a skeleton graph for this tiling.
      */
     public class Skeleton extends PeriodicGraph {
-        final Map node2corner = new HashMap();
-        final Map corner2node = new HashMap();
+        final private Map node2corner = new HashMap();
+        final private Map corner2node = new HashMap();
         
         /**
          * Constructs an instance.
@@ -351,14 +351,14 @@ public class Tiling {
 
             // --- create nodes of the graph and map Delaney chambers to nodes
             idcs = IndexList.except(dsym, 0);
-            for (final Iterator iter = dsym.orbitRepresentatives(idcs); iter
+            for (final Iterator iter = dsym.orbitReps(idcs); iter
                     .hasNext();) {
                 G.newNode(0, iter.next());
             }
 
             // --- create the edges
             idcs = IndexList.except(dsym, 1);
-            for (final Iterator iter = dsym.orbitRepresentatives(idcs); iter
+            for (final Iterator iter = dsym.orbitReps(idcs); iter
                     .hasNext();) {
                 final Object D = iter.next();
                 final Object E = dsym.op(0, D);
@@ -389,7 +389,7 @@ public class Tiling {
             // --- create nodes and maps to chamber corners to nodes
             for (int i = 0; i <= dim; ++i) {
                 final List idcs = IndexList.except(dsym, i);
-                for (Iterator iter = dsym.orbitRepresentatives(idcs); iter
+                for (Iterator iter = dsym.orbitReps(idcs); iter
                         .hasNext();) {
                     G.newNode(i, iter.next());
                 }
@@ -399,7 +399,7 @@ public class Tiling {
             for (int i = 0; i < dim; ++i) {
                 for (int j = i + 1; j <= dim; ++j) {
                     final List idcs = IndexList.except(dsym, i, j);
-                    for (Iterator iter = dsym.orbitRepresentatives(idcs); iter
+                    for (Iterator iter = dsym.orbitReps(idcs); iter
                             .hasNext();) {
                         final Object D = iter.next();
                         final INode v = G.nodeForCorner(i, D);
@@ -455,7 +455,7 @@ public class Tiling {
         List idcs = new LinkedList();
         for (int i = 1; i <= dim; ++i) {
             idcs.add(new Integer(i-1));
-            for (final Iterator reps = cover.orbitRepresentatives(idcs); reps
+            for (final Iterator reps = cover.orbitReps(idcs); reps
                     .hasNext();) {
                 final Object D = reps.next();
                 Matrix s = Point.origin(dim).getCoordinates();
@@ -551,6 +551,17 @@ public class Tiling {
             dif[i] = (Vector) vertexBarycentricPosition(i + 1, D).minus(p);
         }
         return Vector.toMatrix(dif);
+    }
+    
+    public List getFaces() {
+        final DelaneySymbol cover = getCover();
+        final int d = cover.dim();
+        final List idcs = IndexList.except(cover, 2);
+        final List faces = new ArrayList();
+        for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
+            
+        }
+        return faces;
     }
     
 	/**

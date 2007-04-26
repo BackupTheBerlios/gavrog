@@ -42,7 +42,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * TODO this implementation is incorrect
  * 
  * @author Olaf Delgado
- * @version $Id: Patches.java,v 1.2 2006/09/28 00:54:37 odf Exp $
+ * @version $Id: Patches.java,v 1.3 2007/04/26 20:21:58 odf Exp $
  */
 public class Patches extends BranchAndCut {
 	static final private List idcs = new IndexList(0, 1);
@@ -97,7 +97,7 @@ public class Patches extends BranchAndCut {
         this.seen = new HashSet();
         
         this.seeds = new LinkedList();
-        for (final Iterator reps = this.ds.orbitRepresentatives(idcs); reps.hasNext();) {
+        for (final Iterator reps = this.ds.orbitReps(idcs); reps.hasNext();) {
         	this.seeds.add(reps.next());
         }
     }

@@ -44,7 +44,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.42 2006/12/30 15:24:45 odf Exp $
+ * @version $Id: FaceTransitive.java,v 1.43 2007/04/26 20:21:58 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private boolean TEST = false;
@@ -153,7 +153,7 @@ public class FaceTransitive extends IteratorAdapter {
             
             // --- collect (0,2)-orbits
             final List orbits = new ArrayList();
-            for (final Iterator reps = base.orbitRepresentatives(idcsEdge2d); reps
+            for (final Iterator reps = base.orbitReps(idcsEdge2d); reps
 					.hasNext();) {
 				final Object D = reps.next();
 				final List orbit = Iterators.asList(base.orbit(idcsEdge2d, D));
@@ -447,7 +447,7 @@ public class FaceTransitive extends IteratorAdapter {
                     final DSymbol ds = (DSymbol) this.augmented.next();
                     boolean okay = true;
                     for (final Iterator reps = ds
-                            .orbitRepresentatives(idcsFace2d); reps.hasNext();) {
+                            .orbitReps(idcsFace2d); reps.hasNext();) {
                         final Object D = reps.next();
                         final DSymbol face = new DSymbol(new Subsymbol(ds,
                                 idcsFace2d, D));
@@ -560,7 +560,7 @@ public class FaceTransitive extends IteratorAdapter {
             time4BaseDoubleFaced.start();
         	this.minVert = minVert;
         	boolean good = false;
-        	for (final Iterator reps = ds.orbitRepresentatives(idcsFace2d); reps
+        	for (final Iterator reps = ds.orbitReps(idcsFace2d); reps
 					.hasNext();) {
         		if (ds.m(0, 1, reps.next()) <= 5) {
         			good = true;
@@ -653,7 +653,7 @@ public class FaceTransitive extends IteratorAdapter {
 
 		public Glue(final DSymbol ds) {
 			this.ds = ds;
-			final Iterator reps = ds.orbitRepresentatives(idcsFace2d);
+			final Iterator reps = ds.orbitReps(idcsFace2d);
 			final Object firstRep = reps.next();
 			final Object targetRep = (reps.hasNext() ? reps.next() : firstRep);
 			if (ds.orbitIsLoopless(idcsFace2d, firstRep)) {
@@ -935,7 +935,7 @@ public class FaceTransitive extends IteratorAdapter {
 
     final static DSymbol baseTile(final DSymbol tile) {
         final DynamicDSymbol ds = new DynamicDSymbol(tile);
-        final List reps = Iterators.asList(ds.orbitRepresentatives(idcsVert2d));
+        final List reps = Iterators.asList(ds.orbitReps(idcsVert2d));
         for (final Iterator iter = reps.iterator(); iter.hasNext();) {
             final Object D = iter.next();
             if (ds.m(1, 2, D) == 2) {
@@ -1067,7 +1067,7 @@ public class FaceTransitive extends IteratorAdapter {
      */
     private static int minVert(final DSymbol tile) {
         int min = Integer.MAX_VALUE;
-        for (final Iterator iter = tile.orbitRepresentatives(idcsVert2d); iter
+        for (final Iterator iter = tile.orbitReps(idcsVert2d); iter
                 .hasNext();) {
             min = Math.min(min, tile.m(1, 2, iter.next()));
         }
@@ -1075,7 +1075,7 @@ public class FaceTransitive extends IteratorAdapter {
     }
     
 	private boolean hasTrivialVertices(final DSymbol ds) {
-        for (final Iterator reps = ds.orbitRepresentatives(idcsVert3d); reps
+        for (final Iterator reps = ds.orbitReps(idcsVert3d); reps
                 .hasNext();) {
             boolean bad = true;
             for (final Iterator elms = ds.orbit(idcsVert3d, reps.next()); elms

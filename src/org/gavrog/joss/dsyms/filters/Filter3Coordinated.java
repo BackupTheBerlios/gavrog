@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
  * avoid duplicates, unless a tiling is self-dual.
  * 
  * @author Olaf Delgado
- * @version $Id: Filter3Coordinated.java,v 1.1 2006/08/29 03:47:20 odf Exp $
+ * @version $Id: Filter3Coordinated.java,v 1.2 2007/04/26 20:21:58 odf Exp $
  */
 public class Filter3Coordinated {
 
@@ -67,7 +67,7 @@ public class Filter3Coordinated {
      */
     private static boolean is3coordinated(final DSymbol ds) {
         final List idcs = new IndexList(1, 2, 3);
-        for (Iterator reps = ds.orbitRepresentatives(idcs); reps.hasNext();) {
+        for (Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
             final Object D = reps.next();
             final DSymbol sub = new DSymbol(new Subsymbol(ds, idcs, D));
             final DSymbol cov = new DSymbol(Covers.finiteUniversalCover(sub));

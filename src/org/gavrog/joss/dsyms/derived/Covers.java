@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.11 2007/04/23 22:45:56 odf Exp $
+ * @version $Id: Covers.java,v 1.12 2007/04/26 20:21:58 odf Exp $
  */
 public class Covers {
     /**
@@ -130,7 +130,7 @@ public class Covers {
 			final int i = ((Integer) idcs.get(k)).intValue();
 			for (int l = k + 1; l <= ds.dim(); ++l) {
 				final int j = ((Integer) idcs.get(l)).intValue();
-				final Iterator reps = ds.orbitRepresentatives(new IndexList(i, j));
+				final Iterator reps = ds.orbitReps(new IndexList(i, j));
 				while (reps.hasNext()) {
 					deg = Math.max(deg, ds.v(i, j, reps.next()));
 				}

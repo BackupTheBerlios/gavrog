@@ -27,7 +27,7 @@ import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSCover.java,v 1.3 2007/04/23 22:12:27 odf Exp $
+ * @version $Id: DSCover.java,v 1.4 2007/04/26 20:21:56 odf Exp $
  */
 public class DSCover extends DSymbol {
     final private DSMorphism coverMorphism;
@@ -148,7 +148,7 @@ public class DSCover extends DSymbol {
         // --- generate the v-values for the final symbol
         for (int i = 0; i < dim; ++i) {
             final List idcs = new IndexList(i, i + 1);
-            for (final Iterator reps = tmp.orbitRepresentatives(idcs); reps
+            for (final Iterator reps = tmp.orbitReps(idcs); reps
                     .hasNext();) {
                 final Integer D = (Integer) reps.next();
                 final Integer E = new Integer((D.intValue() - 1) % nOld + 1);

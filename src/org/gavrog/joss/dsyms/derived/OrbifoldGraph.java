@@ -37,7 +37,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.17 2006/11/18 23:33:21 odf Exp $
+ * @version $Id: OrbifoldGraph.java,v 1.18 2007/04/26 20:21:58 odf Exp $
  */
 public class OrbifoldGraph {
     final private String[] stabilizers;
@@ -83,7 +83,7 @@ public class OrbifoldGraph {
             for (int j = i+1; j <= d; ++j) {
                 final List ilj = new IndexList(j);
                 final List idcs = new IndexList(i, j);
-                for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+                for (final Iterator reps = ds.orbitReps(idcs); reps
                         .hasNext();) {
                     final Object D = reps.next();
                     
@@ -150,7 +150,7 @@ public class OrbifoldGraph {
         for (int i = 0; i <= 3; ++i) {
             final List idcs = new IndexList(ds);
             idcs.remove(new Integer(i));
-            for (final Iterator reps = ds.orbitRepresentatives(idcs); reps
+            for (final Iterator reps = ds.orbitReps(idcs); reps
                     .hasNext();) {
                 final List sub = Iterators.asList(ds.orbit(idcs, reps.next()));
                 final List cones = new ArrayList();
