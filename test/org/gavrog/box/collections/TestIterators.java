@@ -36,7 +36,7 @@ import junit.framework.TestCase;
  * Unit test for class Iterators.
  * 
  * @author Olaf Delgado
- * @version $Id: TestIterators.java,v 1.2 2007/04/18 22:42:39 odf Exp $
+ * @version $Id: TestIterators.java,v 1.3 2007/04/29 21:34:03 odf Exp $
  */
 public class TestIterators extends TestCase {
     private Object x;
@@ -206,6 +206,13 @@ public class TestIterators extends TestCase {
         Assert.assertTrue(Iterators.equal(range, Iterators.range(3, 7)));
         Assert.assertFalse(Iterators.equal(range, Iterators.range(4, 8)));
         Assert.assertFalse(Iterators.equal(range, Iterators.range(3, 8)));
+    }
+    
+    public void testContains() {
+    	assertTrue(Iterators.contains(range, new Integer(3)));
+    	assertTrue(Iterators.contains(range, new Integer(6)));
+    	assertFalse(Iterators.contains(range, new Integer(7)));
+    	assertFalse(Iterators.contains(range, "a"));
     }
     
     public void testWrite() {
