@@ -62,7 +62,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.22 2007/04/29 22:38:52 odf Exp $
+ * @version $Id: Tiling.java,v 1.23 2007/04/29 23:09:09 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -544,6 +544,7 @@ public class Tiling {
     public class Face {
     	final private List edges;
     	final private List nodeShifts;
+    	final private Object chamber;
     	
     	private Face(final Object D) {
     		final DelaneySymbol cover = getCover();
@@ -564,6 +565,7 @@ public class Tiling {
                 shift = (Vector) (shift.plus(skel.getShift(e)));
                 E = cover.op(1, cover.op(0, E));
             } while (!E.equals(D));
+            this.chamber = D;
     	}
 
     	public int size() {
@@ -583,7 +585,7 @@ public class Tiling {
 		}
 		
 		public Object getChamber() {
-			return getSkeleton().chamberAtEdge(edge(0));
+			return this.chamber;
 		}
     }
     
@@ -646,9 +648,6 @@ public class Tiling {
             for (Iterator freps = sub.orbitReps(idcsHF); freps.hasNext();) {
                 final Object E = freps.next();
                 final Face f = (Face) ch2f.get(E);
-                if (f == null) {
-                	System.out.println(E);
-                }
                 final Object Ef = f2ch.get(f);
                 final Vector shift = (Vector) cornerShift(2, E).minus(
                         cornerShift(2, Ef));

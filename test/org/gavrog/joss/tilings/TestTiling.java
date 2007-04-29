@@ -16,11 +16,14 @@
 
 package org.gavrog.joss.tilings;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
@@ -33,7 +36,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.11 2007/04/29 22:38:57 odf Exp $
+ * @version $Id: TestTiling.java,v 1.12 2007/04/29 23:09:10 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -98,8 +101,10 @@ public class TestTiling extends TestCase {
         final DelaneySymbol cov = til.getCover();
         final Skeleton skel = til.getSkeleton();
         final List faces = til.getFaces();
+        final List idcs = IndexList.except(cov, 2);
         final int d = cov.dim();
-        final int n = cov.numberOfOrbits(IndexList.except(cov, 2));
+        final int n = cov.numberOfOrbits(idcs);
+        final Set seen = new HashSet();
         assertEquals(n, faces.size());
         for (final Iterator iter = faces.iterator(); iter.hasNext();) {
             final Face f = (Face) iter.next();
@@ -111,7 +116,9 @@ public class TestTiling extends TestCase {
                 sum = (Vector) sum.plus(skel.getShift(e));
             }
             assertEquals(Vector.zero(d), sum);
+            seen.addAll(Iterators.asList(cov.orbit(idcs, f.getChamber())));
         }
+        assertEquals(cov.size(), seen.size());
     }
     
     public void testBodies() {
@@ -121,7 +128,7 @@ public class TestTiling extends TestCase {
     }
     
     public void testBodies(final Tiling til) {
-        System.out.println(til.getBodies());
+        System.out.println(til.getBodies().size());
     }
     
     public void testSpaceGroup() {
