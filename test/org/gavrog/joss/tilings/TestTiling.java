@@ -21,8 +21,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.gavrog.box.collections.Iterators;
-import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
@@ -30,11 +28,12 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.Tiling.Face;
 import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.10 2007/04/26 23:25:29 odf Exp $
+ * @version $Id: TestTiling.java,v 1.11 2007/04/29 22:38:57 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -100,13 +99,15 @@ public class TestTiling extends TestCase {
         final Skeleton skel = til.getSkeleton();
         final List faces = til.getFaces();
         final int d = cov.dim();
-        final int n = Iterators.size(cov.orbitReps(IndexList.except(cov, 2)));
+        final int n = cov.numberOfOrbits(IndexList.except(cov, 2));
         assertEquals(n, faces.size());
         for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-            final List f = (List) ((Pair) iter.next()).getFirst();
+            final Face f = (Face) iter.next();
             Vector sum = Vector.zero(d);
-            for (final Iterator edges = f.iterator(); edges.hasNext();) {
-                final IEdge e = (IEdge) edges.next();
+            for (int i = 0; i < f.size(); ++i) {
+                final IEdge e = f.edge(i);
+                assertEquals(sum, f.shift(i));
+                assertEquals(e.source(), f.node(i));
                 sum = (Vector) sum.plus(skel.getShift(e));
             }
             assertEquals(Vector.zero(d), sum);

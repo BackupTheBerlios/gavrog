@@ -62,7 +62,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.21 2007/04/26 23:25:28 odf Exp $
+ * @version $Id: Tiling.java,v 1.22 2007/04/29 22:38:52 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -539,34 +539,73 @@ public class Tiling {
     }
     
     /**
-     * @return the list of 2-dimensional constituents for this tiling.
+     * Represents a face (2-dimensional constituent) of this tiling.
      */
+    public class Face {
+    	final private List edges;
+    	final private List nodeShifts;
+    	
+    	private Face(final Object D) {
+    		final DelaneySymbol cover = getCover();
+    		final Skeleton skel = getSkeleton();
+            final List idcs = IndexList.except(cover, 0, 1);
+            this.edges = new LinkedList();
+            this.nodeShifts = new LinkedList();
+            Object E = D;
+            Vector shift = Vector.zero(cover.dim());
+            do {
+                IEdge e = skel.edgeForChamber(E);
+                final Object F = skel.chamberAtEdge(e);
+                if (Iterators.contains(cover.orbit(idcs, E), F)) {
+                	e = e.reverse();
+                }
+                this.edges.add(e);
+                this.nodeShifts.add(shift);
+                shift = (Vector) (shift.plus(skel.getShift(e)));
+                E = cover.op(1, cover.op(0, E));
+            } while (!E.equals(D));
+    	}
+
+    	public int size() {
+    		return this.edges.size();
+    	}
+    	
+		public IEdge edge(final int i) {
+			return (IEdge) this.edges.get(i);
+		}
+
+		public INode node(final int i) {
+			return edge(i).source();
+		}
+		
+		public Vector shift(final int i) {
+			return (Vector) this.nodeShifts.get(i);
+		}
+		
+		public Object getChamber() {
+			return getSkeleton().chamberAtEdge(edge(0));
+		}
+    }
+    
+    /**
+	 * Computes a list of representatives for the translational types of faces
+	 * (2-dimensional constituents) of this tiling. A translational type is
+	 * defined as the set of all translates of a single tile.
+	 * 
+	 * @return the list of 2-dimensional constituents for this tiling.
+	 */
     public List getFaces() {
         try {
             return (List) this.cache.get(FACES);
         } catch (Cache.NotFoundException ex) {
             final DelaneySymbol cover = getCover();
-            final Skeleton skel = getSkeleton();
             final List idcs = IndexList.except(cover, 2);
-            final List idcsHE = IndexList.except(cover, 0, 1);
             final List faces = new ArrayList();
             for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-                final Object D = reps.next();
-                final List f = new LinkedList();
-                Object E = D;
-                do {
-                    final IEdge e = skel.edgeForChamber(E);
-                    final List orb = Iterators.asList(cover.orbit(idcsHE, E));
-                    if (orb.contains(skel.chamberAtEdge(e))) {
-                        f.add(e);
-                    } else {
-                        f.add(e.reverse());
-                    }
-                    E = cover.op(1, cover.op(0, E));
-                } while (!E.equals(D));
-                faces.add(new Pair(f, D));
+                faces.add(new Face(reps.next()));
             }
-            return (List) this.cache.put(FACES, faces);
+            return (List) this.cache.put(FACES, Collections
+					.unmodifiableList(faces));
         }
     }
     
@@ -586,9 +625,8 @@ public class Tiling {
         final Map f2ch = new HashMap();
         final List idcsF = IndexList.except(cover, 2);
         for (final Iterator iter = getFaces().iterator(); iter.hasNext();) {
-            final Pair item = (Pair) iter.next();
-            final List f = (List) item.getFirst();
-            final Object D = item.getSecond();
+            final Face f = (Face) iter.next();
+            final Object D = f.getChamber();
             f2ch.put(f, D);
             for (final Iterator orb = cover.orbit(idcsF, D); orb.hasNext();) {
                 ch2f.put(orb.next(), f);
@@ -607,7 +645,10 @@ public class Tiling {
             final DelaneySymbol sub = new Subsymbol(cover, idcs, D);
             for (Iterator freps = sub.orbitReps(idcsHF); freps.hasNext();) {
                 final Object E = freps.next();
-                final List f = (List) ch2f.get(E);
+                final Face f = (Face) ch2f.get(E);
+                if (f == null) {
+                	System.out.println(E);
+                }
                 final Object Ef = f2ch.get(f);
                 final Vector shift = (Vector) cornerShift(2, E).minus(
                         cornerShift(2, Ef));
