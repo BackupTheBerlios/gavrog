@@ -31,12 +31,13 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.Tiling.Body;
 import org.gavrog.joss.tilings.Tiling.Face;
 import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.13 2007/04/30 02:27:45 odf Exp $
+ * @version $Id: TestTiling.java,v 1.14 2007/04/30 23:53:01 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -139,7 +140,17 @@ public class TestTiling extends TestCase {
     }
     
     public void testBodies(final Tiling til) {
-        System.out.println(til.getBodies().size());
+        final DelaneySymbol cov = til.getCover();
+        final List bodies = til.getBodies();
+        final List idcs = IndexList.except(cov, 3);
+        final int n = cov.numberOfOrbits(idcs);
+        final Set seen = new HashSet();
+        assertEquals(n, bodies.size());
+        for (final Iterator iter = bodies.iterator(); iter.hasNext();) {
+            final Body b = (Body) iter.next();
+            seen.addAll(Iterators.asList(cov.orbit(idcs, b.getChamber())));
+        }
+        assertEquals(cov.size(), seen.size());
     }
     
     public void testSpaceGroup() {
