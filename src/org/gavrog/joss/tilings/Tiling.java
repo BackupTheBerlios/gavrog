@@ -62,7 +62,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.23 2007/04/29 23:09:09 odf Exp $
+ * @version $Id: Tiling.java,v 1.24 2007/04/30 02:27:44 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -71,6 +71,7 @@ public class Tiling {
     final protected static Object EDGE_TRANSLATIONS = new Tag();
     final protected static Object CORNER_SHIFTS = new Tag();
     final protected static Object SKELETON = new Tag();
+    final protected static Object DUAL_SKELETON = new Tag();
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
     final protected static Object FACES = new Tag();
@@ -259,13 +260,25 @@ public class Tiling {
         final private Map chamber2node = new HashMap();
         final private Map edge2chamber = new HashMap();
         final private Map chamber2edge = new HashMap();
+        final private List nodeIdcs;
+        final private List edgeIdcs;
         
         /**
          * Constructs an instance.
+         * @param dual if true, constructs a dual skeleton.
          * @param dimension
          */
-        private Skeleton() {
+        private Skeleton(boolean dual) {
             super(getCover().dim());
+            final DelaneySymbol cover = getCover();
+            final int d = cover.dim();
+            if (dual) {
+            	nodeIdcs = IndexList.except(cover, d);
+            	edgeIdcs = IndexList.except(cover, d-1);
+            } else {
+            	nodeIdcs = IndexList.except(cover, 0);
+            	edgeIdcs = IndexList.except(cover, 1);
+            }
         }
         
         /**
@@ -277,8 +290,7 @@ public class Tiling {
             final DelaneySymbol cover = getCover();
             final INode v = super.newNode();
             this.node2chamber.put(v, D);
-            final List idcs = IndexList.except(cover, 0);
-            for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
+            for (final Iterator orb = cover.orbit(nodeIdcs, D); orb.hasNext();) {
                 this.chamber2node.put(orb.next(), v);
             }
             return v;
@@ -297,8 +309,7 @@ public class Tiling {
             final DelaneySymbol cover = getCover();
             final IEdge e = super.newEdge(v, w, s);
             this.edge2chamber.put(e, D);
-            final List idcs = IndexList.except(cover, 1);
-            for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
+            for (final Iterator orb = cover.orbit(edgeIdcs, D); orb.hasNext();) {
                 this.chamber2edge.put(orb.next(), e);
             }
             return e;
@@ -373,35 +384,59 @@ public class Tiling {
         try {
             return (Skeleton) this.cache.get(SKELETON);
         } catch (Cache.NotFoundException ex) {
-
-            final DelaneySymbol dsym = getCover();
-            final Skeleton G = new Skeleton();
-            List idcs;
-
-            // --- create nodes of the graph and map Delaney chambers to nodes
-            idcs = IndexList.except(dsym, 0);
-            for (final Iterator iter = dsym.orbitReps(idcs); iter.hasNext();) {
-                G.newNode(iter.next());
-            }
-
-            // --- create the edges
-            idcs = IndexList.except(dsym, 1);
-            for (final Iterator iter = dsym.orbitReps(idcs); iter.hasNext();) {
-                final Object D = iter.next();
-                final Object E = dsym.op(0, D);
-                final INode v = G.nodeForChamber(D);
-                final INode w = G.nodeForChamber(E);
-                final Vector t = edgeTranslation(0, D);
-                final Vector sD = cornerShift(0, D);
-                final Vector sE = cornerShift(0, E);
-                final Vector s = (Vector) t.plus(sE).minus(sD);
-                G.newEdge(v, w, s, D);
-            }
-
-            return (Skeleton) this.cache.put(SKELETON, G);
+            return (Skeleton) this.cache.put(SKELETON, makeSkeleton(false));
         }
     }
 
+	/**
+	 * @return the skeleton graph of the tiling.
+	 */
+	public Skeleton getDualSkeleton() {
+        try {
+            return (Skeleton) this.cache.get(DUAL_SKELETON);
+        } catch (Cache.NotFoundException ex) {
+            return (Skeleton) this.cache.put(DUAL_SKELETON, makeSkeleton(true));
+        }
+    }
+
+	/**
+	 * Constructs the skeleton or dual skeleton of the tiling modulo
+	 * translations.
+	 * 
+	 * @param dual if true, the dual skeleton is constructed.
+	 * @return the resulting skeleton graph.
+	 */
+	private Skeleton makeSkeleton(final boolean dual) {
+        final DelaneySymbol cover = getCover();
+        final Skeleton G = new Skeleton(dual);
+        final int d = cover.dim();
+        final int idx0 = dual ? d : 0;
+        final int idx1 = dual ? d-1 : 1;
+        List idcs;
+
+        // --- create nodes of the graph and map Delaney chambers to nodes
+        idcs = IndexList.except(cover, idx0);
+        for (final Iterator iter = cover.orbitReps(idcs); iter.hasNext();) {
+            G.newNode(iter.next());
+        }
+
+        // --- create the edges
+        idcs = IndexList.except(cover, idx1);
+        for (final Iterator iter = cover.orbitReps(idcs); iter.hasNext();) {
+            final Object D = iter.next();
+            final Object E = cover.op(idx0, D);
+            final INode v = G.nodeForChamber(D);
+            final INode w = G.nodeForChamber(E);
+            final Vector t = edgeTranslation(idx0, D);
+            final Vector sD = cornerShift(idx0, D);
+            final Vector sE = cornerShift(idx0, E);
+            final Vector s = (Vector) t.plus(sE).minus(sD);
+            G.newEdge(v, w, s, D);
+        }
+        
+        return G;
+	}
+	
     /**
      * Computes positions for chamber corners by first placing corners for
      * vertices (index 0) barycentrically, then placing corners for edges etc.

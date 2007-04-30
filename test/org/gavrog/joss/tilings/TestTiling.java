@@ -36,7 +36,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.12 2007/04/29 23:09:10 odf Exp $
+ * @version $Id: TestTiling.java,v 1.13 2007/04/30 02:27:45 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -53,6 +53,17 @@ public class TestTiling extends TestCase {
         final PeriodicGraph sk1 = t1.getSkeleton();
         final PeriodicGraph sk2 = t2.getSkeleton();
         final PeriodicGraph sk3 = t3.getSkeleton();
+        assertEquals(gr1, sk1);
+        assertEquals(gr2, sk2);
+        assertEquals(gr3, sk3);
+        assertFalse(gr1.equals(sk2));
+        assertFalse(gr2.equals(sk1));
+    }
+    
+    public void testDualSkeleton() {
+        final PeriodicGraph sk1 = t1.getDualSkeleton();
+        final PeriodicGraph sk2 = t2.getDualSkeleton();
+        final PeriodicGraph sk3 = t3.getDualSkeleton();
         assertEquals(gr1, sk1);
         assertEquals(gr2, sk2);
         assertEquals(gr3, sk3);
