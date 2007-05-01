@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.25 2007/04/30 23:39:42 odf Exp $
+ * @version $Id: Tiling.java,v 1.26 2007/05/01 02:12:20 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -681,7 +681,7 @@ public class Tiling {
             return this.index;
         }
 
-        public int getSize() {
+        public int size() {
             return this.size;
         }
         
@@ -754,12 +754,23 @@ public class Tiling {
                     Df = cover.op(3, Df);
                 }
                 final Face f = (Face) ch2f.get(Df);
+                final Vector t = edgeTranslation(3, Df);
                 body.faces[i] = f.getIndex();
                 body.faceShifts[i] = (Vector) cornerShift(2, Df).minus(
-                        cornerShift(2, f.getChamber()));
+                        cornerShift(2, f.getChamber())).plus(t);
                 final Object Dn = skel.chamberAtNode(e.target());
                 body.neighbors[i] = ((Integer) ch2b.get(Dn)).intValue();
-                body.neighborShifts[i] = edgeTranslation(3, Df);
+                body.neighborShifts[i] = t;
+                ++i;
+                if (e.source().equals(e.target())) {
+                    body.faces[i] = body.faces[i - 1];
+                    body.faceShifts[i] = (Vector) cornerShift(2,
+                            cover.op(3, Df)).minus(
+                            cornerShift(2, f.getChamber())).minus(t);
+                    body.neighbors[i] = body.neighbors[i - 1];
+                    body.neighborShifts[i] = (Vector) t.negative();
+                    ++i;
+                }
             }
             bodies.add(body);
         }
