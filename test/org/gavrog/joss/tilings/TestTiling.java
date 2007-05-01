@@ -37,7 +37,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.15 2007/05/01 02:12:22 odf Exp $
+ * @version $Id: TestTiling.java,v 1.16 2007/05/01 05:13:53 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -97,7 +97,7 @@ public class TestTiling extends TestCase {
         			}
             		final Point p = til.vertexBarycentricPosition(j, D);
             		final Point q = til.vertexBarycentricPosition(j, Di);
-            		assertEquals(q, p.plus(t));
+            		assertEquals(q, p.minus(t));
         		}
         	}
         }
