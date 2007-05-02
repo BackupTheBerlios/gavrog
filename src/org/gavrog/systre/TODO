@@ -23,5 +23,7 @@ Planned/requested features:
 - If graph has collisions, try to refine anyway.
 - Plot the quotient graph.
 - Compute vertex symbols.
+- Report induced symmetries from "given" (or report none at all) for components.
+- If group has translational freedom, put one node on 0 for the respective axes.
 
 =====================================================
