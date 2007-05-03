@@ -29,15 +29,13 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
-import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling.Body;
 import org.gavrog.joss.tilings.Tiling.Face;
-import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.19 2007/05/03 07:23:43 odf Exp $
+ * @version $Id: TestTiling.java,v 1.20 2007/05/03 22:28:21 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -142,7 +140,6 @@ public class TestTiling extends TestCase {
     
     public void testFaces(final Tiling til) {
         final DelaneySymbol cov = til.getCover();
-        final Skeleton skel = til.getSkeleton();
         final List faces = til.getFaces();
         final List idcs = IndexList.except(cov, 2);
         final int n = cov.numberOfOrbits(idcs);
@@ -150,13 +147,6 @@ public class TestTiling extends TestCase {
         assertEquals(n, faces.size());
         for (final Iterator iter = faces.iterator(); iter.hasNext();) {
             final Face f = (Face) iter.next();
-            Vector sum = f.shift(0);
-            for (int i = 0; i < f.size(); ++i) {
-                final IEdge e = f.edge(i);
-                assertEquals(e.source(), f.node(i));
-                sum = (Vector) sum.plus(skel.getShift(e));
-            }
-            assertEquals(f.shift(0), sum);
             seen.addAll(Iterators.asList(cov.orbit(idcs, f.getChamber())));
         }
         assertEquals(cov.size(), seen.size());

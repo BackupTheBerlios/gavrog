@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.Cache;
-import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -60,7 +59,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.30 2007/05/03 07:23:43 odf Exp $
+ * @version $Id: Tiling.java,v 1.31 2007/05/03 22:28:19 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -575,53 +574,38 @@ public class Tiling {
      * Represents a face (2-dimensional constituent) of this tiling.
      */
     public class Face {
-    	final private List edges;
-    	final private List nodeShifts;
-    	final private Object chamber;
+        final private List chambers;
         final private int index;
     	
     	private Face(final Object D, final int index) {
     		final DelaneySymbol cover = getCover();
-    		final Skeleton skel = getSkeleton();
-            final List idcs = IndexList.except(cover, 0, 1);
-            this.edges = new LinkedList();
-            this.nodeShifts = new LinkedList();
+            this.chambers = new LinkedList();
             Object E = D;
-            Vector shift = Vector.zero(cover.dim());
             do {
-                IEdge e = skel.edgeForChamber(E);
-                final Object F = skel.chamberAtEdge(e);
-                if (Iterators.contains(cover.orbit(idcs, E), F)) {
-                	e = e.reverse();
-                }
-                this.edges.add(e);
-                //this.nodeShifts.add(shift);
-                this.nodeShifts.add(cornerShift(0, E));
-                shift = (Vector) (shift.plus(skel.getShift(e)));
+                this.chambers.add(E);
                 E = cover.op(1, cover.op(0, E));
             } while (!E.equals(D));
-            this.chamber = D;
             this.index = index;
     	}
 
     	public int size() {
-    		return this.edges.size();
+    		return this.chambers.size();
     	}
     	
-		public IEdge edge(final int i) {
-			return (IEdge) this.edges.get(i);
-		}
-
+        public Object chamber(final int i) {
+            return this.chambers.get(i);
+        }
+        
 		public INode node(final int i) {
-			return edge(i).source();
+			return getSkeleton().nodeForChamber(chamber(i));
 		}
 		
 		public Vector shift(final int i) {
-			return (Vector) this.nodeShifts.get(i);
+			return cornerShift(0, chamber(i));
 		}
 		
 		public Object getChamber() {
-			return this.chamber;
+			return chamber(0);
 		}
 
         public int getIndex() {
