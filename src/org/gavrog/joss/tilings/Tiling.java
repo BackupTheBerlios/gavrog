@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.28 2007/05/03 00:29:50 odf Exp $
+ * @version $Id: Tiling.java,v 1.29 2007/05/03 01:52:43 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -587,8 +587,7 @@ public class Tiling {
             this.edges = new LinkedList();
             this.nodeShifts = new LinkedList();
             Object E = D;
-            //TODO why negative?
-            Vector shift = (Vector) cornerShift(0, D).negative();
+            Vector shift = Vector.zero(cover.dim());
             do {
                 IEdge e = skel.edgeForChamber(E);
                 final Object F = skel.chamberAtEdge(e);
@@ -750,26 +749,25 @@ public class Tiling {
             int i = 0;
             for (final Iterator conn = v.incidences(); conn.hasNext();) {
                 final IEdge e = (IEdge) conn.next();
-                Object Df = skel.chamberAtEdge(e);
-                if (!k.equals(ch2b.get(Df))) {
-                    Df = cover.op(3, Df);
+                final Face f = (Face) ch2f.get(skel.chamberAtEdge(e));
+                final Object Df;
+                if (!ch2b.get(f.getChamber()).equals(k)) {
+                    Df = cover.op(3, f.getChamber());
+                } else {
+                    Df = f.getChamber();
                 }
-                final Face f = (Face) ch2f.get(Df);
                 final Vector t = edgeTranslation(3, Df);
                 body.faces[i] = f.getIndex();
-                //TODO why negative?
-                body.faceShifts[i] = (Vector) cornerShift(2, Df).minus(
-                        cornerShift(2, f.getChamber())).negative();
+                body.faceShifts[i] = (Vector) cornerShift(2, Df)
+                        .minus(cornerShift(2, f.getChamber()));
                 final Object Dn = skel.chamberAtNode(e.target());
                 body.neighbors[i] = ((Integer) ch2b.get(Dn)).intValue();
                 body.neighborShifts[i] = t;
                 ++i;
                 if (e.source().equals(e.target())) {
                     body.faces[i] = body.faces[i - 1];
-                    //TODO why negative?
-                    body.faceShifts[i] = (Vector) cornerShift(2,
-                            cover.op(3, Df)).minus(
-                            cornerShift(2, f.getChamber())).negative();
+                    body.faceShifts[i] = (Vector) cornerShift(2, cover.op(3, Df))
+                            .minus(cornerShift(2, f.getChamber()));
                     body.neighbors[i] = body.neighbors[i - 1];
                     body.neighborShifts[i] = (Vector) t.negative();
                     ++i;

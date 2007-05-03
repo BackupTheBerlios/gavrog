@@ -37,7 +37,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.17 2007/05/03 00:29:54 odf Exp $
+ * @version $Id: TestTiling.java,v 1.18 2007/05/03 01:52:44 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -72,6 +72,37 @@ public class TestTiling extends TestCase {
         assertFalse(gr2.equals(sk1));
     }
     
+    public void testCornerShifts() {
+        testCornerShifts(t1);
+        testCornerShifts(t2);
+        testCornerShifts(t3);
+    }
+    
+    public void testCornerShifts(final Tiling til) {
+        final DelaneySymbol cover = til.getCover();
+        final int dim = cover.dim();
+        for (final Iterator elms = cover.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            for (int i = 0; i <= dim; ++i) {
+                final Object Di = cover.op(i, D);
+                final Vector t = til.edgeTranslation(i, D);
+                // --- make sure tiles stay connected
+                if (i != cover.dim()) {
+                    assertEquals(Vector.zero(dim), t);
+                }
+                // --- make sure chambers fit together nicely
+                for (int j = 0; j < dim; ++j) {
+                    if (j == i) {
+                        continue;
+                    }
+                    final Vector p = til.cornerShift(j, D);
+                    final Vector q = til.cornerShift(j, Di);
+                    assertEquals(q, p.minus(t));
+                }
+            }
+        }
+    }
+
     public void testVertexBarycentricPositions() {
     	testVertexBarycentricPositions(t1);
     	testVertexBarycentricPositions(t2);
@@ -162,9 +193,8 @@ public class TestTiling extends TestCase {
                     assertEquals(b, bn.neighbor(in));
                     assertEquals(b.neighborShift(i), bn.neighborShift(in)
                             .negative());
-                    //TODO why negative?
                     assertEquals(b.faceShift(i), bn.faceShift(in).plus(
-                            b.neighborShift(i)).negative());
+                            b.neighborShift(i)));
                 }
             }
         }
