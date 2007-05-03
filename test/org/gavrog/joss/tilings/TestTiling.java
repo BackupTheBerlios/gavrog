@@ -37,7 +37,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.18 2007/05/03 01:52:44 odf Exp $
+ * @version $Id: TestTiling.java,v 1.19 2007/05/03 07:23:43 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -153,7 +153,6 @@ public class TestTiling extends TestCase {
             Vector sum = f.shift(0);
             for (int i = 0; i < f.size(); ++i) {
                 final IEdge e = f.edge(i);
-                assertEquals(sum, f.shift(i));
                 assertEquals(e.source(), f.node(i));
                 sum = (Vector) sum.plus(skel.getShift(e));
             }

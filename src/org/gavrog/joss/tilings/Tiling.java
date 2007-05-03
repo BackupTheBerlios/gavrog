@@ -60,7 +60,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.29 2007/05/03 01:52:43 odf Exp $
+ * @version $Id: Tiling.java,v 1.30 2007/05/03 07:23:43 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -595,7 +595,8 @@ public class Tiling {
                 	e = e.reverse();
                 }
                 this.edges.add(e);
-                this.nodeShifts.add(shift);
+                //this.nodeShifts.add(shift);
+                this.nodeShifts.add(cornerShift(0, E));
                 shift = (Vector) (shift.plus(skel.getShift(e)));
                 E = cover.op(1, cover.op(0, E));
             } while (!E.equals(D));
