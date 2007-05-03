@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.io.Output;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.31 2007/05/03 22:28:19 odf Exp $
+ * @version $Id: Tiling.java,v 1.32 2007/05/03 23:07:39 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -596,14 +596,6 @@ public class Tiling {
             return this.chambers.get(i);
         }
         
-		public INode node(final int i) {
-			return getSkeleton().nodeForChamber(chamber(i));
-		}
-		
-		public Vector shift(final int i) {
-			return cornerShift(0, chamber(i));
-		}
-		
 		public Object getChamber() {
 			return chamber(0);
 		}
