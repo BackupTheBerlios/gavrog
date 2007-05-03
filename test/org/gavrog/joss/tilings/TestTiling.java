@@ -37,7 +37,7 @@ import org.gavrog.joss.tilings.Tiling.Skeleton;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.16 2007/05/01 05:13:53 odf Exp $
+ * @version $Id: TestTiling.java,v 1.17 2007/05/03 00:29:54 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -114,20 +114,19 @@ public class TestTiling extends TestCase {
         final Skeleton skel = til.getSkeleton();
         final List faces = til.getFaces();
         final List idcs = IndexList.except(cov, 2);
-        final int d = cov.dim();
         final int n = cov.numberOfOrbits(idcs);
         final Set seen = new HashSet();
         assertEquals(n, faces.size());
         for (final Iterator iter = faces.iterator(); iter.hasNext();) {
             final Face f = (Face) iter.next();
-            Vector sum = Vector.zero(d);
+            Vector sum = f.shift(0);
             for (int i = 0; i < f.size(); ++i) {
                 final IEdge e = f.edge(i);
                 assertEquals(sum, f.shift(i));
                 assertEquals(e.source(), f.node(i));
                 sum = (Vector) sum.plus(skel.getShift(e));
             }
-            assertEquals(Vector.zero(d), sum);
+            assertEquals(f.shift(0), sum);
             seen.addAll(Iterators.asList(cov.orbit(idcs, f.getChamber())));
         }
         assertEquals(cov.size(), seen.size());
@@ -163,8 +162,9 @@ public class TestTiling extends TestCase {
                     assertEquals(b, bn.neighbor(in));
                     assertEquals(b.neighborShift(i), bn.neighborShift(in)
                             .negative());
+                    //TODO why negative?
                     assertEquals(b.faceShift(i), bn.faceShift(in).plus(
-                            b.neighborShift(i)));
+                            b.neighborShift(i)).negative());
                 }
             }
         }
