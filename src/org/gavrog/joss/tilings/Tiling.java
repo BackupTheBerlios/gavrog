@@ -16,13 +16,6 @@
 
 package org.gavrog.joss.tilings;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,13 +31,11 @@ import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSPair;
-import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
-import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
@@ -53,13 +44,12 @@ import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.io.Output;
 
 /**
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.32 2007/05/03 23:07:39 odf Exp $
+ * @version $Id: Tiling.java,v 1.33 2007/05/06 06:53:37 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -71,7 +61,6 @@ public class Tiling {
     final protected static Object DUAL_SKELETON = new Tag();
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
-    final protected static Object FACES = new Tag();
     final protected static Object BODIES = new Tag();
     
     // --- cache for this instance
@@ -605,53 +594,54 @@ public class Tiling {
         }
     }
     
-    /**
-	 * Computes a list of representatives for the translational types of faces
-	 * (2-dimensional constituents) of this tiling. A translational type is
-	 * defined as the set of all translates of a single tile.
-	 * 
-	 * @return the list of 2-dimensional constituents for this tiling.
-	 */
-    public List getFaces() {
-        try {
-            return (List) this.cache.get(FACES);
-        } catch (Cache.NotFoundException ex) {
-            final DelaneySymbol cover = getCover();
-            final List idcs = IndexList.except(cover, 2);
-            final List faces = new ArrayList();
-            int i = 0;
-            for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-                faces.add(new Face(reps.next(), i++));
-            }
-            return (List) this.cache.put(FACES, Collections
-					.unmodifiableList(faces));
-        }
-    }
-    
+    // --- maps cover chambers to body numbers
+    final Map ch2b = new HashMap();
+
     /**
      * Represents a body (3-dimensional constituent) of this tiling.
      */
     public class Body {
-        final private Object chamber;
         final private int index;
-        final private int size;
-        final private int faces[];
+        final private Face faces[];
         final private int neighbors[];
-        final private Vector faceShifts[];
         final private Vector neighborShifts[];
 
-        private Body(final Object D, final int index, final int size) {
-            this.chamber = D;
-            this.index = index;
-            this.size = size;
-            this.faces = new int[size];
-            this.neighbors = new int[size];
-            this.faceShifts = new Vector[size];
-            this.neighborShifts = new Vector[size];
-        }
+        private Body(final INode v) {
+        	final DSCover cover = getCover();
+        	final Skeleton skel = getDualSkeleton();
+        	final Integer k = (Integer) ch2b.get(skel.chamberAtNode(v));
+            this.index = k.intValue();
 
+            final int deg = v.degree();
+        	this.faces = new Face[deg];
+        	this.neighbors = new int[deg];
+        	this.neighborShifts = new Vector[deg];
+        	
+            int i = 0;
+            for (final Iterator conn = v.incidences(); conn.hasNext();) {
+                final IEdge e = (IEdge) conn.next();
+                Object Df = skel.chamberAtEdge(e);
+                if (!ch2b.get(Df).equals(k)) {
+                    Df = cover.op(3, Df);
+                }
+                final Vector t = edgeTranslation(3, Df);
+                this.faces[i] = new Face(Df, i);
+                final Object Dn = skel.chamberAtNode(e.target());
+                this.neighbors[i] = ((Integer) ch2b.get(Dn)).intValue();
+                this.neighborShifts[i] = t;
+                ++i;
+                if (e.source().equals(e.target())) {
+                	Df = cover.op(3, Df);
+                    this.faces[i] = new Face(Df, i);
+                    this.neighbors[i] = this.index;
+                    this.neighborShifts[i] = (Vector) t.negative();
+                    ++i;
+                }
+            }
+        }
+        
         public Object getChamber() {
-            return this.chamber;
+            return face(0).chamber(0);
         }
 
         public int getIndex() {
@@ -659,15 +649,11 @@ public class Tiling {
         }
 
         public int size() {
-            return this.size;
+            return this.faces.length;
         }
         
         public Face face(final int i) {
-            return (Face) getFaces().get(this.faces[i]);
-        }
-        
-        public Vector faceShift(final int i) {
-            return this.faceShifts[i];
+            return this.faces[i];
         }
         
         public Body neighbor(final int i) {
@@ -678,7 +664,7 @@ public class Tiling {
             return this.neighborShifts[i];
         }
     }
-    
+
     /**
      * @return the list of 3-dimensional constituents for this tiling.
      */
@@ -690,104 +676,26 @@ public class Tiling {
         
         final DelaneySymbol cover = getCover();
         
-        // --- map each chamber to the face it belongs to
-        final List faces = getFaces();
-        final Map ch2f = new HashMap();
-        final List idcsF = IndexList.except(cover, 2);
-        for (int i = 0; i < faces.size(); ++i) {
-            final Face f = (Face) faces.get(i);
-            final Object D = f.getChamber();
-            for (final Iterator orb = cover.orbit(idcsF, D); orb.hasNext();) {
-                final Object E = orb.next();
-                ch2f.put(E, f);
-            }
-        }
-
         // --- map chambers to body indices and vice versa
         final List idcs = IndexList.except(cover, 3);
-        final Map ch2b = new HashMap();
         int n = 0;
-        for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-            final Object D = reps.next();
-            for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                ch2b.put(orb.next(), new Integer(n));
+        for (final Iterator elms = cover.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            if (!ch2b.containsKey(D)) {
+                final Integer nn = new Integer(n++);
+                for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
+                    ch2b.put(orb.next(), nn);
+                }
             }
-            ++n;
         }
         
         // --- construct the list of bodies with associated data
-        final Skeleton skel = getDualSkeleton();
         final List bodies = new ArrayList();
-        for (final Iterator nodes = skel.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            final Object D = skel.chamberAtNode(v);
-            final Integer k = (Integer) ch2b.get(D);
-            final Body body = new Body(D, k.intValue(), v.degree());
-            int i = 0;
-            for (final Iterator conn = v.incidences(); conn.hasNext();) {
-                final IEdge e = (IEdge) conn.next();
-                final Face f = (Face) ch2f.get(skel.chamberAtEdge(e));
-                final Object Df;
-                if (!ch2b.get(f.getChamber()).equals(k)) {
-                    Df = cover.op(3, f.getChamber());
-                } else {
-                    Df = f.getChamber();
-                }
-                final Vector t = edgeTranslation(3, Df);
-                body.faces[i] = f.getIndex();
-                body.faceShifts[i] = (Vector) cornerShift(2, Df)
-                        .minus(cornerShift(2, f.getChamber()));
-                final Object Dn = skel.chamberAtNode(e.target());
-                body.neighbors[i] = ((Integer) ch2b.get(Dn)).intValue();
-                body.neighborShifts[i] = t;
-                ++i;
-                if (e.source().equals(e.target())) {
-                    body.faces[i] = body.faces[i - 1];
-                    body.faceShifts[i] = (Vector) cornerShift(2, cover.op(3, Df))
-                            .minus(cornerShift(2, f.getChamber()));
-                    body.neighbors[i] = body.neighbors[i - 1];
-                    body.neighborShifts[i] = (Vector) t.negative();
-                    ++i;
-                }
-            }
-            bodies.add(body);
+        for (Iterator nodes = getDualSkeleton().nodes(); nodes.hasNext();) {
+            bodies.add(new Body((INode) nodes.next()));
         }
         
         // --- cache and return
         return (List) this.cache.put(BODIES, bodies);
     }
-    
-	/**
-     * Main method for testing purposes.
-     * 
-	 * @param args command line arguments.
-	 */
-	public static void main(String[] args) {
-		try {
-			final Reader in;
-			final Writer out;
-			if (args.length > 0) {
-				in = new FileReader(args[0]);
-			} else {
-				in = new InputStreamReader(System.in);
-			}
-			if (args.length > 1) {
-				out = new FileWriter(args[1]);
-			} else {
-				out = new OutputStreamWriter(System.out);
-			}
-
-			int count = 0;
-
-			for (Iterator input = new InputIterator(in); input.hasNext();) {
-				final DSymbol ds = (DSymbol) input.next();
-				++count;
-				final Skeleton G = new Tiling(ds).getSkeleton();
-				Output.writePGR(out, G, "T" + count);
-				out.flush();
-			}
-		} catch (final IOException ex) {
-			ex.printStackTrace();
-		}
-	}
 }

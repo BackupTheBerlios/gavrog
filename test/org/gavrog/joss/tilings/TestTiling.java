@@ -31,11 +31,10 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling.Body;
-import org.gavrog.joss.tilings.Tiling.Face;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.20 2007/05/03 22:28:21 odf Exp $
+ * @version $Id: TestTiling.java,v 1.21 2007/05/06 06:53:40 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -132,26 +131,6 @@ public class TestTiling extends TestCase {
         }
     }
 
-    public void testFaces() {
-        testFaces(t1);
-        testFaces(t2);
-        testFaces(t3);
-    }
-    
-    public void testFaces(final Tiling til) {
-        final DelaneySymbol cov = til.getCover();
-        final List faces = til.getFaces();
-        final List idcs = IndexList.except(cov, 2);
-        final int n = cov.numberOfOrbits(idcs);
-        final Set seen = new HashSet();
-        assertEquals(n, faces.size());
-        for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-            final Face f = (Face) iter.next();
-            seen.addAll(Iterators.asList(cov.orbit(idcs, f.getChamber())));
-        }
-        assertEquals(cov.size(), seen.size());
-    }
-    
     public void testBodies() {
         testBodies(t1);
         testBodies(t2);
@@ -165,30 +144,9 @@ public class TestTiling extends TestCase {
         final int n = cov.numberOfOrbits(idcs);
         final Set seen = new HashSet();
         assertEquals(n, bodies.size());
-        final int nf = til.getFaces().size();
-        final int faceSeen[][] = new int[nf][3];
         for (final Iterator iter = bodies.iterator(); iter.hasNext();) {
             final Body b = (Body) iter.next();
             seen.addAll(Iterators.asList(cov.orbit(idcs, b.getChamber())));
-            for (int i = 0; i < b.size(); ++i) {
-                final int k = b.face(i).getIndex();
-                if (++faceSeen[k][0] == 1) {
-                    faceSeen[k][1] = b.getIndex();
-                    faceSeen[k][2] = i;
-                } else {
-                    assertEquals(faceSeen[k][1], b.neighbor(i).getIndex());
-                    final Body bn = (Body) til.getBodies().get(faceSeen[k][1]);
-                    final int in = faceSeen[k][2];
-                    assertEquals(b, bn.neighbor(in));
-                    assertEquals(b.neighborShift(i), bn.neighborShift(in)
-                            .negative());
-                    assertEquals(b.faceShift(i), bn.faceShift(in).plus(
-                            b.neighborShift(i)));
-                }
-            }
-        }
-        for (int k = 0; k < nf; ++k) {
-            assertTrue(faceSeen[k][0] == 2);
         }
         assertEquals(cov.size(), seen.size());
     }
