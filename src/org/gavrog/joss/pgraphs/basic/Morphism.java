@@ -45,7 +45,7 @@ import org.gavrog.joss.geometry.Vector;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.9 2006/09/21 23:11:17 odf Exp $
+ * @version $Id: Morphism.java,v 1.10 2007/05/08 05:39:29 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;
@@ -141,9 +141,11 @@ public class Morphism implements Map {
                     img2src.put(e2, e1);
                     final INode u1 = e1.target();
                     final INode u2 = e2.target();
-                    src2img.put(u1, u2);
-                    img2src.put(u2, u1);
-                    queue.addLast(u1);
+					img2src.put(u2, u1);
+                    if (!src2img.containsKey(u1)) {
+						src2img.put(u1, u2);
+						queue.addLast(u1);
+					}
                 }
             }
         }
