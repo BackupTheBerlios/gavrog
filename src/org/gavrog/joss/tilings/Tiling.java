@@ -19,10 +19,12 @@ package org.gavrog.joss.tilings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.simple.Tag;
@@ -49,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.33 2007/05/06 06:53:37 odf Exp $
+ * @version $Id: Tiling.java,v 1.34 2007/05/08 06:20:38 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -62,6 +64,7 @@ public class Tiling {
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
     final protected static Object BODIES = new Tag();
+	final protected static Object SYMMETRIES = new Tag();
     
     // --- cache for this instance
     final protected Cache cache = new Cache();
@@ -248,6 +251,7 @@ public class Tiling {
         final private Map chamber2edge = new HashMap();
         final private List nodeIdcs;
         final private List edgeIdcs;
+        final private boolean dual;
         
         /**
          * Constructs an instance.
@@ -265,6 +269,7 @@ public class Tiling {
             	nodeIdcs = IndexList.except(cover, 0);
             	edgeIdcs = IndexList.except(cover, 1);
             }
+            this.dual = dual;
         }
         
         /**
@@ -302,6 +307,51 @@ public class Tiling {
         }
         
         /**
+         * Determines the list of symmetries for this tiling.
+         * 
+         * @return the space group.
+         */
+        public Set symmetries() {
+            try {
+                return (Set) this.cache.get(SYMMETRIES);
+            } catch (Cache.NotFoundException ex) {
+                // --- get the toroidal cover of the base symbol
+                final DSCover cover = getCover();
+
+                // --- find a chamber with nonzero volume
+                Object D0 = null;
+                for (final Iterator elms = cover.elements(); elms.hasNext();) {
+                    final Object D = elms.next();
+                    if (!spanningMatrix(D).determinant().isZero()) {
+                        D0 = D;
+                        break;
+                    }
+                }
+                if (D0 == null) {
+                    throw new RuntimeException("all chambers have zero volume");
+                }
+
+                // --- compute affine maps from start chamber to its images
+                final Set syms = new HashSet();
+                final Object E = cover.image(D0);
+                final INode v = nodeForChamber(D0);
+                final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
+                for (final Iterator elms = cover.elements(); elms.hasNext();) {
+                    final Object D = elms.next();
+                    if (cover.image(D).equals(E)) {
+                        final Matrix A = (Matrix) Minv.times(spanningMatrix(D));
+                        final INode w = nodeForChamber(D);
+                        syms.add(new Morphism(v, w, A));
+                    }
+                }
+
+                // --- construct the group, cache and return it
+                final Set result = Collections.unmodifiableSet(syms);
+                return (Set) this.cache.put(SYMMETRIES, result);
+            }
+        }
+        
+        /**
          * Retrieves the chamber a node belongs to.
          * @param v the node.
          * @return a chamber associated to node v.
@@ -327,7 +377,14 @@ public class Tiling {
         public Object chamberAtEdge(final IEdge e) {
             return this.edge2chamber.get(e);
         }
-        
+
+		/**
+		 * @return true if this is a dual skeleton
+		 */
+		public boolean isDual() {
+			return this.dual;
+		}
+		
         /**
          * Retrieves the edge associated to a chamber.
          * @param D the chamber.
@@ -503,52 +560,16 @@ public class Tiling {
      * @return the space group.
      */
     public SpaceGroup getSpaceGroup() {
-        try {
-            return (SpaceGroup) this.cache.get(SPACEGROUP);
-        } catch (Cache.NotFoundException ex) {
-            // --- get the toroidal cover of the base symbol
-            final DSCover cover = getCover();
-
-            // --- find a chamber with nonzero volume
-            Object D0 = null;
-            for (final Iterator elms = cover.elements(); elms.hasNext();) {
-                final Object D = elms.next();
-                if (!spanningMatrix(D).determinant().isZero()) {
-                    D0 = D;
-                    break;
-                }
-            }
-            if (D0 == null) {
-                throw new RuntimeException("all chambers have zero volume");
-            }
-
-            // --- compute affine maps from start chamber to its images
-            final List ops = new ArrayList();
-            final Object E = cover.image(D0);
-            final Skeleton skel = getSkeleton();
-            final INode v = skel.nodeForChamber(D0);
-            final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
-            for (final Iterator elms = cover.elements(); elms.hasNext();) {
-                final Object D = elms.next();
-                if (cover.image(D).equals(E)) {
-                    final Matrix A = (Matrix) Minv.times(spanningMatrix(D));
-                    final INode w = skel.nodeForChamber(D);
-                    ops.add(new Morphism(v, w, A).getAffineOperator());
-                }
-            }
-
-            // --- construct the group, cache and return it
-            final SpaceGroup group = new SpaceGroup(cover.dim(), ops);
-            return (SpaceGroup) this.cache.put(SPACEGROUP, group);
-        }
-    }
+		return getSkeleton().getSpaceGroup();
+	}
     
     /**
-     * Computes a matrix of chamber edge vectors. The i-th row contains the
-     * vector from the 0-corner to the (i+1)-corner.
-     * @param D a chamber.
-     * @return the matrix of edge vectors.
-     */
+	 * Computes a matrix of chamber edge vectors. The i-th row contains the
+	 * vector from the 0-corner to the (i+1)-corner.
+	 * 
+	 * @param D a chamber.
+	 * @return the matrix of edge vectors.
+	 */
     private Matrix spanningMatrix(final Object D) {
         final int d = getCover().dim();
         final Point p = vertexBarycentricPosition(0, D);
