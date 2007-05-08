@@ -48,7 +48,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.3 2007/04/24 01:19:15 odf Exp $
+ * @version $Id: Embedder.java,v 1.4 2007/05/08 05:27:54 odf Exp $
  */
 public class Embedder {
     protected class Angle {
@@ -137,10 +137,9 @@ public class Embedder {
      * @param graph
      * @param positions
      * @param gram
-     * @param spaceGroup TODO
      */
     public Embedder(final PeriodicGraph graph, final Map positions,
-            final Matrix gram, final SpaceGroup spaceGroup) {
+            final Matrix gram) {
         
         // --- generic initialization
         this.graph = graph;
@@ -199,12 +198,7 @@ public class Embedder {
         }
 
         // --- set up translation between parameter space and gram matrix entries
-        final SpaceGroup group;
-        if (spaceGroup == null) {
-            group = graph.getSpaceGroup();
-        } else {
-            group = spaceGroup;
-        }
+        final SpaceGroup group = graph.getSpaceGroup();
         this.gramSpace = group.configurationSpaceForGramMatrix();
         k = this.dimGramSpace = this.gramSpace.numberOfRows();
         
@@ -295,11 +289,7 @@ public class Embedder {
     }
 
     public Embedder(final PeriodicGraph G) {
-        this(G, null, null, null);
-    }
-    
-    public Embedder(final PeriodicGraph G, final SpaceGroup group) {
-        this(G, null, null, group);
+        this(G, null, null);
     }
     
     public int degreesOfFreedom() {
