@@ -34,7 +34,7 @@ import org.gavrog.joss.tilings.Tiling.Body;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.21 2007/05/06 06:53:40 odf Exp $
+ * @version $Id: TestTiling.java,v 1.22 2007/05/09 01:46:03 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -134,7 +134,6 @@ public class TestTiling extends TestCase {
     public void testBodies() {
         testBodies(t1);
         testBodies(t2);
-        //testBodies(t3);
     }
     
     public void testBodies(final Tiling til) {
