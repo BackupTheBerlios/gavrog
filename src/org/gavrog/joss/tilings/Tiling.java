@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.35 2007/05/09 00:20:09 odf Exp $
+ * @version $Id: Tiling.java,v 1.36 2007/05/09 00:29:30 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -302,8 +302,6 @@ public class Tiling {
             final DelaneySymbol cover = getCover();
             final IEdge e = super.newEdge(v, w, s);
             this.edge2chamber.put(e, D);
-            final IEdge eo = e.oriented();
-            this.edge2chamber.put(eo, D);
             for (final Iterator orb = cover.orbit(halfEdgeIdcs, D); orb.hasNext();) {
                 this.chamber2edge.put(orb.next(), e);
             }
@@ -372,6 +370,7 @@ public class Tiling {
                 final INode w = nodeForChamber(img);
                 src2img.put(v, w);
                 img2src.put(w, v);
+                // --- important to use oriented edges here
                 IEdge e = edgeForChamber(src).oriented();
                 IEdge f = edgeForChamber(img).oriented();
                 src2img.put(e, f);
