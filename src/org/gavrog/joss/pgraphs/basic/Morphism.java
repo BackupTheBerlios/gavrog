@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
-import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
@@ -45,7 +44,7 @@ import org.gavrog.joss.geometry.Vector;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  * 
  * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.10 2007/05/08 05:39:29 odf Exp $
+ * @version $Id: Morphism.java,v 1.11 2007/05/09 00:17:06 odf Exp $
  */
 public class Morphism implements Map {
     final private Map src2img;
@@ -206,22 +205,7 @@ public class Morphism implements Map {
      * @param M the linear part of the induced coordinate transformation.
      */
     public Morphism(final INode v1, final INode v2, final Matrix M) {
-        this(v1, v2, opFromLinear(M));
-    }
-    
-    /**
-     * Constructs an operator from a matrix that only determines its linear part.
-     * @param M the input matrix.
-     * @return the new operator.
-     */
-    private static Operator opFromLinear(final Matrix M) {
-        final int d = M.numberOfColumns();
-        final Matrix M1 = new Matrix(d + 1, d + 1);
-        M1.setSubMatrix(0, 0, M);
-        M1.setSubMatrix(d, 0, Matrix.zero(1, d));
-        M1.setSubMatrix(0, d, Matrix.zero(d, 1));
-        M1.set(d, d, Whole.ONE);
-        return new Operator(M1);
+        this(v1, v2, Operator.fromLinear(M));
     }
     
     /**
@@ -232,8 +216,8 @@ public class Morphism implements Map {
      * @param operator the associated coordinate transformation.
      * @param injective is the morphism injective?
      */
-    private Morphism(final Map src2img, final Map img2src, final Operator operator,
-            final boolean injective) {
+    public Morphism(final Map src2img, final Map img2src,
+            final Operator operator, final boolean injective) {
         this.src2img = src2img;
         this.img2src = img2src;
         this.operator = operator;
