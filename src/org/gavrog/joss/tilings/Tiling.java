@@ -32,12 +32,14 @@ import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSCover;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroup;
 import org.gavrog.joss.geometry.Vector;
@@ -51,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.34 2007/05/08 06:20:38 odf Exp $
+ * @version $Id: Tiling.java,v 1.35 2007/05/09 00:20:09 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -250,7 +252,7 @@ public class Tiling {
         final private Map edge2chamber = new HashMap();
         final private Map chamber2edge = new HashMap();
         final private List nodeIdcs;
-        final private List edgeIdcs;
+        final private List halfEdgeIdcs;
         final private boolean dual;
         
         /**
@@ -264,10 +266,10 @@ public class Tiling {
             final int d = cover.dim();
             if (dual) {
             	nodeIdcs = IndexList.except(cover, d);
-            	edgeIdcs = IndexList.except(cover, d-1);
+            	halfEdgeIdcs = IndexList.except(cover, d, d-1);
             } else {
             	nodeIdcs = IndexList.except(cover, 0);
-            	edgeIdcs = IndexList.except(cover, 1);
+            	halfEdgeIdcs = IndexList.except(cover, 0, 1);
             }
             this.dual = dual;
         }
@@ -300,8 +302,17 @@ public class Tiling {
             final DelaneySymbol cover = getCover();
             final IEdge e = super.newEdge(v, w, s);
             this.edge2chamber.put(e, D);
-            for (final Iterator orb = cover.orbit(edgeIdcs, D); orb.hasNext();) {
+            final IEdge eo = e.oriented();
+            this.edge2chamber.put(eo, D);
+            for (final Iterator orb = cover.orbit(halfEdgeIdcs, D); orb.hasNext();) {
                 this.chamber2edge.put(orb.next(), e);
+            }
+            final IEdge er = e.reverse();
+            final Object Dr = dual ? cover.op(cover.dim(), D) : cover.op(0, D);
+            this.edge2chamber.put(er, Dr);
+            for (final Iterator orb = cover.orbit(halfEdgeIdcs, Dr); orb
+                    .hasNext();) {
+                this.chamber2edge.put(orb.next(), er);
             }
             return e;
         }
@@ -334,14 +345,10 @@ public class Tiling {
                 // --- compute affine maps from start chamber to its images
                 final Set syms = new HashSet();
                 final Object E = cover.image(D0);
-                final INode v = nodeForChamber(D0);
-                final Matrix Minv = (Matrix) spanningMatrix(D0).inverse();
                 for (final Iterator elms = cover.elements(); elms.hasNext();) {
                     final Object D = elms.next();
                     if (cover.image(D).equals(E)) {
-                        final Matrix A = (Matrix) Minv.times(spanningMatrix(D));
-                        final INode w = nodeForChamber(D);
-                        syms.add(new Morphism(v, w, A));
+                        syms.add(derivedMorphism(D0, D));
                     }
                 }
 
@@ -351,8 +358,31 @@ public class Tiling {
             }
         }
         
+        private Morphism derivedMorphism(final Object D, final Object E) {
+            final DSCover cover = getCover();
+            final DSMorphism map = new DSMorphism(cover, cover, D, E);
+            final Operator op = Operator.fromLinear((Matrix) spanningMatrix(D)
+                    .inverse().times(spanningMatrix(E)));
+            final Map src2img = new HashMap();
+            final Map img2src = new HashMap();
+            for (final Iterator elms = cover.elements(); elms.hasNext();) {
+                final Object src = elms.next();
+                final Object img = map.get(src);
+                final INode v = nodeForChamber(src);
+                final INode w = nodeForChamber(img);
+                src2img.put(v, w);
+                img2src.put(w, v);
+                IEdge e = edgeForChamber(src).oriented();
+                IEdge f = edgeForChamber(img).oriented();
+                src2img.put(e, f);
+                img2src.put(f, e);
+            }
+            return new Morphism(src2img, img2src, op, true);
+        }
+        
         /**
          * Retrieves the chamber a node belongs to.
+         * 
          * @param v the node.
          * @return a chamber associated to node v.
          */
