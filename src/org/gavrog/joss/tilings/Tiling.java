@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.36 2007/05/09 00:29:30 odf Exp $
+ * @version $Id: Tiling.java,v 1.37 2007/05/10 21:25:38 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -645,13 +645,15 @@ public class Tiling {
     }
     
     // --- maps cover chambers to body numbers
-    final Map ch2b = new HashMap();
+    final Map chamber2body = new HashMap();
+    final Map chamber2kind = new HashMap();
 
     /**
      * Represents a body (3-dimensional constituent) of this tiling.
      */
     public class Body {
         final private int index;
+        final private int kind;
         final private Face faces[];
         final private int neighbors[];
         final private Vector neighborShifts[];
@@ -659,8 +661,10 @@ public class Tiling {
         private Body(final INode v) {
         	final DSCover cover = getCover();
         	final Skeleton skel = getDualSkeleton();
-        	final Integer k = (Integer) ch2b.get(skel.chamberAtNode(v));
+            final Object D = skel.chamberAtNode(v);
+        	final Integer k = (Integer) chamber2body.get(D);
             this.index = k.intValue();
+            this.kind = ((Integer) chamber2kind.get(cover.image(D))).intValue();
 
             final int deg = v.degree();
         	this.faces = new Face[deg];
@@ -671,13 +675,13 @@ public class Tiling {
             for (final Iterator conn = v.incidences(); conn.hasNext();) {
                 final IEdge e = (IEdge) conn.next();
                 Object Df = skel.chamberAtEdge(e);
-                if (!ch2b.get(Df).equals(k)) {
+                if (!chamber2body.get(Df).equals(k)) {
                     Df = cover.op(3, Df);
                 }
                 final Vector t = edgeTranslation(3, Df);
                 this.faces[i] = new Face(Df, i);
                 final Object Dn = skel.chamberAtNode(e.target());
-                this.neighbors[i] = ((Integer) ch2b.get(Dn)).intValue();
+                this.neighbors[i] = ((Integer) chamber2body.get(Dn)).intValue();
                 this.neighborShifts[i] = t;
                 ++i;
                 if (e.source().equals(e.target())) {
@@ -696,6 +700,10 @@ public class Tiling {
 
         public int getIndex() {
             return this.index;
+        }
+
+        public int getKind() {
+            return this.kind;
         }
 
         public int size() {
@@ -725,16 +733,29 @@ public class Tiling {
         }
         
         final DelaneySymbol cover = getCover();
+        final DelaneySymbol image = getSymbol();
+        final List idcs = IndexList.except(cover, 3);
+        
+        // --- map image chambers to body kinds
+        int m = 0;
+        for (final Iterator elms = image.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            if (!chamber2kind.containsKey(D)) {
+                final Integer mm = new Integer(m++);
+                for (final Iterator orb = image.orbit(idcs, D); orb.hasNext();) {
+                    chamber2kind.put(orb.next(), mm);
+                }
+            }
+        }
         
         // --- map chambers to body indices and vice versa
-        final List idcs = IndexList.except(cover, 3);
         int n = 0;
         for (final Iterator elms = cover.elements(); elms.hasNext();) {
             final Object D = elms.next();
-            if (!ch2b.containsKey(D)) {
+            if (!chamber2body.containsKey(D)) {
                 final Integer nn = new Integer(n++);
                 for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                    ch2b.put(orb.next(), nn);
+                    chamber2body.put(orb.next(), nn);
                 }
             }
         }

@@ -34,7 +34,7 @@ import org.gavrog.joss.tilings.Tiling.Body;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.22 2007/05/09 01:46:03 odf Exp $
+ * @version $Id: TestTiling.java,v 1.23 2007/05/10 21:25:40 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -143,10 +143,13 @@ public class TestTiling extends TestCase {
         final int n = cov.numberOfOrbits(idcs);
         final Set seen = new HashSet();
         assertEquals(n, bodies.size());
+        int m = 0;
         for (final Iterator iter = bodies.iterator(); iter.hasNext();) {
             final Body b = (Body) iter.next();
             seen.addAll(Iterators.asList(cov.orbit(idcs, b.getChamber())));
+            m = Math.max(m, b.getKind());
         }
+        assertEquals(til.getSymbol().numberOfOrbits(idcs), m + 1);
         assertEquals(cov.size(), seen.size());
     }
     
