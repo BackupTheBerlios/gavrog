@@ -71,7 +71,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.1 2007/05/12 01:32:27 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.2 2007/05/12 01:45:12 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -117,7 +117,7 @@ public class SystreCmdline extends EventSource {
         builtinArchive = new Archive("1.0");
 
         // --- read the default archives
-        final Package pkg = Archive.class.getPackage();
+        final Package pkg = this.getClass().getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
         
         final String rcsrPath = packagePath + "/rcsr.arc";
