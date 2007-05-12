@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.systre;
+package org.gavrog.joss.pgraphs.io;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * A class to represent an archive of periodic nets.
  * 
  * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.14 2006/07/18 01:19:51 odf Exp $
+ * @version $Id: Archive.java,v 1.1 2007/05/12 01:32:27 odf Exp $
  */
 public class Archive {
     final String keyVersion;

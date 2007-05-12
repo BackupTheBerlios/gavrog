@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 /**
  * Exceptions thrown by Systre's methods.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreException.java,v 1.4 2006/04/30 03:27:26 odf Exp $
+ * @version $Id: SystreException.java,v 1.1 2007/05/12 01:32:24 odf Exp $
  */
 public class SystreException extends RuntimeException {
     public static class Type {

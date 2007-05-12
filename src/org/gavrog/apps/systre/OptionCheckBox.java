@@ -31,7 +31,7 @@ limitations under the License.
 */
 
 
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 import java.lang.reflect.Method;
 

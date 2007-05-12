@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 import java.io.File;
 import java.util.HashSet;

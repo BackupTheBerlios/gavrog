@@ -18,7 +18,6 @@ import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling;
-import org.gavrog.systre.Archive;
 
 /**
  * Encapsulates a net with extra information picked up by the parser.

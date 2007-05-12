@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 import java.applet.Applet;
 import java.awt.BorderLayout;
@@ -86,6 +86,7 @@ import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.Embedder;
+import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
@@ -114,7 +115,7 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
  * is displayed symbolically.
  * 
  * @author Olaf Delgado
- * @version $Id: NetViewer.java,v 1.39 2007/04/24 19:56:59 odf Exp $
+ * @version $Id: NetViewer.java,v 1.1 2007/05/12 01:32:27 odf Exp $
  */
 public class NetViewer extends Applet {
     // --- color constants

@@ -40,14 +40,14 @@ import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.NetParser;
-import org.gavrog.systre.Archive;
 
 /**
  * Tests class PeriodicGraph.
  * 
  * @author Olaf Delgado
- * @version $Id: TestPeriodicGraph.java,v 1.41 2007/04/24 19:56:59 odf Exp $
+ * @version $Id: TestPeriodicGraph.java,v 1.42 2007/05/12 01:32:27 odf Exp $
  */
 public class TestPeriodicGraph extends TestCase {
     private PeriodicGraph G, dia, cds;

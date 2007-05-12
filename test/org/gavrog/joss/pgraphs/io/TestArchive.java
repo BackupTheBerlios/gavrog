@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.systre;
+package org.gavrog.joss.pgraphs.io;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -24,12 +24,13 @@ import java.io.StringReader;
 import junit.framework.TestCase;
 
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.NetParser;
-import org.gavrog.systre.Archive.Entry;
+import org.gavrog.joss.pgraphs.io.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.6 2006/08/18 20:56:14 odf Exp $
+ * @version $Id: TestArchive.java,v 1.1 2007/05/12 01:32:27 odf Exp $
  */
 public class TestArchive extends TestCase {
     final PeriodicGraph srs = NetParser.stringToNet(""

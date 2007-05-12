@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 import java.awt.Color;
 import java.awt.Insets;
@@ -44,6 +44,7 @@ import org.gavrog.box.simple.TaskController;
 import org.gavrog.box.simple.TaskStoppedException;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.pgraphs.embed.ProcessedNet;
+import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.Output;
 
@@ -70,7 +71,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.73 2007/03/29 01:00:51 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.1 2007/05/12 01:32:27 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -61,6 +61,7 @@ import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.embed.ProcessedNet;
+import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
@@ -70,7 +71,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.66 2007/03/20 19:20:27 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.1 2007/05/12 01:32:27 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;

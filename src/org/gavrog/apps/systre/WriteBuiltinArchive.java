@@ -1,4 +1,4 @@
-package org.gavrog.systre;
+package org.gavrog.apps.systre;
 
 import java.io.FileWriter;
 import java.io.IOException;
