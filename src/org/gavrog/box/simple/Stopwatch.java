@@ -19,7 +19,7 @@ package org.gavrog.box.simple;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Stopwatch.java,v 1.3 2006/11/22 06:26:45 odf Exp $
+ * @version $Id: Stopwatch.java,v 1.4 2007/05/12 06:23:55 odf Exp $
  */
 public class Stopwatch {
     private long accumulated = 0;
@@ -45,9 +45,6 @@ public class Stopwatch {
     }
     
     public void stop() {
-        if (!this.isRunning) {
-            throw new RuntimeException("not running");
-        }
         final long end = time();
         this.accumulated += end - this.start;
         this.isRunning = false;
