@@ -31,35 +31,47 @@ limitations under the License.
 */
 
 
-package org.gavrog.apps.systre;
+package org.gavrog.box.gui;
 
+import java.awt.Insets;
 import java.lang.reflect.Method;
 
 import org.gavrog.box.simple.Strings;
 
 import buoy.event.EventProcessor;
 import buoy.event.ValueChangedEvent;
-import buoy.widget.BCheckBox;
+import buoy.widget.BLabel;
+import buoy.widget.BSpinner;
+import buoy.widget.LayoutInfo;
+import buoy.widget.RowContainer;
 
-public class OptionCheckBox extends BCheckBox {
-	public OptionCheckBox(final String label, final Object target, final String option)
+public class OptionSpinnerBox extends RowContainer {
+	private BSpinner spinner;
+
+	public OptionSpinnerBox(final String label, final Object target, final String option)
 			throws Exception {
 
-		super(label, false);
+		super();
 		this.setBackground(null);
-
+		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
+				new Insets(5, 5, 5, 5), null));
+		
+		this.spinner = new BSpinner();
+		this.add(spinner);
+		this.add(new BLabel(label));
+		
 		final Class klazz = (target instanceof Class ? (Class) target : target.getClass());
 		final String optionCap = Strings.capitalized(option);
 		final Method getter = klazz.getMethod("get" + optionCap, null);
 		final Method setter = klazz.getMethod("set" + optionCap,
-				new Class[] { boolean.class });
+				new Class[] { int.class });
 
-		this.setState(((Boolean) getter.invoke(target, null)).booleanValue());
+		this.spinner.setValue(getter.invoke(target, null));
 
-		this.addEventLink(ValueChangedEvent.class, new EventProcessor() {
+		this.spinner.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				try {
-					setter.invoke(target, new Object[] { new Boolean(getState()) });
+					setter.invoke(target, new Object[] { spinner.getValue() });
 				} catch (final Exception ex) {
 				}
 			}
