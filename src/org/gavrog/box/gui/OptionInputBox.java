@@ -34,8 +34,6 @@ limitations under the License.
 package org.gavrog.box.gui;
 
 import java.awt.Insets;
-import java.beans.BeanInfo;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 
@@ -68,17 +66,7 @@ public class OptionInputBox extends RowContainer {
 		this.add(input);
 		this.add(new BLabel(label));
 
-		final Class targetType = (target instanceof Class ? (Class) target
-				: target.getClass());
-		final BeanInfo info = Introspector.getBeanInfo(targetType);
-		final PropertyDescriptor props[] = info.getPropertyDescriptors();
-		PropertyDescriptor prop = null;
-		for (int i = 0; i < props.length; ++i) {
-			if (props[i].getName().equals(option)) {
-				prop = props[i];
-				break;
-			}
-		}
+		final PropertyDescriptor prop = Config.namedProperty(target, option);
 		if (prop == null) {
 			throw new IllegalArgumentException("Target class has no property "
 					+ option);

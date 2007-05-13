@@ -28,7 +28,7 @@ import java.util.Properties;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Config.java,v 1.2 2007/05/13 19:37:40 odf Exp $
+ * @version $Id: Config.java,v 1.3 2007/05/13 19:53:29 odf Exp $
  */
 public class Config {
 	final private static Map mappedTypes = new HashMap();
@@ -103,5 +103,21 @@ public class Config {
 					.invoke(source, new Object[] {})));
 		}
 		return result;
+	}
+	
+	public static PropertyDescriptor namedProperty(final Object source,
+			final String name) throws Exception {
+		final Class type = (source instanceof Class ? (Class) source : source
+				.getClass());
+		final BeanInfo info = Introspector.getBeanInfo(type);
+		final PropertyDescriptor props[] = info.getPropertyDescriptors();
+		PropertyDescriptor prop = null;
+		for (int i = 0; i < props.length; ++i) {
+			if (props[i].getName().equals(name)) {
+				prop = props[i];
+				break;
+			}
+		}
+		return prop;
 	}
 }
