@@ -34,10 +34,10 @@ limitations under the License.
 package org.gavrog.box.gui;
 
 import java.awt.Insets;
-import java.lang.reflect.Constructor;
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-
-import org.gavrog.box.simple.Strings;
 
 import buoy.event.EventProcessor;
 import buoy.event.ValueChangedEvent;
@@ -68,29 +68,31 @@ public class OptionInputBox extends RowContainer {
 		this.add(input);
 		this.add(new BLabel(label));
 
-		final Class klazz = (target instanceof Class ? (Class) target : target
-				.getClass());
-		final String optionCap = Strings.capitalized(option);
-		final Method getter = klazz.getMethod("get" + optionCap, null);
-		final Class optionType = getter.getReturnType();
-		final Class mappedType = Config.wrapperType(optionType);
-		final Constructor fromString = mappedType
-				.getConstructor(new Class[] { String.class });
-		final Constructor wrapper = mappedType
-				.getConstructor(new Class[] { optionType });
-		final Method setter = klazz.getMethod("set" + optionCap,
-				new Class[] { optionType });
-		final Object oldValue = getter.invoke(target, null);
-		final Object mappedValue = wrapper.newInstance(new Object[] { oldValue });
-		
-		this.input.setText(String.valueOf(mappedValue));
+		final Class targetType = (target instanceof Class ? (Class) target
+				: target.getClass());
+		final BeanInfo info = Introspector.getBeanInfo(targetType);
+		final PropertyDescriptor props[] = info.getPropertyDescriptors();
+		PropertyDescriptor prop = null;
+		for (int i = 0; i < props.length; ++i) {
+			if (props[i].getName().equals(option)) {
+				prop = props[i];
+				break;
+			}
+		}
+		if (prop == null) {
+			throw new IllegalArgumentException("Target class has no property "
+					+ option);
+		}
+		final Method getter = prop.getReadMethod();
+		final Method setter = prop.getWriteMethod();
+		final Class optionType = setter.getParameterTypes()[0];
 
+		this.input.setText(Config.asString(getter.invoke(target, null)));
 		this.input.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				try {
-					final Object value = fromString
-							.newInstance(new Object[] { input.getText() });
-					setter.invoke(target, new Object[] { value });
+					Object val = Config.construct(optionType, input.getText());
+					setter.invoke(target, new Object[] { val });
 				} catch (final Exception ex) {
 				}
 			}
