@@ -33,6 +33,7 @@ limitations under the License.
 
 package org.gavrog.box.gui;
 
+import java.awt.Color;
 import java.awt.Insets;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -55,6 +56,7 @@ public class OptionInputBox extends RowContainer {
 		mappedTypes.put(long.class, Long.class);
 		mappedTypes.put(float.class, Float.class);
 		mappedTypes.put(double.class, Double.class);
+		mappedTypes.put(Color.class, ColorWrapper.class);
 	}
 	
 	private BTextField input;
@@ -83,17 +85,22 @@ public class OptionInputBox extends RowContainer {
 		final String optionCap = Strings.capitalized(option);
 		final Method getter = klazz.getMethod("get" + optionCap, null);
 		final Class optionType = getter.getReturnType();
-		final Constructor constructor = mappedType(optionType)
+		final Class mappedType = mappedType(optionType);
+		final Constructor fromString = mappedType
 				.getConstructor(new Class[] { String.class });
+		final Constructor wrapper = mappedType
+				.getConstructor(new Class[] { optionType });
 		final Method setter = klazz.getMethod("set" + optionCap,
 				new Class[] { optionType });
-
-		this.input.setText(String.valueOf(getter.invoke(target, null)));
+		final Object oldValue = getter.invoke(target, null);
+		final Object mappedValue = wrapper.newInstance(new Object[] { oldValue });
+		
+		this.input.setText(String.valueOf(mappedValue));
 
 		this.input.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				try {
-					final Object value = constructor
+					final Object value = fromString
 							.newInstance(new Object[] { input.getText() });
 					setter.invoke(target, new Object[] { value });
 				} catch (final Exception ex) {
