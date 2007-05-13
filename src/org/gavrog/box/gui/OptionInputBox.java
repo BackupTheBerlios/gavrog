@@ -74,7 +74,7 @@ public class OptionInputBox extends RowContainer {
 		super();
 		this.setBackground(null);
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
-				new Insets(5, 5, 5, 5), null));
+				new Insets(2, 5, 2, 5), null));
 
 		this.input = new BTextField(size);
 		this.add(input);
