@@ -33,12 +33,9 @@ limitations under the License.
 
 package org.gavrog.box.gui;
 
-import java.awt.Color;
 import java.awt.Insets;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.gavrog.box.simple.Strings;
 
@@ -50,15 +47,6 @@ import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 
 public class OptionInputBox extends RowContainer {
-	final private static Map mappedTypes = new HashMap();
-	static {
-		mappedTypes.put(int.class, Integer.class);
-		mappedTypes.put(long.class, Long.class);
-		mappedTypes.put(float.class, Float.class);
-		mappedTypes.put(double.class, Double.class);
-		mappedTypes.put(Color.class, ColorWrapper.class);
-	}
-	
 	private BTextField input;
 
 	public OptionInputBox(
@@ -85,7 +73,7 @@ public class OptionInputBox extends RowContainer {
 		final String optionCap = Strings.capitalized(option);
 		final Method getter = klazz.getMethod("get" + optionCap, null);
 		final Class optionType = getter.getReturnType();
-		final Class mappedType = mappedType(optionType);
+		final Class mappedType = Config.wrapperType(optionType);
 		final Constructor fromString = mappedType
 				.getConstructor(new Class[] { String.class });
 		final Constructor wrapper = mappedType
@@ -107,13 +95,5 @@ public class OptionInputBox extends RowContainer {
 				}
 			}
 		});
-	}
-	
-	private Class mappedType(final Class type) {
-		if (mappedTypes.containsKey(type)) {
-			return (Class) mappedTypes.get(type);
-		} else {
-			return type;
-		}
 	}
 }
