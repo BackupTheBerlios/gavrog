@@ -39,7 +39,7 @@ import javax.swing.SwingUtilities;
 
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.gui.OptionCheckBox;
-import org.gavrog.box.gui.OptionSpinnerBox;
+import org.gavrog.box.gui.OptionInputBox;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.box.simple.TaskController;
@@ -73,7 +73,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.2 2007/05/12 23:38:56 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.3 2007/05/13 00:02:21 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -375,9 +375,9 @@ public class SystreGUI extends BFrame {
 					SpaceGroupCatalogue.class, "preferHexagonal"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
 					"relaxPositions"));
-			column.add(new OptionSpinnerBox("Importance Of Equal Edge Lengths",
+			column.add(new OptionInputBox("Importance Of Equal Edge Lengths",
 					this.systre, "relaxPasses"));
-			column.add(new OptionSpinnerBox("Relaxation Step Limit",
+			column.add(new OptionInputBox("Relaxation Step Limit",
 					this.systre, "relaxSteps"));
 			column.add(new OptionCheckBox("Output Complete Unit Cell Contents",
 					this.systre, "outputFullCell"));
