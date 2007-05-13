@@ -82,11 +82,11 @@ public class OptionInputBox extends RowContainer {
 				.getClass());
 		final String optionCap = Strings.capitalized(option);
 		final Method getter = klazz.getMethod("get" + optionCap, null);
-		final Method setter = klazz.getMethod("set" + optionCap,
-				new Class[] { int.class });
-		final Class optionType = mappedType(getter.getReturnType());
-		final Constructor constructor = optionType
+		final Class optionType = getter.getReturnType();
+		final Constructor constructor = mappedType(optionType)
 				.getConstructor(new Class[] { String.class });
+		final Method setter = klazz.getMethod("set" + optionCap,
+				new Class[] { optionType });
 
 		this.input.setText(String.valueOf(getter.invoke(target, null)));
 
