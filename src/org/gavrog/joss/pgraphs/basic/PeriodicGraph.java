@@ -54,7 +54,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.71 2007/04/26 00:59:32 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.72 2007/05/15 23:11:47 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -556,13 +556,31 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param shift the shift vector associated to the new edge.
      * @return the newly created edge.
      */
-    public IEdge newEdge(final INode source, final INode target, final Vector shift) {
+    public IEdge newEdge(final INode source, final INode target,
+            final Vector shift) {
+        return newEdge(source, target, shift, true);
+    }
+
+    /**
+     * Creates a new edge.
+     * @param source the source node.
+     * @param target the target node.
+     * @param shift the shift vector associated to the new edge.
+     * @param checkSimple if true, trivial loops and duplicates are forbidden.
+     * @return the newly created edge.
+     */
+    public IEdge newEdge(final INode source, final INode target,
+            final Vector shift, final boolean checkSimple) {
         if (shift.getDimension() != this.dimension) {
             throw new IllegalArgumentException("bad shape for shift");
-        } else if (getEdge(source, target, shift) != null) {
-            throw new IllegalArgumentException("duplicate edge");
-        } else if (source.equals(target) && shift.equals(shift.zero())) {
-            throw new IllegalArgumentException("trivial loop");
+        }
+        if (checkSimple) {
+            if (getEdge(source, target, shift) != null) {
+                throw new IllegalArgumentException("duplicate edge");
+            }
+            if (source.equals(target) && shift.equals(shift.zero())) {
+                throw new IllegalArgumentException("trivial loop");
+            }
         }
         cache.clear();
         final IEdge e = super.newEdge(source, target);
