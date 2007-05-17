@@ -1,5 +1,5 @@
 /*
-Copyright 2006 Olaf Delgado-Friedrichs
+Copyright 2007 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.4 2007/05/08 05:27:54 odf Exp $
+ * @version $Id: Embedder.java,v 1.5 2007/05/17 19:08:48 odf Exp $
  */
 public class Embedder {
     protected class Angle {
@@ -67,9 +67,10 @@ public class Embedder {
                 return false;
             }
             final Angle a = (Angle) other;
-            return (this.v.equals(a.v) && this.w.equals(a.w) && this.s.equals(a.s))
-                   || (this.v.equals(a.w) && this.w.equals(a.v) && this.s.equals(a.s
-                           .negative()));
+            return (this.v.equals(a.v) && this.w.equals(a.w) && this.s
+					.equals(a.s))
+					|| (this.v.equals(a.w) && this.w.equals(a.v) && this.s
+							.equals(a.s.negative()));
         }
         
         public int hashCode() {
@@ -94,10 +95,12 @@ public class Embedder {
         public final int type;
         public final double weight;
         public double length;
-        
-        public Edge(final INode v, final INode w, final Vector s, int type, final double weight) {
-            this.v = v;
-            this.w = w;
+
+		public Edge(
+				final INode v, final INode w, final Vector s, int type,
+				final double weight) {
+			this.v = v;
+			this.w = w;
             final int d = s.getDimension();
             this.shift = new double[d];
             for (int i = 0; i < d; ++i) {
@@ -121,15 +124,15 @@ public class Embedder {
     double volumeWeight;
     double p[];
     
-    // --- Options:
-    private  int passes = 3;
 	private final PeriodicGraph graph;
 	private final Map node2sym;
 	private final Map node2images;
-	private final Set angles;
-	private boolean optimizePositions = true;
 	protected boolean _positionsRelaxed = false;
 	protected boolean _cellRelaxed = false;
+
+	// --- Options:
+    private  int passes = 3;
+	private boolean optimizePositions = true;
     
     /**
      * Constructs an instance.
@@ -145,11 +148,6 @@ public class Embedder {
         this.graph = graph;
         final int d = this.dimGraph = graph.getDimension();
 
-        this.angles = makeAngles();
-        if (this.angles == null) {
-            throw new RuntimeException("something wrong here");
-        }
-        
         this.node2sym = new HashMap();
         for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
@@ -356,29 +354,48 @@ public class Embedder {
     * @return an iterator over the set of orbits.
     */
    private Iterator angleOrbits() {
-       final Partition P = new Partition();
-       final Map pos = getGraph().barycentricPlacement();
-       for (final Iterator syms = getGraph().symmetries().iterator(); syms.hasNext();) {
-           final Morphism phi = (Morphism) syms.next();
-           final Operator A = phi.getAffineOperator();
-           for (final Iterator angles = angles(); angles.hasNext();) {
-               final Angle a = (Angle) angles.next();
-               
-               final INode vphi = (INode) phi.get(a.v);
-               final Point pv = (Point) pos.get(a.v);
-               final Vector dv = (Vector) pv.times(A).minus(pos.get(vphi));
-               
-               final INode wphi = (INode) phi.get(a.w);
-               final Point pw = (Point) pos.get(a.w);
-               final Vector dw = (Vector) pw.times(A).minus(pos.get(wphi));
-               
-               final Vector s = (Vector) a.s.times(A).plus(dw).minus(dv);
-               
-               P.unite(a, new Angle(vphi, wphi, s));
-           }
-       }
-       return P.classes();
-   }
+		final HashSet angles = new HashSet();
+		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
+			final INode v = (INode) nodes.next();
+			final List incidences = this.graph.allIncidences(v);
+			final int n = incidences.size();
+			for (int i = 0; i < n - 1; ++i) {
+				final IEdge e1 = (IEdge) incidences.get(i);
+				final INode w1 = e1.target();
+				for (int j = i + 1; j < n; ++j) {
+					final IEdge e2 = (IEdge) incidences.get(j);
+					final INode w2 = e2.target();
+					final Vector s = (Vector) this.graph.getShift(e2).minus(
+							this.graph.getShift(e1));
+					angles.add(new Angle(w1, w2, s));
+				}
+			}
+		}
+		
+		final Partition P = new Partition();
+		final Map pos = getGraph().barycentricPlacement();
+		for (final Iterator syms = getGraph().symmetries().iterator(); syms
+				.hasNext();) {
+			final Morphism phi = (Morphism) syms.next();
+			final Operator A = phi.getAffineOperator();
+			for (final Iterator iter = angles.iterator(); iter.hasNext();) {
+				final Angle a = (Angle) iter.next();
+
+				final INode vphi = (INode) phi.get(a.v);
+				final Point pv = (Point) pos.get(a.v);
+				final Vector dv = (Vector) pv.times(A).minus(pos.get(vphi));
+
+				final INode wphi = (INode) phi.get(a.w);
+				final Point pw = (Point) pos.get(a.w);
+				final Vector dw = (Vector) pw.times(A).minus(pos.get(wphi));
+
+				final Vector s = (Vector) a.s.times(A).plus(dw).minus(dv);
+
+				P.unite(a, new Angle(vphi, wphi, s));
+			}
+		}
+		return P.classes();
+	}
    
     // --- we need to override some default implementations
     
@@ -691,27 +708,6 @@ public class Embedder {
 	    this._cellRelaxed = false;
 	}
 
-	private Set makeAngles() {
-	    final HashSet result = new HashSet();
-	    for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
-	        final INode v = (INode) nodes.next();
-	        final List incidences = this.graph.allIncidences(v);
-	        final int n = incidences.size();
-	        for (int i = 0; i < n-1; ++i) {
-	            final IEdge e1 = (IEdge) incidences.get(i);
-	            final INode w1 = e1.target();
-	            for (int j = i+1; j < n; ++j) {
-	                final IEdge e2 = (IEdge) incidences.get(j);
-	                final INode w2 = e2.target();
-	                final Vector s = (Vector) this.graph.getShift(e2).minus(
-	                        this.graph.getShift(e1));
-	                result.add(new Angle(w1, w2, s));
-	            }
-	        }
-	    }
-	    return result;
-	}
-
 	protected void resymmetrizeCell() {
 	    setGramMatrix(resymmetrized(getGramMatrix(), getGraph()));
 	}
@@ -787,10 +783,6 @@ public class Embedder {
 	protected double length(final Vector v) {
 	    final Real squareLength = (Real) Vector.dot(v, v, getGramMatrix());
 	    return Math.sqrt(squareLength.doubleValue());
-	}
-
-	protected Iterator angles() {
-	    return this.angles.iterator();
 	}
 
 	protected Iterator nodeOrbitReps() {
