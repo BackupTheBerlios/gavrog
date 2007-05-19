@@ -18,16 +18,14 @@
 package org.gavrog.joss.graphics;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.2 2007/05/19 06:40:43 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.3 2007/05/19 07:50:06 odf Exp $
  */
 public class SubdivisionSurface {
     final public double[][] vertices;
@@ -256,8 +254,12 @@ public class SubdivisionSurface {
             }
             
             // --- add inner vertices
-            final Map back = new HashMap();
-			final Map forw = new HashMap();
+            final int back[] = new int[startNew + n];
+			final int forw[] = new int[startNew + n];
+			for (int i = startInner; i < back.length; ++i) {
+				back[i] = forw[i] = -1;
+			}
+			
 			for (int i0 = 0; i0 < n; ++i0) {
 				if (i0 == 0 && upDown[i0] == 0) {
 					continue;
@@ -290,10 +292,10 @@ public class SubdivisionSurface {
 				} else {
 					continue;
                 }
-				back.put(new Integer(k), new Integer(a + startInner));
-				forw.put(new Integer(k), new Integer(b + startInner));
-				forw.put(new Integer(a + startInner), new Integer(k));
-				back.put(new Integer(b + startInner), new Integer(k));
+				back[k] = a + startInner;
+				forw[k] = b + startInner;
+				forw[a + startInner] = k;
+				back[b + startInner] = k;
                 final double v[] = new double[3];
                 Vec.minus(tmp, c, center);
                 Vec.complementProjection(tmp, tmp, normal);
@@ -304,10 +306,9 @@ public class SubdivisionSurface {
 			
             // --- add new faces pointing outward
 			for (int i = startInner; i < startNew; ++i) {
-				final Integer ii = new Integer(i);
-				if (back.containsKey(ii) && forw.containsKey(ii)) {
-					final int b = ((Integer) back.get(ii)).intValue();
-					final int f = ((Integer) forw.get(ii)).intValue();
+				if (back[i] >= 0 && forw[i] >= 0) {
+					final int b = back[i];
+					final int f = forw[i];
 					if (b != f) {
 						faces.add(new int[] { i, f, b });
 					}
@@ -316,10 +317,9 @@ public class SubdivisionSurface {
             
             // --- add new faces pointing inward
 			for (int i = startNew; i < vertices.size(); ++i) {
-				final Integer ii = new Integer(i);
-				if (back.containsKey(ii) && forw.containsKey(ii)) {
-					final int b = ((Integer) back.get(ii)).intValue();
-					final int f = ((Integer) forw.get(ii)).intValue();
+				if (back[i] >= 0 && forw[i] >= 0) {
+					final int b = back[i];
+					final int f = forw[i];
 					if (b != f) {
 						final int m = (b + 1 - startInner) % n + startInner;
 						if (m == f) {
@@ -349,20 +349,17 @@ public class SubdivisionSurface {
             
             // --- add remaining new faces
 			for (int i0 = startInner; i0 < startNew; ++i0) {
-				final Integer ii0 = new Integer(i0);
-                if (!forw.containsKey(ii0)
-						|| forw.get(ii0).equals(back.get(ii0))) {
-                    if (!back.containsKey(ii0)) {
-                        continue;
-                    }
+                if (forw[i0] < 0 || forw[i0] == back[i0]) {
+					if (back[i0] < 0) {
+						continue;
+					}
 					final int i1 = (i0 + 1 - startInner) % n + startInner;
-					final Integer ii1 = new Integer(i1);
-					final int b = ((Integer) back.get(ii0)).intValue();
+					final int b = back[i0];
 					final int f;
-					if (back.containsKey(ii1)) {
-						f = ((Integer) back.get(ii1)).intValue();
+					if (back[i1] >= 0) {
+						f = back[i1];
 					} else {
-						f = ((Integer) forw.get(ii1)).intValue();
+						f = forw[i1];
 					}
 					faces.add(new int[] { i0, i1, f, b });
 				}
