@@ -17,11 +17,17 @@
 
 package org.gavrog.joss.graphics;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+
 /**
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.1 2007/05/07 01:33:22 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.2 2007/05/19 06:40:43 odf Exp $
  */
 public class SubdivisionSurface {
     final public double[][] vertices;
@@ -183,4 +189,209 @@ public class SubdivisionSurface {
         
         return new SubdivisionSurface(newVertices, newFaces, newFixed);
     }
+
+    public static SubdivisionSurface fromOutline(final double corners[][]) {
+    	final List vertices = new ArrayList();
+    	final List faces = new ArrayList();
+    	final double tmp[] = new double[3];
+    	int startInner = 0;
+    	for (int i = 0; i < corners.length; ++i) {
+    		vertices.add(corners[i]);
+    	}
+    	
+    	while (true) {
+            final int startNew = vertices.size();
+			final int n = startNew - startInner;
+			if (n <= 4) {
+				break;
+			}
+			
+            // --- compute an average normal vector and face center
+			final double normal[] = new double[3];
+			final double center[] = new double[3];
+			for (int i = 0; i < n; ++i) {
+				Vec.crossProduct(tmp, (double[]) vertices.get(i + startInner),
+						(double[]) vertices.get((i + 1) % n + startInner));
+				Vec.plus(normal, normal, tmp);
+				Vec.plus(center, center, (double[]) vertices.get(i + startInner));
+			}
+			// --- normalize both vectors
+			Vec.normalized(normal, normal);
+			Vec.times(center, 1.0 / n, center);
+
+			// --- determine if vertices lie above, on or below the middle plane
+			final int upDown[] = new int[n];
+			int nOnMiddle = 0;
+			for (int i = 0; i < n; ++i) {
+				Vec.minus(tmp, (double[]) vertices.get(i + startInner),
+						center);
+				final double d0 = Vec.innerProduct(normal, tmp);
+				if (d0 > 0.01) {
+					upDown[i] = 1;
+                } else if (d0 < -0.01) {
+                    upDown[i] = -1;
+                } else {
+                    upDown[i] = 0;
+                    ++nOnMiddle;
+                }
+            }
+            if (nOnMiddle == n) {
+                break;
+            }
+
+            // --- determine where the middle plane is crossed
+            final boolean changes[] = new boolean[n];
+            int nChanging = 0;
+            for (int i0 = 0; i0 < n; ++i0) {
+                int i1 = (i0 + 1) % n;
+                if (upDown[i0] != upDown[i1]) {
+                    changes[i0] = true;
+                    ++nChanging;
+                } else {
+                    changes[i0] = false;
+                }
+            }
+            if (nChanging < 4) {
+                break;
+            }
+            
+            // --- add inner vertices
+            final Map back = new HashMap();
+			final Map forw = new HashMap();
+			for (int i0 = 0; i0 < n; ++i0) {
+				if (i0 == 0 && upDown[i0] == 0) {
+					continue;
+				}
+				final int i1 = (i0 + 1) % n;
+                final int k = vertices.size();
+                final double c[] = new double[3];
+                final int a;
+                final int b;
+				if (changes[i0]) {
+					if (changes[i1] && upDown[i1] == 0) {
+						a = i0;
+						b = (i1 + 1) % n;
+						Vec.linearCombination(tmp, 0.5, (double[]) vertices
+								.get(i0 + startInner), 0.5, (double[]) vertices
+								.get(i1 + startInner));
+						Vec.linearCombination(c, 0.667, tmp, 0.333,
+								(double[]) vertices.get(b + startInner));
+						++i0;
+					} else {
+						a = i0;
+						b = i1;
+						Vec.linearCombination(c, 0.5, (double[]) vertices
+								.get(i0 + startInner), 0.5, (double[]) vertices
+								.get(i1 + startInner));
+					}
+				} else if (!changes[i1]) {
+					a = b = i1;
+					Vec.copy(c, (double[]) vertices.get(i1 + startInner));
+				} else {
+					continue;
+                }
+				back.put(new Integer(k), new Integer(a + startInner));
+				forw.put(new Integer(k), new Integer(b + startInner));
+				forw.put(new Integer(a + startInner), new Integer(k));
+				back.put(new Integer(b + startInner), new Integer(k));
+                final double v[] = new double[3];
+                Vec.minus(tmp, c, center);
+                Vec.complementProjection(tmp, tmp, normal);
+                Vec.linearCombination(tmp, 0.5, tmp, 1, center);
+                Vec.linearCombination(v, 0.667, tmp, 0.333, c);
+                vertices.add(v);
+			}
+			
+            // --- add new faces pointing outward
+			for (int i = startInner; i < startNew; ++i) {
+				final Integer ii = new Integer(i);
+				if (back.containsKey(ii) && forw.containsKey(ii)) {
+					final int b = ((Integer) back.get(ii)).intValue();
+					final int f = ((Integer) forw.get(ii)).intValue();
+					if (b != f) {
+						faces.add(new int[] { i, f, b });
+					}
+				}
+			}
+            
+            // --- add new faces pointing inward
+			for (int i = startNew; i < vertices.size(); ++i) {
+				final Integer ii = new Integer(i);
+				if (back.containsKey(ii) && forw.containsKey(ii)) {
+					final int b = ((Integer) back.get(ii)).intValue();
+					final int f = ((Integer) forw.get(ii)).intValue();
+					if (b != f) {
+						final int m = (b + 1 - startInner) % n + startInner;
+						if (m == f) {
+							faces.add(new int[] { i, b, f });
+						} else {
+							final double u[] = new double[3];
+							final double v[] = new double[3];
+							final double w[] = new double[3];
+							Vec.minus(u, (double[]) vertices.get(b),
+									(double[]) vertices.get(m));
+							Vec.minus(v, (double[]) vertices.get(i),
+									(double[]) vertices.get(m));
+							Vec.minus(w, (double[]) vertices.get(f),
+									(double[]) vertices.get(m));
+							final double angle = Vec.angle(u, v)
+									+ Vec.angle(v, w);
+							if (angle > 0.75 * Math.PI) {
+								faces.add(new int[] { i, b, m });
+								faces.add(new int[] { i, m, f });
+							} else {
+								faces.add(new int[] { i, b, m, f });
+							}
+						}
+					}
+				}
+			}
+            
+            // --- add remaining new faces
+			for (int i0 = startInner; i0 < startNew; ++i0) {
+				final Integer ii0 = new Integer(i0);
+                if (!forw.containsKey(ii0)
+						|| forw.get(ii0).equals(back.get(ii0))) {
+                    if (!back.containsKey(ii0)) {
+                        continue;
+                    }
+					final int i1 = (i0 + 1 - startInner) % n + startInner;
+					final Integer ii1 = new Integer(i1);
+					final int b = ((Integer) back.get(ii0)).intValue();
+					final int f;
+					if (back.containsKey(ii1)) {
+						f = ((Integer) back.get(ii1)).intValue();
+					} else {
+						f = ((Integer) forw.get(ii1)).intValue();
+					}
+					faces.add(new int[] { i0, i1, f, b });
+				}
+			}
+			
+			// --- prepare for the next step if any
+            final int x = vertices.size() - startNew;
+			startInner = startNew;
+			if (x == n) {
+				break;
+			}
+    	}
+    	// --- add final inner face
+    	final int inner[] = new int[vertices.size() - startInner];
+    	for (int i = startInner; i < vertices.size(); ++i) {
+    		inner[i - startInner] = i;
+    	}
+    	faces.add(inner);
+
+    	// --- construct a subdivision surface to return
+    	final double pos[][] = new double[vertices.size()][];
+    	vertices.toArray(pos);
+    	final int idcs[][] = new int[faces.size()][];
+    	faces.toArray(idcs);
+    	final boolean fixed[] = new boolean[vertices.size()];
+    	for (int i = 0; i < corners.length; ++i) {
+    		fixed[i] = true;
+    	}
+    	
+    	return new SubdivisionSurface(pos, idcs, fixed);
+	}
 }
