@@ -38,6 +38,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.gui.Invoke;
 import org.gavrog.box.gui.OptionCheckBox;
 import org.gavrog.box.gui.OptionInputBox;
 import org.gavrog.box.simple.DataFormatException;
@@ -73,7 +74,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.3 2007/05/13 00:02:21 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.4 2007/05/20 22:50:17 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -211,7 +212,7 @@ public class SystreGUI extends BFrame {
     }
     
     public void status(final String text) {
-		invokeAndWait(new Runnable() {
+		Invoke.andWait(new Runnable() {
 			public void run() {
 				statusBar.setText("<html><font color=\"green\">&nbsp;" + text
 						 + "</font></html>");
@@ -602,7 +603,7 @@ public class SystreGUI extends BFrame {
             }
         }
         
-        invokeAndWait(new Runnable() {
+        Invoke.andWait(new Runnable() {
             public void run() {
                 final String title = "Systre: " + type + " ERROR";
                 final String msg = text + (ex != null ? " - " + ex.getMessage() : "")
@@ -615,7 +616,7 @@ public class SystreGUI extends BFrame {
 	}
     
     private void disableMainButtons() {
-        invokeAndWait(new Runnable() {
+        Invoke.andWait(new Runnable() {
             public void run() {
                 openButton.setEnabled(false);
                 nextButton.setEnabled(false);
@@ -626,7 +627,7 @@ public class SystreGUI extends BFrame {
     }
 
     private void enableMainButtons() {
-        invokeLater(new Runnable() {
+        Invoke.later(new Runnable() {
             public void run() {
                 openButton.setEnabled(true);
                 if (moreNets()) {
@@ -716,40 +717,6 @@ public class SystreGUI extends BFrame {
     
     public void doQuit() {
         System.exit(0);
-    }
-    
-    /**
-     * Wrapper for {@link SwingUtilities.invokeAndWait}}. If we're in the event dispatch
-     * thread, the argument is just invoked normally.
-     * 
-     * @param runnable what to invoke.
-     */
-    private void invokeAndWait(final Runnable runnable) {
-        if (SwingUtilities.isEventDispatchThread()) {
-            runnable.run();
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(runnable);
-            } catch (Exception ex) {
-            }
-        }
-    }
-
-    /**
-     * Wrapper for {@link SwingUtilities.invokeLater}}. If we're in the event dispatch
-     * thread, the argument is just invoked normally.
-     * 
-     * @param runnable what to invoke.
-     */
-    private void invokeLater(final Runnable runnable) {
-        if (SwingUtilities.isEventDispatchThread()) {
-            runnable.run();
-        } else {
-            try {
-                SwingUtilities.invokeLater(runnable);
-            } catch (Exception ex) {
-            }
-        }
     }
     
 	public boolean getSingleWrite() {
