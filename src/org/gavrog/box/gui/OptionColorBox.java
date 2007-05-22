@@ -35,10 +35,13 @@ package org.gavrog.box.gui;
 
 import java.awt.Color;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 
 import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
@@ -48,20 +51,32 @@ import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 
 public class OptionColorBox extends RowContainer {
-	final private BButton color;
-
+	static private Color currentColor = null;
+	final static private JColorChooser chooser = new JColorChooser();
+	final static private ActionListener onOk = new ActionListener() {
+		public void actionPerformed(final ActionEvent ev) {
+			currentColor = chooser.getColor();
+		}
+	};
+	final static private ActionListener onCancel = new ActionListener() {
+		public void actionPerformed(final ActionEvent ev) {
+			currentColor = null;
+		}
+	};
+	final static private JDialog dialog = JColorChooser.createDialog(null,
+			"Choose a color", true, chooser, onOk, onCancel);
+	
 	public OptionColorBox(
 			final String label, final Object target, final String option)
 			throws Exception {
-
 		super();
 		this.setBackground(null);
 
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
 				new Insets(2, 5, 2, 5), null));
 
-		this.color = new BButton();
-		this.add(this.color);
+		final BButton color = new BButton();
+		this.add(color);
 		this.add(new BLabel(label));
 
 		final PropertyDescriptor prop = Config.namedProperty(target, option);
@@ -72,14 +87,15 @@ public class OptionColorBox extends RowContainer {
 		final Method getter = prop.getReadMethod();
 		final Method setter = prop.getWriteMethod();
 
-		this.color.setBackground((Color) getter.invoke(target, null));
-		this.color.addEventLink(CommandEvent.class, new EventProcessor() {
+		color.setBackground((Color) getter.invoke(target, null));
+		color.addEventLink(CommandEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				try {
-					final Color newColor = JColorChooser.showDialog(null,
-							label, color.getBackground());
-					color.setBackground(newColor);
-					setter.invoke(target, new Object[] { newColor });
+					dialog.setVisible(true);
+					if (currentColor != null) {
+						color.setBackground(currentColor);
+						setter.invoke(target, new Object[] { currentColor });
+					}
 				} catch (final Exception ex) {
 				}
 			}
