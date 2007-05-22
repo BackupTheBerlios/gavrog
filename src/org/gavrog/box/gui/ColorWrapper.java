@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * @author Olaf Delgado
- * @version $Id: ColorWrapper.java,v 1.1 2007/05/13 01:30:29 odf Exp $
+ * @version $Id: ColorWrapper.java,v 1.2 2007/05/22 05:03:08 odf Exp $
  */
 public class ColorWrapper extends Color {
 	final private static Map name2color = new HashMap();
@@ -83,7 +83,7 @@ public class ColorWrapper extends Color {
 		if (name != null) {
 			return name;
 		} else {
-			return "#" + Integer.toHexString(getRGB());
+			return String.valueOf(getRGB());
 		}
 	}
 }
