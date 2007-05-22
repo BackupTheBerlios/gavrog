@@ -50,7 +50,7 @@ public class OptionInputBox extends RowContainer {
 	public OptionInputBox(
 			final String label, final Object target, final String option)
 			throws Exception {
-		this(label, target, option, 10);
+		this(label, target, option, 5);
 	}
 	
 	public OptionInputBox(
