@@ -37,7 +37,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
@@ -71,7 +70,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.2 2007/05/12 01:45:12 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.3 2007/05/22 22:34:36 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -704,7 +703,7 @@ public class SystreCmdline extends EventSource {
         out.println("Data file \"" + filePath + "\".");
         
         // --- loop through the structures specified in the input file
-        while (true) {
+        while (inputs.hasNext()) {
             Net G = null;
             Exception problem = null;
             
@@ -712,8 +711,6 @@ public class SystreCmdline extends EventSource {
             status("Reading...");
             try {
                 G = (Net) inputs.next();
-            } catch (NoSuchElementException ex) {
-                break;
             } catch (Exception ex) {
                 problem = ex;
             }
