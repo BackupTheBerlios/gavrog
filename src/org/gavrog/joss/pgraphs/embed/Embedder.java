@@ -45,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * This class implements an embedding algorithm for periodic graphs.
  * 
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.6 2007/05/18 03:11:34 odf Exp $
+ * @version $Id: Embedder.java,v 1.7 2007/05/23 05:23:14 odf Exp $
  */
 public class Embedder {
 	final private static int EDGE = 1;
@@ -561,7 +561,7 @@ public class Embedder {
 			System.out.println("edgeWeightSum is " + edgeWeightSum
 					+ ", but should be " + getGraph().numberOfEdges());
 		}
-		final double scaling = 1 / avg;
+		final double scaling = 1.01 / avg;
 
 		double edgeVariance = 0.0;
 		double edgePenalty = 0.0;
