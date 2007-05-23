@@ -38,6 +38,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.gui.ExtensionFilter;
 import org.gavrog.box.gui.Invoke;
 import org.gavrog.box.gui.OptionCheckBox;
 import org.gavrog.box.gui.OptionInputBox;
@@ -74,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.4 2007/05/20 22:50:17 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.5 2007/05/23 06:18:34 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
