@@ -28,7 +28,7 @@ import java.util.Properties;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Config.java,v 1.3 2007/05/13 19:53:29 odf Exp $
+ * @version $Id: Config.java,v 1.4 2007/05/24 23:17:51 odf Exp $
  */
 public class Config {
 	final private static Map mappedTypes = new HashMap();
@@ -73,17 +73,16 @@ public class Config {
 		final BeanInfo info = Introspector.getBeanInfo(type);
 		final PropertyDescriptor props[] = info.getPropertyDescriptors();
 		for (int i = 0; i < props.length; ++i) {
-			final String name = props[i].getName();
-			if (name.equals("class")) {
+			if (props[i].getWriteMethod() == null) {
 				continue;
 			}
-			final String value = input.getProperty(prefix + name);
+			final String value = input.getProperty(prefix + props[i].getName());
 			if (value == null) {
 				continue;
 			}
 			final Method setter = props[i].getWriteMethod();
-			setter.invoke(target, new Object[] { construct(setter
-					.getParameterTypes()[0], value) });
+            final Class valueType = setter.getParameterTypes()[0];
+			setter.invoke(target, new Object[] { construct(valueType, value) });
 		}
 	}
 
@@ -95,13 +94,13 @@ public class Config {
 		final Properties result = new Properties();
 		final PropertyDescriptor props[] = info.getPropertyDescriptors();
 		for (int i = 0; i < props.length; ++i) {
-			final String name = props[i].getName();
-			if (name.equals("class")) {
-				continue;
-			}
-			result.setProperty(prefix + name, asString(props[i].getReadMethod()
-					.invoke(source, new Object[] {})));
-		}
+            if (props[i].getWriteMethod() == null) {
+                continue;
+            }
+            final Method getter = props[i].getReadMethod();
+            final Object value = getter.invoke(source, new Object[] {});
+            result.setProperty(prefix + props[i].getName(), asString(value));
+        }
 		return result;
 	}
 	
