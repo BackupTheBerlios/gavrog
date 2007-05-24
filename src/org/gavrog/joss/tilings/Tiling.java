@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.38 2007/05/15 23:13:10 odf Exp $
+ * @version $Id: Tiling.java,v 1.39 2007/05/24 04:03:21 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -67,6 +67,7 @@ public class Tiling {
     final protected static Object SPACEGROUP = new Tag();
     final protected static Object BODIES = new Tag();
 	final protected static Object SYMMETRIES = new Tag();
+	final protected static Object COVER_ORIENTATION = new Tag();
     
     // --- cache for this instance
     final protected Cache cache = new Cache();
@@ -122,6 +123,27 @@ public class Tiling {
      */
     public DSCover getCover() {
         return this.cov;
+    }
+    
+    /**
+     * @return a map assigning orientations to cover chambers.
+     */
+    public Map getCoverOrientation() {
+    	try {
+    		return (Map) this.cache.get(COVER_ORIENTATION);
+    	} catch (Cache.NotFoundException ex) {
+    		final DSCover cover = getCover();
+    		final Map ori = cover.partialOrientation();
+    		return (Map) this.cache.put(COVER_ORIENTATION, ori);
+    	}
+    }
+    
+    /**
+     * @param D a chamber of the (pseudo-) toroidal cover.
+     * @return the orientation of cover chamber D.
+     */
+    public int coverOrientation(final Object D) {
+    	return ((Integer) this.getCoverOrientation().get(D)).intValue();
     }
     
     /**
@@ -619,11 +641,12 @@ public class Tiling {
     	private Face(final Object D, final int index) {
     		final DelaneySymbol cover = getCover();
             this.chambers = new LinkedList();
-            Object E = D;
+            final Object E0 = coverOrientation(D) < 0 ? cover.op(0, D) : D;
+            Object E = E0;
             do {
                 this.chambers.add(E);
                 E = cover.op(1, cover.op(0, E));
-            } while (!E.equals(D));
+            } while (!E.equals(E0));
             this.index = index;
     	}
 
