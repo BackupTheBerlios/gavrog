@@ -17,12 +17,13 @@
 
 package org.gavrog.box.collections;
 
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Cache.java,v 1.1 2007/04/26 00:59:05 odf Exp $
+ * @version $Id: Cache.java,v 1.2 2007/05/25 22:18:58 odf Exp $
  */
 public class Cache {
     final private Map content;
@@ -35,12 +36,11 @@ public class Cache {
      * @param content
      */
     public Cache() {
-        this.content = new WeakHashMap();
+        this.content = new HashMap();
     }
 
     /**
      * 
-     * @see java.util.Map#clear()
      */
     public void clear() {
         this.content.clear();
@@ -49,21 +49,21 @@ public class Cache {
     /**
      * @param key
      * @return
-     * @see java.util.Map#get(java.lang.Object)
      */
     public Object get(final Object key) {
-        final Object result = this.content.get(key);
-        if (result != null) {
-            return result;
-        } else {
-            throw new NotFoundException();
+        final Object entry = this.content.get(key);
+        if (entry != null) {
+            final Object result = ((SoftReference) entry).get();
+            if (result != null) {
+                return result;
+            }
         }
+        throw new NotFoundException();
     }
 
     /**
      * @param key
      * @return
-     * @see java.util.Map#get(java.lang.Object)
      */
     public boolean getBoolean(final Object key) {
         return ((Boolean) this.get(key)).booleanValue();
@@ -73,10 +73,9 @@ public class Cache {
      * @param key
      * @param value
      * @return
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
     public Object put(final Object key, final Object value) {
-        this.content.put(key, value);
+        this.content.put(key, new SoftReference(value));
         return value;
     }
 
@@ -84,19 +83,22 @@ public class Cache {
      * @param key
      * @param value
      * @return
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
     public boolean put(final Object key, final boolean value) {
-        this.content.put(key, new Boolean(value));
-        return value;
+        return ((Boolean) this.put(key, new Boolean(value))).booleanValue();
     }
 
     /**
      * @param key
      * @return
-     * @see java.util.Map#remove(java.lang.Object)
      */
     public Object remove(final Object key) {
-        return this.content.remove(key);
+        Object value = null;
+        try {
+            value = this.get(key);
+        } catch (NotFoundException ex) {
+        }
+        this.content.remove(key);
+        return value;
     }
 }
