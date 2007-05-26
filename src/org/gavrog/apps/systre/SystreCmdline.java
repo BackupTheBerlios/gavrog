@@ -18,7 +18,9 @@ package org.gavrog.apps.systre;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,10 +39,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.gui.Config;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.box.simple.Strings;
@@ -70,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.4 2007/05/26 20:38:26 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.5 2007/05/26 22:38:16 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -894,6 +898,21 @@ public class SystreCmdline extends EventSource {
             } else if (s.equalsIgnoreCase("--systreKey")
             		|| s.equalsIgnoreCase("-systreKey")) {
             	setOutputSystreKey(true);
+            } else if (s.equalsIgnoreCase("--writeConfig")
+            		|| s.equalsIgnoreCase("-writeConfig")) {
+                if (i == args.length - 1) {
+                    out.println("!!! WARNING (USAGE) - Argument missing for \""
+                            + s + "\".");
+                } else {
+                    saveOptions(args[++i]);
+                }
+            } else if (s.equals("-c")) {
+                if (i == args.length - 1) {
+                    out.println("!!! WARNING (USAGE) - Argument missing for \""
+                            + s + "\".");
+                } else {
+                    loadOptions(args[++i]);
+                }
             } else if (s.equals("-x")) {
                 archivesAsInput = !archivesAsInput;
             } else {
@@ -968,6 +987,57 @@ public class SystreCmdline extends EventSource {
 		}
 	}
 	
+    private void saveOptions(final String configFileName) {
+    	// --- pick up all property values for this instance
+    	final Properties ourProps;
+		try {
+			ourProps = Config.getProperties(this);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return;
+		}
+		
+		// --- write them to the configuration file
+    	try {
+			ourProps.store(new FileOutputStream(configFileName), "Systre options");
+		} catch (final FileNotFoundException ex) {
+			System.err.println("Could not find configuration file " + configFileName);
+		} catch (final IOException ex) {
+			System.err.println("Exception occurred while writing configuration file");
+		}
+    }
+
+    private void loadOptions(final String configFileName) {
+    	// --- read the configuration file
+    	final Properties ourProps = new Properties();
+    	try {
+			ourProps.load(new FileInputStream(configFileName));
+		} catch (FileNotFoundException ex) {
+			System.err.println("Could not find configuration file " + configFileName);
+			return;
+		} catch (IOException ex) {
+			System.err.println("Exception occurred while reading configuration file");
+			return;
+		}
+		
+		// --- override by system properties if defined
+		for (final Iterator keys = ourProps.keySet().iterator(); keys.hasNext();) {
+			final String key = (String) keys.next();
+			final String val = System.getProperty(key);
+			if (val != null) {
+				ourProps.setProperty(key, val);
+			}
+		}
+    	
+		// --- set the properties for this instance
+    	try {
+    		Config.setProperties(this, ourProps);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+    }
+    
+	// --- user-definable properties
     public ProcessedNet getLastStructure() {
         return this.lastStructure;
     }
