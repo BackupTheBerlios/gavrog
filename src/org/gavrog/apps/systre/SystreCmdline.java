@@ -70,7 +70,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.3 2007/05/22 22:34:36 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.4 2007/05/26 20:38:26 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -97,6 +97,7 @@ public class SystreCmdline extends EventSource {
     private int relaxSteps = 10000;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
+    private boolean outputSystreKey = false;
     private boolean duplicateIsError = false;
     private BufferedWriter outputArchive = null;
     
@@ -431,13 +432,15 @@ public class SystreCmdline extends EventSource {
             throw new RuntimeException(msg);
         }
         
-        
         quitIfCancelled();
         
         // --- determine the Systre key and look it up in the archives
     	status("Computing the unique invariant (a.k.a. Systre key) for this net...");
     	
         final String invariant = G.getSystreKey();
+        if (getOutputSystreKey()) {
+        	out.println("   Systre key: \"" + invariant + "\"");
+        }
 
         status("Looking for isomorphic nets...");
     	
@@ -885,6 +888,12 @@ public class SystreCmdline extends EventSource {
             } else if (s.equalsIgnoreCase("--arcAsInput")
                     || s.equalsIgnoreCase("-arcAsInput")) {
                 archivesAsInput = true;
+            } else if (s.equalsIgnoreCase("--fullUnitCell")
+            		|| s.equalsIgnoreCase("-fullUnitCell")) {
+            	setOutputFullCell(true);
+            } else if (s.equalsIgnoreCase("--systreKey")
+            		|| s.equalsIgnoreCase("-systreKey")) {
+            	setOutputSystreKey(true);
             } else if (s.equals("-x")) {
                 archivesAsInput = !archivesAsInput;
             } else {
@@ -937,6 +946,10 @@ public class SystreCmdline extends EventSource {
         }
     }
     
+    public static void main(final String args[]) {
+        new SystreCmdline().run(args);
+    }
+
     private void status(final String text) {
     	this.lastStatus = text;
     	dispatchEvent(text);
@@ -1019,7 +1032,11 @@ public class SystreCmdline extends EventSource {
         this.outputFullCell = fullCellOutput;
     }
     
-    public static void main(final String args[]) {
-        new SystreCmdline().run(args);
-    }
+	public boolean getOutputSystreKey() {
+		return this.outputSystreKey;
+	}
+
+	public void setOutputSystreKey(boolean outputSystreKey) {
+		this.outputSystreKey = outputSystreKey;
+	}
 }
