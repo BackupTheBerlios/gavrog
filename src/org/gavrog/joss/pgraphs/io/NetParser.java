@@ -58,11 +58,11 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.85 2007/03/29 04:50:08 odf Exp $
+ * @version $Id: NetParser.java,v 1.86 2007/05/28 07:58:00 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
-    private final static boolean DEBUG = false;
+    private final static boolean DEBUG = true;
     
     // --- define some key constants for data associated to nodes
     public static class InfoType extends NamedConstant {
@@ -1142,7 +1142,339 @@ public class NetParser extends GenericParser {
         return G;
     }
     
+    public class Face {
+    	final private int size;
+    	final private int points[];
+    	final private Vector shifts[];
+    	
+    	public Face(final int points[], final Vector shifts[]) {
+    		if (points.length != shifts.length) {
+    			throw new RuntimeException("lengths do not match");
+    		}
+    		this.points = points;
+    		this.shifts = shifts;
+    		this.size = shifts.length;
+    	}
+    	
+		public int point(final int i) {
+			return this.points[i];
+		}
+		public Vector shift(final int i) {
+			return this.shifts[i];
+		}
+		public int getSize() {
+			return this.size;
+		}
+		//TODO add hashCode(), compareTo() and toString()
+    }
+    
     /**
+     * Parses a list of rings.
+     * 
+     * @param block the pre-parsed input.
+     * @return the ring list in symbolic form.
+     */
+    private Pair parseFaceList(final Entry[] block) {
+        final Set seen = new HashSet();
+        
+        String groupName = null;
+        int dim = 3;
+        SpaceGroup group = null;
+        List ops = new ArrayList();
+        Matrix cellGram = null;
+        
+        double precision = 0.001;
+        
+        final List faces = new ArrayList();
+        
+        // --- collect data from the input
+        for (int i = 0; i < block.length; ++i) {
+            final List row = block[i].values;
+            final String key = block[i].key;
+            final int lineNr = block[i].lineNumber;
+            if (key.equals("group")) {
+                if (seen.contains(key)) {
+                    final String msg = "Group specified twice at line ";
+                    throw new DataFormatException(msg + lineNr);
+                }
+                if (row.size() < 1) {
+                    final String msg = "Missing argument at line ";
+                    throw new DataFormatException(msg + lineNr);
+                }
+                groupName = (String) row.get(0);
+                group = parseSpaceGroupName(groupName);
+                if (group == null) {
+                    final String msg = "Space group \"" + groupName
+                            + "\" not recognized at line ";
+                    throw new DataFormatException(msg + lineNr);
+                }
+                dim = group.getDimension();
+                groupName = SpaceGroupCatalogue.listedName(dim, groupName);
+                ops.addAll(group.getOperators());
+            } else if (key.equals("cell")) {
+                if (seen.contains(key)) {
+                    final String msg = "Cell specified twice at line ";
+                    throw new DataFormatException(msg + lineNr);
+                }
+                final int m = dim + dim * (dim-1) / 2;
+                if (row.size() != m) {
+                    final String msg = "Expected " + m + " arguments at line ";
+                    throw new DataFormatException(msg + lineNr);
+                }
+                for (int j = 0; j < m; ++j) {
+                    if (!(row.get(i) instanceof Real)) {
+                        final String msg = "Arguments must be real numbers at line ";
+                        throw new DataFormatException(msg + lineNr);
+                    }
+                }
+                cellGram = gramMatrix(dim, row);
+            } else if (key.equals("face")) {
+            	if (row.size() < 1 + 3 * dim) {
+					final String msg = "Not enough data for a face at line";
+					throw new DataFormatException(msg + lineNr);
+				}
+            	final int size = ((Whole) row.get(0)).intValue();
+            	final Point f[] = new Point[size];
+            	int p = 1;
+            	for (int j = 0; j < size; ++j) {
+                    final IArithmetic pos[] = new IArithmetic[dim];
+                    for (int k = 0; k < dim; ++k) {
+                        pos[k] = (IArithmetic) row.get(p++);
+                    }
+                    f[j] = new Point(pos);
+            	}
+                faces.add(f);
+            } else {
+                // store additional entrys here
+            }
+            seen.add(key);
+        }
+        
+        // --- use reasonable default for missing data
+        if (group == null) {
+            groupName = "P1";
+            group = parseSpaceGroupName(groupName);
+            dim = group.getDimension();
+            ops.addAll(group.getOperators());
+        }
+        if (cellGram == null) {
+        	if (dim == 2) {
+        		final char c = groupName.charAt(1);
+        		if (c == '3' || c == '6') {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0, -0.5 },
+        					{ -0.5,  1.0 }
+        			});
+        		} else {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0,  0.0 },
+        					{  0.0,  1.0 }
+        			});
+        		}
+        	} else if (dim == 3) {
+        		final char c;
+        		if (groupName.charAt(1) == '_') {
+        			c = groupName.charAt(2);
+        		} else {
+        			c = groupName.charAt(1);
+        		}
+        		if (c == '3' || c == '6') {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0, -0.5,  0.0 },
+        					{ -0.5,  1.0,  0.0 },
+        					{  0.0,  0.0,  1.0 },
+        			});
+        		} else {
+        			cellGram = new Matrix(new double[][] {
+        					{  1.0,  0.0,  0.0 },
+        					{  0.0,  1.0,  0.0 },
+        					{  0.0,  0.0,  1.0 },
+        			});
+        		}
+        	}
+        }
+        
+        // --- output some of the basic data
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Group name: " + groupName);
+            System.err.println("  operators:");
+            for (final Iterator iter = ops.iterator(); iter.hasNext();) {
+                System.err.println("    " + iter.next());
+            }
+            System.err.println();
+
+            System.err.println("Cell gram matrix = " + cellGram);
+            System.err.println();
+            
+            System.err.println("Faces:");
+            for (final Iterator iter = faces.iterator(); iter.hasNext();) {
+            	final Point f[] = (Point[]) iter.next();
+                System.err.print("   ");
+                for (int i = 0; i < f.length; ++i) {
+                	System.err.print(" " + f[i]);
+                }
+                System.err.println();
+            }
+        }
+        
+        // --- get info for converting to a primitive setting
+        final Matrix primitiveCell = group.primitiveCell();
+        final Operator to = group.transformationToPrimitive();
+        final Operator from = (Operator) to.inverse();
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Primitive cell: " + primitiveCell);
+        }
+        
+        // --- extract and convert operators
+        final Set primitiveOps = group.primitiveOperators();
+        ops.clear();
+        for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
+            final Operator op = (Operator) iter.next();
+            ops.add(((Operator) from.times(op).times(to)).modZ());
+        }
+        
+        // --- convert face lists
+        for (int i = 0; i < faces.size(); ++i) {
+        	final Point faceOld[] = (Point[]) faces.get(i);
+        	final Point faceNew[] = new Point[faceOld.length];
+        	for (int k = 0; k < faceOld.length; ++k) {
+        		faceNew[k] = (Point) faceOld[k].times(to);
+        	}
+        	faces.set(i, faceNew);
+        }
+        
+        // --- convert gram matrix
+        if (cellGram != null) {
+            cellGram = ((Matrix) primitiveCell.times(cellGram).times(
+                    primitiveCell.transposed())).symmetric();
+        }
+        
+        // --- apply group operators to generate all corner points
+        final Map indexToPos = new HashMap();
+        
+        for (final Iterator iterf = faces.iterator(); iterf.hasNext();) {
+			final Point face[] = (Point[]) iterf.next();
+			for (int i = 0; i < face.length; ++i) {
+				final Point site = face[i];
+				if (lookup(site, indexToPos, precision) != null) {
+					if (DEBUG) {
+						System.err.println();
+						System.err.println("Ignoring point " + site);
+					}
+					continue;
+				}
+				if (DEBUG) {
+					System.err.println();
+					System.err.println("Mapping point " + site);
+				}
+				final Set stabilizer = pointStabilizer(site, ops, precision);
+				if (DEBUG) {
+					System.err.println("  stabilizer has size "
+							+ stabilizer.size());
+				}
+				// --- loop through the cosets of the stabilizer
+				final Set opsSeen = new HashSet();
+				for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+					// --- get the next coset representative
+					final Operator op = ((Operator) itOps.next()).modZ();
+					if (!opsSeen.contains(op)) {
+						if (DEBUG) {
+							System.err.println("  applying " + op);
+						}
+						// --- compute mapped node position
+						final Point p = (Point) site.times(op);
+						indexToPos.put(new Integer(indexToPos.size()), p);
+
+						// --- mark operators that should not be used anymore
+						for (final Iterator iter = stabilizer.iterator(); iter
+								.hasNext();) {
+							final Operator a = (Operator) ((Operator) iter
+									.next()).times(op);
+							final Operator aModZ = a.modZ();
+							opsSeen.add(aModZ);
+							if (DEBUG) {
+								System.err.println("  marking operator "
+										+ aModZ + " as used");
+							}
+						}
+					}
+				}
+			}
+		}
+
+        if (DEBUG) {
+			System.err.println();
+			System.err.println("Generated " + indexToPos.size()
+					+ " nodes in primitive cell.");
+		}
+        
+        final Set allFaces = new HashSet();
+        for (final Iterator iter = faces.iterator(); iter.hasNext();) {
+        	final Point f[] = (Point[]) iter.next();
+			final int n = f.length;
+			for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+				final Operator op = ((Operator) itOps.next()).modZ();
+				//TODO create a face object here
+				final Pair fMapped[] = new Pair[n];
+				for (int i = 0; i < n; ++i) {
+					fMapped[i] = lookup((Point) f[i].times(op), indexToPos,
+							precision);
+				}
+				final Pair fNormal[] = normalizedFace(fMapped);
+				allFaces.add(fNormal);
+			}
+        }
+        
+        // --- return the result here
+        final List result = new ArrayList();
+        result.addAll(allFaces);
+        return new Pair(result, indexToPos);
+    }
+    
+    /**
+	 * @param face
+	 * @return
+	 */
+	private Pair[] normalizedFace(final Pair face[]) {
+		final int n = face.length;
+		Pair[] best = null;
+		for (int i = 0; i < n; ++i) {
+			final Vector s = (Vector) face[i].getSecond();
+			Pair trial[] = new Pair[n];
+			for (int k = 0; k < n; ++k) {
+				final Pair p = face[(i + k) % n];
+				final Object v = p.getFirst();
+				final Vector t = (Vector) p.getSecond();
+				final Pair x = new Pair(v, t.minus(s));
+				trial[k] = x;
+			}
+			for (int r = 0; r <= 1; ++r) {
+				if (best == null) {
+					best = trial;
+				}
+				for (int k = 0; k < n; ++k) {
+					final int d = trial[k].compareTo(best[k]);
+					if (d < 0) {
+						best = trial;
+						break;
+					} else if (d > 0) {
+						break;
+					}
+				}
+				for (int k = 1; k  < (n + 1) / 2; ++k) {
+					final Pair t = trial[k];
+					trial[k] = trial[n - k];
+					trial[n - k] = t;
+				}
+			}
+		}
+
+		return best;
+	}
+
+	/**
      * Finds the node and shift associated to a point position.
      * @param pos the position to look up.
      * @param nodeToPos maps nodes to positions.
@@ -1154,7 +1486,7 @@ public class NetParser extends GenericParser {
             final double precision) {
         final int d = pos.getDimension();
         for (final Iterator iter = nodeToPos.keySet().iterator(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
+            final Object v = iter.next();
             final Point p = (Point) nodeToPos.get(v);
             if (distModZ(pos, p) <= precision) {
                 final Vector diff = (Vector) pos.minus(p);
@@ -1290,5 +1622,15 @@ public class NetParser extends GenericParser {
             }
         }
         return true;
+    }
+    
+    public static void main(final String args[]) {
+    	final String s = ""
+    		+ "TILING\n"
+    		+ "  GROUP P432\n"
+    		+ "  FACE 4 0 0 0 1 0 0 1 1 0 0 1 0\n"
+    		+ "END\n";
+    	final NetParser parser = new NetParser(new StringReader(s));
+    	parser.parseFaceList(parser.parseDataBlock().getEntries());
     }
 }
