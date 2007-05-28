@@ -58,7 +58,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.86 2007/05/28 07:58:00 odf Exp $
+ * @version $Id: NetParser.java,v 1.87 2007/05/28 21:11:06 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -1144,28 +1144,70 @@ public class NetParser extends GenericParser {
     
     public class Face {
     	final private int size;
-    	final private int points[];
+    	final private int vertices[];
     	final private Vector shifts[];
     	
     	public Face(final int points[], final Vector shifts[]) {
     		if (points.length != shifts.length) {
     			throw new RuntimeException("lengths do not match");
     		}
-    		this.points = points;
+    		this.vertices = points;
     		this.shifts = shifts;
     		this.size = shifts.length;
     	}
     	
-		public int point(final int i) {
-			return this.points[i];
+		public int vertex(final int i) {
+			return this.vertices[i];
 		}
 		public Vector shift(final int i) {
 			return this.shifts[i];
 		}
-		public int getSize() {
+		public int size() {
 			return this.size;
 		}
-		//TODO add hashCode(), compareTo() and toString()
+		
+		public int hashCode() {
+			int code = 0;
+			for (int i = 0; i < size(); ++i) {
+				code = (code * 37 + vertex(i)) * 127 + shift(i).hashCode();
+			}
+			return code;
+		}
+		
+		public int compareTo(final Object other) {
+			if (other instanceof Face) {
+				final Face f = (Face) other;
+				int d = 0;
+				for (int i = 0; i < size(); ++i) {
+					d = vertex(i) - f.vertex(i);
+					if (d != 0) {
+						return d;
+					}
+					d = shift(i).compareTo(f.shift(i));
+					if (d != 0) {
+						return d;
+					}
+				}
+				return 0;
+			} else {
+				throw new IllegalArgumentException("argument must be a face");
+			}
+		}
+		
+		public String toString() {
+			final  StringBuffer buf = new StringBuffer(100);
+			for (int i = 0; i < size(); ++i) {
+				if (i > 0) {
+					buf.append('-');
+				}
+				buf.append('(');
+				buf.append(vertex(i));
+				buf.append(',');
+				buf.append(shift(i));
+				buf.append(')');
+			}
+			return buf.toString();
+		}
     }
     
     /**
