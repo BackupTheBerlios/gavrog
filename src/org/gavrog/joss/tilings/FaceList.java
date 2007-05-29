@@ -22,14 +22,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.NetParser.Face;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.1 2007/05/29 07:14:18 odf Exp $
+ * @version $Id: FaceList.java,v 1.2 2007/05/29 07:34:26 odf Exp $
  */
 public class FaceList {
 	/**
@@ -75,11 +76,27 @@ public class FaceList {
 		}
 	}
 	
-	public FaceList(final List faces, final Map pointIndexToPosition) {
+	public FaceList(final List faces, final Map indexToPosition) {
 		// --- computes normals for face sectors
 		final Map normals = new HashMap();
+
 		for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-			//TODO continue here
+			final Face f = (Face) iter.next();
+			final int n = f.size();
+			
+			// --- compute corners and center of this face
+			Matrix sum = Point.origin(3).getCoordinates();
+			final Point corners[] = new Point[n];
+			for (int i = 0; i < n; ++i) {
+				final Integer v = new Integer(f.vertex(i));
+				final Vector s = f.shift(i);
+				final Point p = (Point) s.plus(indexToPosition.get(v));
+				corners[i] = p;
+				sum = (Matrix) sum.plus(p.getCoordinates());
+			}
+            final Point center = new Point((Matrix) sum.dividedBy(n));
+            
+            //TODO compute the normals
 		}
 		
 		final Map facesAtEdge = collectEdges(faces, false);
