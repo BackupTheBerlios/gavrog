@@ -29,8 +29,10 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.NetParser.Face;
 
 /**
+ * Implements a periodic face set meant to define a tiling.
+ * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.2 2007/05/29 07:34:26 odf Exp $
+ * @version $Id: FaceList.java,v 1.3 2007/05/29 21:13:25 odf Exp $
  */
 public class FaceList {
 	/**
@@ -77,32 +79,51 @@ public class FaceList {
 	}
 	
 	public FaceList(final List faces, final Map indexToPosition) {
-		// --- computes normals for face sectors
-		final Map normals = new HashMap();
-
-		for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-			final Face f = (Face) iter.next();
-			final int n = f.size();
-			
-			// --- compute corners and center of this face
-			Matrix sum = Point.origin(3).getCoordinates();
-			final Point corners[] = new Point[n];
-			for (int i = 0; i < n; ++i) {
-				final Integer v = new Integer(f.vertex(i));
-				final Vector s = f.shift(i);
-				final Point p = (Point) s.plus(indexToPosition.get(v));
-				corners[i] = p;
-				sum = (Matrix) sum.plus(p.getCoordinates());
-			}
-            final Point center = new Point((Matrix) sum.dividedBy(n));
-            
-            //TODO compute the normals
-		}
-		
+        // --- determine sector normals for each face
+        final Map normals = new HashMap();
+        for (final Iterator iter = faces.iterator(); iter.hasNext();) {
+            final Face f = (Face) iter.next();
+            normals.put(f, sectorNormals(f, indexToPosition));
+        }
+        
 		final Map facesAtEdge = collectEdges(faces, false);
 	}
 	
-	public static Map collectEdges(final List faces, final boolean useShifts) {
+    /**
+     * Computes normals for the sectors of a face.
+     * 
+     * @param f the input face.
+     * @param indexToPos maps symbolic corners to positions.
+     * @return the array of sector normals.
+     */
+    private static Vector[] sectorNormals(final Face f, final Map indexToPos) {
+        final int n = f.size();
+
+        // --- compute corners and center of this face
+        Matrix sum = Point.origin(3).getCoordinates();
+        final Point corners[] = new Point[n];
+        for (int i = 0; i < n; ++i) {
+            final Integer v = new Integer(f.vertex(i));
+            final Vector s = f.shift(i);
+            final Point p = (Point) s.plus(indexToPos.get(v));
+            corners[i] = p;
+            sum = (Matrix) sum.plus(p.getCoordinates());
+        }
+        final Point center = new Point((Matrix) sum.dividedBy(n));
+
+        // --- use that to compute the normals
+        final Vector normals[] = new Vector[n];
+        for (int i = 0; i < n; ++i) {
+            final int i1 = (i + 1) % n;
+            final Vector a = (Vector) corners[i].minus(center);
+            final Vector b = (Vector) corners[i1].minus(corners[i]);
+            normals[i] = Vector.crossProduct3D(a, b);
+        }
+
+        return normals;
+    }
+    
+	private static Map collectEdges(final List faces, final boolean useShifts) {
 		final Map facesAtEdge = new HashMap();
 		for (final Iterator iter = faces.iterator(); iter.hasNext();) {
 			final Face f = (Face) iter.next();
