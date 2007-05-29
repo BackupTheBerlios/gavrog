@@ -58,11 +58,11 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.87 2007/05/28 21:11:06 odf Exp $
+ * @version $Id: NetParser.java,v 1.88 2007/05/29 00:17:09 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
-    private final static boolean DEBUG = true;
+    private final static boolean DEBUG = false;
     
     // --- define some key constants for data associated to nodes
     public static class InfoType extends NamedConstant {
@@ -1142,7 +1142,7 @@ public class NetParser extends GenericParser {
         return G;
     }
     
-    public class Face {
+    public static class Face {
     	final private int size;
     	final private int vertices[];
     	final private Vector shifts[];
@@ -1151,8 +1151,8 @@ public class NetParser extends GenericParser {
     		if (points.length != shifts.length) {
     			throw new RuntimeException("lengths do not match");
     		}
-    		this.vertices = points;
-    		this.shifts = shifts;
+    		this.vertices = (int[]) points.clone();
+    		this.shifts = (Vector[]) shifts.clone();
     		this.size = shifts.length;
     	}
     	
@@ -1194,6 +1194,10 @@ public class NetParser extends GenericParser {
 			}
 		}
 		
+		public boolean equals(final Object other) {
+			return compareTo(other) == 0;
+		}
+		
 		public String toString() {
 			final  StringBuffer buf = new StringBuffer(100);
 			for (int i = 0; i < size(); ++i) {
@@ -1203,7 +1207,7 @@ public class NetParser extends GenericParser {
 				buf.append('(');
 				buf.append(vertex(i));
 				buf.append(',');
-				buf.append(shift(i));
+				buf.append(shift(i).toString().replaceFirst("Vector", ""));
 				buf.append(')');
 			}
 			return buf.toString();
@@ -1216,7 +1220,7 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the ring list in symbolic form.
      */
-    private Pair parseFaceList(final Entry[] block) {
+    private static Pair parseFaceList(final Entry[] block) {
         final Set seen = new HashSet();
         
         String groupName = null;
@@ -1449,67 +1453,93 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
 			System.err.println();
 			System.err.println("Generated " + indexToPos.size()
-					+ " nodes in primitive cell.");
+					+ " nodes in primitive cell.\n");
 		}
         
-        final Set allFaces = new HashSet();
+        final Set faceSeen = new HashSet();
+        final List result = new ArrayList();
         for (final Iterator iter = faces.iterator(); iter.hasNext();) {
         	final Point f[] = (Point[]) iter.next();
 			final int n = f.length;
 			for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
 				final Operator op = ((Operator) itOps.next()).modZ();
-				//TODO create a face object here
-				final Pair fMapped[] = new Pair[n];
+				final int points[] = new int[n];
+				final Vector shifts[] = new Vector[n];
 				for (int i = 0; i < n; ++i) {
-					fMapped[i] = lookup((Point) f[i].times(op), indexToPos,
+					final Pair p = lookup((Point) f[i].times(op), indexToPos,
 							precision);
+					points[i] = ((Integer) p.getFirst()).intValue();
+					shifts[i] = (Vector) p.getSecond();
 				}
-				final Pair fNormal[] = normalizedFace(fMapped);
-				allFaces.add(fNormal);
+				final Face fMapped = new Face(points, shifts);
+				if (DEBUG) {
+					System.err.println("Normalizing mapped face " + fMapped);
+				}
+				final Face fNormal = normalizedFace(fMapped);
+				if (DEBUG) {
+					System.err.println("  result = " + fNormal);
+				}
+				if (faceSeen.contains(fNormal)) {
+					if (DEBUG) {
+						System.err.println("  rejected!");
+					}
+				} else {
+					if (DEBUG) {
+						System.err.println("  accepted!");
+					}
+					result.add(fNormal);
+					faceSeen.add(fNormal);
+				}
 			}
         }
         
         // --- return the result here
-        final List result = new ArrayList();
-        result.addAll(allFaces);
+        if (DEBUG) {
+        	System.err.println("\nAccepted " + result.size() + " faces:");
+        	for (final Iterator iter = result.iterator(); iter.hasNext();) {
+        		System.err.println("  " + iter.next());
+        	}
+        }
         return new Pair(result, indexToPos);
+    }
+    
+    public static Pair parseFaceList(final Block block) {
+    	return parseFaceList(block.getEntries());
     }
     
     /**
 	 * @param face
 	 * @return
 	 */
-	private Pair[] normalizedFace(final Pair face[]) {
-		final int n = face.length;
-		Pair[] best = null;
+	private static Face normalizedFace(final Face face) {
+		final int n = face.size();
+		Face trial;
+		Face best = null;
 		for (int i = 0; i < n; ++i) {
-			final Vector s = (Vector) face[i].getSecond();
-			Pair trial[] = new Pair[n];
+			final Vector s = face.shift(i);
+			int points[] = new int[n];
+			Vector shifts[] = new Vector[n];
 			for (int k = 0; k < n; ++k) {
-				final Pair p = face[(i + k) % n];
-				final Object v = p.getFirst();
-				final Vector t = (Vector) p.getSecond();
-				final Pair x = new Pair(v, t.minus(s));
-				trial[k] = x;
+				final int index = (i + k) % n;
+				final int v = face.vertex(index);
+				final Vector t = face.shift(index);
+				points[k] = v;
+				shifts[k] = (Vector) t.minus(s);
 			}
+			trial = new Face(points, shifts);
 			for (int r = 0; r <= 1; ++r) {
-				if (best == null) {
+				if (best == null || best.compareTo(trial) > 0) {
 					best = trial;
 				}
-				for (int k = 0; k < n; ++k) {
-					final int d = trial[k].compareTo(best[k]);
-					if (d < 0) {
-						best = trial;
-						break;
-					} else if (d > 0) {
-						break;
-					}
-				}
 				for (int k = 1; k  < (n + 1) / 2; ++k) {
-					final Pair t = trial[k];
-					trial[k] = trial[n - k];
-					trial[n - k] = t;
+					final int t = points[k];
+					points[k] = points[n - k];
+					points[n - k] = t;
+					final Vector tmp = shifts[k];
+					shifts[k] = shifts[n - k];
+					shifts[n - k] = tmp;
 				}
+				trial = new Face(points, shifts);
 			}
 		}
 
@@ -1673,6 +1703,6 @@ public class NetParser extends GenericParser {
     		+ "  FACE 4 0 0 0 1 0 0 1 1 0 0 1 0\n"
     		+ "END\n";
     	final NetParser parser = new NetParser(new StringReader(s));
-    	parser.parseFaceList(parser.parseDataBlock().getEntries());
+    	System.out.println(parseFaceList(parser.parseDataBlock()));
     }
 }
