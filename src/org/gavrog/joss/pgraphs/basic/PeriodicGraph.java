@@ -32,7 +32,7 @@ import java.util.Set;
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
-import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
 import org.gavrog.box.simple.Tag;
@@ -54,7 +54,7 @@ import org.gavrog.joss.geometry.Vector;
  * Implements a representation of a periodic graph.
  * 
  * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.72 2007/05/15 23:11:47 odf Exp $
+ * @version $Id: PeriodicGraph.java,v 1.73 2007/05/30 23:19:53 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -1678,12 +1678,12 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the invariant.
      */
-    public NiceIntList invariant() {
+    public NiftyList invariant() {
         if (DEBUG) {
             System.out.println("\nComputing invariant for " + this);
         }
         try {
-            return (NiceIntList) this.cache.get(INVARIANT);
+            return (NiftyList) this.cache.get(INVARIANT);
         } catch (Cache.NotFoundException ex) {
         }
         
@@ -1960,7 +1960,7 @@ public class PeriodicGraph extends UndirectedGraph {
 		}
 
         // --- cache the results
-        return (NiceIntList) cache.put(INVARIANT, new NiceIntList(invariant));
+        return (NiftyList) cache.put(INVARIANT, new NiftyList(invariant));
     }
     
     /**

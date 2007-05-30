@@ -26,14 +26,14 @@ import java.util.Map;
 
 import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.Iterators;
-import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 
 
 /**
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.7 2007/04/26 20:21:56 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.8 2007/05/30 23:19:52 odf Exp $
  */
 public abstract class DelaneySymbol implements Comparable {
 
@@ -508,13 +508,13 @@ public abstract class DelaneySymbol implements Comparable {
     }
 
     // --- Caches for invariant and map from original to canonical element names
-    private NiceIntList _invariant = null;
+    private NiftyList _invariant = null;
     private Map original2canonical;
     
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#invariant()
      */
-    public NiceIntList invariant() {
+    public NiftyList invariant() {
     	if (this._invariant != null) {
     		return this._invariant;
     	}
@@ -538,7 +538,7 @@ public abstract class DelaneySymbol implements Comparable {
             for (final Iterator iter = invariants.iterator(); iter.hasNext();) {
                 result.addAll((List) iter.next());
             }
-            this._invariant = new NiceIntList(result);
+            this._invariant = new NiftyList(result);
             return this._invariant;
         }
         
@@ -671,7 +671,7 @@ public abstract class DelaneySymbol implements Comparable {
         }
         
         /* --- Cache and return it. */
-        this._invariant = new NiceIntList(result);
+        this._invariant = new NiftyList(result);
         return this._invariant;
     }
 

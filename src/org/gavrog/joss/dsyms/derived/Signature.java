@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.HashMapWithDefault;
-import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Signature.java,v 1.1 2007/05/21 05:14:25 odf Exp $
+ * @version $Id: Signature.java,v 1.2 2007/05/30 23:19:53 odf Exp $
  */
 public class Signature {
 	private static int gcd(int a, int b) {
@@ -60,7 +60,7 @@ public class Signature {
 			sizes.add(new Integer(ds.m(0, 1, reps.next())));
 		}
 		Collections.sort(sizes);
-		return new NiceIntList(sizes);
+		return new NiftyList(sizes);
 	}
 	
 	private static String faceSizeToTileSig(final List sig) {
@@ -108,7 +108,7 @@ public class Signature {
 		};
 		final List idcs = new IndexList(0, 1, 2);
 		for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-			final List s = new NiceIntList(faceSizes(new Subsymbol(ds, idcs,
+			final List s = new NiftyList(faceSizes(new Subsymbol(ds, idcs,
 					reps.next())));
 			final int n = ((Integer) countSigs.get(s)).intValue();
 			countSigs.put(s, new Integer(n + 1));

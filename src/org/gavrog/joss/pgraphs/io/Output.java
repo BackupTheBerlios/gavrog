@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.collections.NiceIntList;
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Output.java,v 1.4 2006/10/02 22:43:30 odf Exp $
+ * @version $Id: Output.java,v 1.5 2007/05/30 23:19:53 odf Exp $
  */
 public class Output {
     public static void writePGR(final Writer out, final PeriodicGraph G, final String name)
@@ -78,7 +78,7 @@ public class Output {
 					list.add(new Integer(((Whole) s.get(k)).intValue()));
 				}
 			}
-			tmp[i] = new NiceIntList(list);
+			tmp[i] = new NiftyList(list);
             ++i;
         }
         Arrays.sort(tmp);

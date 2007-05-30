@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2007 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,19 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Helper class to hold a list of integers and make it hashable, comparable and printable
- * in a nice useful way.
+ * Nifty lists are hashable, comparable and printable in a nice useful way.
  * 
  * @author Olaf Delgado
- * @version $Id: NiceIntList.java,v 1.4 2006/10/05 22:49:51 odf Exp $
+ * @version $Id: NiftyList.java,v 1.1 2007/05/30 23:19:53 odf Exp $
  */
-public class NiceIntList extends ArrayList implements Comparable {
-
+public class NiftyList extends ArrayList implements Comparable {
     /**
      * Construct an instance.
      * @param model the contents of the new instance.
      */
-    public NiceIntList(final List model) {
+    public NiftyList(final List model) {
         super(model);
     }
     
@@ -40,15 +38,14 @@ public class NiceIntList extends ArrayList implements Comparable {
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo(final Object arg) {
-        if (!(arg instanceof NiceIntList)) {
-            throw new IllegalArgumentException("argument must be of type Invariant");
+        if (!(arg instanceof List)) {
+            throw new IllegalArgumentException("argument must be of type List");
         }
-        final NiceIntList other = (NiceIntList) arg;
+        final List other = (List) arg;
         for (int i = 0; i < Math.min(this.size(), other.size()); ++i) {
-            final int a = ((Integer) this.get(i)).intValue();
-            final int b = ((Integer) other.get(i)).intValue();
-            if (a != b) {
-            	return a - b;
+            final int d = ((Comparable) this.get(i)).compareTo(other.get(i));
+            if (d != 0) {
+            	return d;
             }
         }
         return this.size() - other.size();
@@ -59,8 +56,8 @@ public class NiceIntList extends ArrayList implements Comparable {
      */
     public int hashCode() {
         int res = 0;
-        for (int i = 0; i < this.size(); ++i) {
-            res = res * 157 + this.get(i).hashCode();
+        for (int i = 0; i < size(); ++i) {
+            res = res * 157 + get(i).hashCode();
         }
         return res;
     }
@@ -70,11 +67,11 @@ public class NiceIntList extends ArrayList implements Comparable {
      */
     public String toString() {
         final StringBuffer buffer = new StringBuffer(50);
-        for (int i = 0; i < this.size(); ++i) {
+        for (int i = 0; i < size(); ++i) {
             if (i > 0) {
                 buffer.append(" ");
             }
-            buffer.append(this.get(i));
+            buffer.append(get(i));
         }
         return buffer.toString();
     }
