@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.Whole;
  * other geometry types easier, a zero coordinate is added internally.
  * 
  * @author Olaf Delgado
- * @version $Id: Vector.java,v 1.29 2006/09/12 23:00:44 odf Exp $
+ * @version $Id: Vector.java,v 1.30 2007/05/30 00:36:14 odf Exp $
  */
 public class Vector extends ArithmeticBase implements IArithmetic {
     final Matrix coords;
@@ -196,6 +196,21 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         final int a[] = new int[dimension];
         a[axis] = 1;
         return new Vector(a);
+    }
+    
+    /**
+     * Returns a unit vector in the same direction as the given one.
+     * 
+     * @param source the input vector.
+     * @return a vector of unit length in the same direction.
+     */
+    public static Vector unit(final Vector source) {
+        final IArithmetic x = dot(source, source);
+        if (x instanceof Real) {
+            return (Vector) x.dividedBy(((Real) x).sqrt());
+        } else {
+            throw new IllegalArgumentException("cannot take square root");
+        }
     }
     
     /**
