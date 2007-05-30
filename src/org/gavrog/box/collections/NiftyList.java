@@ -23,9 +23,16 @@ import java.util.List;
  * Nifty lists are hashable, comparable and printable in a nice useful way.
  * 
  * @author Olaf Delgado
- * @version $Id: NiftyList.java,v 1.1 2007/05/30 23:19:53 odf Exp $
+ * @version $Id: NiftyList.java,v 1.2 2007/05/30 23:28:32 odf Exp $
  */
 public class NiftyList extends ArrayList implements Comparable {
+    /**
+     * Construct an empty instance.
+     */
+    public NiftyList() {
+        super();
+    }
+    
     /**
      * Construct an instance.
      * @param model the contents of the new instance.
