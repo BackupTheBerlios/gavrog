@@ -39,9 +39,11 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.4 2007/05/30 00:36:41 odf Exp $
+ * @version $Id: FaceList.java,v 1.5 2007/05/30 03:46:04 odf Exp $
  */
 public class FaceList {
+	final private static boolean DEBUG = false;
+	
 	/**
 	 * Hashable class for edges in the tiling to be constructed.
 	 */
@@ -70,6 +72,10 @@ public class FaceList {
 			final Edge e = (Edge) other;
 			return source == e.source && target == e.target
 					&& shift.equals(e.shift);
+		}
+		
+		public String toString() {
+			return "(" + source + "," + target + "," + shift + ")";
 		}
 	}
 	
@@ -121,6 +127,10 @@ public class FaceList {
                 throw new IllegalArgumentException("Incidence expected");
             }
         }
+        
+        public String toString() {
+        	return "(" + face + "," + index + "," + reverse + "," + angle + ")";
+        }
 	}
 	
     final private List faces;
@@ -128,6 +138,9 @@ public class FaceList {
     final private DSymbol ds;
     
 	public FaceList(final List faces, final Map indexToPosition) {
+		if (DEBUG) {
+			System.err.println("\nStarting FaceList constructor");
+		}
         if (faces == null || faces.size() < 1) {
             throw new IllegalArgumentException("no faces given");
         }
@@ -170,6 +183,10 @@ public class FaceList {
             }
         }
         
+        if (DEBUG) {
+        	System.err.println("Symbol without 2-ops: " + new DSymbol(ds));
+        }
+        
         // --- set 2 operator according to cyclic orders of faces around edges
 		final Map facesAtEdge = collectEdges(faces, false);
 
@@ -202,6 +219,12 @@ public class FaceList {
                 }
                 incidences.set(i, new Incidence(inc, angle));
             }
+            if (DEBUG) {
+            	System.err.println("Augmented incidences at edge " + e + ":");
+				for (int i = 0; i < incidences.size(); ++i) {
+					System.err.println("    " + incidences.get(i));
+				}
+            }
             
             // --- sort by angle
             Collections.sort(incidences);
@@ -209,6 +232,12 @@ public class FaceList {
             // --- top off with a copy of the first incidences
             final Incidence inc = (Incidence) incidences.get(0);
             incidences.add(new Incidence(inc, inc.angle + 2 * Math.PI));
+            if (DEBUG) {
+            	System.err.println("Sorted incidences at edge " + e + ":");
+				for (int i = 0; i < incidences.size(); ++i) {
+					System.err.println("    " + incidences.get(i));
+				}
+            }
             
             // --- now set all the connections around this edge
             for (int i = 0; i < incidences.size() - 1; ++i) {
@@ -232,20 +261,39 @@ public class FaceList {
                 }
                 if (inc2.reverse) {
                     final int k = 2 * inc2.index;
-                    C = elms2.get(k);
-                    D = elms2.get(k + 1);
-                } else {
-                    final int k = 2 * (inc2.index + inc2.face.size());
                     C = elms2.get(k + 1);
                     D = elms2.get(k);
+                } else {
+                    final int k = 2 * (inc2.index + inc2.face.size());
+                    C = elms2.get(k);
+                    D = elms2.get(k + 1);
                 }
                 ds.redefineOp(2, A, C);
                 ds.redefineOp(2, B, D);
             }
         }
         
+        if (DEBUG) {
+        	System.err.println("Symbol with 2-ops: " + new DSymbol(ds));
+        }
+        
+        // --- set all v values to 1
+        for (int i = 0; i < dim; ++i) {
+        	for (final Iterator iter = ds.elements(); iter.hasNext();) {
+        		final Object D = iter.next();
+        		if (!ds.definesV(i, i + 1, D)) {
+					ds.redefineV(i, i + 1, D, 1);
+				}
+        	}
+        }
+        
+        if (DEBUG) {
+        	System.err.println("Completed symbol: " + new DSymbol(ds));
+        }
+        
         // --- freeze the constructed symbol
-        this.ds = new DSymbol(ds);
+        //TODO keep given symmetry
+        this.ds = new DSymbol(ds.minimal());
 	}
 	
     private FaceList(final Pair p) {
@@ -269,7 +317,10 @@ public class FaceList {
      */
     private static Vector[] sectorNormals(final Face f, final Map indexToPos) {
         final int n = f.size();
-
+        if (DEBUG) {
+        	System.err.println("Computing normals for face " + f);
+        }
+        
         // --- compute corners and center of this face
         Matrix sum = null;
         final Point corners[] = new Point[n];
@@ -293,6 +344,9 @@ public class FaceList {
             final Vector a = (Vector) corners[i].minus(center);
             final Vector b = (Vector) corners[i1].minus(corners[i]);
             normals[i] = Vector.unit(Vector.crossProduct3D(a, b));
+            if (DEBUG) {
+            	System.err.println("  " + normals[i]);
+            }
         }
 
         return normals;
@@ -309,13 +363,26 @@ public class FaceList {
 				final int w = f.vertex(i1);
 				final Vector s = (Vector) f.shift(i1).minus(f.shift(i));
 				final Edge e = new Edge(v, w, s);
+				final boolean rev = (e.source != v || !e.shift.equals(s));
 				if (!facesAtEdge.containsKey(e)) {
 					facesAtEdge.put(e, new ArrayList());
 				}
-				((List) facesAtEdge.get(e)).add(new Incidence(f, i, v > w));
+				((List) facesAtEdge.get(e)).add(new Incidence(f, i, rev));
 			}
 		}
 		
+		if (DEBUG) {
+			System.err.println("Edge to incident faces mapping:");
+			for (Iterator iter = facesAtEdge.keySet().iterator(); iter
+					.hasNext();) {
+				final Edge e = (Edge) iter.next();
+				final List inc = (List) facesAtEdge.get(e);
+				System.err.println("  " + inc.size() + " at edge " + e + ":");
+				for (int i = 0; i < inc.size(); ++i) {
+					System.err.println("    " + inc.get(i));
+				}
+			}
+		}
 		return facesAtEdge;
 	}
 }
