@@ -43,7 +43,6 @@ import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
@@ -53,18 +52,17 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.tilings.FaceList;
 
 
 /**
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.89 2007/05/30 01:17:55 odf Exp $
+ * @version $Id: NetParser.java,v 1.90 2007/05/30 01:22:25 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
-    private final static boolean DEBUG = true;
+    private final static boolean DEBUG = false;
     
     // --- define some key constants for data associated to nodes
     public static class InfoType extends NamedConstant {
@@ -1730,7 +1728,6 @@ public class NetParser extends GenericParser {
     		+ "END\n";
     	final NetParser parser = new NetParser(new StringReader(s));
         final Block data = parser.parseDataBlock();
-        final DSymbol ds = new FaceList(data).getSymbol();
-        System.out.println(ds);
+        System.out.println(parseFaceList(data));
     }
 }
