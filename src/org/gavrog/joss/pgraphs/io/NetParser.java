@@ -43,6 +43,7 @@ import org.gavrog.jane.numbers.FloatingPoint;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
@@ -52,17 +53,18 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.FaceList;
 
 
 /**
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.88 2007/05/29 00:17:09 odf Exp $
+ * @version $Id: NetParser.java,v 1.89 2007/05/30 01:17:55 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
-    private final static boolean DEBUG = false;
+    private final static boolean DEBUG = true;
     
     // --- define some key constants for data associated to nodes
     public static class InfoType extends NamedConstant {
@@ -167,6 +169,9 @@ public class NetParser extends GenericParser {
         result.put("bond", "edge");
         result.put("bonds", "edge");
         result.put("edges", "edge");
+        result.put("faces", "face");
+        result.put("ring", "face");
+        result.put("rings", "face");
         result.put("spacegroup", "group");
         result.put("space_group", "group");
         result.put("id", "name");
@@ -1232,6 +1237,8 @@ public class NetParser extends GenericParser {
         double precision = 0.001;
         
         final List faces = new ArrayList();
+        IArithmetic faceData[] = null;
+        int faceDataIndex = 0;
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -1275,21 +1282,40 @@ public class NetParser extends GenericParser {
                 }
                 cellGram = gramMatrix(dim, row);
             } else if (key.equals("face")) {
-            	if (row.size() < 1 + 3 * dim) {
-					final String msg = "Not enough data for a face at line";
-					throw new DataFormatException(msg + lineNr);
-				}
-            	final int size = ((Whole) row.get(0)).intValue();
-            	final Point f[] = new Point[size];
-            	int p = 1;
-            	for (int j = 0; j < size; ++j) {
-                    final IArithmetic pos[] = new IArithmetic[dim];
-                    for (int k = 0; k < dim; ++k) {
-                        pos[k] = (IArithmetic) row.get(p++);
+                for (int j = 0; j < row.size(); ++j) {
+                    final Object item = row.get(j);
+                    if (faceData == null) {
+                        if (item instanceof Whole) {
+                            final int n = ((Whole) item).intValue();
+                            faceData = new IArithmetic[n * dim];
+                            faceDataIndex = 0;
+                        } else {
+                            String msg = "face size expected at line ";
+                            throw new DataFormatException(msg + lineNr);
+                        }
+                    } else {
+                        if (item instanceof IArithmetic) {
+                            faceData[faceDataIndex++] = (IArithmetic) item;
+                            if (faceDataIndex == faceData.length) {
+                                final int n = faceData.length / dim;
+                                final Point f[] = new Point[n];
+                                int p = 0;
+                                for (int nu = 0; nu < n; ++nu) {
+                                    IArithmetic pos[] = new IArithmetic[dim];
+                                    for (int k = 0; k < dim; ++k) {
+                                        pos[k] = faceData[p++];
+                                    }
+                                    f[nu] = new Point(pos);
+                                }
+                                faces.add(f);
+                                faceData = null;
+                            }
+                        } else {
+                            String msg = "coordinate expected at line ";
+                            throw new DataFormatException(msg + lineNr);
+                        }
                     }
-                    f[j] = new Point(pos);
-            	}
-                faces.add(f);
+                }
             } else {
                 // store additional entrys here
             }
@@ -1703,6 +1729,8 @@ public class NetParser extends GenericParser {
     		+ "  FACE 4 0 0 0 1 0 0 1 1 0 0 1 0\n"
     		+ "END\n";
     	final NetParser parser = new NetParser(new StringReader(s));
-    	System.out.println(parseFaceList(parser.parseDataBlock()));
+        final Block data = parser.parseDataBlock();
+        final DSymbol ds = new FaceList(data).getSymbol();
+        System.out.println(ds);
     }
 }
