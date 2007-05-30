@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.NamedConstant;
@@ -58,7 +59,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.90 2007/05/30 01:22:25 odf Exp $
+ * @version $Id: NetParser.java,v 1.91 2007/05/30 23:29:08 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -1234,7 +1235,8 @@ public class NetParser extends GenericParser {
         
         double precision = 0.001;
         
-        final List faces = new ArrayList();
+        final List faceLists = new ArrayList();
+        List faces = new ArrayList();
         IArithmetic faceData[] = null;
         int faceDataIndex = 0;
         
@@ -1314,10 +1316,19 @@ public class NetParser extends GenericParser {
                         }
                     }
                 }
+            } else if (key.equals("tile")) {
+                if (faces.size() > 0) {
+                    faceLists.add(faces);
+                }
+                faces = new ArrayList();
             } else {
                 // store additional entrys here
             }
             seen.add(key);
+        }
+        final boolean useTiles = faceLists.size() > 0;
+        if (faces.size() > 0) {
+            faceLists.add(faces);
         }
         
         // --- use reasonable default for missing data
@@ -1377,12 +1388,20 @@ public class NetParser extends GenericParser {
             System.err.println("Cell gram matrix = " + cellGram);
             System.err.println();
             
-            System.err.println("Faces:");
-            for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-            	final Point f[] = (Point[]) iter.next();
-                System.err.print("   ");
-                for (int i = 0; i < f.length; ++i) {
-                	System.err.print(" " + f[i]);
+            if (useTiles) {
+                System.err.println("Tiles:");
+            } else {
+                System.err.println("Faces:");
+            }
+            for (Iterator iterT = faceLists.iterator(); iterT.hasNext();) {
+                final List list = (List) iterT.next();
+                for (Iterator iter = list.iterator(); iter.hasNext();) {
+                    final Point f[] = (Point[]) iter.next();
+                    System.err.print("   ");
+                    for (int i = 0; i < f.length; ++i) {
+                        System.err.print(" " + f[i]);
+                    }
+                    System.err.println();
                 }
                 System.err.println();
             }
@@ -1406,13 +1425,16 @@ public class NetParser extends GenericParser {
         }
         
         // --- convert face lists
-        for (int i = 0; i < faces.size(); ++i) {
-        	final Point faceOld[] = (Point[]) faces.get(i);
-        	final Point faceNew[] = new Point[faceOld.length];
-        	for (int k = 0; k < faceOld.length; ++k) {
-        		faceNew[k] = (Point) faceOld[k].times(to);
-        	}
-        	faces.set(i, faceNew);
+        for (final Iterator iter = faceLists.iterator(); iter.hasNext();) {
+            final List list = (List) iter.next();
+            for (int i = 0; i < list.size(); ++i) {
+                final Point faceOld[] = (Point[]) list.get(i);
+                final Point faceNew[] = new Point[faceOld.length];
+                for (int k = 0; k < faceOld.length; ++k) {
+                    faceNew[k] = (Point) faceOld[k].times(to);
+                }
+                list.set(i, faceNew);
+            }
         }
         
         // --- convert gram matrix
@@ -1424,55 +1446,58 @@ public class NetParser extends GenericParser {
         // --- apply group operators to generate all corner points
         final Map indexToPos = new HashMap();
         
-        for (final Iterator iterf = faces.iterator(); iterf.hasNext();) {
-			final Point face[] = (Point[]) iterf.next();
-			for (int i = 0; i < face.length; ++i) {
-				final Point site = face[i];
-				if (lookup(site, indexToPos, precision) != null) {
-					if (DEBUG) {
-						System.err.println();
-						System.err.println("Ignoring point " + site);
-					}
-					continue;
-				}
-				if (DEBUG) {
-					System.err.println();
-					System.err.println("Mapping point " + site);
-				}
-				final Set stabilizer = pointStabilizer(site, ops, precision);
-				if (DEBUG) {
-					System.err.println("  stabilizer has size "
-							+ stabilizer.size());
-				}
-				// --- loop through the cosets of the stabilizer
-				final Set opsSeen = new HashSet();
-				for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
-					// --- get the next coset representative
-					final Operator op = ((Operator) itOps.next()).modZ();
-					if (!opsSeen.contains(op)) {
-						if (DEBUG) {
-							System.err.println("  applying " + op);
-						}
-						// --- compute mapped node position
-						final Point p = (Point) site.times(op);
-						indexToPos.put(new Integer(indexToPos.size()), p);
+        for (final Iterator itert = faceLists.iterator(); itert.hasNext();) {
+            final List list = (List) itert.next();
+            for (final Iterator iterf = list.iterator(); iterf.hasNext();) {
+                final Point face[] = (Point[]) iterf.next();
+                for (int i = 0; i < face.length; ++i) {
+                    final Point site = face[i];
+                    if (lookup(site, indexToPos, precision) != null) {
+                        if (DEBUG) {
+                            System.err.println();
+                            System.err.println("Ignoring point " + site);
+                        }
+                        continue;
+                    }
+                    if (DEBUG) {
+                        System.err.println();
+                        System.err.println("Mapping point " + site);
+                    }
+                    final Set stabilizer = pointStabilizer(site, ops, precision);
+                    if (DEBUG) {
+                        System.err.println("  stabilizer has size "
+                                + stabilizer.size());
+                    }
+                    // --- loop through the cosets of the stabilizer
+                    final Set opsSeen = new HashSet();
+                    for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                        // --- get the next coset representative
+                        final Operator op = ((Operator) itOps.next()).modZ();
+                        if (!opsSeen.contains(op)) {
+                            if (DEBUG) {
+                                System.err.println("  applying " + op);
+                            }
+                            // --- compute mapped node position
+                            final Point p = (Point) site.times(op);
+                            indexToPos.put(new Integer(indexToPos.size()), p);
 
-						// --- mark operators that should not be used anymore
-						for (final Iterator iter = stabilizer.iterator(); iter
-								.hasNext();) {
-							final Operator a = (Operator) ((Operator) iter
-									.next()).times(op);
-							final Operator aModZ = a.modZ();
-							opsSeen.add(aModZ);
-							if (DEBUG) {
-								System.err.println("  marking operator "
-										+ aModZ + " as used");
-							}
-						}
-					}
-				}
-			}
-		}
+                            // --- mark operators that should not be used anymore
+                            for (final Iterator iter = stabilizer.iterator(); iter
+                                    .hasNext();) {
+                                final Operator a = (Operator) ((Operator) iter
+                                        .next()).times(op);
+                                final Operator aModZ = a.modZ();
+                                opsSeen.add(aModZ);
+                                if (DEBUG) {
+                                    System.err.println("  marking operator "
+                                            + aModZ + " as used");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         if (DEBUG) {
 			System.err.println();
@@ -1480,46 +1505,77 @@ public class NetParser extends GenericParser {
 					+ " nodes in primitive cell.\n");
 		}
         
-        final Set faceSeen = new HashSet();
+        final Set notNew = new HashSet();
         final List result = new ArrayList();
-        for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-        	final Point f[] = (Point[]) iter.next();
-			final int n = f.length;
-			for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
-				final Operator op = ((Operator) itOps.next()).modZ();
-				final int points[] = new int[n];
-				final Vector shifts[] = new Vector[n];
-				for (int i = 0; i < n; ++i) {
-					final Pair p = lookup((Point) f[i].times(op), indexToPos,
-							precision);
-					points[i] = ((Integer) p.getFirst()).intValue();
-					shifts[i] = (Vector) p.getSecond();
-				}
-				final Face fMapped = new Face(points, shifts);
-				if (DEBUG) {
-					System.err.println("Normalizing mapped face " + fMapped);
-				}
-				final Face fNormal = normalizedFace(fMapped);
-				if (DEBUG) {
-					System.err.println("  result = " + fNormal);
-				}
-				if (faceSeen.contains(fNormal)) {
-					if (DEBUG) {
-						System.err.println("  rejected!");
-					}
-				} else {
-					if (DEBUG) {
-						System.err.println("  accepted!");
-					}
-					result.add(fNormal);
-					faceSeen.add(fNormal);
-				}
-			}
+        for (final Iterator iterT = faceLists.iterator(); iterT.hasNext();) {
+            final List list = (List) iterT.next();
+            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                final Operator op = ((Operator) itOps.next()).modZ();
+                final List mappedFaces = new ArrayList();
+                
+                for (final Iterator iter = list.iterator(); iter.hasNext();) {
+                    final Point f[] = (Point[]) iter.next();
+                    final int n = f.length;
+                    final int points[] = new int[n];
+                    final Vector shifts[] = new Vector[n];
+                    for (int i = 0; i < n; ++i) {
+                        final Pair p = lookup((Point) f[i].times(op),
+                                indexToPos, precision);
+                        points[i] = ((Integer) p.getFirst()).intValue();
+                        shifts[i] = (Vector) p.getSecond();
+                    }
+                    final Face fMapped = new Face(points, shifts);
+                    if (DEBUG) {
+                        System.err.println("Mapped face: " + fMapped);
+                    }
+                    final Pair normalized = normalizedFace(fMapped);
+                    if (DEBUG) {
+                        System.err.println("  normalized: " + normalized);
+                    }
+                    if (useTiles) {
+                        mappedFaces.add(normalized);
+                    } else {
+                        final Face fNormal = (Face) normalized.getFirst();
+                        if (notNew.contains(fNormal)) {
+                            if (DEBUG) {
+                                System.err.println("  rejected!");
+                            }
+                        } else {
+                            if (DEBUG) {
+                                System.err.println("  accepted!");
+                            }
+                            result.add(fNormal);
+                            notNew.add(fNormal);
+                        }
+                    }
+                }
+                if (useTiles) {
+                    if (DEBUG) {
+                        System.err.println("Mapped tile: " + mappedFaces);
+                    }
+                    final NiftyList tNormal = normalizedTile(mappedFaces);
+                    if (DEBUG) {
+                        System.err.println("  normalized: " + tNormal);
+                    }
+                    if (notNew.contains(tNormal)) {
+                        if (DEBUG) {
+                            System.err.println("  rejected!");
+                        }
+                    } else {
+                        if (DEBUG) {
+                            System.err.println("  accepted!");
+                        }
+                        result.add(tNormal);
+                        notNew.add(tNormal);
+                    }
+                }
+            }
         }
         
         // --- return the result here
         if (DEBUG) {
-        	System.err.println("\nAccepted " + result.size() + " faces:");
+        	System.err.println("\nAccepted " + result.size()
+                       + (useTiles ? " tiles:" : " faces:"));
         	for (final Iterator iter = result.iterator(); iter.hasNext();) {
         		System.err.println("  " + iter.next());
         	}
@@ -1535,10 +1591,11 @@ public class NetParser extends GenericParser {
 	 * @param face
 	 * @return
 	 */
-	private static Face normalizedFace(final Face face) {
+	private static Pair normalizedFace(final Face face) {
 		final int n = face.size();
 		Face trial;
 		Face best = null;
+        Vector bestShift = null;
 		for (int i = 0; i < n; ++i) {
 			final Vector s = face.shift(i);
 			int points[] = new int[n];
@@ -1554,6 +1611,7 @@ public class NetParser extends GenericParser {
 			for (int r = 0; r <= 1; ++r) {
 				if (best == null || best.compareTo(trial) > 0) {
 					best = trial;
+                    bestShift = s;
 				}
 				for (int k = 1; k  < (n + 1) / 2; ++k) {
 					final int t = points[k];
@@ -1567,9 +1625,29 @@ public class NetParser extends GenericParser {
 			}
 		}
 
-		return best;
+		return new Pair(best, bestShift);
 	}
 
+    private static NiftyList normalizedTile(final List tile) {
+        NiftyList best = null;
+        for (int i = 0; i < tile.size(); ++i) {
+            final Vector shift = (Vector) ((Pair) tile.get(i)).getSecond();
+            final NiftyList current = new NiftyList();
+            for (final Iterator iter = tile.iterator(); iter.hasNext();) {
+                final Pair pair = (Pair) iter.next();
+                final Face face = (Face) pair.getFirst();
+                final Vector t = (Vector) pair.getSecond();
+                current.add(new Pair(face, t.minus(shift)));
+            }
+            Collections.sort(current);
+            if (best == null || best.compareTo(current) < 0) {
+                best = current;
+            }
+        }
+        
+        return best;
+    }
+    
 	/**
      * Finds the node and shift associated to a point position.
      * @param pos the position to look up.
