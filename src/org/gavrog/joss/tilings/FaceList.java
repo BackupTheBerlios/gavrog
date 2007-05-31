@@ -39,10 +39,10 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.10 2007/05/31 08:26:08 odf Exp $
+ * @version $Id: FaceList.java,v 1.11 2007/05/31 20:44:15 odf Exp $
  */
 public class FaceList {
-	final private static boolean DEBUG = false;
+	final private static boolean DEBUG = true;
 	
 	/**
 	 * Hashable class for edges in the tiling to be constructed.
@@ -338,9 +338,11 @@ public class FaceList {
 		
 		if (DEBUG) {
 			System.err.println("Edge to incident faces mapping:");
-			for (Iterator iter = facesAtEdge.keySet().iterator(); iter
-					.hasNext();) {
-				final Edge e = (Edge) iter.next();
+            final List edges = new ArrayList();
+            edges.addAll(facesAtEdge.keySet());
+            Collections.sort(edges);
+			for (Iterator iter = edges.iterator(); iter.hasNext();) {
+				final Object e = iter.next();
 				final List inc = (List) facesAtEdge.get(e);
 				System.err.println("  " + inc.size() + " at edge " + e + ":");
 				for (int i = 0; i < inc.size(); ++i) {
@@ -452,8 +454,8 @@ public class FaceList {
     }
     
     private void set2opTileMode(final DynamicDSymbol ds, final Map faceElms) {
-    	for (final Iterator iter = this.tiles.iterator(); iter.hasNext();) {
-			final List tile = (List) iter.next();
+        for (int i = 0; i < this.tiles.size(); ++i) {
+			final List tile = (List) this.tiles.get(i);
 			final Map facesAtEdge = collectEdges(tile, true);
 			for (Iterator i2 = facesAtEdge.values().iterator(); i2.hasNext();) {
 				final List flist = (List) i2.next();
@@ -462,10 +464,29 @@ public class FaceList {
 					throw new UnsupportedOperationException(msg);
 				}
 				final Object D[] = new Object[2];
+                final Object E[] = new Object[2];
+                boolean reverse = false;
 				for (int k = 0; k <= 1; ++k) {
 					final Incidence inc = (Incidence) flist.get(k);
-			    	//TODO complete implementation
+                    final Pair p = (Pair) tile.get(inc.faceIndex);
+                    final Face face = (Face) p.getFirst();
+                    final Vector shift = (Vector) p.getSecond();
+                    final List taf = (List) this.tilesAtFace.get(face);
+                    final int t = taf.indexOf(new Pair(new Integer(i), shift));
+                    final int x = 2 * (t * face.size() + inc.edgeIndex);
+                    D[k] = ((List) faceElms.get(face)).get(x);
+                    E[k] = ((List) faceElms.get(face)).get(x + 1);
+                    if (inc.reverse) {
+                        reverse = !reverse;
+                    }
 				}
+                if (reverse) {
+                    ds.redefineOp(2, D[0], E[1]);
+                    ds.redefineOp(2, D[1], E[0]);
+                } else {
+                    ds.redefineOp(2, D[0], D[1]);
+                    ds.redefineOp(2, E[0], E[1]);
+                }
 			}
 		}
     }
