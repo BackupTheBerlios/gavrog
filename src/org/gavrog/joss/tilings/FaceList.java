@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.9 2007/05/31 00:58:22 odf Exp $
+ * @version $Id: FaceList.java,v 1.10 2007/05/31 08:26:08 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -80,25 +80,27 @@ public class FaceList {
 	}
 	
 	private static class Incidence implements Comparable {
-		final public Face face;
-		final public int index;
+		final public int faceIndex;
+		final public int edgeIndex;
 		final public boolean reverse;
         final public double angle;
 		
-		public Incidence(final Face face, final int index, final boolean rev,
-                final double angle) {
-			this.face = face;
-			this.index = index;
+		public Incidence(
+				final int faceIndex, final int edgeIndex, final boolean rev,
+				final double angle) {
+			this.faceIndex = faceIndex;
+			this.edgeIndex = edgeIndex;
 			this.reverse = rev;
             this.angle = angle;
 		}
         
-        public Incidence(final Face face, final int index, final boolean rev) {
-            this(face, index, rev, 0.0);
+        public Incidence(
+				final int faceIndex, final int edgeIndex, final boolean rev) {
+            this(faceIndex, edgeIndex, rev, 0.0);
         }
         
         public Incidence(final Incidence source, final double angle) {
-            this(source.face, source.index, source.reverse, angle);
+            this(source.faceIndex, source.edgeIndex, source.reverse, angle);
         }
 
         public int compareTo(final Object arg) {
@@ -109,12 +111,11 @@ public class FaceList {
                 } else if (this.angle > other.angle) {
                     return 1;
                 }
-                int d = this.face.compareTo(other.face);
-                if (d != 0) {
-                    return d;
+                if (this.faceIndex != other.faceIndex) {
+                	return this.faceIndex - other.faceIndex;
                 }
-                if (this.index != other.index) {
-                    return this.index - other.index;
+                if (this.edgeIndex != other.edgeIndex) {
+                    return this.edgeIndex - other.edgeIndex;
                 }
                 if (!this.reverse && other.reverse) {
                     return -1;
@@ -129,11 +130,14 @@ public class FaceList {
         }
         
         public String toString() {
-        	return "(" + face + "," + index + "," + reverse + "," + angle + ")";
+        	return "(" + faceIndex + "," + edgeIndex + "," + reverse + ","
+					+ angle + ")";
         }
 	}
 	
     final private List faces;
+    final private List tiles;
+    final private Map tilesAtFace;
     final private Map indexToPos;
     final private int dim;
     final private DSymbol ds;
@@ -146,11 +150,9 @@ public class FaceList {
             throw new IllegalArgumentException("no data given");
         }
         
-        final List tiles;
-        final Map tilesAtFace;
         if (input.get(0) instanceof List) {
-            tiles = new ArrayList();
-            tilesAtFace = new HashMap();
+            this.tiles = new ArrayList();
+            this.tilesAtFace = new HashMap();
             for (int i = 0; i < input.size(); ++i) {
                 final List tile = (List) input.get(i);
                 final List newTile = new ArrayList();
@@ -160,20 +162,20 @@ public class FaceList {
                     final Pair normal = NetParser.normalizedFace(face);
                     final Vector shift = (Vector) ((Vector) entry.getSecond())
                             .plus(normal.getSecond());
-                    if (!tilesAtFace.containsKey(face)) {
-                        tilesAtFace.put(face, new ArrayList());
+                    if (!this.tilesAtFace.containsKey(face)) {
+                        this.tilesAtFace.put(face, new ArrayList());
                     }
-                    ((List) tilesAtFace.get(face)).add(new Pair(new Integer(i),
+                    ((List) this.tilesAtFace.get(face)).add(new Pair(new Integer(i),
                             shift));
                     newTile.add(new Pair(face, shift));
                 }
-                tiles.add(newTile);
+                this.tiles.add(newTile);
             }
             this.faces = new ArrayList();
-            this.faces.addAll(tilesAtFace.keySet());
+            this.faces.addAll(this.tilesAtFace.keySet());
         } else {
-            tiles = null;
-            tilesAtFace = null;
+            this.tiles = null;
+            this.tilesAtFace = null;
             this.faces = new ArrayList();
             this.faces.addAll(input);
         }
@@ -215,8 +217,10 @@ public class FaceList {
         	System.err.println("Symbol without 2-ops: " + new DSymbol(ds));
         }
         
-        if (tiles == null) {
+        if (this.tiles == null) {
             set2opPlainMode(ds, faceElements);
+        } else {
+        	set2opTileMode(ds, faceElements);
         }
         
         if (DEBUG) {
@@ -300,35 +304,35 @@ public class FaceList {
     
 	private static Map collectEdges(final List faces, final boolean useShifts) {
 		final Map facesAtEdge = new HashMap();
-		for (final Iterator iter = faces.iterator(); iter.hasNext();) {
+		for (int i = 0; i < faces.size(); ++i) {
             final Face f;
             final Vector shiftF;
             if (useShifts) {
-                final Pair entry = (Pair) iter.next();
+                final Pair entry = (Pair) faces.get(i);
                 f = (Face) entry.getFirst();
                 shiftF = (Vector) entry.getSecond();
             } else {
-                f = (Face) iter.next();
+                f = (Face) faces.get(i);
                 shiftF = null;
             }
 			final int n = f.size();
-			for (int i = 0; i < n; ++i) {
-				final int i1 = (i + 1) % n;
-				final int v = f.vertex(i);
+			for (int j = 0; j < n; ++j) {
+				final int i1 = (j + 1) % n;
+				final int v = f.vertex(j);
 				final int w = f.vertex(i1);
-				final Vector s = (Vector) f.shift(i1).minus(f.shift(i));
+				final Vector s = (Vector) f.shift(i1).minus(f.shift(j));
 				final Edge e = new Edge(v, w, s);
 				final boolean rev = (e.source != v || !e.shift.equals(s));
                 final Object key;
                 if (useShifts) {
-                    key = new Pair(e, shiftF.plus(f.shift(i)));
+                    key = new Pair(e, shiftF.plus(f.shift(j)));
                 } else {
                     key = e;
                 }
 				if (!facesAtEdge.containsKey(key)) {
 					facesAtEdge.put(key, new ArrayList());
 				}
-				((List) facesAtEdge.get(key)).add(new Incidence(f, i, rev));
+				((List) facesAtEdge.get(key)).add(new Incidence(i, j, rev));
 			}
 		}
 		
@@ -369,7 +373,8 @@ public class FaceList {
             Vector n0 = null;
             for (int i = 0; i < incidences.size(); ++i) {
                 final Incidence inc = (Incidence) incidences.get(i);
-                Vector normal = ((Vector[]) normals.get(inc.face))[inc.index];
+                Vector normal = ((Vector[]) normals.get(faces
+						.get(inc.faceIndex)))[inc.edgeIndex];
                 if (inc.reverse) {
                     normal = (Vector) normal.negative();
                 }
@@ -414,25 +419,29 @@ public class FaceList {
                 if (inc2.angle - inc1.angle < 1e-3) {
                     throw new RuntimeException("tiny dihedral angle");
                 }
-                final List elms1 = (List) faceElms.get(inc1.face);
-                final List elms2 = (List) faceElms.get(inc2.face);
+                final List elms1 = (List) faceElms.get(faces
+						.get(inc1.faceIndex));
+				final List elms2 = (List) faceElms.get(faces
+						.get(inc2.faceIndex));
                 
                 final Object A, B, C, D;
                 if (inc1.reverse) {
-                    final int k = 2 * (inc1.index + inc1.face.size());
+                    final int k = 2 * (inc1.edgeIndex + ((Face) faces
+							.get(inc1.faceIndex)).size());
                     A = elms1.get(k + 1);
                     B = elms1.get(k);
                 } else {
-                    final int k = 2 * inc1.index;
+                    final int k = 2 * inc1.edgeIndex;
                     A = elms1.get(k);
                     B = elms1.get(k + 1);
                 }
                 if (inc2.reverse) {
-                    final int k = 2 * inc2.index;
+                    final int k = 2 * inc2.edgeIndex;
                     C = elms2.get(k + 1);
                     D = elms2.get(k);
                 } else {
-                    final int k = 2 * (inc2.index + inc2.face.size());
+                    final int k = 2 * (inc2.edgeIndex + ((Face) faces
+							.get(inc2.faceIndex)).size());
                     C = elms2.get(k);
                     D = elms2.get(k + 1);
                 }
@@ -440,5 +449,24 @@ public class FaceList {
                 ds.redefineOp(2, B, D);
             }
         }
+    }
+    
+    private void set2opTileMode(final DynamicDSymbol ds, final Map faceElms) {
+    	for (final Iterator iter = this.tiles.iterator(); iter.hasNext();) {
+			final List tile = (List) iter.next();
+			final Map facesAtEdge = collectEdges(tile, true);
+			for (Iterator i2 = facesAtEdge.values().iterator(); i2.hasNext();) {
+				final List flist = (List) i2.next();
+				if (flist.size() != 2) {
+					final String msg = flist.size() + " faces at an edge";
+					throw new UnsupportedOperationException(msg);
+				}
+				final Object D[] = new Object[2];
+				for (int k = 0; k <= 1; ++k) {
+					final Incidence inc = (Incidence) flist.get(k);
+			    	//TODO complete implementation
+				}
+			}
+		}
     }
 }
