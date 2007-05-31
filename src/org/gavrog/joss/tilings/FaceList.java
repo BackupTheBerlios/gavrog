@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.8 2007/05/31 00:34:35 odf Exp $
+ * @version $Id: FaceList.java,v 1.9 2007/05/31 00:58:22 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -301,7 +301,16 @@ public class FaceList {
 	private static Map collectEdges(final List faces, final boolean useShifts) {
 		final Map facesAtEdge = new HashMap();
 		for (final Iterator iter = faces.iterator(); iter.hasNext();) {
-			final Face f = (Face) iter.next();
+            final Face f;
+            final Vector shiftF;
+            if (useShifts) {
+                final Pair entry = (Pair) iter.next();
+                f = (Face) entry.getFirst();
+                shiftF = (Vector) entry.getSecond();
+            } else {
+                f = (Face) iter.next();
+                shiftF = null;
+            }
 			final int n = f.size();
 			for (int i = 0; i < n; ++i) {
 				final int i1 = (i + 1) % n;
@@ -310,10 +319,16 @@ public class FaceList {
 				final Vector s = (Vector) f.shift(i1).minus(f.shift(i));
 				final Edge e = new Edge(v, w, s);
 				final boolean rev = (e.source != v || !e.shift.equals(s));
-				if (!facesAtEdge.containsKey(e)) {
-					facesAtEdge.put(e, new ArrayList());
+                final Object key;
+                if (useShifts) {
+                    key = new Pair(e, shiftF.plus(f.shift(i)));
+                } else {
+                    key = e;
+                }
+				if (!facesAtEdge.containsKey(key)) {
+					facesAtEdge.put(key, new ArrayList());
 				}
-				((List) facesAtEdge.get(e)).add(new Incidence(f, i, rev));
+				((List) facesAtEdge.get(key)).add(new Incidence(f, i, rev));
 			}
 		}
 		
