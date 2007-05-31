@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.7 2007/05/31 00:19:49 odf Exp $
+ * @version $Id: FaceList.java,v 1.8 2007/05/31 00:34:35 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -134,6 +134,7 @@ public class FaceList {
 	}
 	
     final private List faces;
+    final private Map indexToPos;
     final private int dim;
     final private DSymbol ds;
     
@@ -144,6 +145,7 @@ public class FaceList {
         if (input == null || input.size() < 1) {
             throw new IllegalArgumentException("no data given");
         }
+        
         final List tiles;
         final Map tilesAtFace;
         if (input.get(0) instanceof List) {
@@ -185,6 +187,8 @@ public class FaceList {
             throw new UnsupportedOperationException("dimension must be 3");
         }
         
+        this.indexToPos = indexToPosition;
+        
         // --- initialize the intermediate symbol
         final Map faceElements = new HashMap();
         final DynamicDSymbol ds = new DynamicDSymbol(this.dim);
@@ -211,97 +215,8 @@ public class FaceList {
         	System.err.println("Symbol without 2-ops: " + new DSymbol(ds));
         }
         
-        // --- determine sector normals for each face
-        final Map normals = new HashMap();
-        for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
-            final Face f = (Face) iter.next();
-            normals.put(f, sectorNormals(f, indexToPosition));
-        }
-        
-        // --- set 2 operator according to cyclic orders of faces around edges
-		final Map facesAtEdge = collectEdges(input, false);
-
-        for (Iterator iter = facesAtEdge.keySet().iterator(); iter.hasNext();) {
-            final Edge e = (Edge) iter.next();
-            final Point p = (Point) indexToPosition.get(new Integer(e.source));
-            final Point q = (Point) indexToPosition.get(new Integer(e.target));
-            final Vector a = Vector.unit((Vector) q.plus(e.shift).minus(p));
-            
-            // --- augment all incidences at this edge with their angles
-            final List incidences = (List) facesAtEdge.get(e);
-            Vector n0 = null;
-            for (int i = 0; i < incidences.size(); ++i) {
-                final Incidence inc = (Incidence) incidences.get(i);
-                Vector normal = ((Vector[]) normals.get(inc.face))[inc.index];
-                if (inc.reverse) {
-                    normal = (Vector) normal.negative();
-                }
-                double angle;
-                if (i == 0) {
-                    n0 = normal;
-                    angle = 0.0;
-                } else {
-                    double x = ((Real) Vector.dot(n0, normal)).doubleValue();
-                    x = Math.max(Math.min(x, 1.0), -1.0);
-                    angle = Math.acos(x);
-                    if (Vector.volume3D(a, n0, normal).isNegative()) {
-                        angle = 2 * Math.PI - angle;
-                    }
-                }
-                incidences.set(i, new Incidence(inc, angle));
-            }
-            if (DEBUG) {
-            	System.err.println("Augmented incidences at edge " + e + ":");
-				for (int i = 0; i < incidences.size(); ++i) {
-					System.err.println("    " + incidences.get(i));
-				}
-            }
-            
-            // --- sort by angle
-            Collections.sort(incidences);
-            
-            // --- top off with a copy of the first incidences
-            final Incidence inc = (Incidence) incidences.get(0);
-            incidences.add(new Incidence(inc, inc.angle + 2 * Math.PI));
-            if (DEBUG) {
-            	System.err.println("Sorted incidences at edge " + e + ":");
-				for (int i = 0; i < incidences.size(); ++i) {
-					System.err.println("    " + incidences.get(i));
-				}
-            }
-            
-            // --- now set all the connections around this edge
-            for (int i = 0; i < incidences.size() - 1; ++i) {
-                final Incidence inc1 = (Incidence) incidences.get(i);
-                final Incidence inc2 = (Incidence) incidences.get(i + 1);
-                if (inc2.angle - inc1.angle < 1e-3) {
-                    throw new RuntimeException("tiny dihedral angle");
-                }
-                final List elms1 = (List) faceElements.get(inc1.face);
-                final List elms2 = (List) faceElements.get(inc2.face);
-                
-                final Object A, B, C, D;
-                if (inc1.reverse) {
-                    final int k = 2 * (inc1.index + inc1.face.size());
-                    A = elms1.get(k + 1);
-                    B = elms1.get(k);
-                } else {
-                    final int k = 2 * inc1.index;
-                    A = elms1.get(k);
-                    B = elms1.get(k + 1);
-                }
-                if (inc2.reverse) {
-                    final int k = 2 * inc2.index;
-                    C = elms2.get(k + 1);
-                    D = elms2.get(k);
-                } else {
-                    final int k = 2 * (inc2.index + inc2.face.size());
-                    C = elms2.get(k);
-                    D = elms2.get(k + 1);
-                }
-                ds.redefineOp(2, A, C);
-                ds.redefineOp(2, B, D);
-            }
+        if (tiles == null) {
+            set2opPlainMode(ds, faceElements);
         }
         
         if (DEBUG) {
@@ -416,4 +331,99 @@ public class FaceList {
 		}
 		return facesAtEdge;
 	}
+
+    private void set2opPlainMode(final DynamicDSymbol ds, final Map faceElms) {
+        // --- determine sector normals for each face
+        final Map normals = new HashMap();
+        for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
+            final Face f = (Face) iter.next();
+            normals.put(f, sectorNormals(f, this.indexToPos));
+        }
+        
+        // --- set 2 operator according to cyclic orders of faces around edges
+        final Map facesAtEdge = collectEdges(this.faces, false);
+
+        for (Iterator iter = facesAtEdge.keySet().iterator(); iter.hasNext();) {
+            final Edge e = (Edge) iter.next();
+            final Point p = (Point) this.indexToPos.get(new Integer(e.source));
+            final Point q = (Point) this.indexToPos.get(new Integer(e.target));
+            final Vector a = Vector.unit((Vector) q.plus(e.shift).minus(p));
+            
+            // --- augment all incidences at this edge with their angles
+            final List incidences = (List) facesAtEdge.get(e);
+            Vector n0 = null;
+            for (int i = 0; i < incidences.size(); ++i) {
+                final Incidence inc = (Incidence) incidences.get(i);
+                Vector normal = ((Vector[]) normals.get(inc.face))[inc.index];
+                if (inc.reverse) {
+                    normal = (Vector) normal.negative();
+                }
+                double angle;
+                if (i == 0) {
+                    n0 = normal;
+                    angle = 0.0;
+                } else {
+                    double x = ((Real) Vector.dot(n0, normal)).doubleValue();
+                    x = Math.max(Math.min(x, 1.0), -1.0);
+                    angle = Math.acos(x);
+                    if (Vector.volume3D(a, n0, normal).isNegative()) {
+                        angle = 2 * Math.PI - angle;
+                    }
+                }
+                incidences.set(i, new Incidence(inc, angle));
+            }
+            if (DEBUG) {
+                System.err.println("Augmented incidences at edge " + e + ":");
+                for (int i = 0; i < incidences.size(); ++i) {
+                    System.err.println("    " + incidences.get(i));
+                }
+            }
+            
+            // --- sort by angle
+            Collections.sort(incidences);
+            
+            // --- top off with a copy of the first incidences
+            final Incidence inc = (Incidence) incidences.get(0);
+            incidences.add(new Incidence(inc, inc.angle + 2 * Math.PI));
+            if (DEBUG) {
+                System.err.println("Sorted incidences at edge " + e + ":");
+                for (int i = 0; i < incidences.size(); ++i) {
+                    System.err.println("    " + incidences.get(i));
+                }
+            }
+            
+            // --- now set all the connections around this edge
+            for (int i = 0; i < incidences.size() - 1; ++i) {
+                final Incidence inc1 = (Incidence) incidences.get(i);
+                final Incidence inc2 = (Incidence) incidences.get(i + 1);
+                if (inc2.angle - inc1.angle < 1e-3) {
+                    throw new RuntimeException("tiny dihedral angle");
+                }
+                final List elms1 = (List) faceElms.get(inc1.face);
+                final List elms2 = (List) faceElms.get(inc2.face);
+                
+                final Object A, B, C, D;
+                if (inc1.reverse) {
+                    final int k = 2 * (inc1.index + inc1.face.size());
+                    A = elms1.get(k + 1);
+                    B = elms1.get(k);
+                } else {
+                    final int k = 2 * inc1.index;
+                    A = elms1.get(k);
+                    B = elms1.get(k + 1);
+                }
+                if (inc2.reverse) {
+                    final int k = 2 * inc2.index;
+                    C = elms2.get(k + 1);
+                    D = elms2.get(k);
+                } else {
+                    final int k = 2 * (inc2.index + inc2.face.size());
+                    C = elms2.get(k);
+                    D = elms2.get(k + 1);
+                }
+                ds.redefineOp(2, A, C);
+                ds.redefineOp(2, B, D);
+            }
+        }
+    }
 }
