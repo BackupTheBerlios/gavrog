@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.92 2007/05/30 23:35:49 odf Exp $
+ * @version $Id: NetParser.java,v 1.93 2007/05/31 00:10:03 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -1594,7 +1594,7 @@ public class NetParser extends GenericParser {
 	 * @param face
 	 * @return
 	 */
-	private static Pair normalizedFace(final Face face) {
+	public static Pair normalizedFace(final Face face) {
 		final int n = face.size();
 		Face trial;
 		Face best = null;
