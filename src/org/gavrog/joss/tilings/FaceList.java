@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.5 2007/05/30 03:46:04 odf Exp $
+ * @version $Id: FaceList.java,v 1.6 2007/05/31 00:10:46 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -137,14 +137,46 @@ public class FaceList {
     final private int dim;
     final private DSymbol ds;
     
-	public FaceList(final List faces, final Map indexToPosition) {
+	public FaceList(final List input, final Map indexToPosition) {
 		if (DEBUG) {
 			System.err.println("\nStarting FaceList constructor");
 		}
-        if (faces == null || faces.size() < 1) {
-            throw new IllegalArgumentException("no faces given");
+        if (input == null || input.size() < 1) {
+            throw new IllegalArgumentException("no data given");
         }
-        final Face f0 = (Face) faces.get(0);
+        final List tiles;
+        final Map tilesAtFace;
+        if (input.get(0) instanceof List) {
+            tiles = new ArrayList();
+            tilesAtFace = new HashMap();
+            for (int i = 0; i < input.size(); ++i) {
+                final List tile = (List) input.get(i);
+                final List newTile = new ArrayList();
+                for (int j = 0; j < tile.size(); ++j) {
+                    final Pair entry = (Pair) tile.get(j);
+                    final Face face = (Face) entry.getFirst();
+                    final Pair normal = NetParser.normalizedFace(face);
+                    final Vector shift = (Vector) ((Vector) entry.getSecond())
+                            .plus(normal.getSecond());
+                    if (!tilesAtFace.containsKey(face)) {
+                        tilesAtFace.put(face, new ArrayList());
+                    }
+                    ((List) tilesAtFace.get(face)).add(new Pair(new Integer(i),
+                            shift));
+                    newTile.add(new Pair(face, shift));
+                }
+                tiles.add(newTile);
+            }
+            this.faces = new ArrayList();
+            this.faces.addAll(tilesAtFace.keySet());
+        } else {
+            tiles = null;
+            tilesAtFace = null;
+            this.faces = new ArrayList();
+            this.faces.addAll(input);
+        }
+        
+        final Face f0 = (Face) this.faces.get(0);
         if (f0.size() < 3) {
             throw new IllegalArgumentException("minimal face-size is 3");
         }
@@ -152,7 +184,6 @@ public class FaceList {
         if (this.dim != 3) {
             throw new UnsupportedOperationException("dimension must be 3");
         }
-        this.faces = faces;
         
         // --- determine sector normals for each face
         final Map normals = new HashMap();
@@ -188,7 +219,7 @@ public class FaceList {
         }
         
         // --- set 2 operator according to cyclic orders of faces around edges
-		final Map facesAtEdge = collectEdges(faces, false);
+		final Map facesAtEdge = collectEdges(input, false);
 
         for (Iterator iter = facesAtEdge.keySet().iterator(); iter.hasNext();) {
             final Edge e = (Edge) iter.next();
