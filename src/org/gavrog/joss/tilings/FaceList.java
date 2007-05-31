@@ -39,15 +39,15 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.11 2007/05/31 20:44:15 odf Exp $
+ * @version $Id: FaceList.java,v 1.12 2007/05/31 22:01:26 odf Exp $
  */
 public class FaceList {
-	final private static boolean DEBUG = true;
+	final private static boolean DEBUG = false;
 	
 	/**
 	 * Hashable class for edges in the tiling to be constructed.
 	 */
-	private static class Edge {
+	private static class Edge implements Comparable {
 		final public int source;
 		final public int target;
 		final public Vector shift;
@@ -74,6 +74,21 @@ public class FaceList {
 					&& shift.equals(e.shift);
 		}
 		
+        public int compareTo(final Object arg) {
+            if (arg instanceof Edge) {
+                final Edge other = (Edge) arg;
+                if (this.source != other.source) {
+                    return this.source - other.source;
+                }
+                if (this.target != other.target) {
+                    return this.target - other.target;
+                }
+                return this.shift.compareTo(other.shift);
+            } else {
+                throw new IllegalArgumentException("argument must be an Edge");
+            }
+        }
+        
 		public String toString() {
 			return "(" + source + "," + target + "," + shift + ")";
 		}
@@ -306,26 +321,27 @@ public class FaceList {
 		final Map facesAtEdge = new HashMap();
 		for (int i = 0; i < faces.size(); ++i) {
             final Face f;
-            final Vector shiftF;
+            final Vector fShift;
             if (useShifts) {
                 final Pair entry = (Pair) faces.get(i);
                 f = (Face) entry.getFirst();
-                shiftF = (Vector) entry.getSecond();
+                fShift = (Vector) entry.getSecond();
             } else {
                 f = (Face) faces.get(i);
-                shiftF = null;
+                fShift = null;
             }
 			final int n = f.size();
 			for (int j = 0; j < n; ++j) {
-				final int i1 = (j + 1) % n;
+				final int j1 = (j + 1) % n;
 				final int v = f.vertex(j);
-				final int w = f.vertex(i1);
-				final Vector s = (Vector) f.shift(i1).minus(f.shift(j));
+				final int w = f.vertex(j1);
+				final Vector s = (Vector) f.shift(j1).minus(f.shift(j));
 				final Edge e = new Edge(v, w, s);
 				final boolean rev = (e.source != v || !e.shift.equals(s));
                 final Object key;
                 if (useShifts) {
-                    key = new Pair(e, shiftF.plus(f.shift(j)));
+                    final Vector vShift = rev ? f.shift(j1) : f.shift(j);
+                    key = new Pair(e, fShift.plus(vShift));
                 } else {
                     key = e;
                 }
