@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.6 2007/05/31 00:10:46 odf Exp $
+ * @version $Id: FaceList.java,v 1.7 2007/05/31 00:19:49 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -185,13 +185,6 @@ public class FaceList {
             throw new UnsupportedOperationException("dimension must be 3");
         }
         
-        // --- determine sector normals for each face
-        final Map normals = new HashMap();
-        for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
-            final Face f = (Face) iter.next();
-            normals.put(f, sectorNormals(f, indexToPosition));
-        }
-        
         // --- initialize the intermediate symbol
         final Map faceElements = new HashMap();
         final DynamicDSymbol ds = new DynamicDSymbol(this.dim);
@@ -216,6 +209,13 @@ public class FaceList {
         
         if (DEBUG) {
         	System.err.println("Symbol without 2-ops: " + new DSymbol(ds));
+        }
+        
+        // --- determine sector normals for each face
+        final Map normals = new HashMap();
+        for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
+            final Face f = (Face) iter.next();
+            normals.put(f, sectorNormals(f, indexToPosition));
         }
         
         // --- set 2 operator according to cyclic orders of faces around edges
