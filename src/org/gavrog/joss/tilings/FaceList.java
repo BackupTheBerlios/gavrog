@@ -39,7 +39,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.12 2007/05/31 22:01:26 odf Exp $
+ * @version $Id: FaceList.java,v 1.13 2007/06/01 09:00:12 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -257,7 +257,7 @@ public class FaceList {
         }
         
         // --- freeze the constructed symbol
-        //TODO keep given symmetry
+        //TODO keep given symmetry and record original vertex positions
         this.ds = new DSymbol(ds.minimal());
 	}
 	
