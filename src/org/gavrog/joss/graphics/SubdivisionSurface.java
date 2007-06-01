@@ -25,18 +25,74 @@ import java.util.List;
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.3 2007/05/19 07:50:06 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.4 2007/06/01 21:26:31 odf Exp $
  */
 public class SubdivisionSurface {
     final public double[][] vertices;
     final public int[][] faces;
     final public boolean[] fixed;
+    final public Object[] tag;
+    public double[][] faceNormals;
+    public double[][] vertexNormals;
+    
+    public SubdivisionSurface(final double[][] vertices, final int[][] faces,
+            final boolean fixed[], final Object tag[]) {
+        this.vertices = (double[][]) vertices.clone();
+        this.faces = (int[][]) faces.clone();
+        this.fixed = (boolean[]) fixed.clone();
+        if (tag == null) {
+            this.tag = null;
+        } else {
+            this.tag = (Object[]) tag.clone();
+        }
+    }
     
     public SubdivisionSurface(final double[][] vertices, final int[][] faces,
             final boolean fixed[]) {
-        this.vertices = vertices;
-        this.faces = faces;
-        this.fixed = fixed;
+        this(vertices, faces, fixed, null);
+    }
+    
+    public double[][] getFaceNormals() {
+        if (this.faceNormals == null) {
+            final int nf = this.faces.length;
+            this.faceNormals = new double[nf][3];
+            for (int i = 0; i < nf; ++i) {
+                final int[] face = this.faces[i];
+                final int n = face.length;
+                final double normal[] = new double[] { 0.0, 0.0, 0.0 };
+                for (int j = 0; j < n; ++j) {
+                    final double p[] = this.vertices[face[j]];
+                    final double q[] = this.vertices[face[(j + 1) % n]];
+                    Vec.plus(normal, normal, Vec.crossProduct(null, p, q));
+                }
+                // --- normalize both vectors
+                Vec.normalized(this.faceNormals[i], normal);
+            }
+        }
+        return (double[][]) this.faceNormals.clone();
+    }
+    
+    public double[][] getVertexNormals() {
+        if (this.vertexNormals == null) {
+            final int nv = this.vertices.length;
+            final int nf = this.faces.length;
+            this.vertexNormals = new double[nv][3];
+            
+            for (int i = 0; i < nf; ++i) {
+                final int face[] = this.faces[i];
+                final double normal[] = this.faceNormals[i];
+                final int n = face.length;
+                for (int j = 0; j < n; ++j) {
+                    final int v = face[j];
+                    Vec.plus(this.vertexNormals[v], this.vertexNormals[v],
+                            normal);
+                }
+            }
+            for (int i = 0; i < nv; ++i) {
+                Vec.normalized(this.vertexNormals[i], this.vertexNormals[i]);
+            }
+        }
+        return (double[][]) this.vertexNormals.clone();
     }
     
     public SubdivisionSurface nextLevel() {
@@ -71,9 +127,15 @@ public class SubdivisionSurface {
         }
         
         // --- create arrays for new surface
-        final double[][] newVertices = new double[nf + ne + nv][3];
-        final int[][] newFaces = new int[ne + neInterior][4];
-        final boolean[] newFixed = new boolean[newVertices.length];
+        final double newVertices[][] = new double[nf + ne + nv][3];
+        final int newFaces[][] = new int[ne + neInterior][4];
+        final boolean newFixed[] = new boolean[newVertices.length];
+        final Object newTag[];
+        if (this.tag != null) {
+            newTag = new Object[newFaces.length];
+        } else {
+            newTag = null;
+        }
         
         // --- make the new faces
         int facesMade = 0;
@@ -86,8 +148,12 @@ public class SubdivisionSurface {
                 final int w = face[(j + 2) % n];
                 final int k = edgeToIndex[u][v];
                 final int k1 = edgeToIndex[v][w];
-                newFaces[facesMade++] = new int[] { i, nf + k,
-                        nf + ne + v, nf + k1 };
+                newFaces[facesMade] = new int[] { i, nf + k, nf + ne + v,
+                        nf + k1 };
+                if (newTag != null) {
+                    newTag[facesMade] = this.tag[i];
+                }
+                ++facesMade;
                 newFixed[nf + k] = this.fixed[u] && this.fixed[v];
                 newFixed[nf + ne + u] = this.fixed[u];
             }
@@ -185,7 +251,7 @@ public class SubdivisionSurface {
             }
         }
         
-        return new SubdivisionSurface(newVertices, newFaces, newFixed);
+        return new SubdivisionSurface(newVertices, newFaces, newFixed, newTag);
     }
 
     public static SubdivisionSurface fromOutline(final double corners[][]) {
