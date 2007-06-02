@@ -26,7 +26,7 @@ import java.util.List;
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.5 2007/06/01 23:08:07 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.6 2007/06/02 06:17:39 odf Exp $
  */
 public class SubdivisionSurface {
     final public double[][] vertices;
@@ -129,7 +129,7 @@ public class SubdivisionSurface {
             System.arraycopy(verts, 0, newVerts, offsetV, nv);
             System.arraycopy(parts[i].fixed, 0, newFixed, offsetV, nv);
             System.arraycopy(parts[i].tags, 0, newTags, offsetF, nf);
-            for (int j = 0; j < faces.length; ++i) {
+            for (int j = 0; j < faces.length; ++j) {
                 final int face[] = faces[j];
                 final int newFace[] = new int[face.length];
                 newFaces[j + offsetF] = newFace;
@@ -394,7 +394,8 @@ public class SubdivisionSurface {
         return new SubdivisionSurface(newVertices, newFaces, newFixed, newTags);
     }
 
-    public static SubdivisionSurface fromOutline(final double corners[][]) {
+    public static SubdivisionSurface fromOutline(final double corners[][],
+    		final boolean fixBorder) {
     	final List vertices = new ArrayList();
     	final List faces = new ArrayList();
     	final double tmp[] = new double[3];
@@ -591,8 +592,10 @@ public class SubdivisionSurface {
     	final int idcs[][] = new int[faces.size()][];
     	faces.toArray(idcs);
     	final boolean fixed[] = new boolean[vertices.size()];
-    	for (int i = 0; i < corners.length; ++i) {
-    		fixed[i] = true;
+    	if (fixBorder) {
+    		for (int i = 0; i < corners.length; ++i) {
+    			fixed[i] = true;
+    		}
     	}
     	
     	return new SubdivisionSurface(pos, idcs, fixed);
