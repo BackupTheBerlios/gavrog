@@ -26,21 +26,21 @@ import java.util.List;
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.6 2007/06/02 06:17:39 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.7 2007/06/02 23:47:55 odf Exp $
  */
 public class SubdivisionSurface {
     final public double[][] vertices;
     final public int[][] faces;
-    final public boolean[] fixed;
+    final public int[] fixed;
     public Object[] tags;
     public double[][] faceNormals;
     public double[][] vertexNormals;
     
     public SubdivisionSurface(final double[][] vertices, final int[][] faces,
-            final boolean fixed[], final Object tag[]) {
+            final int fixed[], final Object tag[]) {
         this.vertices = (double[][]) vertices.clone();
         this.faces = (int[][]) faces.clone();
-        this.fixed = (boolean[]) fixed.clone();
+        this.fixed = (int[]) fixed.clone();
         if (tag == null) {
             this.tags = null;
         } else {
@@ -49,7 +49,7 @@ public class SubdivisionSurface {
     }
     
     public SubdivisionSurface(final double[][] vertices, final int[][] faces,
-            final boolean fixed[]) {
+            final int fixed[]) {
         this(vertices, faces, fixed, null);
     }
     
@@ -115,7 +115,7 @@ public class SubdivisionSurface {
             newNV += parts[i].vertices.length;
         }
         final double newVerts[][] = new double[newNV][];
-        final boolean newFixed[] = new boolean[newNV];
+        final int newFixed[] = new int[newNV];
         final int newFaces[][] = new int[newNF][];
         final Object newTags[] = new Object[newNF];
         
@@ -182,7 +182,7 @@ public class SubdivisionSurface {
         // --- collect used vertices and map old vertex numbers to new ones
         final int mapV[] = new int[nv];
         final double newVerts[][] = new double[newNV][3];
-        final boolean newFixed[] = new boolean[newNV];
+        final int newFixed[] = new int[newNV];
         final double newVNormals[][];
         if (this.vertexNormals == null) {
             newVNormals = null;
@@ -269,7 +269,7 @@ public class SubdivisionSurface {
         // --- create arrays for new surface
         final double newVertices[][] = new double[nf + ne + nv][3];
         final int newFaces[][] = new int[ne + neInterior][4];
-        final boolean newFixed[] = new boolean[newVertices.length];
+        final int newFixed[] = new int[newVertices.length];
         final Object newTags[];
         if (this.tags != null) {
             newTags = new Object[newFaces.length];
@@ -294,8 +294,8 @@ public class SubdivisionSurface {
                     newTags[facesMade] = this.tags[i];
                 }
                 ++facesMade;
-                newFixed[nf + k] = this.fixed[u] && this.fixed[v];
-                newFixed[nf + ne + u] = this.fixed[u];
+                newFixed[nf + k] = Math.min(this.fixed[u], this.fixed[v]) - 1;
+                newFixed[nf + ne + u] = this.fixed[u] - 1;
             }
         }
         
@@ -337,13 +337,13 @@ public class SubdivisionSurface {
             }
             ++vertexDeg[e1];
             ++vertexDeg[e2];
-            if (!newFixed[e1]) {
+            if (newFixed[e1] < 0) {
                 for (int i = 0; i < 3; ++i) {
                     p1[i] += q2[i];
                 }
                 ++vertexDeg[e1];
             }
-            if (!newFixed[e2]) {
+            if (newFixed[e2] < 0) {
                 for (int i = 0; i < 3; ++i) {
                     p2[i] += q2[i];
                 }
@@ -363,7 +363,7 @@ public class SubdivisionSurface {
         for (int k = 0; k < newFaces.length; ++k) {
         	final int[] face = newFaces[k];
             final int v = face[2];
-            if (newFixed[v]) {
+            if (newFixed[v] >= 0) {
                 continue;
             }
             final double[] p = vertexTmp[v];
@@ -382,7 +382,7 @@ public class SubdivisionSurface {
             p[0] = q[0];
             p[1] = q[1];
             p[2] = q[2];
-            if (!newFixed[v]) {
+            if (newFixed[v] < 0) {
                 final double[] r = vertexTmp[v];
                 final int d = vertexDeg[v];
                 for (int nu = 0; nu < 3; ++nu) {
@@ -395,7 +395,7 @@ public class SubdivisionSurface {
     }
 
     public static SubdivisionSurface fromOutline(final double corners[][],
-    		final boolean fixBorder) {
+    		final int fixBorder) {
     	final List vertices = new ArrayList();
     	final List faces = new ArrayList();
     	final double tmp[] = new double[3];
@@ -591,11 +591,9 @@ public class SubdivisionSurface {
     	vertices.toArray(pos);
     	final int idcs[][] = new int[faces.size()][];
     	faces.toArray(idcs);
-    	final boolean fixed[] = new boolean[vertices.size()];
-    	if (fixBorder) {
-    		for (int i = 0; i < corners.length; ++i) {
-    			fixed[i] = true;
-    		}
+    	final int fixed[] = new int[vertices.size()];
+    	for (int i = 0; i < corners.length; ++i) {
+    		fixed[i] = fixBorder;
     	}
     	
     	return new SubdivisionSurface(pos, idcs, fixed);
@@ -606,7 +604,7 @@ public class SubdivisionSurface {
                 { 0, 1, 1 }, { 1, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 1, 1 } };
         final int f[][] = { { 0, 1, 3, 2 }, { 5, 4, 6, 7 }, { 1, 0, 4, 5 },
                 { 2, 3, 7, 6 }, { 0, 2, 6, 4 }, { 3, 1, 5, 7 } };
-        final boolean fixed[] = new boolean[8];
+        final int fixed[] = new int[8];
         final Object tag[] = { "left", "right", "bottom", "top", "back",
                 "front" };
         
