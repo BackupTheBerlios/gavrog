@@ -26,7 +26,7 @@ import java.util.List;
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.7 2007/06/02 23:47:55 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.8 2007/06/04 19:00:25 odf Exp $
  */
 public class SubdivisionSurface {
     final public double[][] vertices;
@@ -294,7 +294,13 @@ public class SubdivisionSurface {
                     newTags[facesMade] = this.tags[i];
                 }
                 ++facesMade;
-                newFixed[nf + k] = Math.min(this.fixed[u], this.fixed[v]) - 1;
+                final int fu = this.fixed[u];
+                final int fv = this.fixed[v];
+                if (fu > 0 && fv <= 0 || fv > 0 && fu <= 0) {
+                    newFixed[nf + k] = 0;
+                } else {
+                    newFixed[nf + k] = Math.min(fu, fv) - 1;
+                }
                 newFixed[nf + ne + u] = this.fixed[u] - 1;
             }
         }
