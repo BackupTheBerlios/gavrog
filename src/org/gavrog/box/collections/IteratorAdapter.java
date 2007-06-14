@@ -24,9 +24,9 @@ import java.util.NoSuchElementException;
  * An abstract base class for iterators with single element cacheing. Derived
  * classes need only implement the method <code>findNext</code>.
  * @author Olaf Delgado
- * @version $Id: IteratorAdapter.java,v 1.2 2007/04/20 01:16:38 odf Exp $
+ * @version $Id: IteratorAdapter.java,v 1.3 2007/06/14 12:07:02 odf Exp $
  */
-public abstract class IteratorAdapter implements Iterator, Iterable {
+public abstract class IteratorAdapter implements Iterator {
     private LinkedList cache = new LinkedList();
 
     /**
