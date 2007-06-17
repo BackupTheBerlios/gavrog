@@ -19,22 +19,54 @@ package org.gavrog.joss.graphics;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import org.gavrog.box.simple.Tag;
 
 
 /**
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.8 2007/06/04 19:00:25 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.9 2007/06/17 12:47:31 odf Exp $
  */
 public class SubdivisionSurface {
+	final static Tag FACE = new Tag();
+	final static Tag VERTEX = new Tag();
+	final static Tag NORMAL = new Tag();
+
+	private static class AttributeKey {
+		final Object targetType;
+		final int index;
+		final Object attribute;
+		
+		public AttributeKey(final Object type, final int idx, final Object key) {
+			this.targetType = type;
+			this.index = idx;
+			this.attribute = key;
+		}
+		
+		public int hashCode() {
+			return (this.targetType.hashCode() * 37 + this.index) * 37
+					+ this.attribute.hashCode();
+		}
+		
+		public boolean equals(final Object x) {
+			final AttributeKey other = (AttributeKey) x;
+			return this.targetType.equals(other.targetType)
+					&& this.index == other.index
+					&& this.attribute.equals(other.attribute);
+		}
+	}
+	
     final public double[][] vertices;
     final public int[][] faces;
     final public int[] fixed;
     public Object[] tags;
-    public double[][] faceNormals;
-    public double[][] vertexNormals;
+    final public Map attributes;
     
     public SubdivisionSurface(final double[][] vertices, final int[][] faces,
             final int fixed[], final Object tag[]) {
@@ -46,6 +78,7 @@ public class SubdivisionSurface {
         } else {
             this.tags = (Object[]) tag.clone();
         }
+        this.attributes = new HashMap();
     }
     
     public SubdivisionSurface(final double[][] vertices, final int[][] faces,
@@ -53,48 +86,69 @@ public class SubdivisionSurface {
         this(vertices, faces, fixed, null);
     }
     
+    public void setAttribute(final Object targetType, final int targetIndex,
+			final Object attributeKey, final Object attributeValue) {
+		this.attributes.put(new AttributeKey(targetType, targetIndex,
+				attributeKey), attributeValue);
+	}
+
+	public Object getAttribute(final Object targetType, final int targetIndex,
+			final Object attributeKey) {
+		return this.attributes.get(new AttributeKey(targetType, targetIndex,
+				attributeKey));
+	}
+    
+    public void computeNormals() {
+		final int nv = this.vertices.length;
+		final double vertexNormals[][] = new double[nv][3];
+		final int nf = this.faces.length;
+
+		for (int i = 0; i < nf; ++i) {
+			final int[] face = this.faces[i];
+			final int n = face.length;
+			final double normal[] = new double[] { 0.0, 0.0, 0.0 };
+			for (int j = 0; j < n; ++j) {
+				final double p[] = this.vertices[face[j]];
+				final double q[] = this.vertices[face[(j + 1) % n]];
+				Vec.plus(normal, normal, Vec.crossProduct(null, p, q));
+			}
+			Vec.normalized(normal, normal);
+			setAttribute(FACE, i, NORMAL, normal);
+
+			for (int j = 0; j < n; ++j) {
+				final int v = face[j];
+				Vec.plus(vertexNormals[v], vertexNormals[v], normal);
+			}
+		}
+		for (int i = 0; i < nv; ++i) {
+			final double normal[] = new double[3];
+			Vec.normalized(normal, vertexNormals[i]);
+			setAttribute(VERTEX, i, NORMAL, normal);
+		}
+	}
+    
     public double[][] getFaceNormals() {
-        if (this.faceNormals == null) {
-            final int nf = this.faces.length;
-            this.faceNormals = new double[nf][3];
-            for (int i = 0; i < nf; ++i) {
-                final int[] face = this.faces[i];
-                final int n = face.length;
-                final double normal[] = new double[] { 0.0, 0.0, 0.0 };
-                for (int j = 0; j < n; ++j) {
-                    final double p[] = this.vertices[face[j]];
-                    final double q[] = this.vertices[face[(j + 1) % n]];
-                    Vec.plus(normal, normal, Vec.crossProduct(null, p, q));
-                }
-                // --- normalize both vectors
-                Vec.normalized(this.faceNormals[i], normal);
-            }
-        }
-        return (double[][]) this.faceNormals.clone();
+    	final int nf = this.faces.length;
+    	final double normals[][] = new double[nf][3];
+    	for (int i = 0; i < nf; ++i) {
+    		final double n[] = (double[]) getAttribute(FACE, i, NORMAL);
+    		for (int j = 0; j < 3; ++j) {
+    			normals[i][j] = n[j];
+    		}
+    	}
+    	return normals;
     }
     
     public double[][] getVertexNormals() {
-        if (this.vertexNormals == null) {
-            getFaceNormals();
-            final int nv = this.vertices.length;
-            final int nf = this.faces.length;
-            this.vertexNormals = new double[nv][3];
-            
-            for (int i = 0; i < nf; ++i) {
-                final int face[] = this.faces[i];
-                final double normal[] = this.faceNormals[i];
-                final int n = face.length;
-                for (int j = 0; j < n; ++j) {
-                    final int v = face[j];
-                    Vec.plus(this.vertexNormals[v], this.vertexNormals[v],
-                            normal);
-                }
-            }
-            for (int i = 0; i < nv; ++i) {
-                Vec.normalized(this.vertexNormals[i], this.vertexNormals[i]);
-            }
-        }
-        return (double[][]) this.vertexNormals.clone();
+    	final int nv = this.vertices.length;
+    	final double normals[][] = new double[nv][3];
+    	for (int i = 0; i < nv; ++i) {
+    		final double n[] = (double[]) getAttribute(VERTEX, i, NORMAL);
+    		for (int j = 0; j < 3; ++j) {
+    			normals[i][j] = n[j];
+    		}
+    	}
+    	return normals;
     }
     
     public void tagAll(final Object tag) {
@@ -183,55 +237,59 @@ public class SubdivisionSurface {
         final int mapV[] = new int[nv];
         final double newVerts[][] = new double[newNV][3];
         final int newFixed[] = new int[newNV];
-        final double newVNormals[][];
-        if (this.vertexNormals == null) {
-            newVNormals = null;
-        } else {
-            newVNormals = new double[newNV][3];
-        }
         int k = 0;
         for (int i = 0; i < nv; ++i) {
             if (usedV[i]) {
                 mapV[i] = k;
                 Vec.copy(newVerts[k], this.vertices[i]);
-                if (newVNormals != null) {
-                    Vec.copy(newVNormals[k], this.vertexNormals[i]);
-                }
                 newFixed[k] = this.fixed[i];
                 ++k;
+            } else {
+            	mapV[i] = -1;
             }
         }
         
         // --- map and collect faces
+        final int mapF[] = new int[nf];
         final int newFaces[][] = new int[newNF][];
         final Object newTags[] = new Object[newNF];
-        final double newFNormals[][];
-        if (this.faceNormals == null) {
-            newFNormals = null;
-        } else {
-            newFNormals = new double[newNF][3];
-        }
         k = 0;
         for (int i = 0; i < nf; ++i) {
             if (usedF[i]) {
+            	mapF[i] = k;
                 final int face[] = this.faces[i];
                 final int newFace[] = new int[face.length];
                 for (int j = 0; j < face.length; ++j) {
                     newFace[j] = mapV[face[j]];
                 }
                 newFaces[k] = newFace;
-                if (newFNormals != null) {
-                    Vec.copy(newFNormals[k], this.faceNormals[i]);
-                }
                 newTags[k] = tag;
                 ++k;
+            } else {
+            	mapF[i] = -1;
             }
         }
         
+        // --- make new surface
         final SubdivisionSurface surf = new SubdivisionSurface(newVerts,
                 newFaces, newFixed, newTags);
-        surf.vertexNormals = newVNormals;
-        surf.faceNormals = newFNormals;
+        
+        // --- extract attributes
+        for (final Iterator iter = this.attributes.keySet().iterator(); iter
+				.hasNext();) {
+        	final AttributeKey key = (AttributeKey) iter.next();
+        	final int newIndex;
+        	if (key.targetType == FACE) {
+        		newIndex = mapF[key.index];
+        	} else {
+        		newIndex = mapV[key.index];
+        	}
+        	if (newIndex >= 0) {
+        		surf.setAttribute(key.targetType, newIndex, key.attribute,
+        				this.attributes.get(key));
+        	}
+        }
+        
         return surf;
     }
     
@@ -616,12 +674,15 @@ public class SubdivisionSurface {
         
         SubdivisionSurface surf = new SubdivisionSurface(v, f, fixed, tag);
         surf = surf.nextLevel();
-        surf.getVertexNormals();
+        surf.computeNormals();
         final SubdivisionSurface front = surf.extract("front");
         System.out.println("Front:");
-        System.out.println("  vertices = " + Arrays.deepToString(front.vertices));
-        System.out.println("  normals = " + Arrays.deepToString(front.vertexNormals));
-        System.out.println("  faces = " + Arrays.deepToString(front.faces));
-        System.out.println("  normals = " + Arrays.deepToString(front.faceNormals));
+		System.out
+				.println("  vertices: " + Arrays.deepToString(front.vertices));
+		System.out.println("  vertex normals: "
+				+ Arrays.deepToString(front.getVertexNormals()));
+		System.out.println("  faces: " + Arrays.deepToString(front.faces));
+		System.out.println("  face normals: "
+				+ Arrays.deepToString(front.getFaceNormals()));
     }
 }
