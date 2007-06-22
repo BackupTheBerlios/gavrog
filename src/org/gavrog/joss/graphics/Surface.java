@@ -24,20 +24,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.gavrog.box.simple.Tag;
+import org.gavrog.box.simple.NamedConstant;
 
 
 /**
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: Surface.java,v 1.1 2007/06/22 11:41:08 odf Exp $
+ * @version $Id: Surface.java,v 1.2 2007/06/22 13:05:05 odf Exp $
  */
 public class Surface {
-	final static Tag FACE = new Tag();
-	final static Tag VERTEX = new Tag();
-	final static Tag NORMAL = new Tag();
-	final static Tag TAG = new Tag();
+	private static class Target extends NamedConstant {
+		protected Target(String name) { super(name); }
+	}
+	private static class Attribute extends NamedConstant {
+		protected Attribute(String name) { super(name); }
+	}
+	
+	final public static Target FACE = new Target("face");
+	final public static Target VERTEX = new Target("vertex");
+	
+	final public static Attribute CONVEX = new Attribute("convex");
+	final public static Attribute NORMAL = new Attribute("normal");
+	final public static Attribute TAG = new Attribute("tag");
 
 	private static class AttributeKey {
 		final Object targetType;
@@ -66,25 +75,14 @@ public class Surface {
     final public double[][] vertices;
     final public int[][] faces;
     final public int[] fixed;
-    public Object[] tags;
     final private Map attributes;
     
-    public Surface(final double[][] vertices, final int[][] faces,
-            final int fixed[], final Object tag[]) {
+    public Surface(
+			final double[][] vertices, final int[][] faces, final int fixed[]) {
         this.vertices = (double[][]) vertices.clone();
         this.faces = (int[][]) faces.clone();
         this.fixed = (int[]) fixed.clone();
-        if (tag == null) {
-            this.tags = null;
-        } else {
-            this.tags = (Object[]) tag.clone();
-        }
         this.attributes = new HashMap();
-    }
-    
-    public Surface(final double[][] vertices, final int[][] faces,
-            final int fixed[]) {
-        this(vertices, faces, fixed, null);
     }
     
     public void setAttribute(final Object targetType, final int targetIndex,
@@ -93,10 +91,22 @@ public class Surface {
 				attributeKey), attributeValue);
 	}
 
+    public void setAttribute(final Object targetType, final int targetIndex,
+			final Object attributeKey, final boolean attributeValue) {
+		setAttribute(targetType, targetIndex, attributeKey, new Boolean(
+				attributeValue));
+	}
+
 	public Object getAttribute(final Object targetType, final int targetIndex,
 			final Object attributeKey) {
 		return this.attributes.get(new AttributeKey(targetType, targetIndex,
 				attributeKey));
+	}
+    
+	public boolean getBooleanAttribute(final Object targetType,
+			final int targetIndex, final Object attributeKey) {
+		final Object val = getAttribute(targetType, targetIndex, attributeKey);
+		return val == null || ((Boolean) val).booleanValue();
 	}
     
     public void computeNormals() {
@@ -152,13 +162,19 @@ public class Surface {
     	return normals;
     }
     
+//    public void tagAll(final Object tag) {
+//        if (this.tags == null) {
+//            this.tags = new Object[this.faces.length];
+//        }
+//        for (int i = 0; i < this.faces.length; ++i) {
+//            this.tags[i] = tag;
+//        }
+//    }
+    
     public void tagAll(final Object tag) {
-        if (this.tags == null) {
-            this.tags = new Object[this.faces.length];
-        }
-        for (int i = 0; i < this.faces.length; ++i) {
-            this.tags[i] = tag;
-        }
+    	for (int i = 0; i < faces.length; ++i) {
+    		setAttribute(FACE, i, TAG, tag);
+    	}
     }
 
     public static Surface concatenation(final Surface parts[]) {
@@ -172,7 +188,6 @@ public class Surface {
         final double newVerts[][] = new double[newNV][];
         final int newFixed[] = new int[newNV];
         final int newFaces[][] = new int[newNF][];
-        final Object newTags[] = new Object[newNF];
         final int mapV[][] = new int[n][];
         final int mapF[][] = new int[n][];
         
@@ -193,7 +208,6 @@ public class Surface {
             }
             System.arraycopy(verts, 0, newVerts, offsetV, nv);
             System.arraycopy(parts[i].fixed, 0, newFixed, offsetV, nv);
-            System.arraycopy(parts[i].tags, 0, newTags, offsetF, nf);
             for (int j = 0; j < faces.length; ++j) {
                 final int face[] = faces[j];
                 final int newFace[] = new int[face.length];
@@ -206,7 +220,7 @@ public class Surface {
             offsetF += nf;
         }
         
-        final Surface surf = new Surface(newVerts, newFaces, newFixed, newTags);
+        final Surface surf = new Surface(newVerts, newFaces, newFixed);
         
         // --- copy attributes
 		for (int i = 0; i < n; ++i) {
@@ -238,10 +252,6 @@ public class Surface {
     }
     
     public Surface extract(final Object tag) {
-        if (this.tags == null) {
-            return null;
-        }
-        
         final int nf = this.faces.length;
         final int nv = this.vertices.length;
         
@@ -250,8 +260,11 @@ public class Surface {
         final boolean usedF[] = new boolean[nf];
         int newNV = 0;
         int newNF = 0;
-        for (int i = 0; i < nf; ++i) {
-            if (equal(this.tags[i], tag)) {
+        for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
+        	final AttributeKey key = (AttributeKey) iter.next();
+        	if (key.targetType.equals(FACE) && key.attribute.equals(TAG)
+					&& equal(tag, attributes.get(key))) {
+        		final int i = key.index;
                 final int face[] = this.faces[i];
                 for (int j = 0; j < face.length; ++j) {
                     final int v = face[j];
@@ -260,9 +273,11 @@ public class Surface {
                     }
                     usedV[v] = true;
                 }
-                usedF[i] = true;
-                ++newNF;
-            }
+                if (!usedF[i]) {
+                	++newNF;
+                }
+            	usedF[i] = true;
+        	}
         }
         
         // --- collect used vertices and map old vertex numbers to new ones
@@ -303,8 +318,7 @@ public class Surface {
         }
         
         // --- make new surface
-        final Surface surf = new Surface(newVerts,
-                newFaces, newFixed, newTags);
+        final Surface surf = new Surface(newVerts, newFaces, newFixed);
         
         // --- extract attributes
         for (final Iterator iter = this.attributes.keySet().iterator(); iter
@@ -360,12 +374,7 @@ public class Surface {
         final double newVertices[][] = new double[nf + ne + nv][3];
         final int newFaces[][] = new int[ne + neInterior][4];
         final int newFixed[] = new int[newVertices.length];
-        final Object newTags[];
-        if (this.tags != null) {
-            newTags = new Object[newFaces.length];
-        } else {
-            newTags = null;
-        }
+        final boolean newConvex[] = new boolean[newVertices.length];
         
         // --- create mappings from old to (lists of) new components
         final int mapF[][] = new int[nf][];
@@ -384,18 +393,21 @@ public class Surface {
                 final int k1 = edgeToIndex[v][w];
                 newFaces[facesMade] = new int[] { i, nf + k, nf + ne + v,
 						nf + k1 };
-                if (newTags != null) {
-                    newTags[facesMade] = this.tags[i];
-                }
                 mapF[i][j] = facesMade;
                 ++facesMade;
+                
+                final boolean cu = getBooleanAttribute(VERTEX, u, CONVEX);
+                final boolean cv = getBooleanAttribute(VERTEX, v, CONVEX);
+                boolean convex = newConvex[nf + k] = (cu || cv);
+                
                 final int fu = this.fixed[u];
                 final int fv = this.fixed[v];
-                if (fu > 0 && fv <= 0 || fv > 0 && fu <= 0) {
+                if (convex && (fu > 0 && fv <= 0 || fv > 0 && fu <= 0)) {
                     newFixed[nf + k] = 0;
                 } else {
                     newFixed[nf + k] = Math.min(fu, fv) - 1;
                 }
+                
                 newFixed[nf + ne + u] = this.fixed[u] - 1;
             }
         }
@@ -492,7 +504,7 @@ public class Surface {
             }
         }
         
-        Surface surf = new Surface(newVertices, newFaces, newFixed, newTags);
+        Surface surf = new Surface(newVertices, newFaces, newFixed);
 
         // --- copy attributes
         for (final Iterator iter = this.attributes.keySet().iterator(); iter
@@ -510,6 +522,13 @@ public class Surface {
 				surf.setAttribute(type, key.index + nf + ne, attr, val);
 			}
 		}
+        // --- add convex attributes
+        for (int i = 0; i < newVertices.length; ++i) {
+        	if (newConvex[i]) {
+        		setAttribute(VERTEX, i, CONVEX, CONVEX);
+        	}
+        }
+        
         return surf;
     }
 
@@ -725,9 +744,12 @@ public class Surface {
                 { 2, 3, 7, 6 }, { 0, 2, 6, 4 }, { 3, 1, 5, 7 } };
         final int fixed[] = new int[8];
         final Object tag[] = { "left", "right", "bottom", "top", "back",
-                "front" };
+				"front" };
         
-        Surface surf = new Surface(v, f, fixed, tag);
+        Surface surf = new Surface(v, f, fixed);
+        for (int i = 0; i < tag.length; ++i) {
+        	surf.setAttribute(FACE, i, TAG, tag[i]);
+        }
         surf = surf.subdivision();
         surf.computeNormals();
         final Surface front = surf.extract("front");
