@@ -31,12 +31,13 @@ import org.gavrog.box.simple.Tag;
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: SubdivisionSurface.java,v 1.9 2007/06/17 12:47:31 odf Exp $
+ * @version $Id: SubdivisionSurface.java,v 1.10 2007/06/22 07:46:44 odf Exp $
  */
 public class SubdivisionSurface {
 	final static Tag FACE = new Tag();
 	final static Tag VERTEX = new Tag();
 	final static Tag NORMAL = new Tag();
+	final static Tag TAG = new Tag();
 
 	private static class AttributeKey {
 		final Object targetType;
@@ -66,7 +67,7 @@ public class SubdivisionSurface {
     final public int[][] faces;
     final public int[] fixed;
     public Object[] tags;
-    final public Map attributes;
+    final private Map attributes;
     
     public SubdivisionSurface(final double[][] vertices, final int[][] faces,
             final int fixed[], final Object tag[]) {
