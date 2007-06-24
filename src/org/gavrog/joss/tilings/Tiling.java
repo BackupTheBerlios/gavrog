@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.39 2007/05/24 04:03:21 odf Exp $
+ * @version $Id: Tiling.java,v 1.40 2007/06/24 11:01:36 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -675,6 +675,7 @@ public class Tiling {
      * Represents a body (3-dimensional constituent) of this tiling.
      */
     public class Body {
+    	final private int tilingId = Tiling.this.hashCode();
         final private int index;
         final private int kind;
         final private Face faces[];
@@ -743,6 +744,15 @@ public class Tiling {
         
         public Vector neighborShift(final int i) {
             return this.neighborShifts[i];
+        }
+        
+        public int hashCode() {
+        	return this.tilingId * 37 + this.index;
+        }
+        
+        public boolean equals(final Object arg) {
+        	final Body other = (Body) arg;
+        	return other.tilingId == this.tilingId && other.index == this.index;
         }
     }
 
