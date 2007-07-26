@@ -74,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.5 2007/05/26 22:38:16 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.6 2007/07/26 04:01:07 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -298,6 +298,12 @@ public class SystreCmdline extends EventSource {
 				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
 			} else {
         		orbit2name.put(orbit, nodeName);
+        		final Integer conn = (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
+        		if (conn != null && conn.intValue() != v.degree()) {
+        			String msg = "Node " + v + " has connectivity " + v.degree()
+        				+ ", where " + conn + " was expected";
+    				throw new SystreException(SystreException.INPUT, msg);
+        		}
         		orbit2cs.put(orbit, G0.getNodeInfo(v, NetParser.COORDINATION_SEQUENCE));
         	}
     		node2name.put(w, orbit2name.get(orbit));
@@ -357,7 +363,7 @@ public class SystreCmdline extends EventSource {
             out.println();
             cum += orbit.size() * sum;
             if (mismatch) {
-        		final String msg = "Computed CS does not match input CS";
+        		final String msg = "Computed CS does not match input";
 				throw new SystreException(SystreException.INPUT, msg);
             }
         }
