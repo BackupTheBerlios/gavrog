@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.95 2007/05/31 21:51:06 odf Exp $
+ * @version $Id: NetParser.java,v 1.96 2007/07/26 03:54:15 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -71,6 +71,7 @@ public class NetParser extends GenericParser {
             super(name);
         }
     }
+    public static InfoType CONNECTIVITY = new InfoType("Connectivity");
     public static InfoType COORDINATION_SEQUENCE = new InfoType("Coordination-Sequence");
     public static InfoType POSITION = new InfoType("Position");
     
@@ -860,6 +861,7 @@ public class NetParser extends GenericParser {
                     nodeToPosition.put(v, p);
                     nodeToDescriptorAddress.put(v, new Pair(desc, op));
                     // --- also store some permanent information
+                    G.setNodeInfo(v, CONNECTIVITY, new Integer(desc.connectivity));
                     G.setNodeInfo(v, COORDINATION_SEQUENCE, name2cs.get(desc.name));
                     G.setNodeInfo(v, POSITION, p);
                     // --- mark operators that should not be used anymore
