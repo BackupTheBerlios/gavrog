@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.41 2007/07/27 02:23:24 odf Exp $
+ * @version $Id: Tiling.java,v 1.42 2007/07/27 06:07:15 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -65,7 +65,7 @@ public class Tiling {
     final protected static Object DUAL_SKELETON = new Tag();
     final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
     final protected static Object SPACEGROUP = new Tag();
-    final protected static Object BODIES = new Tag();
+    final protected static Object TILES = new Tag();
 	final protected static Object SYMMETRIES = new Tag();
 	final protected static Object COVER_ORIENTATION = new Tag();
     
@@ -632,21 +632,29 @@ public class Tiling {
     }
     
     /**
-     * Represents a face (2-dimensional constituent) of this tiling.
+     * Represents a facet (co-dimension 1 constituent) of this tiling.
      */
-    public class Face {
+    public class Facet {
         final private List chambers;
         final private int index;
     	
-    	private Face(final Object D, final int index) {
+    	private Facet(final Object D, final int index) {
     		final DelaneySymbol cover = getCover();
-            this.chambers = new LinkedList();
+    		final int d = cover.dim();
             final Object E0 = coverOrientation(D) < 0 ? cover.op(0, D) : D;
-            Object E = E0;
-            do {
-                this.chambers.add(E);
-                E = cover.op(1, cover.op(0, E));
-            } while (!E.equals(E0));
+            this.chambers = new LinkedList();
+            if (d == 3) {
+	            Object E = E0;
+	            do {
+	                this.chambers.add(E);
+	                E = cover.op(1, cover.op(0, E));
+	            } while (!E.equals(E0));
+            } else if (d == 2) {
+            	this.chambers.add(E0);
+            	this.chambers.add(cover.op(0, E0));
+            } else {
+            	throw new UnsupportedOperationException("dimension must be 2 or 3");
+            }
             this.index = index;
     	}
 
@@ -667,31 +675,32 @@ public class Tiling {
         }
     }
     
-    // --- maps cover chambers to body numbers
-    final Map chamber2body = new HashMap();
-    final Map chamber2kind = new HashMap();
+    // --- maps cover chambers to tile numbers and tile kinds
+    final private Map chamber2tile = new HashMap();
+    final private Map chamber2kind = new HashMap();
 
     /**
-     * Represents a body (3-dimensional constituent) of this tiling.
+     * Represents a tile (top-dimensional constituent) of this tiling.
      */
-    public class Body {
+    public class Tile {
     	final private int tilingId = Tiling.this.hashCode();
         final private int index;
         final private int kind;
-        final private Face faces[];
+        final private Facet facets[];
         final private int neighbors[];
         final private Vector neighborShifts[];
 
-        private Body(final INode v) {
+        private Tile(final INode v) {
+        	final int d = getSymbol().dim();
         	final DSCover cover = getCover();
         	final Skeleton skel = getDualSkeleton();
             final Object D = skel.chamberAtNode(v);
-        	final Integer k = (Integer) chamber2body.get(D);
+        	final Integer k = (Integer) chamber2tile.get(D);
             this.index = k.intValue();
             this.kind = ((Integer) chamber2kind.get(cover.image(D))).intValue();
 
             final int deg = v.degree();
-        	this.faces = new Face[deg];
+        	this.facets = new Facet[deg];
         	this.neighbors = new int[deg];
         	this.neighborShifts = new Vector[deg];
         	
@@ -699,18 +708,18 @@ public class Tiling {
             for (final Iterator conn = v.incidences(); conn.hasNext();) {
                 final IEdge e = (IEdge) conn.next();
                 Object Df = skel.chamberAtEdge(e);
-                if (!chamber2body.get(Df).equals(k)) {
-                    Df = cover.op(3, Df);
+                if (!chamber2tile.get(Df).equals(k)) {
+                    Df = cover.op(d, Df);
                 }
-                final Vector t = edgeTranslation(3, Df);
-                this.faces[i] = new Face(Df, i);
+                final Vector t = edgeTranslation(d, Df);
+                this.facets[i] = new Facet(Df, i);
                 final Object Dn = skel.chamberAtNode(e.target());
-                this.neighbors[i] = ((Integer) chamber2body.get(Dn)).intValue();
+                this.neighbors[i] = ((Integer) chamber2tile.get(Dn)).intValue();
                 this.neighborShifts[i] = t;
                 ++i;
                 if (e.source().equals(e.target())) {
-                	Df = cover.op(3, Df);
-                    this.faces[i] = new Face(Df, i);
+                	Df = cover.op(d, Df);
+                    this.facets[i] = new Facet(Df, i);
                     this.neighbors[i] = this.index;
                     this.neighborShifts[i] = (Vector) t.negative();
                     ++i;
@@ -719,7 +728,7 @@ public class Tiling {
         }
         
         public Object getChamber() {
-            return face(0).chamber(0);
+            return facet(0).chamber(0);
         }
 
         public int getIndex() {
@@ -731,15 +740,15 @@ public class Tiling {
         }
 
         public int size() {
-            return this.faces.length;
+            return this.facets.length;
         }
         
-        public Face face(final int i) {
-            return this.faces[i];
+        public Facet facet(final int i) {
+            return this.facets[i];
         }
         
-        public Body neighbor(final int i) {
-            return (Body) getBodies().get(this.neighbors[i]);
+        public Tile neighbor(final int i) {
+            return (Tile) getTiles().get(this.neighbors[i]);
         }
         
         public Vector neighborShift(final int i) {
@@ -751,29 +760,25 @@ public class Tiling {
         }
         
         public boolean equals(final Object arg) {
-        	final Body other = (Body) arg;
+        	final Tile other = (Tile) arg;
         	return other.tilingId == this.tilingId && other.index == this.index;
         }
     }
 
     /**
-     * @return the list of 3-dimensional constituents for this tiling.
+     * @return the list of tiles for this tiling.
      */
-    public List getBodies() {
+    public List getTiles() {
         try {
-            return (List) this.cache.get(BODIES);
+            return (List) this.cache.get(TILES);
         } catch (Cache.NotFoundException ex) {
-        }
-        
-        if (getSymbol().dim() < 3) {
-            return (List) this.cache.put(BODIES, new ArrayList());
         }
         
         final DelaneySymbol cover = getCover();
         final DelaneySymbol image = getSymbol();
-        final List idcs = IndexList.except(cover, 3);
+        final List idcs = IndexList.except(cover, image.dim());
         
-        // --- map image chambers to body kinds
+        // --- map image chambers to tile kinds
         int m = 0;
         for (final Iterator elms = image.elements(); elms.hasNext();) {
             final Object D = elms.next();
@@ -785,25 +790,25 @@ public class Tiling {
             }
         }
         
-        // --- map chambers to body indices and vice versa
+        // --- map chambers to tile indices and vice versa
         int n = 0;
         for (final Iterator elms = cover.elements(); elms.hasNext();) {
             final Object D = elms.next();
-            if (!chamber2body.containsKey(D)) {
+            if (!chamber2tile.containsKey(D)) {
                 final Integer nn = new Integer(n++);
                 for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                    chamber2body.put(orb.next(), nn);
+                    chamber2tile.put(orb.next(), nn);
                 }
             }
         }
         
-        // --- construct the list of bodies with associated data
-        final List bodies = new ArrayList();
+        // --- construct the list of tiles with associated data
+        final List tiles = new ArrayList();
         for (Iterator nodes = getDualSkeleton().nodes(); nodes.hasNext();) {
-            bodies.add(new Body((INode) nodes.next()));
+            tiles.add(new Tile((INode) nodes.next()));
         }
         
         // --- cache and return
-        return (List) this.cache.put(BODIES, bodies);
+        return (List) this.cache.put(TILES, tiles);
     }
 }
