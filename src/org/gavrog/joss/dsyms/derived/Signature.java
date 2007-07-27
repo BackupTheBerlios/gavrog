@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Signature.java,v 1.2 2007/05/30 23:19:53 odf Exp $
+ * @version $Id: Signature.java,v 1.3 2007/07/27 02:24:13 odf Exp $
  */
 public class Signature {
 	private static int gcd(int a, int b) {
@@ -93,13 +93,32 @@ public class Signature {
 		return buf.toString();
 	}
 
-	public static String ofTile(final DelaneySymbol base) {
+	public static String ofTiling(final DelaneySymbol base) {
+		if (base.dim() == 3) {
+			return ofTiling3d(base);
+		} else if (base.dim() == 2) {
+			if (base.isSpherical2D()) {
+				return ofTiling2dSpherical(base);
+			} else if (base.curvature2D().isZero()){
+				return ofTiling2dEuclidean(base);
+			}
+		}
+		throw new UnsupportedOperationException("unsupported kind of tiling");
+	}
+	
+	private static String ofTiling2dSpherical(final DelaneySymbol base) {
 		assert base.dim() == 2 : "must be two-dimensional";
 		final DSymbol ds = Covers.finiteUniversalCover(new DSymbol(base));
 		return faceSizeToTileSig(faceSizes(ds));
 	}
 	
-	public static String ofTiling(final DelaneySymbol base) {
+	private static String ofTiling2dEuclidean(final DelaneySymbol base) {
+		assert base.dim() == 2 : "must be two-dimensional";
+		final DSymbol ds = Covers.toroidalCover2D(new DSymbol(base));
+		return faceSizeToTileSig(faceSizes(ds));
+	}
+	
+	private static String ofTiling3d(final DelaneySymbol base) {
 		final DSymbol ds = Covers.pseudoToroidalCover3D(base);
 		final Map countSigs = new HashMapWithDefault() {
 			public Object makeDefault() {
