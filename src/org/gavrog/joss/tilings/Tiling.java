@@ -53,7 +53,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * An instance of this class represents a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.40 2007/06/24 11:01:36 odf Exp $
+ * @version $Id: Tiling.java,v 1.41 2007/07/27 02:23:24 odf Exp $
  */
 public class Tiling {
     // --- the cache keys
@@ -763,6 +763,10 @@ public class Tiling {
         try {
             return (List) this.cache.get(BODIES);
         } catch (Cache.NotFoundException ex) {
+        }
+        
+        if (getSymbol().dim() < 3) {
+            return (List) this.cache.put(BODIES, new ArrayList());
         }
         
         final DelaneySymbol cover = getCover();
