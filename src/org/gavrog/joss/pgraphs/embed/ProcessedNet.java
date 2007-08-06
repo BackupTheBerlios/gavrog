@@ -35,7 +35,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.2 2007/02/16 00:22:33 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.3 2007/08/06 12:22:19 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -145,7 +145,11 @@ public class ProcessedNet {
             out.println("CRYSTAL");
             out.println("  NAME " + Strings.parsable(name, false));
             if (fullCell) {
-                out.println("  GROUP P1");
+            	if (d == 2) {
+            		out.println("  GROUP p1");
+            	} else {
+            		out.println("  GROUP P1");
+            	}
             } else {
                 out.println("  GROUP " + extendedGroupName);
             }
