@@ -13,8 +13,8 @@ from java.io import InputStreamReader, BufferedReader
 
 # --- Gavrog stuff
 from org.gavrog.joss.geometry import SpaceGroupFinder, CrystalSystem
-from org.gavrog.joss.pgraphs.io import NetParser
-from org.gavrog.systre import Archive
+from org.gavrog.joss.pgraphs.io import Net
+from org.gavrog.joss.pgraphs.io import Archive
 
 
 # ============================================================
@@ -22,7 +22,7 @@ from org.gavrog.systre import Archive
 # ============================================================
 
 # --- get RCSR archive file (possibly from a .jar or the web)
-rcsr_path = "org/gavrog/systre/rcsr.arc"
+rcsr_path = "org/gavrog/apps/systre/rcsr.arc"
 rcsr_stream = ClassLoader.getSystemResourceAsStream(rcsr_path)
 reader = BufferedReader(InputStreamReader(rcsr_stream))
 
@@ -35,9 +35,6 @@ archive.addAll(reader)
 #   Main data processing
 # ============================================================
 
-# --- create a parser that reads nets from the given file
-parser = NetParser(sys.argv[1])
-
 # --- dictionary of seen nets
 seen = {}
 
@@ -45,11 +42,7 @@ seen = {}
 count = 0
 
 # --- main loop
-while 1:
-    # --- read the next net from the file
-    G0 = parser.parseNet()
-    if G0 is None:
-        break
+for G0 in Net.iterator(sys.argv[1]):
     count += 1
 
     # --- retrieve the net's name or make one up
@@ -128,6 +121,7 @@ while 1:
     finder = SpaceGroupFinder(spacegroup)
     system = finder.crystalSystem
     special_angle = ((system == CrystalSystem.TRIGONAL)
+                    or (system == CrystalSystem.HEXAGONAL_2D)
                     or (system == CrystalSystem.HEXAGONAL_3D))
     print "\tUnit cell parameters:"
     print "\t\t1 1 1 90 90",
