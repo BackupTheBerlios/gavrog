@@ -31,7 +31,7 @@ import org.gavrog.box.simple.NamedConstant;
  * Implements Catmull-Clark subdivision surfaces.
  * 
  * @author Olaf Delgado
- * @version $Id: Surface.java,v 1.2 2007/06/22 13:05:05 odf Exp $
+ * @version $Id: Surface.java,v 1.3 2007/11/27 06:42:06 odf Exp $
  */
 public class Surface {
 	private static class Target extends NamedConstant {
@@ -569,9 +569,9 @@ public class Surface {
 				Vec.minus(tmp, (double[]) vertices.get(i + startInner),
 						center);
 				final double d0 = Vec.innerProduct(normal, tmp);
-				if (d0 > 0.01) {
+				if (d0 > 0.1) {
 					upDown[i] = 1;
-                } else if (d0 < -0.01) {
+                } else if (d0 < -0.1) {
                     upDown[i] = -1;
                 } else {
                     upDown[i] = 0;
@@ -606,7 +606,7 @@ public class Surface {
 			}
 			
 			for (int i0 = 0; i0 < n; ++i0) {
-				if (i0 == 0 && upDown[i0] == 0) {
+				if (i0 == 0 && changes[n-1] && changes[0] && upDown[0] == 0) {
 					continue;
 				}
 				final int i1 = (i0 + 1) % n;
