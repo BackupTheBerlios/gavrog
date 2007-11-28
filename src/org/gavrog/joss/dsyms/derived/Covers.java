@@ -43,7 +43,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  * Utility methods for constructing Delaney symbol covers.
  * 
  * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.12 2007/04/26 20:21:58 odf Exp $
+ * @version $Id: Covers.java,v 1.13 2007/11/28 03:31:53 odf Exp $
  */
 public class Covers {
     /**
@@ -168,6 +168,10 @@ public class Covers {
     public static DSCover pseudoToroidalCover3D(final DelaneySymbol ds) {
         if (ds.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
+            throw new UnsupportedOperationException(s);
+        }
+        if (!ds.isLocallyEuclidean3D()) {
+            final String s = "symbol must be locally euclidean";
             throw new UnsupportedOperationException(s);
         }
 
