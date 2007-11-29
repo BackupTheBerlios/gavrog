@@ -28,7 +28,9 @@ import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.GenericParser;
@@ -39,7 +41,7 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
  * Implements a periodic face set meant to define a tiling.
  * 
  * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.13 2007/06/01 09:00:12 odf Exp $
+ * @version $Id: FaceList.java,v 1.14 2007/11/29 05:17:20 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -186,6 +188,17 @@ public class FaceList {
                 }
                 this.tiles.add(newTile);
             }
+            // --- make sure each face is in exactly two tiles
+            for (Iterator iter = this.tilesAtFace.values().iterator();
+            		iter.hasNext();) {
+            	final List tlist = (List) iter.next();
+            	final int n = tlist.size();
+            	if (n != 2) {
+            		throw new IllegalArgumentException("Face incident to " + n
+							+ " tile" + (n == 1 ? "" : "s") + ".");
+            	}
+            }
+            
             this.faces = new ArrayList();
             this.faces.addAll(this.tilesAtFace.keySet());
         } else {
@@ -254,6 +267,16 @@ public class FaceList {
         
         if (DEBUG) {
         	System.err.println("Completed symbol: " + new DSymbol(ds));
+        }
+        
+        // --- do some checks
+        assertCompleteness(ds);
+        if (!ds.isConnected()) {
+        	throw new RuntimeException("Built non-connected symbol.");
+        } else if (!ds.isLocallyEuclidean3D()) {
+        	throw new RuntimeException("Built non-manifold symbol.");
+        } else if (!ds.isLocallyEuclidean3D()) {
+        	throw new RuntimeException("Built non-manifold symbol.");
         }
         
         // --- freeze the constructed symbol
@@ -505,5 +528,27 @@ public class FaceList {
                 }
 			}
 		}
+    }
+    
+    private void assertCompleteness(final DelaneySymbol ds) {
+        final List idcs = new IndexList(ds);
+        for (final Iterator elms = ds.elements(); elms.hasNext();) {
+            final Object D = elms.next();
+            for (int i = 0; i < idcs.size()-1; ++i) {
+                final int ii = ((Integer) idcs.get(i)).intValue();
+                if (!ds.definesOp(ii, D)) {
+                	throw new AssertionError(
+                			"op(" + ii + ", " + D + ") undefined");
+                }
+                for (int j = i+1; j < idcs.size(); ++j) {
+                    final int jj = ((Integer) idcs.get(j)).intValue();
+                    if (!ds.definesV(ii, jj, D)) {
+                    	throw new AssertionError(
+                    			"v(" + ii + ", " + jj + ", " + D +
+                    			") undefined");
+                    }
+                }
+            }
+        }
     }
 }
