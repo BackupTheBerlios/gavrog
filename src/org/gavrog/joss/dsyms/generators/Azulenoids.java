@@ -42,6 +42,10 @@ public class Azulenoids extends IteratorAdapter {
 	private DSymbol ds;
 	private Set seenInvariants;
 
+	private int nrOctaSets = 0;
+	private int nrOctaSyms = 0;
+	private int nrAzulSyms = 0;
+	
 	private static DSymbol template = new DSymbol("1.1:60:"
 			+ "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 "
 			+ "50 52 54 56 58 60,"
@@ -90,6 +94,7 @@ public class Azulenoids extends IteratorAdapter {
 	                    if (curv.isNegative()) {
 	                    	continue;
 	                    }
+	                    ++this.nrOctaSets;
 	                    this.syms = new DefineBranching2d(ds, 3, 2, Whole.ZERO);
 	                } else {
 	                    throw new NoSuchElementException("At end");
@@ -99,6 +104,7 @@ public class Azulenoids extends IteratorAdapter {
 				if (!this.ds.curvature2D().isZero()) {
 					continue;
 				}
+				++this.nrOctaSyms;
 				this.pos = 1;
 			}
 			final int p = this.pos;
@@ -145,20 +151,38 @@ public class Azulenoids extends IteratorAdapter {
 			final List key = result.minimal().invariant();
 			if (!this.seenInvariants.contains(key)) {
 				this.seenInvariants.add(key);
+				++nrAzulSyms;
 				return result.dual().minimal().canonical();
 			}
 		}
 	}
 
+
+	public int getNrAzulSyms() {
+		return this.nrAzulSyms;
+	}
+
+	public int getNrOctaSets() {
+		return this.nrOctaSets;
+	}
+
+	public int getNrOctaSyms() {
+		return this.nrOctaSyms;
+	}
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int count = 0;
-		for (final Iterator azul = new Azulenoids(); azul.hasNext();) {
+		final Azulenoids azul = new Azulenoids();
+		while (azul.hasNext()) {
 			System.out.println(azul.next());
-			++count;
 		}
-		System.out.println("#Generated " + count + " symbols.");
+		System.out.println("#Generated:");
+		System.out.println("#    " +
+				azul.getNrOctaSets() + " octagonal D-sets.");
+		System.out.println("#    " +
+				azul.getNrOctaSyms() + " octagonal D-symbols.");
+		System.out.println("#    " +
+				azul.getNrAzulSyms() + " azulenoid D-symbols.");
 	}
 }
