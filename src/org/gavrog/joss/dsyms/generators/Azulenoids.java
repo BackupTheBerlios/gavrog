@@ -46,6 +46,8 @@ public class Azulenoids extends IteratorAdapter {
 	private int nrOctaSyms = 0;
 	private int nrAzulSyms = 0;
 	
+	private boolean trace = false;
+	
 	private static DSymbol template = new DSymbol("1.1:60:"
 			+ "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 "
 			+ "50 52 54 56 58 60,"
@@ -105,6 +107,9 @@ public class Azulenoids extends IteratorAdapter {
 					continue;
 				}
 				++this.nrOctaSyms;
+				if (trace) {
+					System.out.println("# Using octagon tiling " + this.ds);
+				}
 				this.pos = 1;
 			}
 			final int p = this.pos;
@@ -169,11 +174,21 @@ public class Azulenoids extends IteratorAdapter {
 	public int getNrOctaSyms() {
 		return this.nrOctaSyms;
 	}
+	
+	public boolean getTrace() {
+		return this.trace;
+	}
+
+	public void setTrace(boolean trace) {
+		this.trace = trace;
+	}
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		final Azulenoids azul = new Azulenoids();
+		azul.setTrace(true);
 		while (azul.hasNext()) {
 			System.out.println(azul.next());
 		}
