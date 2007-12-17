@@ -33,15 +33,19 @@ limitations under the License.
 
 package org.gavrog.box.gui;
 
+import java.beans.PropertyChangeEvent;
 import java.lang.reflect.Method;
 
 import org.gavrog.box.simple.Strings;
 
 import buoy.event.EventProcessor;
+import buoy.event.EventSource;
 import buoy.event.ValueChangedEvent;
 import buoy.widget.BCheckBox;
 
 public class OptionCheckBox extends BCheckBox {
+	private boolean eventsLocked = false;
+	
 	public OptionCheckBox(final String label, final Object target, final String option)
 			throws Exception {
 
@@ -58,11 +62,43 @@ public class OptionCheckBox extends BCheckBox {
 
 		this.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
-				try {
-					setter.invoke(target, new Object[] { new Boolean(getState()) });
-				} catch (final Exception ex) {
+				if (obtainLock()) {
+					try {
+						setter.invoke(target, new Object[] { new Boolean(
+								getState()) });
+					} catch (final Exception ex) {
+					}
+					releaseLock();
 				}
 			}
 		});
+		
+		if (target instanceof EventSource) {
+			final EventSource s = (EventSource) target;
+			s.addEventLink(PropertyChangeEvent.class, new EventProcessor() {
+				public void handleEvent(Object event) {
+					if (obtainLock()) {
+						final PropertyChangeEvent e = (PropertyChangeEvent) event;
+						if (e.getPropertyName().equals(option)) {
+							setState(((Boolean) e.getNewValue()).booleanValue());
+						}
+						releaseLock();
+					}
+				}
+			});
+		}
+	}
+	
+	private boolean obtainLock() {
+		if (this.eventsLocked) {
+			return false;
+		} else {
+			this.eventsLocked = true;
+			return true;
+		}
+	}
+	
+	private void releaseLock() {
+		this.eventsLocked = false;
 	}
 }

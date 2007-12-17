@@ -34,10 +34,12 @@ limitations under the License.
 package org.gavrog.box.gui;
 
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 
 import buoy.event.EventProcessor;
+import buoy.event.EventSource;
 import buoy.event.ValueChangedEvent;
 import buoy.widget.BLabel;
 import buoy.widget.BTextField;
@@ -45,6 +47,8 @@ import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 
 public class OptionInputBox extends RowContainer {
+	private boolean eventsLocked = false;
+	
 	private BTextField input;
 
 	public OptionInputBox(
@@ -78,12 +82,47 @@ public class OptionInputBox extends RowContainer {
 		this.input.setText(Config.asString(getter.invoke(target, null)));
 		this.input.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
-				try {
-					Object val = Config.construct(optionType, input.getText());
-					setter.invoke(target, new Object[] { val });
-				} catch (final Exception ex) {
+				if (obtainLock()) {
+					try {
+						Object val = Config.construct(optionType, input
+								.getText());
+						setter.invoke(target, new Object[] { val });
+					} catch (final Exception ex) {
+					}
+					releaseLock();
 				}
 			}
 		});
+		
+		if (target instanceof EventSource) {
+			final EventSource s = (EventSource) target;
+			s.addEventLink(PropertyChangeEvent.class, new EventProcessor() {
+				public void handleEvent(Object event) {
+					if (obtainLock()) {
+						final PropertyChangeEvent e = (PropertyChangeEvent) event;
+						try {
+							if (e.getPropertyName().equals(option)) {
+								input.setText(Config.asString(e.getNewValue()));
+							}
+						} catch (Exception ex) {
+						}
+						releaseLock();
+					}
+				}
+			});
+		}
+	}
+	
+	private boolean obtainLock() {
+		if (this.eventsLocked) {
+			return false;
+		} else {
+			this.eventsLocked = true;
+			return true;
+		}
+	}
+	
+	private void releaseLock() {
+		this.eventsLocked = false;
 	}
 }

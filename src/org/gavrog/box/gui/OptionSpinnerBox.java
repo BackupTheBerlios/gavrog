@@ -34,11 +34,13 @@ limitations under the License.
 package org.gavrog.box.gui;
 
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
 import java.lang.reflect.Method;
 
 import org.gavrog.box.simple.Strings;
 
 import buoy.event.EventProcessor;
+import buoy.event.EventSource;
 import buoy.event.ValueChangedEvent;
 import buoy.widget.BLabel;
 import buoy.widget.BSpinner;
@@ -46,6 +48,8 @@ import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 
 public class OptionSpinnerBox extends RowContainer {
+	private boolean eventsLocked = false;
+	
 	private BSpinner spinner;
 
 	public OptionSpinnerBox(final String label, final Object target, final String option)
@@ -68,13 +72,46 @@ public class OptionSpinnerBox extends RowContainer {
 
 		this.spinner.setValue(getter.invoke(target, null));
 
-		this.spinner.addEventLink(ValueChangedEvent.class, new EventProcessor() {
-			public void handleEvent(final Object event) {
-				try {
-					setter.invoke(target, new Object[] { spinner.getValue() });
-				} catch (final Exception ex) {
+		this.spinner.addEventLink(ValueChangedEvent.class,
+				new EventProcessor() {
+					public void handleEvent(final Object event) {
+						if (obtainLock()) {
+							try {
+								setter.invoke(target, new Object[] { spinner
+										.getValue() });
+							} catch (final Exception ex) {
+							}
+							releaseLock();
+						}
+					}
+				});
+		
+		if (target instanceof EventSource) {
+			final EventSource s = (EventSource) target;
+			s.addEventLink(PropertyChangeEvent.class, new EventProcessor() {
+				public void handleEvent(Object event) {
+					if (obtainLock()) {
+						final PropertyChangeEvent e = (PropertyChangeEvent) event;
+						if (e.getPropertyName().equals(option)) {
+							spinner.setValue(e.getNewValue());
+						}
+						releaseLock();
+					}
 				}
-			}
-		});
+			});
+		}
+	}
+	
+	private boolean obtainLock() {
+		if (this.eventsLocked) {
+			return false;
+		} else {
+			this.eventsLocked = true;
+			return true;
+		}
+	}
+	
+	private void releaseLock() {
+		this.eventsLocked = false;
 	}
 }

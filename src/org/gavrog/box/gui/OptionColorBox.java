@@ -37,6 +37,7 @@ import java.awt.Color;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 
@@ -45,12 +46,15 @@ import javax.swing.JDialog;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
+import buoy.event.EventSource;
 import buoy.widget.BButton;
 import buoy.widget.BLabel;
 import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 
 public class OptionColorBox extends RowContainer {
+	private boolean eventsLocked = false;
+	
 	static private Color currentColor = null;
 	final static private JColorChooser chooser = new JColorChooser();
 	final static private ActionListener onOk = new ActionListener() {
@@ -90,15 +94,47 @@ public class OptionColorBox extends RowContainer {
 		color.setBackground((Color) getter.invoke(target, null));
 		color.addEventLink(CommandEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
-				try {
-					dialog.setVisible(true);
-					if (currentColor != null) {
-						color.setBackground(currentColor);
-						setter.invoke(target, new Object[] { currentColor });
+				if (obtainLock()) {
+					try {
+						dialog.setVisible(true);
+						if (currentColor != null) {
+							color.setBackground(currentColor);
+							setter.invoke(target,
+									new Object[] { currentColor });
+						}
+					} catch (final Exception ex) {
 					}
-				} catch (final Exception ex) {
+					releaseLock();
 				}
 			}
 		});
+		
+		if (target instanceof EventSource) {
+			final EventSource s = (EventSource) target;
+			s.addEventLink(PropertyChangeEvent.class, new EventProcessor() {
+				public void handleEvent(Object event) {
+					if (obtainLock()) {
+						final PropertyChangeEvent e = (PropertyChangeEvent) event;
+						if (e.getPropertyName().equals(option)) {
+							color.setBackground((Color) e.getNewValue());
+						}
+						releaseLock();
+					}
+				}
+			});
+		}
+	}
+	
+	private boolean obtainLock() {
+		if (this.eventsLocked) {
+			return false;
+		} else {
+			this.eventsLocked = true;
+			return true;
+		}
+	}
+	
+	private void releaseLock() {
+		this.eventsLocked = false;
 	}
 }
