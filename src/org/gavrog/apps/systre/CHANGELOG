@@ -1,3 +1,7 @@
+Systre 1.1.3:
+
+- Bug fix: some monoclinic groups could produce invalid (and suppressed) output.
+
 Systre 1.1.2:
 
 - The program is now more responsive to the cancel button.

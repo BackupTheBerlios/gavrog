@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ public class Version {
 
 	final public static int minor = 1;
 
-	final public static int patchLevel = 2;
+	final public static int patchLevel = 3;
 
 	final public static String maturity = "beta";
 
-	final public static String date = "2007/03/29";
+	final public static String date = "2008/01/05";
 
 	final public static String extension = (maturity == null ? "" : " "
             + maturity)

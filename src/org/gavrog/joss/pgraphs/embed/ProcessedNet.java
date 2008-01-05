@@ -1,3 +1,19 @@
+/*
+   Copyright 2008 Olaf Delgado-Friedrichs
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package org.gavrog.joss.pgraphs.embed;
 
 import java.io.PrintWriter;
@@ -35,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.3 2007/08/06 12:22:19 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.4 2008/01/05 06:29:15 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -171,6 +187,9 @@ public class ProcessedNet {
 
 			// --- correct to a reduced cell for monoclinic and triclinic groups
 			correction = cell_correction(finder, gram, x, y, z);
+			if (DEBUG) {
+				System.out.println("\t\t@@@   cell correction = " + correction);
+			}
 			final CoordinateChange ctmp = (CoordinateChange) correction.inverse().times(
 					fromStd);
 			x = (Vector) Vector.unit(3, 0).times(ctmp);
@@ -571,39 +590,31 @@ public class ProcessedNet {
         final Vector to[];
         
         if (system == CrystalSystem.MONOCLINIC) {
-            // --- find a pair of shortest vectors that span the same basis as x and z
-            final Vector old[] = new Vector[] { a, c };
-            final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
-                        
             if (type1.contains(name)) {
-                // --- use the new vectors
+                // --- find a reduced basis for the lattice spanned by a and c
+                final Vector old[] = new Vector[] { a, c };
+                final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
                 to = new Vector[] { nu[0], b, nu[1] };
             } else if (type2.contains(name)) {
-                // --- keep c and use the shortest independent new vector as a
-                final Vector new_a;
-                if (c.isCollinearTo(nu[0])) {
-                    new_a = nu[1];
-                } else if (c.isCollinearTo(nu[1])) {
-                    new_a = nu[0];
-                } else if (Vector.dot(nu[1], nu[1], gram).isLessThan(Vector.dot(nu[0], nu[0], gram))) {
-                    new_a = nu[1];
-                } else {
-                    new_a = nu[0];
-                }
-                to = new Vector[] { new_a, b, c };
+                // --- keep c and use shortest sum of a and multiples of c for a
+    	        final IArithmetic t = Vector.dot(a, c, gram).dividedBy(
+						Vector.dot(c, c, gram)).round();
+                final Vector new_a =(Vector) a.minus(t.times(c));
+        	    if (Vector.dot(new_a, c, gram).isPositive()) {
+        	        to = new Vector[] { (Vector) new_a.negative(), b, c };
+        	    } else {
+        	    	to = new Vector[] { new_a, b, c };
+        	    }
             } else if (type3.contains(name)) {
-                // --- keep a and use the shortest independent new vector as c
-                final Vector new_c;
-                if (a.isCollinearTo(nu[0])) {
-                    new_c = nu[1];
-                } else if (a.isCollinearTo(nu[1])) {
-                    new_c = nu[0];
-                } else if (Vector.dot(nu[1], nu[1], gram).isLessThan(Vector.dot(nu[0], nu[0], gram))) {
-                    new_c = nu[1];
-                } else {
-                    new_c = nu[0];
-                }
-                to = new Vector[] { a, b, new_c };
+                // --- keep a and use shortest sum of c and multiples of a for c
+    	        final IArithmetic t = Vector.dot(a, c, gram).dividedBy(
+						Vector.dot(a, a, gram)).round();
+                final Vector new_c =(Vector) c.minus(t.times(a));
+        	    if (Vector.dot(a, new_c, gram).isPositive()) {
+        	        to = new Vector[] { a, b, (Vector) new_c.negative() };
+        	    } else {
+        	    	to = new Vector[] { a, b, new_c };
+        	    }
             } else if (type4.contains(name)) {
                 // --- must keep all old vectors
                 to = new Vector[] { a, b, c };
