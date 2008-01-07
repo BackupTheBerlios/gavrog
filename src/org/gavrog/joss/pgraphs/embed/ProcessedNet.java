@@ -35,8 +35,8 @@ import org.gavrog.box.simple.Strings;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
+import org.gavrog.joss.geometry.CellCorrection;
 import org.gavrog.joss.geometry.CoordinateChange;
-import org.gavrog.joss.geometry.CrystalSystem;
 import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
@@ -51,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.4 2008/01/05 06:29:15 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.5 2008/01/07 02:04:01 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -152,25 +152,6 @@ public class ProcessedNet {
         final boolean cellRelaxed = embedder.cellRelaxed();
         final boolean posRelaxed = embedder.positionsRelaxed();
         
-        // --- print a header if necessary
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Writing header...");
-        }
-        
-        if (cgdFormat) {
-            out.println("CRYSTAL");
-            out.println("  NAME " + Strings.parsable(name, false));
-            if (fullCell) {
-            	if (d == 2) {
-            		out.println("  GROUP p1");
-            	} else {
-            		out.println("  GROUP P1");
-            	}
-            } else {
-                out.println("  GROUP " + extendedGroupName);
-            }
-        }
-        
         // --- get the relaxed Gram matrix
         if (DEBUG) {
         	System.out.println("\t\t@@@ Computing cell parameters...");
@@ -180,42 +161,63 @@ public class ProcessedNet {
         final CoordinateChange correction;
         
         if (d == 3) {
-			// --- the cell vectors in the embedder's coordinate system
-			Vector x = (Vector) Vector.unit(3, 0).times(fromStd);
-			Vector y = (Vector) Vector.unit(3, 1).times(fromStd);
-			Vector z = (Vector) Vector.unit(3, 2).times(fromStd);
-
 			// --- correct to a reduced cell for monoclinic and triclinic groups
-			correction = cell_correction(finder, gram, x, y, z);
+        	final CellCorrection cc = new CellCorrection(finder, gram);
+			correction = cc.getCoordinateChange();
+			final String correctedGroupName;
+			if (cc.getGroupName().equals(finder.getGroupName())) {
+				correctedGroupName = extendedGroupName;
+			} else {
+				correctedGroupName = cc.getGroupName();
+			}
+			
 			if (DEBUG) {
 				System.out.println("\t\t@@@   cell correction = " + correction);
 			}
-			final CoordinateChange ctmp = (CoordinateChange) correction.inverse().times(
-					fromStd);
-			x = (Vector) Vector.unit(3, 0).times(ctmp);
-			y = (Vector) Vector.unit(3, 1).times(ctmp);
-			z = (Vector) Vector.unit(3, 2).times(ctmp);
+			final CoordinateChange ctmp = (CoordinateChange) correction
+					.inverse().times(fromStd);
+			final Vector x = (Vector) Vector.unit(3, 0).times(ctmp);
+			final Vector y = (Vector) Vector.unit(3, 1).times(ctmp);
+			final Vector z = (Vector) Vector.unit(3, 2).times(ctmp);
 
 			// --- compute the cell parameters
-			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
-			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
-			final double c = Math.sqrt(((Real) Vector.dot(z, z, gram)).doubleValue());
+			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram))
+					.doubleValue());
+			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram))
+					.doubleValue());
+			final double c = Math.sqrt(((Real) Vector.dot(z, z, gram))
+					.doubleValue());
 			final double f = 180.0 / Math.PI;
-			final double alpha = Math.acos(((Real) Vector.dot(y, z, gram)).doubleValue()
-					/ (b * c))
-					* f;
-			final double beta = Math.acos(((Real) Vector.dot(x, z, gram)).doubleValue()
-					/ (a * c))
-					* f;
-			final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
-					/ (a * b))
-					* f;
+			final double alpha = f * Math.acos(
+					((Real) Vector.dot(y, z, gram)).doubleValue() / (b * c));
+			final double beta = f * Math.acos(
+					((Real) Vector.dot(x, z, gram)).doubleValue() / (a * c));
+			final double gamma = f * Math.acos(
+					((Real) Vector.dot(x, y, gram)).doubleValue() / (a * b));
 
 			// --- print the cell parameters
 			if (DEBUG) {
 				System.out.println("\t\t@@@ Writing cell parameters...");
 			}
 
+	        // --- print a header if necessary
+	        if (DEBUG) {
+	        	System.out.println("\t\t@@@ Writing header...");
+	        }
+	        
+	        if (cgdFormat) {
+	            out.println("CRYSTAL");
+	            out.println("  NAME " + Strings.parsable(name, false));
+	            if (fullCell) {
+	            		out.println("  GROUP P1");
+	            } else {
+	                out.println("  GROUP " + correctedGroupName);
+	            }
+	        } else if (correctedGroupName != extendedGroupName && ! fullCell) {
+	        	out.println("   Group setting modified to " + correctedGroupName);
+	        }
+	        
+	        // --- print the cell info
 			if (cgdFormat) {
 				out.println("  CELL " + fmtReal5.format(a) + " "
                         + fmtReal5.format(b) + " " + fmtReal5.format(c) + " "
@@ -255,6 +257,21 @@ public class ProcessedNet {
 					/ (a * b))
 					* f;
 
+	        // --- print a header if necessary
+	        if (DEBUG) {
+	        	System.out.println("\t\t@@@ Writing header...");
+	        }
+	        
+	        if (cgdFormat) {
+	            out.println("CRYSTAL");
+	            out.println("  NAME " + Strings.parsable(name, false));
+	            if (fullCell) {
+	            	out.println("  GROUP p1");
+	            } else {
+	                out.println("  GROUP " + extendedGroupName);
+	            }
+	        }
+	        
 			// --- print the cell parameters
 			if (DEBUG) {
 				System.out.println("\t\t@@@ Writing cell parameters...");
@@ -548,93 +565,6 @@ public class ProcessedNet {
                 result.add(candidates.get(0));
             }
         }
-        return result;
-    }
-    
-    private CoordinateChange cell_correction(final SpaceGroupFinder finder,
-            final Matrix gram, final Vector a, Vector b, final Vector c) {
-        
-        // --- get and check the dimension
-        final int dim = a.getDimension();
-        if (dim != 3) {
-            final String msg = "Method called with incorrect dimension";
-            throw new RuntimeException(msg);
-        }
-        
-        // --- little helper class
-        final class NameSet extends HashSet {
-            public NameSet(final String names[]) {
-                super();
-                for (int i = 0; i < names.length; ++i) {
-                    this.add(names[i]);
-                }
-            }
-        }
-        
-        // --- no centering, no glide, both a and c are free
-        final Set type1 = new NameSet(new String[] { "P121", "P1211", "P1m1", "P12/m1",
-                "P121/m1" });
-        // --- no centering, a is free
-        final Set type2 = new NameSet(new String[] { "P1c1", "P12/c1", "P121/c1" });
-        // --- no glide, c is free
-        final Set type3 = new NameSet(new String[] { "C121", "C1m1", "C12/m1" });
-        // --- both glide and centering, only signs are free
-        final Set type4 = new NameSet(new String[] { "C1c1", "C12/c1" });
-        
-        // --- extract some basic info
-        final String name = finder.getGroupName();
-        final CrystalSystem system = finder.getCrystalSystem();
-        
-        // --- old and new basis
-        final Vector from[] = new Vector[] { a, b, c };
-        final Vector to[];
-        
-        if (system == CrystalSystem.MONOCLINIC) {
-            if (type1.contains(name)) {
-                // --- find a reduced basis for the lattice spanned by a and c
-                final Vector old[] = new Vector[] { a, c };
-                final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
-                to = new Vector[] { nu[0], b, nu[1] };
-            } else if (type2.contains(name)) {
-                // --- keep c and use shortest sum of a and multiples of c for a
-    	        final IArithmetic t = Vector.dot(a, c, gram).dividedBy(
-						Vector.dot(c, c, gram)).round();
-                final Vector new_a =(Vector) a.minus(t.times(c));
-        	    if (Vector.dot(new_a, c, gram).isPositive()) {
-        	        to = new Vector[] { (Vector) new_a.negative(), b, c };
-        	    } else {
-        	    	to = new Vector[] { new_a, b, c };
-        	    }
-            } else if (type3.contains(name)) {
-                // --- keep a and use shortest sum of c and multiples of a for c
-    	        final IArithmetic t = Vector.dot(a, c, gram).dividedBy(
-						Vector.dot(a, a, gram)).round();
-                final Vector new_c =(Vector) c.minus(t.times(a));
-        	    if (Vector.dot(a, new_c, gram).isPositive()) {
-        	        to = new Vector[] { a, b, (Vector) new_c.negative() };
-        	    } else {
-        	    	to = new Vector[] { a, b, new_c };
-        	    }
-            } else if (type4.contains(name)) {
-                // --- must keep all old vectors
-                to = new Vector[] { a, b, c };
-            } else {
-                final String msg = "Cannot handle monoclinic space group " + name + ".";
-                throw new RuntimeException(msg);
-            }
-            
-            if (Vector.dot(to[0], to[2], gram).isPositive()) {
-                to[2] = (Vector) to[2].negative();
-            }
-        } else if (system == CrystalSystem.TRICLINIC) {
-            to = Lattices.reducedLatticeBasis(from, gram);
-        } else {
-            to = new Vector[] { a, b, c };
-        }
-        
-        final CoordinateChange F = new CoordinateChange(Vector.toMatrix(from));
-        final CoordinateChange T = new CoordinateChange(Vector.toMatrix(to));
-        final CoordinateChange result = (CoordinateChange) F.inverse().times(T);
         return result;
     }
 
