@@ -21,11 +21,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: CellCorrection.java,v 1.1 2008/01/07 02:02:29 odf Exp $
+ * @version $Id: CellCorrection.java,v 1.2 2008/01/07 06:30:50 odf Exp $
  */
 public class CellCorrection {
 	final private CoordinateChange coordinateChange;
@@ -73,54 +73,90 @@ public class CellCorrection {
 					}
 				}
 
-				// --- no centering, no glide, both a and c are free
-				final Set type1 = new NameSet(new String[] { "P121", "P1211",
-						"P1m1", "P12/m1", "P121/m1" });
-				// --- no centering, a is free
-				final Set type2 = new NameSet(new String[] { "P1c1", "P12/c1",
-						"P121/c1" });
-				// --- no glide, c is free
-				final Set type3 = new NameSet(new String[] { "C121", "C1m1",
-						"C12/m1" });
-				// --- both glide and centering, only signs are free
+				// --- no centering, no glide
+				final Set type1 = new NameSet(new String[] {
+						"P121", "P1211", "P1m1", "P12/m1", "P121/m1" });
+				// --- glides, no centering
+				final Set type2 = new NameSet(new String[] {
+						"P1c1", "P12/c1", "P121/c1" });
+				// --- centering, no glide
+				final Set type3 = new NameSet(new String[] {
+						"C121", "C1m1", "C12/m1" });
+				// --- both glide and centering
 				final Set type4 = new NameSet(new String[] { "C1c1", "C12/c1" });
 
+				// --- find the smallest vectors orthogonal to b
+				final Vector old[] = new Vector[] { a, c };
+				final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
+				to = new Vector[] { nu[0], b, nu[1] };
+				if (Vector.dot(to[0], to[2], gram).isPositive()) {
+					to[2] = (Vector) to[2].negative();
+				}
+				
+				// --- figure out if the group setting changed
+				final CoordinateChange F = new CoordinateChange(Vector
+						.toMatrix(from));
+				final CoordinateChange T = new CoordinateChange(Vector
+						.toMatrix(to));
+				final CoordinateChange C = (CoordinateChange) F.inverse()
+						.times(T);
+
+				final Vector g = ((Vector) new Vector(0, 0, 1).dividedBy(
+						new Whole(2)).times(C)).modZ();
+				final boolean glides_x = !g.get(0).isZero();
+				final boolean glides_z = !g.get(2).isZero();
+				final Vector cen = ((Vector) new Vector(1, 0, 0).dividedBy(
+						new Whole(2)).times(C)).modZ();
+				final boolean centers_x = !cen.get(0).isZero();
+				final boolean centers_z = !cen.get(2).isZero();
+
 				if (type1.contains(name)) {
-					// --- find a reduced basis for the lattice spanned by a and c
-					final Vector old[] = new Vector[] { a, c };
-					final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
-					to = new Vector[] { nu[0], b, nu[1] };
+					// --- nothing to do
 				} else if (type2.contains(name)) {
-					// --- keep c and use shortest sum of a and multiples of c for a
-					final IArithmetic t = Vector.dot(a, c, gram).dividedBy(
-							Vector.dot(c, c, gram)).round();
-					final Vector new_a = (Vector) a.minus(t.times(c));
-					if (Vector.dot(new_a, c, gram).isPositive()) {
-						to = new Vector[] { (Vector) new_a.negative(), b, c };
-					} else {
-						to = new Vector[] { new_a, b, c };
+					if (glides_x) {
+						if (glides_z) {
+							name = name.replace('c', 'n');
+						} else {
+							final Vector tmp = to[0];
+							to[0] = to[2];
+							to[2] = tmp;
+							to[1] = (Vector) to[1].negative();
+						}
 					}
 				} else if (type3.contains(name)) {
-					// --- keep a and use shortest sum of c and multiples of a for c
-					final IArithmetic t = Vector.dot(a, c, gram).dividedBy(
-							Vector.dot(a, a, gram)).round();
-					final Vector new_c = (Vector) c.minus(t.times(a));
-					if (Vector.dot(a, new_c, gram).isPositive()) {
-						to = new Vector[] { a, b, (Vector) new_c.negative() };
-					} else {
-						to = new Vector[] { a, b, new_c };
+					if (centers_z) {
+						if (centers_x) {
+							name = name.replace('C', 'I');
+						} else {
+							final Vector tmp = to[0];
+							to[0] = to[2];
+							to[2] = tmp;
+							to[1] = (Vector) to[1].negative();
+						}
 					}
 				} else if (type4.contains(name)) {
-					// --- must keep all old vectors
-					to = new Vector[] { a, b, c };
+					boolean swap = false;
+					if (centers_z) {
+						if (centers_x) {
+							name = name.replace('C', 'I').replace('c', 'a');
+							swap = glides_z;
+						} else {
+							swap = true;
+						}
+					}
+					if (swap) {
+						final Vector tmp = to[0];
+						to[0] = to[2];
+						to[2] = tmp;
+						to[1] = (Vector) to[1].negative();
+					}
 				} else {
 					final String msg = "Cannot handle monoclinic space group "
 							+ name + ".";
 					throw new RuntimeException(msg);
 				}
-
-				if (Vector.dot(to[0], to[2], gram).isPositive()) {
-					to[2] = (Vector) to[2].negative();
+				if (Vector.volume3D(to[0], to[1], to[2]).isNegative()) {
+					to[1] = (Vector) to[1].negative();
 				}
 			}
 
