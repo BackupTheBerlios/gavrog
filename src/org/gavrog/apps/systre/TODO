@@ -8,10 +8,11 @@ In progress:
 
 Open bugs:
 
-(none)
+- Integers starting with a '+' sign are mistakenly parsed as floating point.
 
 Planned/requested features:
 
+- Introduce a batch mode for SystreGUI.
 - Issue a warning if computed coordination number does not match given.
 - Print parametric positions for nodes and edge centers.
 - Make SystreGUI accept command line arguments.
