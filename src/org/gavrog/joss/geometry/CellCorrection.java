@@ -17,15 +17,12 @@
 
 package org.gavrog.joss.geometry;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: CellCorrection.java,v 1.2 2008/01/07 06:30:50 odf Exp $
+ * @version $Id: CellCorrection.java,v 1.3 2008/01/08 04:40:05 odf Exp $
  */
 public class CellCorrection {
 	final private CoordinateChange coordinateChange;
@@ -62,29 +59,6 @@ public class CellCorrection {
 			if (system == CrystalSystem.TRICLINIC) {
 				to = Lattices.reducedLatticeBasis(from, gram);
 			} else { // Monoclinic case
-
-				// --- little helper class
-				final class NameSet extends HashSet {
-					public NameSet(final String names[]) {
-						super();
-						for (int i = 0; i < names.length; ++i) {
-							this.add(names[i]);
-						}
-					}
-				}
-
-				// --- no centering, no glide
-				final Set type1 = new NameSet(new String[] {
-						"P121", "P1211", "P1m1", "P12/m1", "P121/m1" });
-				// --- glides, no centering
-				final Set type2 = new NameSet(new String[] {
-						"P1c1", "P12/c1", "P121/c1" });
-				// --- centering, no glide
-				final Set type3 = new NameSet(new String[] {
-						"C121", "C1m1", "C12/m1" });
-				// --- both glide and centering
-				final Set type4 = new NameSet(new String[] { "C1c1", "C12/c1" });
-
 				// --- find the smallest vectors orthogonal to b
 				final Vector old[] = new Vector[] { a, c };
 				final Vector nu[] = Lattices.reducedLatticeBasis(old, gram);
@@ -93,7 +67,7 @@ public class CellCorrection {
 					to[2] = (Vector) to[2].negative();
 				}
 				
-				// --- figure out if the group setting changed
+				// --- find symbols for transformed glide and centering vectors
 				final CoordinateChange F = new CoordinateChange(Vector
 						.toMatrix(from));
 				final CoordinateChange T = new CoordinateChange(Vector
@@ -103,58 +77,69 @@ public class CellCorrection {
 
 				final Vector g = ((Vector) new Vector(0, 0, 1).dividedBy(
 						new Whole(2)).times(C)).modZ();
-				final boolean glides_x = !g.get(0).isZero();
-				final boolean glides_z = !g.get(2).isZero();
-				final Vector cen = ((Vector) new Vector(1, 0, 0).dividedBy(
+				final char glide = g.get(0).isZero() ? 'c'
+						: g.get(2).isZero() ? 'a' : 'n';
+				final Vector s = ((Vector) new Vector(1, 0, 0).dividedBy(
 						new Whole(2)).times(C)).modZ();
-				final boolean centers_x = !cen.get(0).isZero();
-				final boolean centers_z = !cen.get(2).isZero();
+				final char centering = s.get(0).isZero() ? 'A' : s.get(2)
+						.isZero() ? 'C' : 'I';
 
-				if (type1.contains(name)) {
-					// --- nothing to do
-				} else if (type2.contains(name)) {
-					if (glides_x) {
-						if (glides_z) {
-							name = name.replace('c', 'n');
-						} else {
-							final Vector tmp = to[0];
-							to[0] = to[2];
-							to[2] = tmp;
-							to[1] = (Vector) to[1].negative();
-						}
-					}
-				} else if (type3.contains(name)) {
-					if (centers_z) {
-						if (centers_x) {
-							name = name.replace('C', 'I');
-						} else {
-							final Vector tmp = to[0];
-							to[0] = to[2];
-							to[2] = tmp;
-							to[1] = (Vector) to[1].negative();
-						}
-					}
-				} else if (type4.contains(name)) {
-					boolean swap = false;
-					if (centers_z) {
-						if (centers_x) {
-							name = name.replace('C', 'I').replace('c', 'a');
-							swap = glides_z;
-						} else {
+				// --- determine the type of group we're dealing with
+				final boolean hasGlide = name.contains("c");
+				final boolean hasCentering = name.contains("C");
+				
+				// --- now check and, if necessary, adjust the new setting
+				boolean swap = false;
+				
+				if (hasCentering && hasGlide) {
+					// --- the combinations 'In', 'Ca' and 'Ac' are impossible
+					switch (centering) {
+					case 'I': // 'Ia' or 'Ic', change latter to former
+						name = name.replace('C', 'I').replace('c', 'a');
+						swap = (glide == 'c');
+						break;
+					case 'A':
+						if (glide == 'n') { // 'An', okay
+							name = name.replace('C', 'A').replace('c', 'n');
+						} else { // 'Aa', change to 'Cc'
 							swap = true;
 						}
+						break;
+					case 'C':
+						if (glide == 'n') { // 'Cn', change to 'An'
+							name = name.replace('C', 'A').replace('c', 'n');
+							swap = true;
+						} // else we have 'Cc' and there's nothing to do
+						break;
 					}
-					if (swap) {
-						final Vector tmp = to[0];
-						to[0] = to[2];
-						to[2] = tmp;
-						to[1] = (Vector) to[1].negative();
+				} else if (hasGlide) {
+					switch (glide) {
+					case 'n':
+						name = name.replace('c', 'n');
+						break;
+					case 'a':
+						swap = true;
+						break;
 					}
-				} else {
-					final String msg = "Cannot handle monoclinic space group "
-							+ name + ".";
-					throw new RuntimeException(msg);
+				} else if (hasCentering) {
+					switch (centering) {
+					case 'I':
+						name = name.replace('C', 'I');
+						break;
+					case 'A':
+						swap = true;
+						break;
+					}
 				}
+
+				if (swap) {
+					final Vector tmp = to[0];
+					to[0] = to[2];
+					to[2] = tmp;
+					to[1] = (Vector) to[1].negative();
+				}
+				
+				// --- make sure we have a right-handed set of vectors
 				if (Vector.volume3D(to[0], to[1], to[2]).isNegative()) {
 					to[1] = (Vector) to[1].negative();
 				}
