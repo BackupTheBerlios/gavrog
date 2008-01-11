@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.96 2007/07/26 03:54:15 odf Exp $
+ * @version $Id: NetParser.java,v 1.97 2008/01/11 05:20:55 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -1085,7 +1085,7 @@ public class NetParser extends GenericParser {
 				final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
 
 				if (v.degree() >= descV.connectivity
-						|| w.degree() >= descW.connectivity) {
+						&& w.degree() >= descW.connectivity) {
 					continue;
 				}
 				if (dist < minEdgeLength) {
@@ -1096,12 +1096,14 @@ public class NetParser extends GenericParser {
 					G.newEdge(v, w, s);
 				}
 				if (v.degree() > descV.connectivity) {
-					final String msg = "Too many neighbors found for node " + v
+					final String msg = "Found " + v.degree()
+							+ " neighbors for node " + descV.name
 							+ " (should be " + descV.connectivity + ")";
 					throw new DataFormatException(msg);
 				}
 				if (w.degree() > descW.connectivity) {
-					final String msg = "Too many neighbors found for node " + w
+					final String msg = "Found " + w.degree()
+							+ " neighbors for node " + descW.name
 							+ " (should be " + descW.connectivity + ")";
 					throw new DataFormatException(msg);
 				}
