@@ -39,7 +39,7 @@ import org.gavrog.joss.tilings.Tiling;
  * A tiling is proper if it has the same symmetry as its underlying net.
  * 
  * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.11 2007/04/18 23:06:22 odf Exp $
+ * @version $Id: FilterProper.java,v 1.12 2008/01/16 02:32:48 odf Exp $
  */
 public class FilterProper {
 
@@ -93,7 +93,11 @@ public class FilterProper {
 					final DSymbol min = new DSymbol(ds.minimal());
 					final DSymbol cov = new DSymbol(Covers
 							.pseudoToroidalCover3D(min));
-					final PeriodicGraph gr = new Tiling(cov).getSkeleton();
+					
+					// IMPORTANT: use copy of skeleton to obtain full symmetry
+					final PeriodicGraph gr = new PeriodicGraph(new Tiling(cov)
+							.getSkeleton());
+					
 					if (!gr.isStable()) {
 						if (verbose) {
 							System.err.print("# --- Symbol " + inCount
@@ -104,7 +108,8 @@ public class FilterProper {
 					if (!gr.isMinimal()) {
 						if (verbose) {
 							System.err.print("# --- Symbol " + inCount
-									+ " is not proper.\n");
+									+ " is not proper - "
+									+ "graph has extra translations.\n");
 						}
 						continue;
 					}
@@ -118,7 +123,9 @@ public class FilterProper {
 					if (gr.symmetries().size() != cov.size() / min.size()) {
 						if (verbose) {
 							System.err.print("# --- Symbol " + inCount
-									+ " is not proper.\n");
+									+ " is not proper - "
+									+ gr.symmetries().size() + " vs. "
+									+ cov.size() / min.size() + " point ops.\n");
 						}
 						continue;
 					}
