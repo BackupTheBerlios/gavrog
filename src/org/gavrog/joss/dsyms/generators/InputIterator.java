@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
  * An iterator that reads Delaney symbols from an input stream.
  * 
  * @author Olaf Delgado
- * @version $Id: InputIterator.java,v 1.4 2006/09/04 05:46:08 odf Exp $
+ * @version $Id: InputIterator.java,v 1.5 2008/01/16 00:50:44 odf Exp $
  */
 public class InputIterator extends IteratorAdapter {
     final private BufferedReader reader;
@@ -61,30 +61,45 @@ public class InputIterator extends IteratorAdapter {
      * @see javaDSym.util.IteratorAdapter#findNext()
      */
     protected Object findNext() throws NoSuchElementException {
+    	String name = null;
         while (true) {
-            final String line;
-            try {
-                line = reader.readLine();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-            if (line == null) {
-                throw new NoSuchElementException("at end");
-            }
-            int i = line.indexOf('#');
-            if (i < 0) {
-                i = line.length();
-            }
-            if (i < 1) {
-                continue;
-            }
-            buffer.append(' ');
-            buffer.append(line.substring(0, i));
-            if (buffer.toString().trim().endsWith(">")) {
-                final DSymbol ds = new DSymbol(buffer.toString().trim());
-                buffer.delete(0, buffer.length());
-                return ds;
-            }
+			String line;
+			try {
+				line = reader.readLine();
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+			if (line == null) {
+              throw new NoSuchElementException("at end");
+			}
+			line = line.trim();
+			if (line.length() == 0) {
+				continue;
+			}
+			if (line.charAt(0) == '#') {
+				if (line.charAt(1) == '@') {
+					line = line.substring(2).trim();
+					if (line.startsWith("name ")) {
+						name = line.substring(5);
+					}
+				}
+			} else {
+				int i = line.indexOf('#');
+				if (i >= 0) {
+					line = line.substring(0, i);
+				}
+				buffer.append(' ');
+				buffer.append(line);
+				if (buffer.toString().trim().endsWith(">")) {
+					final DSymbol ds = new DSymbol(buffer.toString().trim());
+					buffer.delete(0, buffer.length());
+					if (name != null && !name.equals("")) {
+						ds.setName(name);
+					}
+					name = null;
+					return ds;
+				}
+			}
         }
     }
 }
