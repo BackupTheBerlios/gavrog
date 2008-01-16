@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.7 2007/04/26 20:21:57 odf Exp $
+ * @version $Id: DSymbol.java,v 1.8 2008/01/16 00:49:42 odf Exp $
  */
 public class DSymbol extends DelaneySymbol implements Cloneable {
     
@@ -33,6 +33,7 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
     private int size;
     private int[][] op;
     private int[][] v;
+    private String name = null;
 
     /**
      * Dummy constructor for internal purposes.
@@ -328,6 +329,11 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
      */
     public String toString() {
         StringBuffer buf = new StringBuffer(100);
+    	if (getName() != null) {
+    		buf.append("#@ name ");
+    		buf.append(getName());
+    		buf.append('\n');
+    	}
         buf.append("<1.1:");
         buf.append(size);
         if (dim() != 2) {
@@ -539,4 +545,19 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
         }
         return ds;
     }
+
+	/**
+	 * @return the name of this symbol.
+	 */
+	public String getName() {
+		return this.name;
+	}
+
+	/**
+	 * Changes the symbol's name.
+	 * @param name the new name.
+	 */
+	public void setName(final String name) {
+		this.name = name;
+	}
 }
