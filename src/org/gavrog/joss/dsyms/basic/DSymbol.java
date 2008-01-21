@@ -25,7 +25,7 @@ import org.gavrog.box.collections.Iterators;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.8 2008/01/16 00:49:42 odf Exp $
+ * @version $Id: DSymbol.java,v 1.9 2008/01/21 03:53:37 odf Exp $
  */
 public class DSymbol extends DelaneySymbol implements Cloneable {
     
@@ -205,7 +205,11 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
                 if (op[i][D] == 0) {
                     int Di = Integer.parseInt(entries[k++]);
                     if (Di < 0 || Di > size) {
-                        String msg = "illegal image: " + Di;
+                        final String msg = "illegal " + i + "-image: " + Di;
+                        throw new IllegalArgumentException(msg);
+                    } else if (op[i][Di] != 0) {
+                    	final String msg = "element " + Di + " already has a "
+								+ i + "-image";
                         throw new IllegalArgumentException(msg);
                     }
                     op[i][D] = Di;
