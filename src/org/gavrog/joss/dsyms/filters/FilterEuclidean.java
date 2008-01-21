@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
  * @author Olaf Delgado
- * @version $Id: FilterEuclidean.java,v 1.5 2007/02/07 23:59:52 odf Exp $
+ * @version $Id: FilterEuclidean.java,v 1.6 2008/01/21 03:41:30 odf Exp $
  */
 public class FilterEuclidean {
 
@@ -60,6 +60,7 @@ public class FilterEuclidean {
                 ambiguous.add(new Pair(new Integer(count), tester.getOutcome()));
                 System.out.println("#??? " + ds);
             }
+            System.out.flush();
         }
         final long after = System.currentTimeMillis();
 
