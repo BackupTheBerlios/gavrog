@@ -174,6 +174,51 @@ editor to cut and paste those blocks and thus maintain your own
 private archives of nets.
 </p>
 
+<dt><b>Space Group Symbol</b></dt>
+
+<dd>
+<p>
+Enter the space group symbol as it appears in the International Tables
+except N overbar is written as -N and subscripts written as regular
+numbers. Examples: <tt>Fd-3m</tt>, <tt>I41/amd</tt>,
+<tt>P212121</tt>. Only the standard settings of the International
+tables are known at this time. Please note that for certain settings,
+S<small>YSTRE</small> may not yet recognize the abbreviated Herman-Mauguin
+symbols, thus it may be necessary to write, for example, A12/n1 or I12/a1
+rather than A2/n or I2/a.
+</p>
+</dd>
+
+<dt><b>Origin choice</b></dt>
+
+<dd>
+<p>
+If you specify a crystal without explicit edges as in the first and
+fourth example below, S<small>YSTRE</small> needs to compute edges
+based on nearest neighbors. This does not only depend on the correct
+cell parameters, but also on the origin choice. For groups that have
+two conventional choices as according to the international tables,
+S<small>YSTRE</small> uses the second one by default. This can be
+changed in the 'Options' dialog.
+</p>
+
+<p>
+Another way to make sure that the correct origin choice is used is to
+append <tt>:1</tt> or <tt>:2</tt>, respectively, to the group name as
+in Example 4 above.
+</p>
+</dd>
+
+<dt><b>Rhombohedral groups</b></dt>
+
+<dd>
+<p>
+Hexagonal versus rhombohedral settings for rhombohedral groups are
+handled analogously to the above. In this case, append <tt>:H</tt>
+(the default) or <tt>:R</tt>, accordingly.
+</p>
+</dd>
+
 <br>
 <p>
 Below are some examples of legal input for S<small>YSTRE</small>. You
@@ -322,48 +367,6 @@ handle nets of any other dimension than 3 (including plane nets) or
 non-connected nets.
 </p>
 
-</dd>
-
-<dt><b>Space Group Symbol</b></dt>
-
-<dd>
-<p>
-Enter the space group symbol as it appears in the International Tables
-except N overbar is written as -N and subscripts written as regular
-numbers. Examples: <tt>Fd-3m</tt>, <tt>I41/amd</tt>,
-<tt>P212121</tt>. Only the standard settings of the International
-tables are known at this time.
-</p>
-</dd>
-
-<dt><b>Origin choice</b></dt>
-
-<dd>
-<p>
-If you specify a crystal without explicit edges as in the first and
-fourth example above, S<small>YSTRE</small> needs to compute edges
-based on nearest neighbors. This does not only depend on the correct
-cell parameters, but also on the origin choice. For groups that have
-two conventional choices as according to the international tables,
-S<small>YSTRE</small> uses the second one by default. This can be
-changed in the 'Options' dialog.
-</p>
-
-<p>
-Another way to make sure that the correct origin choice is used is to
-append <tt>:1</tt> or <tt>:2</tt>, respectively, to the group name as
-in Example 4 above.
-</p>
-</dd>
-
-<dt><b>Rhombohedral groups</b></dt>
-
-<dd>
-<p>
-Hexagonal versus rhombohedral settings for rhombohedral groups are
-handled analogously to the above. In this case, append <tt>:H</tt>
-(the default) or <tt>:R</tt>, accordingly.
-</p>
 </dd>
 
 <dt><b>Java problems</b></dt>

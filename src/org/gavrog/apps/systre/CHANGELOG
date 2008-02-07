@@ -1,3 +1,7 @@
+Systre 1.1.4:
+
+- Missing abbreviated Herman-Mauguin symbols are mentioned in the help file.
+
 Systre 1.1.3:
 
 - If edges are computed, vertex-degrees are no longer silently changed.
