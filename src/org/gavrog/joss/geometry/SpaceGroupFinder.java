@@ -40,7 +40,7 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Crystallography.
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.57 2006/09/15 06:17:17 odf Exp $
+ * @version $Id: SpaceGroupFinder.java,v 1.58 2008/02/20 04:11:50 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -48,6 +48,7 @@ public class SpaceGroupFinder {
     final private SpaceGroup G;
     final private CrystalSystem crystalSystem;
     final private CoordinateChange toStd;
+    final private CoordinateChange fromStd;
     final private String groupName;
     final private String extension;
     final private int dimension;
@@ -131,6 +132,7 @@ public class SpaceGroupFinder {
                 this.groupName = null;
                 this.extension = null;
                 this.toStd = null;
+                this.fromStd = null;
             } else {
                 final String nameParts[] = ((String) match.getFirst()).split(":");
                 this.groupName = nameParts[0];
@@ -144,6 +146,7 @@ public class SpaceGroupFinder {
                     System.err.println("final coordinate change: " + c);
                 }
                 this.toStd = (CoordinateChange) toNormalized.times(c);
+                this.fromStd = (CoordinateChange) this.toStd.inverse();
             }
         } else {
             final String msg = "group dimension is " + d + ", must be 2 or 3";
@@ -1116,13 +1119,24 @@ public class SpaceGroupFinder {
     }
     
     /**
-     * Returns a basis change that maps the group under inspection to its standard setting
-     * as according to the International Tables.
-     * 
-     * @return the transformation to the standard setting.
-     */
+	 * Returns a basis change that maps the group under inspection to its
+	 * standard setting as according to the International Tables.
+	 * 
+	 * @return the transformation to the standard setting.
+	 */
     public CoordinateChange getToStd() {
         return this.toStd;
+    }
+    
+    /**
+	 * Returns a basis change that maps the group under inspection from its
+	 * standard setting as according to the International Tables to the original
+	 * setting.
+	 * 
+	 * @return the transformation from the standard setting.
+	 */
+    public CoordinateChange getFromStd() {
+        return this.fromStd;
     }
     
     /**
