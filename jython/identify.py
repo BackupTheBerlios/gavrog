@@ -7,7 +7,7 @@
 import sys
 
 from org.gavrog.joss.pgraphs.io import Net
-from org.gavrog.systre import Archive
+from org.gavrog.joss.pgraphs.io import Archive
 
 
 # ============================================================
@@ -27,8 +27,8 @@ def archive_read(archive, path):
 archive = Archive("1.0")
 
 # --- add entries from RCSR and zeolite archive files
-archive_read(archive, "org/gavrog/systre/rcsr.arc")
-archive_read(archive, "org/gavrog/systre/zeolites.arc")
+archive_read(archive, "org/gavrog/apps/systre/rcsr.arc")
+archive_read(archive, "org/gavrog/apps/systre/zeolites.arc")
 
 
 # ============================================================
