@@ -21,11 +21,11 @@ import javax.swing.SwingUtilities;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Invoke.java,v 1.1 2007/05/20 22:50:24 odf Exp $
+ * @version $Id: Invoke.java,v 1.2 2008/02/27 08:14:27 odf Exp $
  */
 public class Invoke {
     /**
-     * Wrapper for {@link SwingUtilities.invokeAndWait}}. If we're in the event dispatch
+     * Wrapper for {@link javax.swing.SwingUtilities.invokeAndWait}}. If we're in the event dispatch
      * thread, the argument is just invoked normally.
      * 
      * @param runnable what to invoke.
@@ -42,7 +42,7 @@ public class Invoke {
     }
 
     /**
-     * Wrapper for {@link SwingUtilities.invokeLater}}. If we're in the event dispatch
+     * Wrapper for {@link javax.swing.SwingUtilities.invokeLater}}. If we're in the event dispatch
      * thread, the argument is just invoked normally.
      * 
      * @param runnable what to invoke.

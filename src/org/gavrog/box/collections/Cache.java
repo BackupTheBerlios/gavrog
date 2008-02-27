@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Cache.java,v 1.2 2007/05/25 22:18:58 odf Exp $
+ * @version $Id: Cache.java,v 1.3 2008/02/27 08:14:27 odf Exp $
  */
 public class Cache {
     final private Map content;
@@ -33,7 +33,6 @@ public class Cache {
     
     /**
      * Constructs an instance.
-     * @param content
      */
     public Cache() {
         this.content = new HashMap();
@@ -48,7 +47,6 @@ public class Cache {
 
     /**
      * @param key
-     * @return
      */
     public Object get(final Object key) {
         final Object entry = this.content.get(key);
@@ -63,7 +61,6 @@ public class Cache {
 
     /**
      * @param key
-     * @return
      */
     public boolean getBoolean(final Object key) {
         return ((Boolean) this.get(key)).booleanValue();
@@ -72,7 +69,6 @@ public class Cache {
     /**
      * @param key
      * @param value
-     * @return
      */
     public Object put(final Object key, final Object value) {
         this.content.put(key, new SoftReference(value));
@@ -82,7 +78,6 @@ public class Cache {
     /**
      * @param key
      * @param value
-     * @return
      */
     public boolean put(final Object key, final boolean value) {
         return ((Boolean) this.put(key, new Boolean(value))).booleanValue();
@@ -90,7 +85,6 @@ public class Cache {
 
     /**
      * @param key
-     * @return
      */
     public Object remove(final Object key) {
         Object value = null;

@@ -22,7 +22,7 @@ import org.gavrog.box.simple.NamedConstant;
  * Base class for move objects in generators.
  * 
  * @author Olaf Delgado
- * @version $Id: Move.java,v 1.1 2006/08/29 03:47:22 odf Exp $
+ * @version $Id: Move.java,v 1.2 2008/02/27 08:14:27 odf Exp $
  */
 public class Move {
 	public static class Type extends NamedConstant {
@@ -46,7 +46,7 @@ public class Move {
 	/**
 	 * Creates a new instance.
 	 * 
-	 * @param choice false is this move is forced.
+	 * @param type the type of this move
 	 */
 	public Move(final Type type) {
 		this.type = type;
