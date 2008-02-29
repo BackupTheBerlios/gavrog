@@ -41,7 +41,7 @@ import org.gavrog.box.collections.Pair;
  * reverse.
  * 
  * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.5 2006/04/04 22:59:26 odf Exp $
+ * @version $Id: UndirectedGraph.java,v 1.6 2008/02/29 03:42:23 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;
@@ -411,6 +411,10 @@ public class UndirectedGraph implements IGraph {
         }
     }
 
+    public IGraphElement getElement(final long id) {
+    	return getElement(new Long(id));
+    }
+    
     /*
      * (non-Javadoc)
      * 
@@ -430,6 +434,10 @@ public class UndirectedGraph implements IGraph {
         }
     }
 
+    public boolean hasElement(final long id) {
+    	return getElement(id) != null;
+    }
+    
     /*
      * (non-Javadoc)
      * 
@@ -440,6 +448,10 @@ public class UndirectedGraph implements IGraph {
         return directedEdges(node1, node2);
     }
 
+    public Iterator connectingEdges(final long i, final long j) {
+    	return directedEdges(i, j);
+    }
+    
     /*
      * (non-Javadoc)
      * 
@@ -471,6 +483,10 @@ public class UndirectedGraph implements IGraph {
         };
     }
 
+    public Iterator directedEdges(final long i, final long j) {
+    	return directedEdges((INode) getElement(i), (INode) getElement(j));
+    }
+    
     /* (non-Javadoc)
      * @see javaPGraphs.IGraph#newNode()
      */
