@@ -30,7 +30,7 @@ import org.gavrog.jane.numbers.Whole;
  * a point in homogeneous coordinates by multiplication from the right.
  * 
  * @author Olaf Delgado
- * @version $Id: Operator.java,v 1.19 2007/05/09 00:15:55 odf Exp $
+ * @version $Id: Operator.java,v 1.20 2008/03/07 07:15:56 odf Exp $
  */
 public class Operator extends ArithmeticBase implements IArithmetic {
     //TODO handle zero scale entry gracefully
@@ -123,6 +123,25 @@ public class Operator extends ArithmeticBase implements IArithmetic {
         M1.setSubMatrix(0, d, Matrix.zero(d, 1));
         M1.set(d, d, Whole.ONE);
         return new Operator(M1);
+    }
+    
+    /**
+     * Constructs a rotation operator that rotates the vector eye onto the
+     * positive z axis and the vector up to the yz plane.
+     * 
+     * @param eye the vector to point towards the eye.
+     * @param up the vector to point upwards.
+     * @return the resulting rotation operator.
+     */
+    public static Operator viewingRotation(final Vector eye, final Vector up) {
+    	final Vector third = Vector.crossProduct3D(eye, up);
+    	final Matrix M = Vector.toMatrix(new Vector[] { eye, up, third });
+    	final Matrix R = LinearAlgebra.rowOrthonormalized(M, Matrix.one(3));
+    	final Matrix A = Matrix.one(4);
+    	A.setSubMatrix(0, 0, R);
+    	
+    	return (Operator) new Operator(A).inverse()
+				.times(new Operator("-z,y,x"));
     }
     
     /* (non-Javadoc)
