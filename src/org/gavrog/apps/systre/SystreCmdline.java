@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2008 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.6 2007/07/26 04:01:07 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.7 2008/03/11 08:28:09 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -219,8 +219,9 @@ public class SystreCmdline extends EventSource {
         
         // --- test if it is Systre-compatible
         if (!G.isLocallyStable()) {
-            final String msg = "Structure is not locally stable";
-            throw new SystreException(SystreException.STRUCTURE, msg);
+            throw new SystreException(SystreException.STRUCTURE,
+            		"Structure has collisions between next-nearest neighbors." +
+            		" Systre does not currently support such structures.");
         }
         if (G.isLadder()) {
             final String msg = "Structure is non-crystallographic (a 'ladder')";
