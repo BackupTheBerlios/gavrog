@@ -38,7 +38,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasperExtended.java,v 1.2 2008/03/15 06:00:24 odf Exp $
+ * @version $Id: FrankKasperExtended.java,v 1.3 2008/03/15 06:59:12 odf Exp $
  */
 
 public class FrankKasperExtended extends TileKTransitive {
@@ -209,7 +209,8 @@ public class FrankKasperExtended extends TileKTransitive {
 		}
 		timer.stop();
 
-		System.out.println("\n# " + iter.statistics());
+		System.out.println();
+		System.out.println("# " + iter.statistics());
 		if (check) {
 			System.out.println("# Of the latter, " + countGood
 					+ " were found euclidean.");
