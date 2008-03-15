@@ -17,12 +17,15 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -35,7 +38,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasperExtended.java,v 1.1 2008/03/15 04:21:36 odf Exp $
+ * @version $Id: FrankKasperExtended.java,v 1.2 2008/03/15 06:00:24 odf Exp $
  */
 
 public class FrankKasperExtended extends TileKTransitive {
@@ -67,6 +70,8 @@ public class FrankKasperExtended extends TileKTransitive {
 		
 		return new IteratorAdapter() {
 			final int n = choices.size();
+			int count = 0;
+			final Set seen = new HashSet();
 			int a[] = null;
 
 			protected Object findNext() throws NoSuchElementException {
@@ -78,7 +83,7 @@ public class FrankKasperExtended extends TileKTransitive {
 						}
 					} else {
 						int i = n - 1;
-						while (i >= 0 && a[i] == 4) {
+						while (i >= 0 && a[i] == 6) {
 							--i;
 						}
 						if (i < 0) {
@@ -89,8 +94,11 @@ public class FrankKasperExtended extends TileKTransitive {
 							choose(++i, 4);
 						}
 					}
-					if (out.isLocallyEuclidean3D()) {
-						return new DSymbol(out);
+					++count;
+					final DSymbol res = new DSymbol(out);
+					if (res.isLocallyEuclidean3D() && !seen.contains(res)) {
+						seen.add(res);
+						return res;
 					}
 				}
 			}
@@ -173,9 +181,12 @@ public class FrankKasperExtended extends TileKTransitive {
 		}
 
 		final int k = Integer.parseInt(args[i]);
-		final TileKTransitive iter = new FrankKasperExtended(k, verbose);
 		int countGood = 0;
 		int countAmbiguous = 0;
+
+		final Stopwatch timer = new Stopwatch();
+		timer.start();
+		final TileKTransitive iter = new FrankKasperExtended(k, verbose);
 
 		try {
 			while (iter.hasNext()) {
@@ -196,18 +207,20 @@ public class FrankKasperExtended extends TileKTransitive {
 		} catch (Exception ex) {
 			ex.printStackTrace(System.err);
 		}
+		timer.stop();
 
-		System.err.println(iter.statistics());
+		System.out.println("\n# " + iter.statistics());
 		if (check) {
-			System.err.println("Of the latter, " + countGood
+			System.out.println("# Of the latter, " + countGood
 					+ " were found euclidean.");
 			if (countAmbiguous > 0) {
-				System.err.println("For " + countAmbiguous
+				System.out.println("# For " + countAmbiguous
 						+ " symbols, euclidicity could not yet be decided.");
 			}
 		}
-		System.err.println("Options: " + (check ? "" : "no")
+		System.out.println("# Options: " + (check ? "" : "no")
 				+ " euclidicity check, " + (verbose ? "verbose" : "quiet")
 				+ ".");
+		System.out.println("# Running time was " + timer.format());
 	}
 }
