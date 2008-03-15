@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * Generates all tile-k-transitive tetrahedra tilings with edge degrees 5 and 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasper.java,v 1.3 2007/04/26 20:21:58 odf Exp $
+ * @version $Id: FrankKasper.java,v 1.4 2008/03/15 05:59:46 odf Exp $
  */
 
 public class FrankKasper extends TileKTransitive {
@@ -54,7 +54,11 @@ public class FrankKasper extends TileKTransitive {
                 throw new RuntimeException("this should not happen: r = " + r + " at D = " + D);
             }
         }
-        return Iterators.singleton(new DSymbol(out));
+        if (out.isLocallyEuclidean3D()) {
+        	return Iterators.singleton(new DSymbol(out));
+        } else {
+        	return Iterators.empty();
+        }
     }
     
     protected Iterator extendTo3d(final DSymbol ds) {
