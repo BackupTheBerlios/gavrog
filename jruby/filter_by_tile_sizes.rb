@@ -10,9 +10,9 @@ def int(x)
   java.lang.Integer.new(x)
 end
 
-def filter(infile, outfile)
+def filter(min, max, infile, outfile)
   ixt = [int(0), int(1), int(2)]
-  range = 12..15
+  range = min..max
 
   File.open(outfile, "w") do |f|
     n_in = n_out = 0
@@ -23,7 +23,8 @@ def filter(infile, outfile)
         n_out += 1
       end
     end
-    f.puts "# filter_by_tile_sizes read #{n_in} and wrote #{n_out} symbols"
+    f.puts "# filter_by_tile_sizes: tile size range #{min}-#{max}"
+    f.puts "# read #{n_in} and wrote #{n_out} symbols"
   end
 end
 
@@ -34,4 +35,4 @@ def nr_faces(ds, elm)
   Covers.finiteUniversalCover(sub).orbit_reps(ixf).map.size
 end
 
-filter(ARGV[0], ARGV[1])
+filter(ARGV[0].to_i, ARGV[1].to_i, ARGV[2], ARGV[3])
