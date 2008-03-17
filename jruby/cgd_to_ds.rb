@@ -11,8 +11,14 @@ def convert(input, output)
       data = parser.parse_data_block
       if data.type.match(/TILING/i)
         name = data.get_entries_as_string "name"
-        f.puts "#\@ name #{name}" if name
-        f.puts FaceList.new(data).symbol
+        begin
+          ds = FaceList.new(data).symbol
+        rescue Exception => ex
+          f.puts "#\@ error \"#{ex.to_s}\" on #{name || "unnamed"}"
+        else
+          f.puts "#\@ name #{name}" if name
+          f.puts ds
+        end
         f.flush
       end
     end
