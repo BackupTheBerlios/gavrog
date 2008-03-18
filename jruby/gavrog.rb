@@ -7,51 +7,6 @@ module Gavrog
   
   DSFile = InputIterator
   
-  class Iterator
-    include Enumerable
-  
-    def initialize(base = nil, &block)
-      @base = base
-      @block = block
-    end
-    
-    def apply(base)
-      self.class.send(:new, base, &@block)
-    end
-    
-    def in_count
-      @in_count || 0
-    end
-    
-    def out_count
-      @out_count || 0
-    end
-  end
-
-  class Mapper < Iterator
-    def each
-      @base.each do |x|
-        @in_count = in_count + 1
-        @out_count = out_count + 1
-        yield @block.call(x)
-      end
-      return self
-    end
-  end
-  
-  class Filter < Iterator
-    def each
-      @base.each do |x|
-        @in_count = in_count + 1
-        if @block.call(x)
-          @out_count = out_count + 1
-          yield x
-        end
-      end
-      return self
-    end
-  end
-  
   class Face
     def initialize(ds, elm)
       @ds = ds
@@ -113,11 +68,25 @@ module Gavrog
     end
   end
 
-  def run_filter(filter, input, output, message = nil)
+  def run_filter(input, output, message = nil)
     File.open(output, "w") do |file|
-      good = filter.apply(DSFile.new(input)).each { |ds| file.puts ds }
+      in_count = out_count = 0
+      
+      DSFile.new(input).each do |ds|
+        in_count += 1
+        out = yield(ds)
+        case out
+        when DSymbol:
+          out_count += 1
+          file.puts out
+        when true:
+          out_count += 1
+          file.puts ds
+        end
+      end
+      
       file.puts "# #{message}" if message
-      file.puts "# read #{good.in_count} and wrote #{good.out_count} symbols"
+      file.puts "# read #{in_count} and wrote #{out_count} symbols"
     end
   end
 end
