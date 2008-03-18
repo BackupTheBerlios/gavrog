@@ -21,6 +21,10 @@ class Iterator
     @base = base
     @block = block
   end
+  
+  def apply(base)
+    self.class.send(:new, base, &@block)
+  end
 end
   
 class Mapper < Iterator
@@ -73,25 +77,25 @@ class DSymbol
   end
   
   def faces
-    Mapper.new self.reps(0, 1, 3) do |elm|
-      Face.new(self, elm)
-    end
+    Mapper.new(self.reps(0, 1, 3)) { |elm| Face.new(self, elm) }
   end
 end
 
-def filter(min, max, input, output)
-  range = min..max
-  
-  filter = Filter.new(DSFile.new(input)) do |ds|
-    ds.faces.all? { |f| range.include? f.degree }
-  end
-
+def run_filter(filter, input, output, message = nil)
   File.open(output, "w") do |file|
-    filter.each { |ds| file.puts ds }
+    good = filter.apply(DSFile.new(input))
+    good.each { |ds| file.puts ds }
     
-    file.puts "# filter_by_face_sizes: face size range #{min}-#{max}"
-    file.puts "# read #{filter.in_count} and wrote #{filter.out_count} symbols"
+    file.puts message if message
+    file.puts "# read #{good.in_count} and wrote #{good.out_count} symbols"
   end
 end
 
-filter ARGV[0].to_i, ARGV[1].to_i, ARGV[2], ARGV[3]
+min  = ARGV[0].to_i
+max  = ARGV[1].to_i
+fin  = ARGV[2]
+fout = ARGV[3]
+
+test = Filter.new { |ds| ds.faces.all? { |f| (min..max).include? f.degree } }
+msg = "# filter_by_face_sizes: face size range #{min}-#{max}"
+run_filter(test, fin, fout, msg)
