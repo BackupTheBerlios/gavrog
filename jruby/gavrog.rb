@@ -35,6 +35,7 @@ module Gavrog
         @out_count = out_count + 1
         yield @block.call(x)
       end
+      return self
     end
   end
   
@@ -47,6 +48,7 @@ module Gavrog
           yield x
         end
       end
+      return self
     end
   end
   
@@ -113,9 +115,7 @@ module Gavrog
 
   def run_filter(filter, input, output, message = nil)
     File.open(output, "w") do |file|
-      good = filter.apply(DSFile.new(input))
-      good.each { |ds| file.puts ds }
-      
+      good = filter.apply(DSFile.new(input)).each { |ds| file.puts ds }
       file.puts "# #{message}" if message
       file.puts "# read #{good.in_count} and wrote #{good.out_count} symbols"
     end
