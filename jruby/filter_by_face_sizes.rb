@@ -17,13 +17,42 @@ end
 class Iterator
   include Enumerable
 
-  def initialize(base, &block)
+  def initialize(base = nil, &block)
     @base = base
     @block = block
   end
+end
   
+class Mapper < Iterator
   def each
-    @base.each { |x| yield @block.call(x) }
+    @base.each do |x|
+      @count = count + 1
+      yield @block.call(x)
+    end
+  end
+  
+  def count
+    @count || 0
+  end
+end
+
+class Filter < Iterator
+  def each
+    @base.each do |x|
+      @in_count = in_count + 1
+      if @block.call(x)
+        @out_count = out_count + 1
+        yield x
+      end
+    end
+  end
+  
+  def in_count
+    @in_count || 0
+  end
+  
+  def out_count
+    @out_count || 0
   end
 end
 
@@ -44,8 +73,8 @@ class DSymbol
   end
   
   def faces
-    Iterator.new self.reps(0, 1, 3) do |elm|
-        Face.new(self, elm)
+    Mapper.new self.reps(0, 1, 3) do |elm|
+      Face.new(self, elm)
     end
   end
 end
@@ -53,16 +82,15 @@ end
 def filter(min, max, input, output)
   range = min..max
   
+  filter = Filter.new(DSFile.new(input)) do |ds|
+    ds.faces.all? { |f| range.include? f.degree }
+  end
+
   File.open(output, "w") do |file|
-    n_in = n_out = 0
-    DSFile.new(input).each do |ds|
-      n_in += 1
-      if ds.faces.all? { |f| range.include? f.degree }
-        file.puts ds
-        n_out += 1
-      end
-    end
-    file.puts "# filter_by_face_sizes read #{n_in} and wrote #{n_out} symbols"
+    filter.each { |ds| file.puts ds }
+    
+    file.puts "# filter_by_face_sizes: face size range #{min}-#{max}"
+    file.puts "# read #{filter.in_count} and wrote #{filter.out_count} symbols"
   end
 end
 
