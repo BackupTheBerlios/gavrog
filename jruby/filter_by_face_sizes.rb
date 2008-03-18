@@ -4,6 +4,8 @@ include Java
 import org.gavrog.joss.dsyms.basic.DSymbol
 import org.gavrog.joss.dsyms.generators.InputIterator
 
+DSFile = InputIterator
+
 def int(x)
   java.lang.Integer.new(x)
 end
@@ -21,18 +23,18 @@ class Iterator
   end
 end
 
-class DSymbol
-  class Face
-    def initialize(ds, elm)
-      @ds = ds
-      @elm = int(elm)
-    end
-    
-    def degree
-      @ds.m(0, 1, @elm)
-    end
+class Face
+  def initialize(ds, elm)
+    @ds = ds
+    @elm = int(elm)
   end
   
+  def degree
+    @ds.m(0, 1, @elm)
+  end
+end
+
+class DSymbol
   def faces
     Iterator.new self.orbit_reps([int(0), int(1), int(3)]) do |elm|
         Face.new(self, elm)
@@ -45,7 +47,7 @@ def filter(min, max, input, output)
   
   File.open(output, "w") do |file|
     n_in = n_out = 0
-    InputIterator.new(input).each do |ds|
+    DSFile.new(input).each do |ds|
       n_in += 1
       if ds.faces.all? { |f| range.include? f.degree }
         file.puts ds
