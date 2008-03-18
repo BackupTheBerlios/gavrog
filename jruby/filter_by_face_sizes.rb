@@ -8,35 +8,35 @@ def int(x)
   java.lang.Integer.new(x)
 end
 
-class DSymbol
-  class Iterator
-    include Enumerable
-    attr_reader :ds
+class Iterator
+  include Enumerable
 
-    def initialize(ds)
-      @ds = ds
-    end
+  def initialize(base, &block)
+    @base = base
+    @block = block
   end
   
-  class Face < Iterator
+  def each
+    @base.each { |x| yield @block.call(x) }
+  end
+end
+
+class DSymbol
+  class Face
     def initialize(ds, elm)
+      @ds = ds
       @elm = int(elm)
-      super(ds)
     end
     
     def degree
-      ds.m(0, 1, @elm)
+      @ds.m(0, 1, @elm)
     end
   end
   
   def faces
-    result = Iterator.new self
-    def result.each
-      ds.orbit_reps([int(0), int(1), int(3)]).each do |elm|
-        yield Face.new(ds, elm)
-      end
+    Iterator.new self.orbit_reps([int(0), int(1), int(3)]) do |elm|
+        Face.new(self, elm)
     end
-    result
   end
 end
 
