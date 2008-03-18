@@ -6,8 +6,12 @@ import org.gavrog.joss.dsyms.generators.InputIterator
 
 DSFile = InputIterator
 
-def int(x)
-  java.lang.Integer.new(x)
+def int(arg)
+  if arg.respond_to? :each
+    arg.map { |x| int(x) }
+  else
+    java.lang.Integer.new(arg)
+  end
 end
 
 class Iterator
@@ -35,8 +39,12 @@ class Face
 end
 
 class DSymbol
+  def reps(*args)
+    orbit_reps(int(args))
+  end
+  
   def faces
-    Iterator.new self.orbit_reps([int(0), int(1), int(3)]) do |elm|
+    Iterator.new self.reps(0, 1, 3) do |elm|
         Face.new(self, elm)
     end
   end
