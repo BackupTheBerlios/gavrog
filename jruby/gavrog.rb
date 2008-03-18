@@ -32,31 +32,23 @@ module Gavrog
   
   class DSymbol
     def reps(*args)
-      orbit_reps(int(args))
+      if args.size == 1 && args[0].respond_to?(:each)
+        orbit_reps(int(args[0]))
+      else
+        orbit_reps(int(args))
+      end
     end
     
     def faces
-      case dim
-      when 2:
-        list = reps(0, 1)
-      when 3:
-        list = reps(0, 1, 3)
-      else
-        raise "dimension #{dim} not supported"
-      end
-      Mapper.new(list) { |elm| Face.new(self, elm) }
+      idcs = indices.map
+      idcs.delete 2
+      reps(idcs).map { |elm| Face.new(self, elm) }
     end
     
     def tiles
-      case dim
-      when 2:
-        list = reps(0, 1)
-      when 3:
-        list = reps(0, 1, 2)
-      else
-        raise "dimension #{dim} not supported"
-      end
-      Mapper.new(list) { |elm| Tile.new(self, elm) }
+      idcs = indices.map
+      idcs.delete dim
+      reps(idcs).map { |elm| Tile.new(self, elm) }
     end
   end
   
