@@ -1,7 +1,6 @@
 #!/bin/env jruby
 
 require File.join(File.dirname(__FILE__), 'gavrog.rb')
-include Gavrog
 
 min  = ARGV[0].to_i
 max  = ARGV[1].to_i

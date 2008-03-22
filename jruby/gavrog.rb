@@ -7,6 +7,12 @@ module Gavrog
   
   DSFile = InputIterator
   
+  def self.included(mod)
+    DSymbol.class_eval do
+      include DelaneySymbolExtensions
+    end
+  end
+
   class Face
     def initialize(ds, elm)
       @ds = ds
@@ -27,28 +33,6 @@ module Gavrog
     def cover
       sub = DSymbol.new(Subsymbol.new(@ds, int([0, 1, 2]), @elm))
       Covers.finiteUniversalCover(sub)
-    end
-  end
-  
-  class DSymbol
-    def reps(*args)
-      if args.size == 1 && args[0].respond_to?(:each)
-        orbit_reps(int(args[0]))
-      else
-        orbit_reps(int(args))
-      end
-    end
-    
-    def faces
-      idcs = indices.map
-      idcs.delete 2
-      reps(idcs).map { |elm| Face.new(self, elm) }
-    end
-    
-    def tiles
-      idcs = indices.map
-      idcs.delete dim
-      reps(idcs).map { |elm| Tile.new(self, elm) }
     end
   end
   
@@ -81,6 +65,28 @@ module Gavrog
       file.puts "# read #{in_count} and wrote #{out_count} symbols"
     end
   end
+
+  module DelaneySymbolExtensions
+    def reps(*args)
+      if args.size == 1 && args[0].respond_to?(:each)
+        orbit_reps(int(args[0]))
+      else
+        orbit_reps(int(args))
+      end
+    end
+    
+    def faces
+      idcs = indices.map
+      idcs.delete 2
+      reps(idcs).map { |elm| Face.new(self, elm) }
+    end
+    
+    def tiles
+      idcs = indices.map
+      idcs.delete dim
+      reps(idcs).map { |elm| Tile.new(self, elm) }
+    end
+  end
 end
 
 module Enumerable
@@ -94,3 +100,5 @@ class Symbol
     proc { |obj, *args| obj.send(self, *args) }
   end
 end
+
+include Gavrog
