@@ -38,7 +38,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasperExtended.java,v 1.3 2008/03/15 06:59:12 odf Exp $
+ * @version $Id: FrankKasperExtended.java,v 1.4 2008/03/22 06:36:11 odf Exp $
  */
 
 public class FrankKasperExtended extends TileKTransitive {
@@ -204,6 +204,7 @@ public class FrankKasperExtended extends TileKTransitive {
 					System.out.println(out);
 				}
 			}
+			System.out.flush();
 		} catch (Exception ex) {
 			ex.printStackTrace(System.err);
 		}
