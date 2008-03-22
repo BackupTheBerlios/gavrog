@@ -8,8 +8,14 @@ module Gavrog
   DSFile = InputIterator
   
   def self.included(mod)
-    DSymbol.class_eval do
-      include DelaneySymbolExtensions
+    [ org.gavrog.joss.dsyms.basic.DSymbol,
+      org.gavrog.joss.dsyms.basic.DSCover,
+      org.gavrog.joss.dsyms.basic.DynamicDSymbol,
+      org.gavrog.joss.dsyms.basic.Subsymbol
+    ].each do |x|
+      x.class_eval do
+        include DelaneySymbolExtensions
+      end
     end
   end
 
