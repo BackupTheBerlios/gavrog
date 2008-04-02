@@ -17,6 +17,8 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -37,33 +39,116 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasperExtended.java,v 1.6 2008/04/02 06:55:54 odf Exp $
+ * @version $Id: FrankKasperExtended.java,v 1.7 2008/04/02 12:16:25 odf Exp $
  */
 
 public class FrankKasperExtended extends TileKTransitive {
-	final private static String[] allowed_stabilizer_sets = { "", "*332",
-			"*332/*332", "*332/*332/*332", "*332/*332/*332/*332",
-			"*332/*332/2*2", "*332/*332/2*2/2*2", "*332/2*2", "*332/2*2/2*2",
-			"*332/2*2/222", "*332/2*2/2x", "*332/222", "*332/2x", "2*2",
-			"2*2/2*2", "2*2/2*2/2*2", "2*2/2*2/2*2/2*2", "2*2/2*2/2*2/2*2/222",
-			"2*2/2*2/2*2/2*2/222/222", "2*2/2*2/2*2/222",
-			"2*2/2*2/2*2/222/222", "2*2/2*2/222", "2*2/2*2/222/222",
-			"2*2/2*2/222/2x", "2*2/2*2/2x", "2*2/222", "2*2/222/222",
-			"2*2/222/2x", "2*2/2x", "222", "222/222", "222/222/222",
-			"222/222/222/222", "222/222/222/222/222",
-			"222/222/222/222/222/222", "222/222/222/222/222/222/222",
-			"222/222/222/222/222/222/222/222", "222/222/222/222/2x",
-			"222/222/222/222/2x/2x", "222/222/222/2x", "222/222/222/2x/2x",
-			"222/222/222/332", "222/222/2x", "222/222/2x/2x", "222/222/332",
-			"222/222/332/332", "222/2x", "222/2x/2x", "222/2x/2x/332",
-			"222/2x/332", "222/332", "222/332/332", "2x", "2x/2x", "2x/2x/2x",
-			"2x/2x/2x/2x", "2x/2x/332", "2x/2x/332/332", "2x/332",
-			"2x/332/332", "332", "332/332", "332/332/332", "332/332/332/332" };
-
-	public FrankKasperExtended(final int k, final boolean verbose) {
-		super(new DSymbol("1:1,1,1:3,3"), k, verbose);
+	final private static Set interesting_stabilizers = new HashSet();
+	final private static Set allowed_stabilizer_sets = new HashSet();
+	static {
+		interesting_stabilizers.addAll(Arrays.asList(new String[] {
+				"*332", "2*2", "222", "2x", "332"
+		}));
+		allowed_stabilizer_sets.addAll(Arrays.asList(new String[] {
+				"", "*332", "*332/*332", "*332/*332/*332", "*332/*332/*332/*332",
+				"*332/*332/2*2", "*332/*332/2*2/2*2", "*332/2*2",
+				"*332/2*2/2*2", "*332/2*2/222", "*332/2*2/2x", "*332/222",
+				"*332/2x", "2*2", "2*2/2*2", "2*2/2*2/2*2", "2*2/2*2/2*2/2*2",
+				"2*2/2*2/2*2/2*2/222", "2*2/2*2/2*2/2*2/222/222",
+				"2*2/2*2/2*2/222", "2*2/2*2/2*2/222/222", "2*2/2*2/222",
+				"2*2/2*2/222/222", "2*2/2*2/222/2x", "2*2/2*2/2x", "2*2/222",
+				"2*2/222/222", "2*2/222/2x", "2*2/2x", "222", "222/222",
+				"222/222/222", "222/222/222/222", "222/222/222/222/222",
+				"222/222/222/222/222/222", "222/222/222/222/222/222/222",
+				"222/222/222/222/222/222/222/222", "222/222/222/222/2x",
+				"222/222/222/222/2x/2x", "222/222/222/2x", "222/222/222/2x/2x",
+				"222/222/222/332", "222/222/2x", "222/222/2x/2x",
+				"222/222/332", "222/222/332/332", "222/2x", "222/2x/2x",
+				"222/2x/2x/332", "222/2x/332", "222/332", "222/332/332", "2x",
+				"2x/2x", "2x/2x/2x", "2x/2x/2x/2x", "2x/2x/332",
+				"2x/2x/332/332", "2x/332", "2x/332/332", "332", "332/332",
+				"332/332/332", "332/332/332/332"
+		}));
 	}
 
+	final private boolean testParts;
+
+	public FrankKasperExtended(
+			final int k, final boolean verbose, final boolean testParts) {
+		super(new DSymbol("1:1,1,1:3,3"), k, verbose);
+		this.testParts = testParts;
+	}
+
+	protected boolean partsListOkay(final List parts) {
+		if (!this.testParts) {
+			return true;
+		}
+		
+		final List stabs = new ArrayList();
+		
+		for (Iterator iter = parts.iterator(); iter.hasNext();) {
+            final String type = orbifoldSymbol((DSymbol) iter.next());
+            if (!type.equals("1")) {
+            	stabs.add(type);
+            }
+		}
+		Collections.sort(stabs);
+		final StringBuffer buf = new StringBuffer(100);
+		for (Iterator iter = stabs.iterator(); iter.hasNext();) {
+			final String type = (String) iter.next();
+			if (interesting_stabilizers.contains(type)) {
+				if (buf.length() > 0) {
+					buf.append('/');
+				}
+				buf.append(type);
+			}
+		}
+		return allowed_stabilizer_sets.contains(buf.toString());
+	}
+	
+	private static String orbifoldSymbol(final DSymbol ds) {
+		final List cones = new ArrayList();
+		final List corners = new ArrayList();
+		for (int k = 0; k < 3; ++k) {
+			final int i = (k + 1) % 3;
+			final int j = (k + 2) % 3;
+			final List idcs = new IndexList(i, j);
+			for (Iterator reps = ds.orbitReps(idcs); reps.hasNext(); ) {
+				final Object D = reps.next();
+				final int v = ds.v(i, j, D);
+				if (v > 1) {
+					if (ds.orbitIsLoopless(idcs, D)) {
+						corners.add(String.valueOf(v));
+					} else {
+						cones.add(String.valueOf(v));
+					}
+				}
+			}
+		}
+		Collections.sort(cones);
+		Collections.reverse(cones);
+		Collections.sort(corners);
+		Collections.reverse(corners);
+		
+        final StringBuffer buf = new StringBuffer(20);
+        if (cones.isEmpty() && corners.isEmpty()) {
+        	buf.append('1');
+        }
+        for (Iterator iter2 = cones.iterator(); iter2.hasNext();) {
+        	buf.append(iter2.next());
+        }
+        if (!ds.isLoopless()) {
+        	buf.append('*');
+        }
+        for (Iterator iter2 = corners.iterator(); iter2.hasNext();) {
+        	buf.append(iter2.next());
+        }
+        if (!ds.isWeaklyOriented()) {
+        	buf.append('x');
+        }
+        return buf.toString();
+	}
+	
 	protected Iterator defineBranching(final DelaneySymbol ds) {
 		final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
 		final IndexList idx = new IndexList(0, 2, 3);
@@ -185,11 +270,14 @@ public class FrankKasperExtended extends TileKTransitive {
 
 	public static void main(final String[] args) {
 		boolean verbose = false;
+		boolean testParts = true;
 		boolean check = true;
 		int i = 0;
 		while (i < args.length && args[i].startsWith("-")) {
 			if (args[i].equals("-v")) {
 				verbose = !verbose;
+			} else if (args[i].equals("-p")) {
+				testParts = !testParts;
 			} else if (args[i].equals("-e")) {
 				check = !check;
 			} else {
@@ -204,7 +292,8 @@ public class FrankKasperExtended extends TileKTransitive {
 
 		final Stopwatch timer = new Stopwatch();
 		timer.start();
-		final TileKTransitive iter = new FrankKasperExtended(k, verbose);
+		final TileKTransitive iter = new FrankKasperExtended(k, verbose,
+				testParts);
 
 		try {
 			while (iter.hasNext()) {

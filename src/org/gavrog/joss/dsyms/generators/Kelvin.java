@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Kelvin.java,v 1.1 2008/03/28 02:18:56 odf Exp $
+ * @version $Id: Kelvin.java,v 1.2 2008/04/02 12:16:25 odf Exp $
  */
 public class Kelvin {
 	final static private List iTiles = new IndexList(0, 1, 2);
@@ -82,7 +82,7 @@ public class Kelvin {
 
 			final Stopwatch timer = new Stopwatch();
 			timer.start();
-			final TileKTransitive iter = new FrankKasperExtended(k, verbose);
+			final TileKTransitive iter = new FrankKasperExtended(k, verbose, true);
 
 			while (iter.hasNext()) {
 				final DSymbol out = ((DSymbol) iter.next()).dual();
