@@ -33,7 +33,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * given combinatorial tile.
  * 
  * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.8 2006/11/03 21:47:52 odf Exp $
+ * @version $Id: TileKTransitive.java,v 1.9 2008/04/02 11:09:59 odf Exp $
  */
 public class TileKTransitive extends IteratorAdapter {
     private final boolean verbose;
@@ -76,6 +76,9 @@ public class TileKTransitive extends IteratorAdapter {
                 while (extended == null || !extended.hasNext()) {
                     if (partLists.hasNext()) {
                         final List tiles = (List) partLists.next();
+                        if (!partsListOkay(tiles)) {
+                        	continue;
+                        }
                         final DynamicDSymbol tmp = new DynamicDSymbol(2);
                         for (final Iterator iter = tiles.iterator(); iter
                                 .hasNext();) {
@@ -109,6 +112,16 @@ public class TileKTransitive extends IteratorAdapter {
                 return new DSymbol(ds.canonical());
             }
         }
+    }
+
+    /**
+     * Override this to restrict the equivariant tile combinations used.
+     * 
+     * @param list a list of D-symbols encoding tiles.
+     * @return true if this combination should be used.
+     */
+    protected boolean partsListOkay(final List list) {
+        return true;
     }
 
     /**
