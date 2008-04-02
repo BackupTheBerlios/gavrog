@@ -81,6 +81,12 @@ module Gavrog
       end
     end
     
+    def subsymbols(idcs)
+      reps(idcs).map do |elm|
+        DSymbol.new(Subsymbol.new(self, idcs.map, int(elm)))
+      end
+    end
+    
     def faces
       idcs = indices.map
       idcs.delete 2
