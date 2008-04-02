@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.8 2007/05/30 23:19:52 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.9 2008/04/02 04:39:48 odf Exp $
  */
 public abstract class DelaneySymbol implements Comparable {
 
@@ -418,7 +418,7 @@ public abstract class DelaneySymbol implements Comparable {
             for (int k = 0; k < indices.size(); ++k) {
                 final int i = ((Integer) indices.get(k)).intValue();
                 final Object Di = op(i, D);
-                if (Di.equals(D)) {
+                if (D.equals(Di)) {
                     loopless = false;
                 } else if (or.get(D).equals(or.get(Di))) {
                     weaklyOriented = false;
