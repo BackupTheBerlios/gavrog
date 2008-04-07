@@ -39,7 +39,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasperExtended.java,v 1.7 2008/04/02 12:16:25 odf Exp $
+ * @version $Id: FrankKasperExtended.java,v 1.8 2008/04/07 06:33:57 odf Exp $
  */
 
 public class FrankKasperExtended extends TileKTransitive {
@@ -87,8 +87,8 @@ public class FrankKasperExtended extends TileKTransitive {
 		final List stabs = new ArrayList();
 		
 		for (Iterator iter = parts.iterator(); iter.hasNext();) {
-            final String type = orbifoldSymbol((DSymbol) iter.next());
-            if (!type.equals("1")) {
+            final String type = guessOrbifoldSymbol((DSymbol) iter.next());
+            if (interesting_stabilizers.contains(type)) {
             	stabs.add(type);
             }
 		}
@@ -96,57 +96,45 @@ public class FrankKasperExtended extends TileKTransitive {
 		final StringBuffer buf = new StringBuffer(100);
 		for (Iterator iter = stabs.iterator(); iter.hasNext();) {
 			final String type = (String) iter.next();
-			if (interesting_stabilizers.contains(type)) {
-				if (buf.length() > 0) {
-					buf.append('/');
-				}
-				buf.append(type);
+			if (buf.length() > 0) {
+				buf.append('/');
 			}
+			buf.append(type);
 		}
 		return allowed_stabilizer_sets.contains(buf.toString());
 	}
 	
-	private static String orbifoldSymbol(final DSymbol ds) {
-		final List cones = new ArrayList();
-		final List corners = new ArrayList();
-		for (int k = 0; k < 3; ++k) {
-			final int i = (k + 1) % 3;
-			final int j = (k + 2) % 3;
-			final List idcs = new IndexList(i, j);
-			for (Iterator reps = ds.orbitReps(idcs); reps.hasNext(); ) {
-				final Object D = reps.next();
-				final int v = ds.v(i, j, D);
-				if (v > 1) {
-					if (ds.orbitIsLoopless(idcs, D)) {
-						corners.add(String.valueOf(v));
-					} else {
-						cones.add(String.valueOf(v));
-					}
-				}
+	private static String guessOrbifoldSymbol(final DSymbol ds) {
+		switch (ds.size()) {
+		case 1:
+			return "*332";
+		case 2:
+			return "332";
+		case 3:
+			return "2*2";
+		case 4:
+			return "*33";
+		case 6:
+			if (ds.isOriented()) {
+				return "222";
+			} else if (ds.isLoopless()) {
+				return "2x";
+			} else {
+				return "*22";
 			}
+		case 8:
+			return "33";
+		case 12:
+			if (ds.isOriented()) {
+				return "22";
+			} else {
+				return "1*";
+			}
+		case 24:
+			return "1";
+		default:
+			return null;
 		}
-		Collections.sort(cones);
-		Collections.reverse(cones);
-		Collections.sort(corners);
-		Collections.reverse(corners);
-		
-        final StringBuffer buf = new StringBuffer(20);
-        if (cones.isEmpty() && corners.isEmpty()) {
-        	buf.append('1');
-        }
-        for (Iterator iter2 = cones.iterator(); iter2.hasNext();) {
-        	buf.append(iter2.next());
-        }
-        if (!ds.isLoopless()) {
-        	buf.append('*');
-        }
-        for (Iterator iter2 = corners.iterator(); iter2.hasNext();) {
-        	buf.append(iter2.next());
-        }
-        if (!ds.isWeaklyOriented()) {
-        	buf.append('x');
-        }
-        return buf.toString();
 	}
 	
 	protected Iterator defineBranching(final DelaneySymbol ds) {
@@ -327,8 +315,10 @@ public class FrankKasperExtended extends TileKTransitive {
 						+ " symbols, euclidicity could not yet be decided.");
 			}
 		}
-		System.out.println("# Options: " + (check ? "" : "no")
-				+ " euclidicity check, " + (verbose ? "verbose" : "quiet")
+		System.out.println("# Options: "
+				+ (check ? "" : "no") + " euclidicity check, "
+				+ (verbose ? "verbose" : "quiet") + ", "
+				+ (testParts ? "" : "no") + " tile stabilizer pre-testing"
 				+ ".");
 		System.out.println("# Running time was " + timer.format());
 	}
