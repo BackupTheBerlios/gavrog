@@ -17,9 +17,12 @@
 
 package org.gavrog.box.simple;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+
 /**
  * @author Olaf Delgado
- * @version $Id: Stopwatch.java,v 1.5 2008/03/27 06:46:16 odf Exp $
+ * @version $Id: Stopwatch.java,v 1.6 2008/04/07 06:32:31 odf Exp $
  */
 public class Stopwatch {
     private long accumulated = 0;
@@ -27,6 +30,7 @@ public class Stopwatch {
     private boolean isRunning;
     private static boolean java5 = System.getProperty("java.version")
 			.startsWith("1.5");
+    private static ThreadMXBean tb = ManagementFactory.getThreadMXBean();
     
     public void start() {
         if (this.isRunning) {
@@ -38,7 +42,12 @@ public class Stopwatch {
     
     private static long time() {
     	if (java5) {
-    		return System.nanoTime();
+    		final long t = tb.getCurrentThreadUserTime();
+    		if (t < 0) {
+    			return System.nanoTime();
+    		} else {
+    			return t;
+    		}
     	} else {
     		return System.currentTimeMillis();
     	}
