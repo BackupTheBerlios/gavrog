@@ -33,7 +33,7 @@ import org.gavrog.jane.numbers.Rational;
 
 /**
  * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.9 2008/04/02 04:39:48 odf Exp $
+ * @version $Id: DelaneySymbol.java,v 1.10 2008/04/07 00:56:41 odf Exp $
  */
 public abstract class DelaneySymbol implements Comparable {
 
@@ -981,6 +981,66 @@ public abstract class DelaneySymbol implements Comparable {
     	return true;
     }
 
+	/**
+	 * For two-dimensional symbols, computes the Conway orbifold symbol.
+	 * 
+	 * @return the orbifold symbol as a string.
+	 */
+	public String orbifoldSymbol2D() {
+        if (dim() != 2) {
+            throw new IllegalArgumentException("symbol must be 2-dimensional");
+        }
+        if (!isConnected()) {
+            throw new IllegalArgumentException("symbol must be connected");
+        }
+		final List cones = new ArrayList();
+		final List corners = new ArrayList();
+		final int x[] = new int[3];
+		final Iterator indices = indices();
+		x[0] = ((Integer) indices.next()).intValue();
+		x[1] = ((Integer) indices.next()).intValue();
+		x[2] = ((Integer) indices.next()).intValue();
+		
+		for (int k = 0; k < 3; ++k) {
+			final int i = (k + 1) % 3;
+			final int j = (k + 2) % 3;
+			final List idcs = new IndexList(x[i], x[j]);
+			for (Iterator reps = orbitReps(idcs); reps.hasNext(); ) {
+				final Object D = reps.next();
+				final int v = v(i, j, D);
+				if (v > 1) {
+					if (orbitIsLoopless(idcs, D)) {
+						cones.add(String.valueOf(v));
+					} else {
+						corners.add(String.valueOf(v));
+					}
+				}
+			}
+		}
+		Collections.sort(cones);
+		Collections.reverse(cones);
+		Collections.sort(corners);
+		Collections.reverse(corners);
+		
+        final StringBuffer buf = new StringBuffer(20);
+        if (cones.isEmpty() && corners.isEmpty()) {
+        	buf.append('1');
+        }
+        for (Iterator iter2 = cones.iterator(); iter2.hasNext();) {
+        	buf.append(iter2.next());
+        }
+        if (!isLoopless()) {
+        	buf.append('*');
+        }
+        for (Iterator iter2 = corners.iterator(); iter2.hasNext();) {
+        	buf.append(iter2.next());
+        }
+        if (!isWeaklyOriented()) {
+        	buf.append('x');
+        }
+        return buf.toString();
+	}
+	
     /**
      * Returns the oriented cover as a flat symbol such that the covering
      * morphism maps the first element of this symbol onto the element 1.

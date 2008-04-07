@@ -46,7 +46,7 @@ end
 
 covers = Covers.allCovers(DSymbol.new("1:1,1,1:3,3"))
 covers.each do |ds|
-  puts orbifold_symbol(ds)
+  puts "#{ds.orbifoldSymbol2D}\t#{ds.to_s}"
 end
 
 tmp = []
