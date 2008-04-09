@@ -3,4 +3,19 @@
 require File.join(File.dirname(__FILE__), 'gavrog.rb')
 import org.gavrog.joss.dsyms.derived.Signature
 
-run_filter(ARGV[0], ARGV[1], "print_signatures") { |ds| Signature.ofTiling(ds) }
+puts "ID    <f>    n  signature"
+puts ""
+
+n = 0
+DSFile.new(ARGV[0]).each do |ds|
+  n += 1
+  cover = Covers.pseudoToroidalCover3D(ds)
+  nt = nf = 0
+  cover.tiles.each do |t|
+    nt += 1
+    nf += t.cover.faces.count
+  end
+  favg = nf / Float(nt)
+  sig = Signature.ofTiling(cover)
+  puts "#{"%03d" % n}  #{"%5.2f" % favg} #{"%3d" % nt}  #{sig}"
+end
