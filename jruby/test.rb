@@ -3,10 +3,15 @@
 require File.join(File.dirname(__FILE__), 'gavrog.rb')
 
 
+tmp = []
 covers = Covers.allCovers(DSymbol.new("1:1,1,1:3,3"))
 covers.each do |ds|
-  puts "#{ds.orbifoldSymbol2D}\t#{ds.to_s}"
+  tmp << [ ds.orientedCover.orbifoldSymbol2D, ds.size, ds.orbifoldSymbol2D ]
 end
+tmp.sort! do |x, y|
+  (x[0] != y[0]) ? y[0] <=> x[0] : x[1] <=> y[1]
+end
+tmp.each { |x| puts x.inspect }
 
 tmp = []
 File.open(ARGV[0]) do |f|
