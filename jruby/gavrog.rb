@@ -58,12 +58,14 @@ module Gavrog
         in_count += 1
         out = yield(ds)
         case out
-        when DSymbol:
-          out_count += 1
-          file.puts out
         when true:
           out_count += 1
           file.puts ds
+        when false, nil:
+          # do nothing
+        else
+          out_count += 1
+          file.puts out
         end
       end
       
