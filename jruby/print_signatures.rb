@@ -17,5 +17,7 @@ DSFile.new(ARGV[0]).each do |ds|
   end
   favg = nf / Float(nt)
   sig = Signature.ofTiling(cover)
-  puts "#{"%03d" % n}  #{"%5.2f" % favg} #{"%3d" % nt}  #{sig}"
+  if favg < 14
+    puts "#{"%03d" % n}  #{"%5.2f" % favg} #{"%3d" % nt}  #{sig}"
+  end
 end
