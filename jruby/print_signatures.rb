@@ -4,7 +4,7 @@ require File.join(File.dirname(__FILE__), 'gavrog.rb')
 import org.gavrog.joss.dsyms.derived.Signature
 
 puts "ID    <f>    n  signature"
-puts ""
+puts
 
 n = 0
 DSFile.new(ARGV[0]).each do |ds|
@@ -21,3 +21,6 @@ DSFile.new(ARGV[0]).each do |ds|
     puts "#{"%03d" % n}  #{"%5.2f" % favg} #{"%3d" % nt}  #{sig}"
   end
 end
+
+puts
+puts "#{n} structures processed."
