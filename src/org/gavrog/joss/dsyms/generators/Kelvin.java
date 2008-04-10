@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Kelvin.java,v 1.2 2008/04/02 12:16:25 odf Exp $
+ * @version $Id: Kelvin.java,v 1.3 2008/04/10 02:10:58 odf Exp $
  */
 public class Kelvin {
 	final static private List iTiles = new IndexList(0, 1, 2);
@@ -55,11 +55,14 @@ public class Kelvin {
 	public static void main(final String[] args) {
 		try {
 			boolean verbose = false;
+			boolean testParts = true;
 			boolean check = true;
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
 				if (args[i].equals("-v")) {
 					verbose = !verbose;
+				} else if (args[i].equals("-p")) {
+					testParts = !testParts;
 				} else if (args[i].equals("-e")) {
 					check = !check;
 				} else {
@@ -81,37 +84,49 @@ public class Kelvin {
 			int countAmbiguous = 0;
 
 			final Stopwatch timer = new Stopwatch();
+			final Stopwatch eTestTimer = new Stopwatch();
 			timer.start();
-			final TileKTransitive iter = new FrankKasperExtended(k, verbose, true);
+			final TileKTransitive iter = new FrankKasperExtended(k, verbose,
+					testParts);
 
 			while (iter.hasNext()) {
 				final DSymbol out = ((DSymbol) iter.next()).dual();
 				if (allTileSizesBetween(out, 12, 16)) {
 					++countTileSizeOk;
 					if (check) {
-						final EuclidicityTester tester = new EuclidicityTester(
-								out);
-						if (tester.isAmbiguous()) {
+						eTestTimer.start();
+						EuclidicityTester tester = new EuclidicityTester(out);
+						final boolean bad = tester.isBad();
+						final boolean ambiguous = tester.isAmbiguous();
+						eTestTimer.stop();
+						if (ambiguous) {
 							output.write("#@ name euclidicity dubious\n");
 							++countAmbiguous;
 						}
-						if (!tester.isBad()) {
+						if (!bad) {
 							output.write(out + "\n");
 							++countGood;
 						}
 					} else {
 						output.write(out + "\n");
 					}
+					output.flush();
 				}
 			}
-			output.flush();
 			timer.stop();
 
-			output.write("\n# Program Kelvin with k = " + k + "\n");
-			output.write("# Options: " + (check ? "" : "no")
-					+ " euclidicity check, " + (verbose ? "verbose" : "quiet")
-					+ ".\n");
-			output.write("# Running time was " + timer.format() + "\n\n");
+			output.write("\n# Program Kelvin with k = " + k + ".\n");
+			output.write("# Options:\n");
+			output.write("#     verbose mode:                    ");
+			output.write((verbose ? "on" : "off") + "\n");
+			output.write("#     vertex symmetries pre-filtering: ");
+			output.write((testParts ? "on" : "off") + "\n");
+			output.write("#     euclidicity test:                ");
+			output.write((check ? "on" : "off")	+ "\n");
+			output.write("# Total execution time in user mode was "
+					+ timer.format() + ".\n");
+			output.write("# Time for euclidicity tests was "
+					+ eTestTimer.format() + ".\n\n");
 			output.write("# " + iter.statistics() + "\n");
 			output.write("# Of the latter, " + countTileSizeOk
 					+ " had between 12 and 16 faces in each tile.\n");
