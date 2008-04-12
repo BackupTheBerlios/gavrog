@@ -32,11 +32,32 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Kelvin.java,v 1.4 2008/04/12 07:44:19 odf Exp $
+ * @version $Id: Kelvin.java,v 1.5 2008/04/12 08:37:56 odf Exp $
  */
 public class Kelvin {
 	final static private List iTiles = new IndexList(0, 1, 2);
 	final static private List iFaces2d = new IndexList(0, 1);
+	
+	public static class Generator extends FrankKasperExtended {
+		final boolean countOnly;
+		int count = 0;
+		public Generator(
+				int k, boolean verbose, boolean testParts, boolean countOnly) {
+			super(k, verbose, testParts);
+			this.countOnly = countOnly;
+		}
+		
+		protected boolean partsListOkay(final List parts) {
+			final boolean ok = super.partsListOkay(parts);
+			if (ok) {
+				++this.count;
+			}
+			return ok && !this.countOnly;
+		}
+		public int getCount() {
+			return this.count;
+		}
+	}
 	
 	private static boolean allTileSizesBetween(final DSymbol ds, final int min,
 			final int max) {
@@ -92,10 +113,13 @@ public class Kelvin {
 			boolean verbose = false;
 			boolean testParts = true;
 			boolean check = true;
+			boolean countOnly = false;
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
 				if (args[i].equals("-v")) {
 					verbose = !verbose;
+				} else if (args[i].equals("-c")) {
+					countOnly = !countOnly;
 				} else if (args[i].equals("-p")) {
 					testParts = !testParts;
 				} else if (args[i].equals("-e")) {
@@ -121,8 +145,8 @@ public class Kelvin {
 			final Stopwatch timer = new Stopwatch();
 			final Stopwatch eTestTimer = new Stopwatch();
 			timer.start();
-			final TileKTransitive iter = new FrankKasperExtended(k, verbose,
-					testParts);
+			final Generator iter = new Generator(k, verbose, testParts,
+					countOnly);
 
 			while (iter.hasNext()) {
 				final DSymbol out = ((DSymbol) iter.next()).dual();
@@ -157,21 +181,35 @@ public class Kelvin {
 			output.write((verbose ? "on" : "off") + "\n");
 			output.write("#     vertex symmetries pre-filtering: ");
 			output.write((testParts ? "on" : "off") + "\n");
-			output.write("#     euclidicity test:                ");
-			output.write((check ? "on" : "off")	+ "\n");
+			output.write("#     first stage counting only:       ");
+			output.write((countOnly ? "on" : "off") + "\n");
+			if (countOnly) {
+				output.write("#     (remaining options were ignored)\n");
+			} else {
+				output.write("#     euclidicity test:                ");
+				output.write((check ? "on" : "off") + "\n");
+			}
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
-			output.write("# Time for euclidicity tests was "
-					+ eTestTimer.format() + ".\n\n");
-			output.write("# " + iter.statistics() + "\n");
-			output.write("# Of the latter, " + countTileSizeOk
-					+ " had between 12 and 16 faces in each tile.\n");
-			if (check) {
-				output.write("# Of those, " + countGood
-						+ " were found euclidean.\n");
-				if (countAmbiguous > 0) {
-					output.write("# For " + countAmbiguous
-						+ " symbols, euclidicity could not yet be decided.\n");
+			if (check && !countOnly) {
+				output.write("# Time for euclidicity tests was "
+						+ eTestTimer.format() + ".\n");
+			}
+			output.write("\n");
+			if (countOnly) {
+				output.write("# Counted " + iter.getCount()
+						+ " feasible spherical symbols.");
+			} else {
+				output.write("# " + iter.statistics() + "\n");
+				output.write("# Of the latter, " + countTileSizeOk
+						+ " had between 12 and 16 faces in each tile.\n");
+				if (check) {
+					output.write("# Of those, " + countGood
+							+ " were found euclidean.\n");
+					if (countAmbiguous > 0) {
+						output.write("# For " + countAmbiguous
+							+ " symbols, euclidicity remains undetermined.\n");
+					}
 				}
 			}
 			output.flush();
