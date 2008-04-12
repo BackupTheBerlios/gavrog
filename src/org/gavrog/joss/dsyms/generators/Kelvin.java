@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Kelvin.java,v 1.3 2008/04/10 02:10:58 odf Exp $
+ * @version $Id: Kelvin.java,v 1.4 2008/04/12 07:44:19 odf Exp $
  */
 public class Kelvin {
 	final static private List iTiles = new IndexList(0, 1, 2);
@@ -50,6 +50,41 @@ public class Kelvin {
 			}
 		}
 		return true;
+	}
+	
+	private static String info(final DSymbol ds) {
+		final StringBuffer buf = new StringBuffer(50);
+		final DSymbol cover = Covers.pseudoToroidalCover3D(ds);
+		final int count[] = new int[5];
+		int nt = 0;
+		int sum_nf = 0;
+		int sum_nfsqr = 0;
+		for (final Iterator reps = cover.orbitReps(iTiles); reps.hasNext();) {
+			final Object D = reps.next();
+			final DSymbol tile = new DSymbol(new Subsymbol(cover, iTiles, D));
+			final int k = tile.numberOfOrbits(iFaces2d);
+			if (k < 12) {
+				return "found tile with less than 12 faces";
+			}
+			if (k > 16) {
+				return "found tile with more than 16 faces";
+			}
+			++count[k-12];
+			sum_nf += k;
+			sum_nfsqr += k * k;
+			++nt;
+		}
+		buf.append("composition: [");
+		for (int i = 0; i < 5; ++i) {
+			buf.append(' ');
+			buf.append(count[i] > 0 ? String.valueOf(count[i]) : "-");
+		}
+		final double avg_nf = sum_nf / (double) nt;
+		buf.append(" ]   <f> = ");
+		buf.append(avg_nf);
+		buf.append("   stdev = ");
+		buf.append(Math.sqrt(sum_nfsqr / (double) nt - avg_nf * avg_nf));
+		return buf.toString();
 	}
 	
 	public static void main(final String[] args) {
@@ -104,6 +139,7 @@ public class Kelvin {
 							++countAmbiguous;
 						}
 						if (!bad) {
+							output.write("# " + info(out) + "\n");
 							output.write(out + "\n");
 							++countGood;
 						}
