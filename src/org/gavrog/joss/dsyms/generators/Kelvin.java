@@ -32,7 +32,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * @author Olaf Delgado
- * @version $Id: Kelvin.java,v 1.5 2008/04/12 08:37:56 odf Exp $
+ * @version $Id: Kelvin.java,v 1.6 2008/04/12 09:40:45 odf Exp $
  */
 public class Kelvin {
 	final static private List iTiles = new IndexList(0, 1, 2);
@@ -40,22 +40,34 @@ public class Kelvin {
 	
 	public static class Generator extends FrankKasperExtended {
 		final boolean countOnly;
+		final int start;
+		final int stop;
 		int count = 0;
-		public Generator(
-				int k, boolean verbose, boolean testParts, boolean countOnly) {
+		
+		public Generator(final int k,
+				         final boolean verbose,
+				         final boolean testParts,
+				         final boolean countOnly,
+				         final int start, final int stop) {
 			super(k, verbose, testParts);
 			this.countOnly = countOnly;
+			this.start = start;
+			this.stop = stop;
 		}
 		
 		protected boolean partsListOkay(final List parts) {
 			final boolean ok = super.partsListOkay(parts);
 			if (ok) {
-				++this.count;
+				++count;
 			}
-			return ok && !this.countOnly;
+			if (countOnly) {
+				return false;
+			}
+			return ok && (start <= count) && (stop <= 0 || stop > count);
 		}
+		
 		public int getCount() {
-			return this.count;
+			return count;
 		}
 	}
 	
@@ -114,6 +126,11 @@ public class Kelvin {
 			boolean testParts = true;
 			boolean check = true;
 			boolean countOnly = false;
+			int start = 0;
+			int stop = 0;
+			int section = 0;
+			int nrOfSections = 0;
+			
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
 				if (args[i].equals("-v")) {
@@ -124,6 +141,20 @@ public class Kelvin {
 					testParts = !testParts;
 				} else if (args[i].equals("-e")) {
 					check = !check;
+				} else if (args[i].equals("-s")) {
+					final String tmp[] = args[++i].split("/");
+					section = Integer.parseInt(tmp[0]);
+					nrOfSections = Integer.parseInt(tmp[1]);
+					if (nrOfSections < 1) {
+						String msg = "Number of sections must be positive.";
+						System.err.println(msg);
+						System.exit(1);
+					} else if (section < 1 || section > nrOfSections) {
+						String msg = "Section # must be between 1 and "
+								+ nrOfSections;
+						System.err.println(msg);
+						System.exit(1);
+					}
 				} else {
 					System.err.println("Unknown option '" + args[i] + "'");
 				}
@@ -144,9 +175,23 @@ public class Kelvin {
 
 			final Stopwatch timer = new Stopwatch();
 			final Stopwatch eTestTimer = new Stopwatch();
+			int n = 0;
 			timer.start();
+			
+			if (nrOfSections > 0) {
+				Generator tmp = new Generator(k, verbose, testParts, true, 0, 0);
+				while (tmp.hasNext()) {
+					tmp.next();
+				}
+				n = tmp.getCount();
+				final int m = nrOfSections;
+				final int s = section;
+				start = (int) Math.round(n / (double) m * (s-1)) + 1;
+				stop  = (int) Math.round(n / (double) m * s) + 1;
+			}
+			
 			final Generator iter = new Generator(k, verbose, testParts,
-					countOnly);
+					countOnly, start, stop);
 
 			while (iter.hasNext()) {
 				final DSymbol out = ((DSymbol) iter.next()).dual();
@@ -188,6 +233,11 @@ public class Kelvin {
 			} else {
 				output.write("#     euclidicity test:                ");
 				output.write((check ? "on" : "off") + "\n");
+				if (nrOfSections > 0) {
+					output.write("#    ran section " + section + " of "
+							+ nrOfSections + " (cases " + start + " to "
+							+ (stop - 1) + " of " + n + ").\n");
+				}
 			}
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
