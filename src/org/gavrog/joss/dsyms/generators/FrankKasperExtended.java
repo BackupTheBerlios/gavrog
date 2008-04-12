@@ -27,19 +27,17 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
-import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
-import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
  * Generates all tile-k-transitive tetrahedra tilings with edge degrees 4, 5 and
  * 6 only.
  * 
  * @author Olaf Delgado
- * @version $Id: FrankKasperExtended.java,v 1.8 2008/04/07 06:33:57 odf Exp $
+ * @version $Id: FrankKasperExtended.java,v 1.9 2008/04/12 08:07:14 odf Exp $
  */
 
 public class FrankKasperExtended extends TileKTransitive {
@@ -254,72 +252,5 @@ public class FrankKasperExtended extends TileKTransitive {
 				return out;
 			}
 		};
-	}
-
-	public static void main(final String[] args) {
-		boolean verbose = false;
-		boolean testParts = true;
-		boolean check = true;
-		int i = 0;
-		while (i < args.length && args[i].startsWith("-")) {
-			if (args[i].equals("-v")) {
-				verbose = !verbose;
-			} else if (args[i].equals("-p")) {
-				testParts = !testParts;
-			} else if (args[i].equals("-e")) {
-				check = !check;
-			} else {
-				System.err.println("Unknown option '" + args[i] + "'");
-			}
-			++i;
-		}
-
-		final int k = Integer.parseInt(args[i]);
-		int countGood = 0;
-		int countAmbiguous = 0;
-
-		final Stopwatch timer = new Stopwatch();
-		timer.start();
-		final TileKTransitive iter = new FrankKasperExtended(k, verbose,
-				testParts);
-
-		try {
-			while (iter.hasNext()) {
-				final DSymbol out = (DSymbol) iter.next();
-				if (check) {
-					final EuclidicityTester tester = new EuclidicityTester(out);
-					if (tester.isAmbiguous()) {
-						System.out.println("??? " + out);
-						++countAmbiguous;
-					} else if (tester.isGood()) {
-						System.out.println(out);
-						++countGood;
-					}
-				} else {
-					System.out.println(out);
-				}
-			}
-			System.out.flush();
-		} catch (Exception ex) {
-			ex.printStackTrace(System.err);
-		}
-		timer.stop();
-
-		System.out.println();
-		System.out.println("# " + iter.statistics());
-		if (check) {
-			System.out.println("# Of the latter, " + countGood
-					+ " were found euclidean.");
-			if (countAmbiguous > 0) {
-				System.out.println("# For " + countAmbiguous
-						+ " symbols, euclidicity could not yet be decided.");
-			}
-		}
-		System.out.println("# Options: "
-				+ (check ? "" : "no") + " euclidicity check, "
-				+ (verbose ? "verbose" : "quiet") + ", "
-				+ (testParts ? "" : "no") + " tile stabilizer pre-testing"
-				+ ".");
-		System.out.println("# Running time was " + timer.format());
 	}
 }
