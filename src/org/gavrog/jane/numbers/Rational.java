@@ -178,8 +178,13 @@ public abstract class Rational extends Real {
                 x_den = x_den.div(b);
             }
 
-            return makeFast((Whole) x_num.times(y_num),
-            		(Whole) x_den.times(y_den));
+            Whole num = (Whole) x_num.times(y_num);
+            Whole den = (Whole) x_den.times(y_den);
+        	if (den.isNegative()) {
+        		den = (Whole) den.negative();
+        		num = (Whole) num.negative();
+        	}
+            return makeFast(num, den);
     	} else if (other instanceof IArithmetic) {
             return ((IArithmetic) other).rtimes(this);
     	} else {
