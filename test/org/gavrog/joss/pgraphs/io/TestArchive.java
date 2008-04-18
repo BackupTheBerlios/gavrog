@@ -24,13 +24,11 @@ import java.io.StringReader;
 import junit.framework.TestCase;
 
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
-import org.gavrog.joss.pgraphs.io.Archive;
-import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.Archive.Entry;
 
 /**
  * @author Olaf Delgado
- * @version $Id: TestArchive.java,v 1.1 2007/05/12 01:32:27 odf Exp $
+ * @version $Id: TestArchive.java,v 1.2 2008/04/18 02:45:54 odf Exp $
  */
 public class TestArchive extends TestCase {
     final PeriodicGraph srs = NetParser.stringToNet(""
@@ -79,14 +77,10 @@ public class TestArchive extends TestCase {
     }
     
     public void testArchiveRead() {
-        final Package pkg = Archive.class.getPackage();
-        final String packagePath = pkg.getName().replaceAll("\\.", "/");
-        final String archivePath = packagePath + "/rcsr.arc";
-
         final Archive rcsr = new Archive("1.0");
-        final InputStream inStream = ClassLoader.getSystemResourceAsStream(archivePath);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-        rcsr.addAll(reader);
+        final String path = "org/gavrog/apps/systre/rcsr.arc";
+        final InputStream stream = ClassLoader.getSystemResourceAsStream(path);
+        rcsr.addAll(new BufferedReader(new InputStreamReader(stream)));
         
         final String key = srs.getSystreKey();
         final Entry entry = rcsr.get(key);
