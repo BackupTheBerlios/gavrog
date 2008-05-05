@@ -2,11 +2,27 @@ require File.join(File.dirname(__FILE__), 'gavrog.rb')
 
 import java.util.HashSet
 
+import org.gavrog.box.simple.Stopwatch
 import org.gavrog.jane.compounds.Matrix
 import org.gavrog.joss.geometry.Operator
 import org.gavrog.joss.geometry.SpaceGroup
 import org.gavrog.joss.geometry.SpaceGroupCatalogue
 import org.gavrog.joss.geometry.Vector
+
+class Operator
+  def to_s
+    d = dimension
+    t = []
+    (0..d).each do |i|
+      t << " " unless i == 0
+      (0..d).each do |j|
+        fmt = (i < d or j == d) ? "%2s" : "%4s"
+        t << fmt % get(i, j)
+      end
+    end
+    t.join " "
+  end
+end
 
 def log(str)
   # puts("# #{str}")
@@ -15,7 +31,7 @@ end
 def sorted_operators(group)
   ops = group.primitive_operators_by_type
   types = ops.key_set.sort_by do |x|
-    [ -x.order, x.orientation_preserving? ? 0 : 1, x.clockwise? ? 0 : 1 ]
+    [ -x.order, x.orientation_preserving? ? 1 : 0, x.clockwise? ? 0 : 1 ]
   end
   res = []
   types.each { |t| res += ops.get(t).map }
@@ -116,8 +132,10 @@ def generators(group)
   t0 = products(dim, gens, true).map
   t = t0.clone
 
-  Vector.from_matrix(group.primitive_cell).each do |v|
-    t << v if improves(v, t, ops)
+  [1, 2].each do |i| # it's important to do two passes here
+    Vector.from_matrix(group.primitive_cell).each do |v|
+      t << v if improves(v, t, ops)
+    end
   end
   
   log "removing redundant translations ..."
@@ -142,9 +160,43 @@ def generators(group)
     raise "Missing translation"
   end
 
-  gens + t - t0
+  gens + (t - t0).map { |v| Operator.new(v) }
 end
 
-gens = generators(SpaceGroup.new(3, ARGV[0]))
+dim = 3
+n = 0
+errors = []
+sizes = []
 
-puts gens.map(&:to_s)
+timer = Stopwatch.new
+timer.start
+
+SpaceGroupCatalogue.all_known_settings(dim).each do |name|
+  if SpaceGroupCatalogue.transform(dim, name).is_one
+    begin
+      gens = generators(SpaceGroup.new(dim, name))
+      sizes << gens.length
+      puts name.sub(/:.*/, "")
+      gens.each do |g|
+        puts "    " + g.to_s
+      end
+    rescue
+      errors << name
+    end
+    puts
+    n += 1
+  end
+end
+
+timer.stop
+
+min = sizes.min
+max = sizes.max
+avg = sizes.inject { |s,x| s + x } / Float(sizes.length)
+
+puts "# Printed #{n - errors.length} generator lists."
+if errors.length > 0
+  puts "# Could not print #{errors.join ", "} because of errors."
+end
+puts "# List lengths: min. #{min}, max. #{max}, avg. #{"%4.2f" % avg}."
+puts "# CPU time: #{timer.format}."
