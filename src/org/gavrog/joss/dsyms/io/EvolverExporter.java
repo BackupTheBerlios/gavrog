@@ -49,7 +49,7 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.3 2008/05/14 07:05:13 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.4 2008/05/14 07:42:39 odf Exp $
  */
 public class EvolverExporter {
 	final private static NumberFormat fmt = new DecimalFormat("##0.000000000");
@@ -239,11 +239,18 @@ public class EvolverExporter {
 	    // --- write the faces
 	    outf.write("faces\n");
 	    final DSymbol cover = this.til.getCover();
+	    final Map signs = cover.partialOrientation();
 	    final Map ch2faceNr = new HashMap();
 	    final Iterator iterF = cover.orbitReps(new IndexList(0, 1, 3));
 	    i = 0;
 	    while (iterF.hasNext()) {
-	    	final Object D0 = iterF.next();
+	    	final Object entry = iterF.next();
+	    	final Object D0;
+	    	if (((Integer) signs.get(entry)).intValue() > 0) {
+	    		D0 = entry;
+	    	} else {
+	    		D0 = cover.op(0, entry);
+	    	}
 	    	outf.write(++i + " ");
 	    	Object D = D0;
 	    	while (true) {
