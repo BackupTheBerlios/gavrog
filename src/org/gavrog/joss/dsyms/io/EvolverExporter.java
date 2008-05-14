@@ -21,6 +21,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,12 +31,16 @@ import java.util.Map;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.compounds.LinearAlgebra;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.IArithmetic;
+import org.gavrog.jane.numbers.Real;
+import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.Lattices;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
@@ -44,14 +50,18 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.1 2008/05/14 02:50:32 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.2 2008/05/14 06:27:27 odf Exp $
  */
 public class EvolverExporter {
+	final private static NumberFormat fmt = new DecimalFormat("##0.000");
+	
 	final private Tiling til;
 	final private Tiling.Skeleton net;
 	final private Embedder embedder;
 	final private CoordinateChange embedderToWorld;
 	final private Map pos;
+	final private double cell[][];
+	final private CoordinateChange worldToCell;
 	
 	public EvolverExporter(final Tiling til) {
 		this.til = til;
@@ -68,18 +78,48 @@ public class EvolverExporter {
         this.embedder.setRelaxPositions(true);
         this.embedder.go(100000);
         this.embedder.normalize();
+        final Matrix gram = this.embedder.getGramMatrix();
         this.embedderToWorld = new CoordinateChange(LinearAlgebra
-				.orthonormalRowBasis(this.embedder.getGramMatrix()));
+				.orthonormalRowBasis(gram));
         this.pos = this.til.cornerPositions(this.embedder.getPositions());
         
         // --- compute an appropriate unit cell
 		final int dim = til.getSymbol().dim();
-		final double basis[][] = new double[dim][];
+		final Matrix I = Matrix.one(dim);
+		final Vector basis[] = new Vector[dim];
 		for (int i = 0; i < dim; ++i) {
-			final Vector v = (Vector) Vector.unit(dim, i).times(
-					this.embedderToWorld);
-			basis[i] = v.getCoordinates().asDoubleArray()[0];
+			basis[i] = (Vector) Vector.unit(dim, i).times(this.embedderToWorld);
 		}
+		final Vector tvecs[] = Lattices.reducedLatticeBasis(basis, I);
+		this.cell = new double[dim][dim];
+		for (int i = 0; i < dim; ++i) {
+			for (int j = 0; j < dim; ++j) {
+				cell[i][j] = ((Real) tvecs[i].get(j)).doubleValue();
+			}
+		}
+		this.worldToCell = new CoordinateChange(Vector.toMatrix(tvecs));
+	}
+	
+	private double[] vertexShift(final double p[]) {
+		final int dim = p.length;
+		final CoordinateChange C = this.worldToCell;
+		final Point v = (Point) new Point(p).times(C);
+		final Whole a[] = new Whole[dim];
+		for (int i = 0; i < dim; ++i) {
+			final Real x = (Real) v.get(i);
+			a[i] = (Whole) x.plus(0.001).mod(Whole.ONE).minus(x).round();
+		}
+		final Vector w = (Vector) new Vector(a).times(C.inverse());
+		return w.getCoordinates().asDoubleArray()[0];
+	}
+	
+	private double length(final double v[]) {
+		return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	}
+	
+	private double angle(final double v[], final double w[]) {
+		return Math.acos((v[0] * w[0] + v[1] * w[1] + v[2] * w[2]) / length(v)
+				/ length(w)) / Math.PI * 180.0;
 	}
 	
 	private double volume(final double c[][]) {
@@ -94,40 +134,33 @@ public class EvolverExporter {
         return p.getCoordinates().asDoubleArray()[0];
     }
     
-	//TODO need some reduced lattice here instead
-    private double[][] getPrimitiveCellVectors() {
-		final int dim = til.getSymbol().dim();
-		final double result[][] = new double[dim][];
-		for (int i = 0; i < dim; ++i) {
-			final Vector v = (Vector) Vector.unit(dim, i).times(
-					this.embedderToWorld);
-			result[i] = v.getCoordinates().asDoubleArray()[0];
-		}
-		return result;
-	}
-
 	public void writeTo(final Writer writer) throws IOException {
 		final BufferedWriter outf = new BufferedWriter(writer);
-		final double cell[][] = getPrimitiveCellVectors();
 	    final List tiles = this.til.getTiles();
-	    final double vol = volume(cell) / tiles.size();
+	    final double vol = volume(this.cell) / tiles.size();
 		final double scale;
 		if (vol > 0) {
-			scale = Math.pow(vol, -1.0/3.0);
+			scale = Math.pow(vol, -1.0 / 3.0);
 		} else {
-			scale = Math.pow(-vol, -1.0/3.0);
+			scale = Math.pow(-vol, -1.0 / 3.0);
 		}
+		System.err.println(fmt.format(length(cell[0])) + " "
+				+ fmt.format(length(cell[1])) + " "
+				+ fmt.format(length(cell[2])) + " "
+				+ fmt.format(angle(cell[1], cell[2])) + " "
+				+ fmt.format(angle(cell[0], cell[2])) + " "
+				+ fmt.format(angle(cell[0], cell[1])));
 		
 		// --- write the initial unit cell vectors
-	    outf.write("parameter p1x = " + cell[0][0] * scale + '\n');
-	    outf.write("parameter p1y = " + cell[0][1] * scale + '\n');
-	    outf.write("parameter p1z = " + cell[0][2] * scale + '\n');
-	    outf.write("parameter p2x = " + cell[1][0] * scale + '\n');
-	    outf.write("parameter p2y = " + cell[1][1] * scale + '\n');
-	    outf.write("parameter p2z = " + cell[1][2] * scale + '\n');
-	    outf.write("parameter p3x = " + cell[2][0] * scale + '\n');
-	    outf.write("parameter p3y = " + cell[2][1] * scale + '\n');
-	    outf.write("parameter p3z = " + cell[2][2] * scale + '\n');
+	    outf.write("parameter p1x = " + fmt.format(cell[0][0] * scale) + '\n');
+		outf.write("parameter p1y = " + fmt.format(cell[0][1] * scale) + '\n');
+		outf.write("parameter p1z = " + fmt.format(cell[0][2] * scale) + '\n');
+		outf.write("parameter p2x = " + fmt.format(cell[1][0] * scale) + '\n');
+		outf.write("parameter p2y = " + fmt.format(cell[1][1] * scale) + '\n');
+		outf.write("parameter p2z = " + fmt.format(cell[1][2] * scale) + '\n');
+		outf.write("parameter p3x = " + fmt.format(cell[2][0] * scale) + '\n');
+		outf.write("parameter p3y = " + fmt.format(cell[2][1] * scale) + '\n');
+		outf.write("parameter p3z = " + fmt.format(cell[2][2] * scale) + '\n');
 	    outf.write('\n');
 	    outf.write("periods\n");
 	    outf.write("p1x p1y p1z\n");
@@ -143,6 +176,7 @@ public class EvolverExporter {
 	    final List nodes = new ArrayList();
 	    nodes.add(null);
 	    Iterators.addAll(nodes, this.net.nodes());
+	    final double[][] shifts = new double[nodes.size()][];
 	    final Map nodeNumbers = new HashMap();
 	    int i = 0;
 	    for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
@@ -153,9 +187,12 @@ public class EvolverExporter {
 	    	nodeNumbers.put(v, new Integer(++i));
 	    	final Object D = this.net.chamberAtNode(v);
 	    	final double p[] = cornerPosition(0, D);
+	    	final double s[] = vertexShift(p);
+	    	shifts[i] = s;
+	    	
 	    	outf.write(i + "  ");
 	    	for (int k = 0; k < 3; ++k) {
-	    		outf.write(" " + p[k] * scale);
+	    		outf.write(" " + fmt.format((p[k] + s[k]) * scale));
 	    	}
 	    	outf.write('\n');
 	    }
@@ -163,6 +200,8 @@ public class EvolverExporter {
 	    
 	    // --- write the edges
 	    outf.write("edges\n");
+	    final CoordinateChange C = (CoordinateChange) this.embedderToWorld
+				.inverse();
 	    final List edges = new ArrayList();
 	    edges.add(null);
 	    Iterators.addAll(edges, this.net.edges());
@@ -177,9 +216,12 @@ public class EvolverExporter {
 	    	final int v = ((Integer) nodeNumbers.get(e.source())).intValue();
 	    	final int w = ((Integer) nodeNumbers.get(e.target())).intValue();
 	    	outf.write(i + "  " + v + ' ' + w + ' ');
-	    	final Vector s = this.net.getShift(e);
+	    	final Vector se = this.net.getShift(e);
+	    	final Vector sv = new Vector(shifts[v]);
+	    	final Vector sw = new Vector(shifts[w]);
+	    	final Vector s = (Vector) se.plus(sv.minus(sw).times(C));
 	    	for (int k = 0; k < 3; ++k) {
-	    		final IArithmetic x = s.get(k);
+	    		final Whole x = (Whole) s.get(k).round();
 	    		if (x.isZero()) {
 	    			outf.write(" *");
 	    		} else if (x.isOne()) {
@@ -187,7 +229,8 @@ public class EvolverExporter {
 	    		} else if (x.negative().isOne()) {
 	    			outf.write(" -");
 	    		} else {
-	    			throw new RuntimeException("Illegal shift vector " + s);
+	    			//throw new RuntimeException("Illegal shift vector " + s);
+	    			outf.write(" " + x);
 	    		}
 	    	}
 	    	outf.write('\n');
@@ -254,14 +297,14 @@ public class EvolverExporter {
 		} else {
 			base = name;
 		}
+		final NumberFormat filename = new DecimalFormat(base + "'-'000'.'fe");
 		int i = 0;
 		for (Iterator it = new InputIterator(name); it.hasNext();) {
 			final DSymbol ds = (DSymbol) it.next();
 			final Tiling til = new Tiling(ds);
 			
 			final EvolverExporter exporter = new EvolverExporter(til);
-			final String outname = String.format("%s-%03d.fe", new Object[] {
-					base, new Integer(++i) });
+			final String outname = filename.format(++i);
 			try {
 				final FileWriter out = new FileWriter(outname);
 				exporter.writeTo(out);
