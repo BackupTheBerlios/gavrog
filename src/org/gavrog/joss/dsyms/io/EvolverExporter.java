@@ -32,7 +32,6 @@ import java.util.Map;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
-import org.gavrog.jane.numbers.IArithmetic;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSPair;
@@ -50,10 +49,10 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.2 2008/05/14 06:27:27 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.3 2008/05/14 07:05:13 odf Exp $
  */
 public class EvolverExporter {
-	final private static NumberFormat fmt = new DecimalFormat("##0.000");
+	final private static NumberFormat fmt = new DecimalFormat("##0.000000000");
 	
 	final private Tiling til;
 	final private Tiling.Skeleton net;
@@ -200,8 +199,8 @@ public class EvolverExporter {
 	    
 	    // --- write the edges
 	    outf.write("edges\n");
-	    final CoordinateChange C = (CoordinateChange) this.embedderToWorld
-				.inverse();
+	    final CoordinateChange e2w = this.embedderToWorld;
+	    final CoordinateChange w2c = (CoordinateChange) this.worldToCell;
 	    final List edges = new ArrayList();
 	    edges.add(null);
 	    Iterators.addAll(edges, this.net.edges());
@@ -216,10 +215,10 @@ public class EvolverExporter {
 	    	final int v = ((Integer) nodeNumbers.get(e.source())).intValue();
 	    	final int w = ((Integer) nodeNumbers.get(e.target())).intValue();
 	    	outf.write(i + "  " + v + ' ' + w + ' ');
-	    	final Vector se = this.net.getShift(e);
+	    	final Vector se = (Vector) this.net.getShift(e).times(e2w);
 	    	final Vector sv = new Vector(shifts[v]);
 	    	final Vector sw = new Vector(shifts[w]);
-	    	final Vector s = (Vector) se.plus(sv.minus(sw).times(C));
+	    	final Vector s = (Vector) se.plus(sv).minus(sw).times(w2c);
 	    	for (int k = 0; k < 3; ++k) {
 	    		final Whole x = (Whole) s.get(k).round();
 	    		if (x.isZero()) {
@@ -229,8 +228,8 @@ public class EvolverExporter {
 	    		} else if (x.negative().isOne()) {
 	    			outf.write(" -");
 	    		} else {
-	    			//throw new RuntimeException("Illegal shift vector " + s);
-	    			outf.write(" " + x);
+	    			throw new RuntimeException("Illegal shift vector " + s);
+	    			//outf.write(" " + x);
 	    		}
 	    	}
 	    	outf.write('\n');
