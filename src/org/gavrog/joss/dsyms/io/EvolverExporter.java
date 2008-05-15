@@ -49,7 +49,7 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.5 2008/05/15 02:54:18 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.6 2008/05/15 05:03:53 odf Exp $
  */
 public class EvolverExporter {
 	final private static NumberFormat fmt = new DecimalFormat("##0.000000000");
@@ -112,19 +112,22 @@ public class EvolverExporter {
 		return w.getCoordinates().asDoubleArray()[0];
 	}
 	
-	private double length(final double v[]) {
-		return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-	}
-	
-	private double angle(final double v[], final double w[]) {
-		return Math.acos((v[0] * w[0] + v[1] * w[1] + v[2] * w[2]) / length(v)
-				/ length(w)) / Math.PI * 180.0;
-	}
-	
 	private double volume(final double c[][]) {
 		return    c[0][0] * c[1][1] * c[2][2] - c[0][2] * c[1][1] * c[2][0]
 				+ c[0][1] * c[1][2] * c[2][0] - c[0][0] * c[1][2] * c[2][1]
 				+ c[0][2] * c[1][0] * c[2][1] - c[0][1] * c[1][0] * c[2][2];
+	}
+	
+	private double chamberVolume(final Object D) {
+		final double c[] = cornerPosition(3, D);
+		final double v[][] = new double[3][3];
+		for (int i = 0; i < 3; ++i) {
+			final double p[] = cornerPosition(i, D);
+			for (int j = 0; j < 3; ++j) {
+				v[i][j] = p[j] - c[j];
+			}
+		}
+		return volume(v);
 	}
 	
     public double[] cornerPosition(final int i, final Object D) {
@@ -138,21 +141,7 @@ public class EvolverExporter {
 	    final List tiles = this.til.getTiles();
 	    final double vol = volume(this.cell);
 	    final double tvol = 1.0 / tiles.size();
-		final double scale;
-		final boolean mirrored;
-		if (vol > 0) {
-			scale = Math.pow(vol, -1.0 / 3.0);
-			mirrored = false;
-		} else {
-			scale = Math.pow(-vol, -1.0 / 3.0);
-			mirrored = true;
-		}
-		System.err.println(fmt.format(length(cell[0])) + " "
-				+ fmt.format(length(cell[1])) + " "
-				+ fmt.format(length(cell[2])) + " "
-				+ fmt.format(angle(cell[1], cell[2])) + " "
-				+ fmt.format(angle(cell[0], cell[2])) + " "
-				+ fmt.format(angle(cell[0], cell[1])));
+		final double scale = Math.pow(Math.abs(vol), -1.0 / 3.0);
 		
 		// --- write the initial unit cell vectors
 	    outf.write("parameter p1x = " + fmt.format(cell[0][0] * scale) + '\n');
@@ -232,7 +221,6 @@ public class EvolverExporter {
 	    			outf.write(" -");
 	    		} else {
 	    			throw new RuntimeException("Illegal shift vector " + s);
-	    			//outf.write(" " + x);
 	    		}
 	    	}
 	    	outf.write('\n');
@@ -242,17 +230,18 @@ public class EvolverExporter {
 	    // --- write the faces
 	    outf.write("faces\n");
 	    final DSymbol cover = this.til.getCover();
-	    final Map signs = cover.partialOrientation();
 	    final Map ch2faceNr = new HashMap();
 	    final Iterator iterF = cover.orbitReps(new IndexList(0, 1, 3));
 	    i = 0;
 	    while (iterF.hasNext()) {
 	    	final Object entry = iterF.next();
 	    	final Object D0;
-	    	if (((Integer) signs.get(entry)).intValue() > 0) {
+	    	if (chamberVolume(entry) > 1e-3) {
 	    		D0 = entry;
-	    	} else {
+	    	} else if (chamberVolume(entry) < -1e-3){
 	    		D0 = cover.op(0, entry);
+	    	} else {
+	    		throw new RuntimeException("degenerate chamber found");
 	    	}
 	    	outf.write(++i + " ");
 	    	Object D = D0;
