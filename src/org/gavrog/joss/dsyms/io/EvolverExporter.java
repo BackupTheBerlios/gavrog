@@ -49,7 +49,7 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.4 2008/05/14 07:42:39 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.5 2008/05/15 02:54:18 odf Exp $
  */
 public class EvolverExporter {
 	final private static NumberFormat fmt = new DecimalFormat("##0.000000000");
@@ -136,12 +136,16 @@ public class EvolverExporter {
 	public void writeTo(final Writer writer) throws IOException {
 		final BufferedWriter outf = new BufferedWriter(writer);
 	    final List tiles = this.til.getTiles();
-	    final double vol = volume(this.cell) / tiles.size();
+	    final double vol = volume(this.cell);
+	    final double tvol = 1.0 / tiles.size();
 		final double scale;
+		final boolean mirrored;
 		if (vol > 0) {
 			scale = Math.pow(vol, -1.0 / 3.0);
+			mirrored = false;
 		} else {
 			scale = Math.pow(-vol, -1.0 / 3.0);
+			mirrored = true;
 		}
 		System.err.println(fmt.format(length(cell[0])) + " "
 				+ fmt.format(length(cell[1])) + " "
@@ -161,14 +165,13 @@ public class EvolverExporter {
 		outf.write("parameter p3y = " + fmt.format(cell[2][1] * scale) + '\n');
 		outf.write("parameter p3z = " + fmt.format(cell[2][2] * scale) + '\n');
 	    outf.write('\n');
+	    outf.write("torus_filled\n");
+	    outf.write('\n');
 	    outf.write("periods\n");
 	    outf.write("p1x p1y p1z\n");
 	    outf.write("p2x p2y p2z\n");
 	    outf.write("p3x p3y p3z\n");
 	    outf.write('\n');
-	    
-	    // --- include an optional header file
-	    outf.write("#include \"foam.eh\"\n\n");
 	    
 	    // --- write the vertices
 	    outf.write("vertices\n");
@@ -282,14 +285,13 @@ public class EvolverExporter {
 	    	final Tiling.Tile t = (Tiling.Tile) iter.next();
 	    	outf.write(++i + " ");
 	    	for (int k = 0; k < t.size(); ++k) {
-	    		outf.write(" " + ch2faceNr.get(t.facet(k).getChamber()));
+	    		final Object D = t.facet(k).getChamber();
+	    		final int n = ((Integer) ch2faceNr.get(D)).intValue();
+	    		outf.write(" " + n);
 	    	}
-	    	outf.write("   volume 1.0\n");
+	    	outf.write("   volume " + fmt.format(tvol) + "\n");
 	    }
 	    outf.write('\n');
-	    
-	    // --- include an optional tail file
-	    outf.write("#include \"foam.et\"\n");
 	    
 	    // --- we're using a buffered writer, so flushing is crucial
 	    outf.flush();
