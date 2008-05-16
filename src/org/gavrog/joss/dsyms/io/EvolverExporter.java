@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.gavrog.box.collections.Iterators;
@@ -49,9 +50,12 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.6 2008/05/15 05:03:53 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.7 2008/05/16 05:06:49 odf Exp $
  */
 public class EvolverExporter {
+    static {
+        Locale.setDefault(Locale.US);
+    }
 	final private static NumberFormat fmt = new DecimalFormat("##0.000000000");
 	
 	final private Tiling til;
@@ -61,6 +65,11 @@ public class EvolverExporter {
 	final private Map pos;
 	final private double cell[][];
 	final private CoordinateChange worldToCell;
+	
+	private String head = null;
+	private String tail = null;
+	private boolean skipPeriods = false;
+	private boolean unitVolumes = false;
 	
 	public EvolverExporter(final Tiling til) {
 		this.til = til;
@@ -139,9 +148,14 @@ public class EvolverExporter {
 	public void writeTo(final Writer writer) throws IOException {
 		final BufferedWriter outf = new BufferedWriter(writer);
 	    final List tiles = this.til.getTiles();
-	    final double vol = volume(this.cell);
-	    final double tvol = 1.0 / tiles.size();
-		final double scale = Math.pow(Math.abs(vol), -1.0 / 3.0);
+	    final double vol = volume(this.cell) / tiles.size();
+	    final double tvol;
+	    if (getUnitVolumes()) {
+	    	tvol = 1.0;
+	    } else {
+	    	tvol = 1.0 / tiles.size();
+	    }
+		final double scale = Math.pow(Math.abs(vol / tvol), -1.0 / 3.0);
 		
 		// --- write the initial unit cell vectors
 	    outf.write("parameter p1x = " + fmt.format(cell[0][0] * scale) + '\n');
@@ -154,13 +168,23 @@ public class EvolverExporter {
 		outf.write("parameter p3y = " + fmt.format(cell[2][1] * scale) + '\n');
 		outf.write("parameter p3z = " + fmt.format(cell[2][2] * scale) + '\n');
 	    outf.write('\n');
-	    outf.write("torus_filled\n");
-	    outf.write('\n');
-	    outf.write("periods\n");
-	    outf.write("p1x p1y p1z\n");
-	    outf.write("p2x p2y p2z\n");
-	    outf.write("p3x p3y p3z\n");
-	    outf.write('\n');
+	    
+	    // --- optionally write a header include instruction
+	    if (head != null) {
+	    	outf.write("#include \"" + head + "\"\n");
+		    outf.write('\n');
+	    }
+	    
+	    // --- optionally set the periods using the parameters written above
+	    if (!getSkipPeriods()) {
+		    outf.write("torus_filled\n");
+		    outf.write('\n');
+		    outf.write("periods\n");
+		    outf.write("p1x p1y p1z\n");
+		    outf.write("p2x p2y p2z\n");
+		    outf.write("p3x p3y p3z\n");
+		    outf.write('\n');
+	    }
 	    
 	    // --- write the vertices
 	    outf.write("vertices\n");
@@ -282,26 +306,98 @@ public class EvolverExporter {
 	    }
 	    outf.write('\n');
 	    
+	    // --- optionally write a tail include instruction
+	    if (tail != null) {
+	    	outf.write("#include \"" + tail + "\"\n");
+		    outf.write('\n');
+	    }
+	    
 	    // --- we're using a buffered writer, so flushing is crucial
 	    outf.flush();
 	}
 	
-	public static void main(final String argv[]) {
-		final String name = argv[0];
+	public String getHead() {
+		return this.head;
+	}
+
+	public void setHead(String head) {
+		this.head = head;
+	}
+
+	public String getTail() {
+		return this.tail;
+	}
+
+	public void setTail(String tail) {
+		this.tail = tail;
+	}
+
+	public boolean getSkipPeriods() {
+		return this.skipPeriods;
+	}
+
+	public void setSkipPeriods(boolean skipPeriods) {
+		this.skipPeriods = skipPeriods;
+	}
+
+	public void toggleSkipPeriods() {
+		this.skipPeriods = !this.skipPeriods;
+	}
+
+	public boolean getUnitVolumes() {
+		return this.unitVolumes;
+	}
+
+	public void setUnitVolumes(boolean unitVolumes) {
+		this.unitVolumes = unitVolumes;
+	}
+
+	public void toggleUnitVolumes() {
+		this.unitVolumes = !this.unitVolumes;
+	}
+
+	public static void main(final String args[]) {
+		String head = null;
+		String tail = null;
+		boolean skipPeriods = false;
+		boolean unitVolumes = false;
+		
+		int i = 0;
+		while (i < args.length && args[i].startsWith("-")) {
+			if (args[i].equals("-p")) {
+				skipPeriods = !skipPeriods;
+			} else if (args[i].equals("-u")) {
+				unitVolumes = !unitVolumes;
+			} else if (args[i].equals("-h")) {
+				head = args[++i];
+			} else if (args[i].equals("-t")) {
+				tail = args[++i];
+			} else {
+				System.err.println("Unknown option '" + args[i] + "'");
+			}
+			++i;
+		}
+		
+		final String name = args[i];
 		final String base;
 		if (name.endsWith(".ds")) {
 			base = name.substring(0, name.length() - 3);
 		} else {
 			base = name;
 		}
-		final NumberFormat filename = new DecimalFormat(base + "'-'000'.'fe");
-		int i = 0;
+		
+		final NumberFormat suffix = new DecimalFormat("-000.fe");
+		int k = 0;
 		for (Iterator it = new InputIterator(name); it.hasNext();) {
 			final DSymbol ds = (DSymbol) it.next();
 			final Tiling til = new Tiling(ds);
 			
 			final EvolverExporter exporter = new EvolverExporter(til);
-			final String outname = filename.format(++i);
+			exporter.setHead(head);
+			exporter.setTail(tail);
+			exporter.setSkipPeriods(skipPeriods);
+			exporter.setUnitVolumes(unitVolumes);
+			final String outname = base + suffix.format(++k);
 			try {
 				final FileWriter out = new FileWriter(outname);
 				exporter.writeTo(out);
