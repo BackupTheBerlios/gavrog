@@ -31,7 +31,7 @@ import org.gavrog.jane.numbers.Real;
  * Various methods related to lattices and lattice bases.
  * 
  * @author Olaf Delgado
- * @version $Id: Lattices.java,v 1.6 2006/07/05 20:00:37 odf Exp $
+ * @version $Id: Lattices.java,v 1.7 2008/05/20 07:59:41 odf Exp $
  */
 public class Lattices {
 
@@ -198,7 +198,7 @@ public class Lattices {
 	                w[i] = (Vector) w[i].negative();
 	            }
 	            A.setRow(i, w[i].getCoordinates());
-	            if (A.rank() > i) {
+	            if (fuzzy_rank(A, 1e-8) > i) {
 	                break;
 	            }
 	            ++k;
@@ -207,6 +207,31 @@ public class Lattices {
 	    return w;
 	}
 
+    /**
+     * Computes the rank of this matrix.
+     * @return the rank.
+     */
+    private static int fuzzy_rank(final Matrix M, final double eps) {
+        final Matrix A = M.mutableClone();
+        Matrix.triangulate(A, null, false, false);
+        int row = 0;
+        for (int col = 0; col < A.numberOfColumns(); ++col) {
+            if (row < A.numberOfRows()) {
+            	final IArithmetic x = A.get(row, col);
+            	final boolean zero;
+            	if (x.isExact()) {
+            		zero = x.isZero();
+            	} else {
+            		zero = ((Real) x.abs()).doubleValue() < Math.abs(eps);
+            	}
+            	if (!zero) {
+            		++row;
+            	}
+            }
+        }
+        return row;
+    }
+    
 	/**
 	 * Returns the vector(s) by which a point has to be shifted in order to
 	 * obtain a translationally equivalent point within the Dirichlet cell
