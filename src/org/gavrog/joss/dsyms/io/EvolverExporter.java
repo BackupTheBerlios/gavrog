@@ -50,7 +50,7 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.7 2008/05/16 05:06:49 odf Exp $
+ * @version $Id: EvolverExporter.java,v 1.8 2008/05/21 07:57:24 odf Exp $
  */
 public class EvolverExporter {
     static {
@@ -84,7 +84,7 @@ public class EvolverExporter {
             this.embedder.go(500);
         }
         this.embedder.setRelaxPositions(true);
-        this.embedder.go(100000);
+        this.embedder.go(10000);
         this.embedder.normalize();
         final Matrix gram = this.embedder.getGramMatrix();
         this.embedderToWorld = new CoordinateChange(LinearAlgebra
@@ -244,7 +244,8 @@ public class EvolverExporter {
 	    		} else if (x.negative().isOne()) {
 	    			outf.write(" -");
 	    		} else {
-	    			throw new RuntimeException("Illegal shift vector " + s);
+	    			outf.write(" " + x);
+//	    			throw new RuntimeException("Illegal shift vector " + s);
 	    		}
 	    	}
 	    	outf.write('\n');
