@@ -58,10 +58,10 @@ module Gavrog
         in_count += 1
         out = yield(ds)
         case out
-        when true:
+        when true then
           out_count += 1
           file.puts ds
-        when false, nil:
+        when false, nil then
           # do nothing
         else
           out_count += 1
