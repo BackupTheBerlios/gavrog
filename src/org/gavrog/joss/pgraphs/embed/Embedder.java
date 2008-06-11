@@ -45,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * This class implements an embedding algorithm for periodic graphs.
  * 
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.7 2007/05/23 05:23:14 odf Exp $
+ * @version $Id: Embedder.java,v 1.8 2008/06/11 07:27:27 odf Exp $
  */
 public class Embedder {
 	final private static int EDGE = 1;
@@ -126,6 +126,7 @@ public class Embedder {
 	// --- represent the current state of the algorithm
 	double p[];
 	double volumeWeight;
+	double penaltyFactor;
 
 	private boolean _positionsRelaxed = false;
 	private boolean _cellRelaxed = false;
@@ -599,8 +600,8 @@ public class Embedder {
 				1e-12)) - 1;
 
 		// --- compute and return the total energy
-		return this.volumeWeight * volumePenalty + edgeVariance + edgePenalty
-				+ anglePenalty;
+		return this.volumeWeight * volumePenalty + edgeVariance +
+			   this.penaltyFactor * (edgePenalty + anglePenalty);
 	}
 
 	private Map nodeSymmetrizations() {
@@ -770,9 +771,11 @@ public class Embedder {
 
 		// --- here's the relaxation procedure
 		double p[] = this.p;
+		final int nrPasses = Math.max(1, this.passes);
 
-		for (int pass = 0; pass < Math.max(1, this.passes); ++pass) {
+		for (int pass = 0; pass < nrPasses; ++pass) {
 			this.volumeWeight = Math.pow(10, -pass);
+			this.penaltyFactor = (pass == nrPasses - 1) ? 1 : 0;
 			p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
 			for (int i = 0; i < p.length; ++i) {
 				this.p[i] = p[i];
