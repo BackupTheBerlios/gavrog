@@ -36,7 +36,9 @@ archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
 # ============================================================
 
 Net.iterator(ARGV[0]).each do |net|
-  if not net.locally_stable?
+  if not net.connected?
+    puts "#{net.name}:\t>>>not connected<<<"
+  elsif not net.locally_stable?
     puts "#{net.name}:\t>>>unstable<<<"
   elsif found = archive.get(net.minimal_image.systre_key)
     unless net.name == found.name
@@ -46,7 +48,7 @@ Net.iterator(ARGV[0]).each do |net|
     if archive.getByName(net.name).nil?
       puts "#{net.name}:\tNEW!!!"
     else
-      puts "#{net.name}:\t>>>differs from archived net with that name<<<"
+      puts "#{net.name}:\t>>>name clash<<<"
     end
   end
 end
