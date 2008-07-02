@@ -40,14 +40,12 @@ archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
 parser = NetParser.new(ARGV[0])
 
 while not parser.at_end
+  net = nil
   begin
     net = parser.parse_net
   rescue DataFormatException => ex
-    if net.nil? || net.name.nil?
-      puts "???:\t>>>#{ex}<<<"
-    else
-      puts "#{net.name}:\t>>>#{ex}<<<"
-    end
+    puts "???:\t>>>#{ex}<<<"
+    next
   end
   if not net.connected?
     puts "#{net.name}:\t>>>not connected<<<"
