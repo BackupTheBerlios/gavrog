@@ -3,8 +3,10 @@ package org.gavrog.joss.pgraphs.io;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -27,6 +29,7 @@ public class Net extends PeriodicGraph {
 	final private String givenGroup;
 	final private Map nodeToName = new HashMap();
 	final private Map nodeInfo = new HashMap();
+	final private List errors = new ArrayList();
 	
 	public Net(final int dim, final String name, final String group) {
 		super(dim);
@@ -101,6 +104,18 @@ public class Net extends PeriodicGraph {
         public IllegalFileNameException(final String msg) {
             super(msg);
         }
+    }
+    
+    public boolean isOk() {
+    	return this.errors.isEmpty();
+    }
+    
+    public Iterator getErrors() {
+    	return this.errors.iterator();
+    }
+    
+    public void logError(final Exception ex) {
+    	this.errors.add(ex);
     }
     
     public static Iterator iterator(final String filePath)

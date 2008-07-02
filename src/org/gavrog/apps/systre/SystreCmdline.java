@@ -74,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.7 2008/03/11 08:28:09 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.8 2008/07/02 05:32:02 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -132,7 +132,6 @@ public class SystreCmdline extends EventSource {
         builtinArchive.addAll(new InputStreamReader(zeoStream));
     }
     
-    /**
     /**
      * Reads an archive file and stores it internally.
      * 
@@ -745,6 +744,9 @@ public class SystreCmdline extends EventSource {
                 if (problem == null) {
                     problem = ex;
                 }
+            }
+            if (problem == null && !G.isOk()) {
+            	problem = (Exception) G.getErrors().next();
             }
             final String archiveName;
             final String displayName;

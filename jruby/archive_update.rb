@@ -37,17 +37,11 @@ archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
 #   Main loop: read nets and print their symbols if found
 # ============================================================
 
-parser = NetParser.new(ARGV[0])
-
-while not parser.at_end
-  net = nil
-  begin
-    net = parser.parse_net
-  rescue DataFormatException => ex
-    puts "???:\t>>>#{ex}<<<"
-    next
-  end
-  if not net.connected?
+Net.iterator(ARGV[0]).each do |net|
+  if not net.ok?
+    message = net.errors.map{ |x| x.message }.join("===")
+    puts "#{net.name}:\t>>>#{message}<<<"
+  elsif not net.connected?
     puts "#{net.name}:\t>>>not connected<<<"
   elsif not net.locally_stable?
     puts "#{net.name}:\t>>>unstable<<<"
