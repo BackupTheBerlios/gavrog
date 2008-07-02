@@ -6,7 +6,9 @@ include Java
 #   Imports
 # ============================================================
 
+import org.gavrog.box.simple.DataFormatException
 import org.gavrog.joss.pgraphs.io.Net
+import org.gavrog.joss.pgraphs.io.NetParser
 import org.gavrog.joss.pgraphs.io.Archive
 
 import java.lang.ClassLoader
@@ -35,11 +37,24 @@ archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
 #   Main loop: read nets and print their symbols if found
 # ============================================================
 
-Net.iterator(ARGV[0]).each do |net|
+parser = NetParser.new(ARGV[0])
+
+while not parser.at_end
+  begin
+    net = parser.parse_net
+  rescue DataFormatException => ex
+    if net.nil? || net.name.nil?
+      puts "???:\t>>>#{ex}<<<"
+    else
+      puts "#{net.name}:\t>>>#{ex}<<<"
+    end
+  end
   if not net.connected?
     puts "#{net.name}:\t>>>not connected<<<"
   elsif not net.locally_stable?
     puts "#{net.name}:\t>>>unstable<<<"
+  elsif net.ladder?
+    puts "#{net.name}:\t>>>ladder<<<"
   elsif found = archive.get(net.minimal_image.systre_key)
     unless net.name == found.name
       puts "#{net.name}:\tfound as #{found.name}"
