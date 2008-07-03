@@ -34,31 +34,66 @@ archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
 
 
 # ============================================================
-#   Main loop: read nets and print their symbols if found
+#   Create a new archive and a corresponding output file
+# ============================================================
+
+new_archive = Archive.new "1.0"
+arc_file = File.new(ARGV[1], "w")
+
+
+# ============================================================
+#   Main loop: read and process nets
 # ============================================================
 
 Net.iterator(ARGV[0]).each do |net|
+  message = nil
+  name = net.name
+  
   if not net.ok?
-    message = net.errors.map{ |x| x.message }.join("===")
-    puts "#{net.name}:\t>>>#{message}<<<"
+    message = ">>>#{net.errors.map{ |x| x.message }.join("===")}<<<"
   elsif not net.connected?
-    puts "#{net.name}:\t>>>not connected<<<"
+    message = ">>>not connected<<<"
   elsif not net.locally_stable?
-    puts "#{net.name}:\t>>>unstable<<<"
+    message = ">>>unstable<<<"
   elsif net.ladder?
-    puts "#{net.name}:\t>>>ladder<<<"
-  elsif found = archive.get(net.minimal_image.systre_key)
-    unless net.name == found.name
-      puts "#{net.name}:\tfound as #{found.name}"
-    end
+    message = ">>>ladder<<<"
   else
-    if archive.getByName(net.name).nil?
-      puts "#{net.name}:\tNEW!!!"
+    key = net.minimal_image.systre_key
+    if new_archive.get(key)
+      message = ">>>duplicate key<<<"
+    elsif new_archive.get(name)
+      message = ">>>duplicate name<<<"
     else
-      puts "#{net.name}:\t>>>name clash<<<"
+      if found = archive.get(key)
+        unless name == found.name
+          message = "found as #{found.name}"
+        end
+      else
+        if archive.getByName(name).nil?
+          message = "NEW!!!"
+        else
+          message = "found different net with this name"
+        end
+      end
+      new_archive.add net, name
+      arc_file.puts new_archive.get(key)
+      arc_file.puts
+      arc_file.flush
     end
   end
+  
+  unless message.nil?
+    puts "#{net.name}:\t#{message}"
+  end
 end
+
+
+# ============================================================
+#   Close the output file
+# ============================================================
+
+arc_file.close
+
 
 # ============================================================
 #   EOF
