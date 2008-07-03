@@ -75,7 +75,7 @@ Net.iterator(ARGV[0]).each do |net|
           message = "found different net with this name"
         end
       end
-      new_archive.add net, name
+      new_archive.add net.minimal_image, name
       arc_file.puts new_archive.get(key)
       arc_file.puts
       arc_file.flush
