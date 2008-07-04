@@ -1,6 +1,6 @@
 <html>
 <!
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -47,8 +47,8 @@ and Refinement</em>. S<small>YSTRE</small> uses a method called
 embeddable) symmetry of a crystal net and to analyze its topological
 structure. It then generates a unique "fingerprint" for the
 topological type of the given net and uses that to look up the
-structure in its built-in database. Users can also create their own
-databases.
+structure in its built-in database (see below). Users can also create
+their own databases.
 </p>
 
 <p>
@@ -58,6 +58,27 @@ is one that minimizes the edge length variance (normalized to unit
 length) and maximizes the unit cell volume. The forces modeled are not
 physically realistic, but should in most cases result in viable input
 for molecular modeling software.
+</p>
+
+<p>
+Currently, S<small>YSTRE</small>'s built-in database contains all
+processable nets from the
+<a href="http://rcsr.anu.edu.au/rcsr_nets">RCSR online resource</a> as
+of July 3, 2008 as well as a large selection of frameworks from the
+<a href="http://izasc.ethz.ch/fmi/xsl/IZA-SC/ft.xsl">Database of
+  Zeolite Framework Types</a>.
+</p>
+
+<p>
+As of July 3, 2008, RCSR nets that will not be recognized with the
+current version are
+<tt>bad</tt>, <tt>bae</tt>, <tt>bai</tt>, <tt>bbu</tt>, <tt>bcr</tt>,
+<tt>cys</tt>, <tt>fco</tt>, <tt>lcw</tt>, <tt>nbo-g</tt>, <tt>uld</tt>
+and <tt>ulm</tt>.<br />
+Zeolite frameworks not covered are
+<tt>EZT</tt>, <tt>FAR</tt>, <tt>IMF</tt>, <tt>IWV</tt>, <tt>MSE</tt>,
+<tt>SBN</tt>, <tt>SIV</tt>, <tt>SSF</tt>, <tt>STO</tt>, <tt>SZR</tt>,
+<tt>TOL</tt> and <tt>TUN</tt>.
 </p>
 
 <p>
