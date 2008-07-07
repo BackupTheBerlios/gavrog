@@ -75,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.5 2007/05/23 06:18:34 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.6 2008/07/07 06:43:28 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -120,6 +120,7 @@ public class SystreGUI extends BFrame {
     // --- options
     private boolean singleWrite = false;
     private boolean readArchivesAsInput = false;
+    private boolean nonStopMode = false;
 
     
     /**
@@ -367,6 +368,8 @@ public class SystreGUI extends BFrame {
                 defaultInsets, null));
         column.setBackground(textColor);
         try {
+			column.add(new OptionCheckBox("Process whole files without stopping",
+					this, "nonStopMode"));
 			column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
 					"useBuiltinArchive"));
 			column.add(new OptionCheckBox("Process '.arc' files like normal input",
@@ -455,8 +458,10 @@ public class SystreGUI extends BFrame {
         Exception problem = null;
         this.currentTranscript.delete(0, this.currentTranscript.length());
         status("Reading the next net...");
+        boolean cancelled = false;
 
-        final class BailOut extends Throwable {}
+        final class BailOut extends Throwable {};
+        final class Cancel  extends Throwable {};
         
         try {
             ++this.count;
@@ -473,7 +478,7 @@ public class SystreGUI extends BFrame {
                 reportException(new SystreException(
                         SystreException.CANCELLED, stopped), "CANCELLED",
                         null, false);
-                throw new BailOut();
+                throw new Cancel();
             } catch (DataFormatException ex) {
                 problem = ex;
             } catch (Exception ex) {
@@ -506,6 +511,7 @@ public class SystreGUI extends BFrame {
                     reportException(new SystreException(
                             SystreException.CANCELLED, stopped), "CANCELLED",
                             null, false);
+                    cancelled = true;
                 } catch (SystreException ex) {
                     reportException(ex, ex.getType().toString(), null, false);
                 } catch (Exception ex) {
@@ -529,9 +535,18 @@ public class SystreGUI extends BFrame {
             out.println();
             out.println("Skipping structure #" + this.count
                     + " due to error in input.");
+        } catch (Cancel ex) {
+        	cancelled = true;
         }
         if (!moreNets()) {
             finishFile();
+        } else if (getNonStopMode() && cancelled) {
+        	out.println();
+        	out.println("'Cancel' pressed in non-stop mode. " +
+        				"Skipping rest of file.");
+            finishFile();
+        } else if (getNonStopMode()) {
+        	nextNet();
         }
         
         this.taskController = null;
@@ -734,6 +749,14 @@ public class SystreGUI extends BFrame {
 
 	public void setReadArchivesAsInput(boolean readArchivesAsInput) {
 		this.readArchivesAsInput = readArchivesAsInput;
+	}
+
+	public boolean getNonStopMode() {
+		return nonStopMode;
+	}
+
+	public void setNonStopMode(boolean nonStopMode) {
+		this.nonStopMode = nonStopMode;
 	}
 
 	public static void main(final String args[]) {

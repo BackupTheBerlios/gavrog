@@ -12,7 +12,6 @@ Open bugs:
 
 Planned/requested features:
 
-- Introduce a batch mode for SystreGUI.
 - Treat connectivity of '0' as yet undetermined. 
 - Issue a warning if computed coordination number does not match given.
 - Print parametric positions for nodes and edge centers.
