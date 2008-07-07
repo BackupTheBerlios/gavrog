@@ -36,7 +36,7 @@ import org.gavrog.jane.numbers.Whole;
 
 /**
  * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.7 2007/03/28 22:25:11 odf Exp $
+ * @version $Id: GenericParser.java,v 1.8 2008/07/07 05:21:22 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
@@ -171,7 +171,8 @@ public class GenericParser {
             final LinkedList fields = new LinkedList();
             int i = 0;
             while (i < line.length()) {
-                while (i < line.length() && Character.isWhitespace(line.charAt(i))) {
+                while (i < line.length()
+						&& Character.isWhitespace(line.charAt(i))) {
                     ++i;
                 }
                 if (i >= line.length()) {
@@ -192,7 +193,7 @@ public class GenericParser {
                     if (j < line.length()) {
                         final char c = line.charAt(j);
                         if (!Character.isWhitespace(c) && c != '#') {
-                            final String msg = "missing space after string at line ";
+                            String msg = "missing space after string at line ";
                             throw new DataFormatException(msg + this.lineno);
                         }
                     }
@@ -269,10 +270,16 @@ public class GenericParser {
                         }
                     } else {
                         try {
-                            number = new Whole(Integer.parseInt(item));
+                        	if (item.startsWith("+")) {
+                        		number = new Whole(Integer.parseInt(item
+										.substring(1)));
+                        	} else {
+                        		number = new Whole(Integer.parseInt(item));
+                        	}
                         } catch (NumberFormatException ex1) {
                             try {
-                                number = new FloatingPoint(Double.parseDouble(item));
+                                number = new FloatingPoint(Double
+										.parseDouble(item));
                             } catch (NumberFormatException ex2) {
                             }
                         }

@@ -8,12 +8,12 @@ In progress:
 
 Open bugs:
 
-- Integers starting with a '+' sign are mistakenly parsed as floating point.
+(none)
 
 Planned/requested features:
 
-- Treat connectivity of '0' as yet undetermined. 
 - Introduce a batch mode for SystreGUI.
+- Treat connectivity of '0' as yet undetermined. 
 - Issue a warning if computed coordination number does not match given.
 - Print parametric positions for nodes and edge centers.
 - Make SystreGUI accept command line arguments.

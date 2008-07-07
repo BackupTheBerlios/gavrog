@@ -1,6 +1,7 @@
 Systre 1.1.5:
 
-- Updated the archive of RCSR nets.
+- Integer numbers in input files can now start with a '+' character.
+- Updated the archive of RCSR nets (2008-07-07).
 - Abbreviated Herman-Mauguin symbols for monoclinic groups are now recognized.
 
 Systre 1.1.4:
