@@ -1,3 +1,6 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 <html>
 <!
    Copyright 2008 Olaf Delgado-Friedrichs
@@ -16,26 +19,26 @@
 >
 
 <head>
-<title>Systre Help</title>
+  <title>Systre Help</title>
+  <link href="gavrog.css" rel="Stylesheet" type="text/css" />
+  <link href="gavrog-print.css" media=print rel="Stylesheet" type="text/css">
+  <link rel="SHORTCUT ICON" href="gavrog.ico" />
 </head>
 
 <body>
 <h1>Systre Help</h1>
 
-<br>
-<h2>Content</h2>
 <ul>
-<li><a href="#introduction">Introduction</a>
-<li><a href="#installation">Installation</a>
-<li><a href="#usage">Usage</a>
-<li><a href="#file_formats">File Formats</a>
-<li><a href="#troubleshooting">Troubleshooting</a>
-<li><a href="#license">License</a>
-<li><a href="#publications">Publications</a>
-<li><a href="#acknowledgements">Acknowledgements</a>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#file_formats">File Formats</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
 </ul>
 
-<br>
 <h2><a name="introduction">Introduction</a></h2>
 
 <p>
@@ -64,13 +67,13 @@ for molecular modeling software.
 Currently, S<small>YSTRE</small>'s built-in database contains all
 processable nets from the
 <a href="http://rcsr.anu.edu.au/rcsr_nets">RCSR online resource</a> as
-of July 3, 2008 as well as a large selection of frameworks from the
+of July 7, 2008 as well as a large selection of frameworks from the
 <a href="http://izasc.ethz.ch/fmi/xsl/IZA-SC/ft.xsl">Database of
   Zeolite Framework Types</a>.
 </p>
 
 <p>
-As of July 3, 2008, RCSR nets that will not be recognized with the
+As of July 7, 2008, RCSR nets that will not be recognized with the
 current version are
 <tt>bad</tt>, <tt>bae</tt>, <tt>bai</tt>, <tt>bbu</tt>, <tt>bcr</tt>,
 <tt>cys</tt>, <tt>fco</tt>, <tt>lcw</tt>, <tt>nbo-g</tt>, <tt>uld</tt>
@@ -86,7 +89,6 @@ S<small>YSTRE</small> is part of <a href="http://www.gavrog.org">The
 Gavrog Project</a>.
 </p>
 
-<br>
 <h2><a name="installation">Installation</a></h2>
 
 <p>
@@ -109,7 +111,6 @@ the file <tt>Systre.jar</tt> and put it anywhere you like, for example
 on your desktop.
 </p>
 
-<br>
 <h2><a name="usage">Usage</a></h2>
 
 <p>
@@ -153,7 +154,6 @@ button lets you modify some of S<small>YSTRE</small>'s internal
 workings.
 </p>
 
-<br>
 <h2><a name="file_formats">File Formats</a></h2>
 
 <p>
@@ -254,7 +254,6 @@ which start with a <tt>#</tt> character and continue until the end of
 the current line.
 </p>
 
-<br>
 <p><b>Example 1</b>: Diamond, specified by space group, unit cell and
 positions. S<small>YSTRE</small> computes edges by finding nearest
 neighbors. Edge lengths have to be larger than 0.1. If any pair of
@@ -279,7 +278,6 @@ CRYSTAL
 END
 </pre>
 
-<br>
 <p><b>Example 2</b>: Diamond, specified as a periodic graph. Here,
 only translational symmetries are assumed, and no coordinates are
 needed. Edges are given explicitly in the form <em>u v x y z</em>,
@@ -300,7 +298,6 @@ EDGES
 END
 </pre>
 
-<br>
 <p><b>Example 3:</b> For <tt>CRYSTAL</tt> input, edges can be given
 explicitly, as well.</p>
 
@@ -329,7 +326,6 @@ CRYSTAL
 END
 </pre>
 
-<br>
 <p><b>Example 4</b>: This example describes a more complicated graph
 and will take S<small>YSTRE</small> significantly
 longer to complete. It shows two situations in which quotes are
@@ -352,7 +348,6 @@ CRYSTAL
 END
 </pre>
 
-<br>
 <h2><a name="troubleshooting">Troubleshooting</a></h2>
 
 <p>
@@ -421,13 +416,12 @@ were using.
 
 </dl>
 
-<br>
 <h2><a name="license">License</a></h2>
 
 S<small>YSTRE</small> is released under the Apache
 License, Version 2.0, as below.<br> <br>
 
-<hr>
+<hr />
 <p align="center">
 Apache License<br>
 Version 2.0, January 2004<br>
@@ -541,18 +535,18 @@ You may reproduce and distribute copies of the
 <ol type="a">
 <li>You must give any other recipients of the Work or
           Derivative Works a copy of this License; and
-<br> <br></li>
+<br /> <br /></li>
 
 <li>You must cause any modified files to carry prominent notices
           stating that You changed the files; and
-<br> <br></li>
+<br /> <br /></li>
 
 <li>You must retain, in the Source form of any Derivative Works
           that You distribute, all copyright, patent, trademark, and
           attribution notices from the Source form of the Work,
           excluding those notices that do not pertain to any part of
           the Derivative Works; and
-<br> <br></li>
+<br /> <br /></li>
 
 <li>If the Work includes a "NOTICE" text file as part of its
           distribution, then any Derivative Works that You distribute must
@@ -635,9 +629,8 @@ While redistributing
 
 END OF TERMS AND CONDITIONS
 </p>
-<hr>
+<hr />
 
-<br>
 <h2><a name="publications">Publications</a></h2>
 <ul>
 
@@ -659,7 +652,6 @@ graphs and convexity of plane tilings. <em>Discr. Comput. Geom.</em>
 
 </ul>
 
-<br>
 <h2><a name="acknowledgements">Acknowledgements</a></h2>
 
 <p>
