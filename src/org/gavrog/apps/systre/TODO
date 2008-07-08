@@ -13,7 +13,12 @@ Open bugs:
 Planned/requested features:
 
 - Treat connectivity of '0' as yet undetermined. 
-- Issue a warning if computed coordination number does not match given.
+- For polar structures, put a vertex with maximal site symmetry at origin:
+	For class 1 (i.e. P1) put one vertex arbitrarily at 0,0,0.
+	For class m (Pm, Pc etc) one vertex at 0,y,0.
+	For classes 2, mm2, 4, 4mm, 3, 3m, 6, 6mm, one vertex at x,y,0.
+- In non-stop mode, suppress alert windows.
+
 - Print parametric positions for nodes and edge centers.
 - Make SystreGUI accept command line arguments.
 - Introduce keyboard shortcuts.
@@ -24,6 +29,5 @@ Planned/requested features:
 - Plot the quotient graph.
 - Compute vertex symbols.
 - Report induced symmetries from "given" (or report none at all) for components.
-- If group has translational freedom, put one node on 0 for the respective axes.
 
 =====================================================
