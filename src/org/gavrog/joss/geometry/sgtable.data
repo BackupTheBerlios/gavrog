@@ -8067,7 +8067,11 @@ alias C2/m C12/m1
 alias A2/m A12/m1
 alias I2/m I12/m1
 alias P2/c P12/c1
+alias P2/n P12/n1
+alias P2/a P12/a1
 alias P21/c P121/c1
+alias P21/n P121/n1
+alias P21/a P121/a1
 alias C2/c C12/c1
 alias A2/n A12/n1
 alias I2/a I12/a1
