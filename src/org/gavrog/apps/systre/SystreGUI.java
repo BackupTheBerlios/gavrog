@@ -75,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.7 2008/07/08 06:10:35 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.8 2008/07/08 06:39:07 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -439,6 +439,9 @@ public class SystreGUI extends BFrame {
     		throw ex;
     	} else {
     		final Net result = (Net) this.netsToProcess.next();
+    		if (!result.isOk()) {
+    			throw (Exception) result.getErrors().next();
+    		}
             this.taskController.bailOutIfCancelled();
             return result;
     	}
