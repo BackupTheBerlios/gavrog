@@ -1,5 +1,6 @@
 Systre 1.1.5:
 
+- A connectivity value of 0 for an atom is now read as 'undetermined'.
 - The GUI version now has an option to process whole files without stopping.
 - Integer numbers in input files can now start with a '+' character.
 - Made archives of RCSR nets and zeolite frameworks current as of 2008-07-07.

@@ -74,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.8 2008/07/02 05:32:02 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.9 2008/07/08 06:41:34 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -299,7 +299,7 @@ public class SystreCmdline extends EventSource {
 			} else {
         		orbit2name.put(orbit, nodeName);
         		final Integer conn = (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
-        		if (conn != null && conn.intValue() != v.degree()) {
+        		if (conn != null && conn.intValue() != 0 && conn.intValue() != v.degree()) {
         			String msg = "Node " + v + " has connectivity " + v.degree()
         				+ ", where " + conn + " was expected";
     				throw new SystreException(SystreException.INPUT, msg);

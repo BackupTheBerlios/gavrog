@@ -59,7 +59,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Contains methods to parse a net specification in Systre format (file extension "cgd").
  * 
  * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.99 2008/07/02 05:31:59 odf Exp $
+ * @version $Id: NetParser.java,v 1.100 2008/07/08 06:41:34 odf Exp $
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -636,15 +636,15 @@ public class NetParser extends GenericParser {
                     throw new DataFormatException(msg + lineNr);
                 }
                 final Object conn = row.get(1);
-                if (!(conn instanceof Whole && ((Whole) conn).isPositive())) {
-                    final String msg = "Connectivity must be a positive integer ";
+                if (!(conn instanceof Whole && ((Whole) conn).isNonNegative())) {
+                    final String msg = "Connectivity must be a non-negative integer at line ";
                     throw new DataFormatException(msg + lineNr);
                 }
                 final IArithmetic pos[] = new IArithmetic[dim];
                 for (int j = 0; j < dim; ++j) {
                     pos[j] = (IArithmetic) row.get(j + 2);
                 }
-                final int c = ((Whole) conn).intValue();
+                final int c = Math.max(0, ((Whole) conn).intValue());
                 final boolean isCenter;
                 if (key.equals("node")) {
                     isCenter = false;

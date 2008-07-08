@@ -12,7 +12,6 @@ Open bugs:
 
 Planned/requested features:
 
-- Treat connectivity of '0' as yet undetermined. 
 - For polar structures, put a vertex with maximal site symmetry at origin:
 	For class 1 (i.e. P1) put one vertex arbitrarily at 0,0,0.
 	For class m (Pm, Pc etc) one vertex at 0,y,0.
