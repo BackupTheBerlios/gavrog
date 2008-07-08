@@ -75,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.6 2008/07/07 06:43:28 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.7 2008/07/08 06:10:35 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -619,16 +619,18 @@ public class SystreGUI extends BFrame {
             }
         }
         
-        Invoke.andWait(new Runnable() {
-            public void run() {
-                final String title = "Systre: " + type + " ERROR";
-                final String msg = text + (ex != null ? " - " + ex.getMessage() : "")
-						+ ".";
-                final BStandardDialog dialog = new BStandardDialog(title, msg,
-                        BStandardDialog.ERROR);
-                dialog.showMessageDialog(SystreGUI.this);
-            }
-        });
+        if (!getNonStopMode()) {
+			Invoke.andWait(new Runnable() {
+				public void run() {
+					final String title = "Systre: " + type + " ERROR";
+					final String msg = text
+							+ (ex != null ? " - " + ex.getMessage() : "") + ".";
+					final BStandardDialog dialog = new BStandardDialog(title,
+							msg, BStandardDialog.ERROR);
+					dialog.showMessageDialog(SystreGUI.this);
+				}
+			});
+		}
 	}
     
     private void disableMainButtons() {
