@@ -2,7 +2,7 @@ Systre 1.1.5:
 
 - The GUI version now has an option to process whole files without stopping.
 - Integer numbers in input files can now start with a '+' character.
-- Updated the archive of RCSR nets (2008-07-07).
+- Made archives of RCSR nets and zeolite frameworks current as of 2008-07-07.
 - Abbreviated Herman-Mauguin symbols for monoclinic groups are now recognized.
 
 Systre 1.1.4:
