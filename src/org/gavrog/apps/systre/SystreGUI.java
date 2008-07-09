@@ -75,7 +75,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.8 2008/07/08 06:39:07 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.9 2008/07/09 00:50:38 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -378,6 +378,8 @@ public class SystreGUI extends BFrame {
 					SpaceGroupCatalogue.class, "preferSecondOrigin"));
 			column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
 					SpaceGroupCatalogue.class, "preferHexagonal"));
+			column.add(new OptionCheckBox("Compute an Embedding", this.systre,
+					"computeEmbedding"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
 					"relaxPositions"));
 			column.add(new OptionInputBox("Importance Of Equal Edge Lengths",

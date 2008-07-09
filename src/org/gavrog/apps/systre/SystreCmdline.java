@@ -74,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.9 2008/07/08 06:41:34 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.10 2008/07/09 00:50:38 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -96,6 +96,7 @@ public class SystreCmdline extends EventSource {
     private final Archive internalArchive = new Archive("1.0");
     
     // --- options
+    private boolean computeEmbedding = true;
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
     private int relaxSteps = 10000;
@@ -523,7 +524,9 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- compute an embedding
-        embedGraph(G, name, node2name, finder);
+        if (getComputeEmbedding()) {
+        	embedGraph(G, name, node2name, finder);
+        }
     }
 
     /**
@@ -871,6 +874,9 @@ public class SystreCmdline extends EventSource {
                 } else {
                     outputArchiveFileName = args[++i];
                 }
+            } else if (s.equalsIgnoreCase("--skipEmbedding")
+                    || s.equalsIgnoreCase("-skipEmbedding")) {
+                setComputeEmbedding(false);
             } else if (s.equalsIgnoreCase("--noBuiltin")
                     || s.equalsIgnoreCase("-noBuiltin")) {
                 setUseBuiltinArchive(false);
@@ -1061,6 +1067,14 @@ public class SystreCmdline extends EventSource {
 
 	public void setUseBuiltinArchive(boolean useBuiltinArchive) {
 		this.useBuiltinArchive = useBuiltinArchive;
+	}
+
+	public boolean getComputeEmbedding() {
+		return this.computeEmbedding;
+	}
+
+	public void setComputeEmbedding(boolean computeEmbedding) {
+		this.computeEmbedding = computeEmbedding;
 	}
 
 	public boolean getRelaxPositions() {
