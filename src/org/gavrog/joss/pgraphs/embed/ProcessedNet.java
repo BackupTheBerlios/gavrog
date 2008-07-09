@@ -51,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.5 2008/01/07 02:04:01 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.6 2008/07/09 08:24:48 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -473,8 +473,13 @@ public class ProcessedNet {
                     + fmtReal5.format(sumAngle / count));
             
             // --- write the shortest non-bonded distance
-            out.println("   Shortest non-bonded distance = "
-                    + fmtReal5.format(smallestNonBondedDistance(graph, embedder)));
+            final double dist = smallestNonBondedDistance(graph, embedder);
+			if (dist < 0) {
+				out.println("   Shortest non-bonded distance not determined.");
+			} else {
+				out.println("   Shortest non-bonded distance = "
+						+ fmtReal5.format(dist));
+			}
             
             // --- write the degrees of freedom as found by the embedder
             if (embedder instanceof Embedder) {
@@ -571,83 +576,100 @@ public class ProcessedNet {
     /**
      * Does what it says.
      * 
-     * @param G
-     *            a periodic graph.
-     * @param embedder
-     *            an embedding for G.
+     * @param G         a periodic graph.
+     * @param embedder  an embedding for G.
      * @return the smallest distance between nodes that are not connected.
      */
     private double smallestNonBondedDistance(final PeriodicGraph G,
             final Embedder embedder) {
-        // --- get some data about the embedding
+        // --- get some data about the graph and embedding
+    	final int dim = G.getDimension();
         final Matrix gram = embedder.getGramMatrix();
         final Map pos = embedder.getPositions();
         
         // --- compute a Dirichlet domain for the translation lattice
         final Vector basis[] = Vector.rowVectors(Matrix.one(G.getDimension()));
-        final Vector dirichletVectors[] = Lattices.dirichletVectors(basis, gram);
+        final Vector dirichlet[] = Lattices.dirichletVectors(basis, gram);
         
-        // --- determine how to shift each node into the Dirichlet domain
-        final Map shift = new HashMap();
-        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            final Point p = (Point) pos.get(v);
-            shift.put(v, Lattices.dirichletShifts(p, dirichletVectors, gram, 1)[0]);
+        // --- find vectors that address neighborhood of dirichlet domain
+        final Vector reduced[] = Lattices.reducedLatticeBasis(basis, gram);
+        final Matrix M = Vector.toMatrix(reduced);
+        final List cellNeighbors = new ArrayList();
+        final int f[] = new int[dim];
+        for (int i = 0; i < dim; ++i) f[i] = -1;
+        while (true) {
+        	final Vector v = new Vector(f);
+        	cellNeighbors.add(new Vector((Matrix) v.getCoordinates().times(M)));
+        	int i = dim-1;
+        	while (i >= 0 && f[i] == 1) --i;
+        	if (i < 0) {
+        		break;
+        	} else {
+        		++f[i++];
+        		while (i < dim) f[i++] = -1;
+        	}
         }
-        
-        // --- list all points in two times extended Dirichlet domain
-        final Set moreNodes = new HashSet();
-        for (final Iterator iter = G.nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            final Vector s = (Vector) shift.get(v);
-            final Point p = (Point) pos.get(v);
-            moreNodes.add(new Pair(v, s));
-            for (int i = 0; i < dirichletVectors.length; ++i) {
-                final Vector vec = (Vector) s.plus(dirichletVectors[i]);
-                final Vector shifts[] = Lattices.dirichletShifts((Point) p.plus(vec),
-                        dirichletVectors, gram, 2);
-                for (int k = 0; k < shifts.length; ++k) {
-                    moreNodes.add(new Pair(v, vec.plus(shifts[k])));
-                }
-            }
-        }
-        
-        // --- determine all distances from orbit representatives
+
+        // --- smallest distance seen so far
         double minDist = Double.MAX_VALUE;
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-            // --- get shift and position for next orbit representative
-            final Set orbit = (Set) orbits.next();
-            final INode v = (INode) orbit.iterator().next();
-            final Vector s = (Vector) shift.get(v);
-            final Point p = (Point) ((Point) pos.get(v)).plus(s);
-            
-            // --- ignore node itself and its neighbors
-            final Set ignore = new HashSet();
-            ignore.add(new Pair(v, s));
-            for (final Iterator inc = G.allIncidences(v).iterator(); inc.hasNext();) {
-                final IEdge e = (IEdge) inc.next();
-                final INode w = e.target();
-                final Vector t = (Vector) G.getShift(e).plus(s);
-                ignore.add(new Pair(w, t));
-            }
-            
-            // --- now looks for closest other point in extended Dirichlet domain
-            for (final Iterator others = moreNodes.iterator(); others.hasNext();) {
-                final Pair item = (Pair) others.next();
-                if (ignore.contains(item)) {
-                    continue;
+
+        // --- loop over all pairs of points in the repeat unit
+        for (final Iterator iter1 = G.nodes(); iter1.hasNext();) {
+            final INode v = (INode) iter1.next();
+            final Point p = (Point) pos.get(v);
+            for (final Iterator iter2 = G.nodes(); iter2.hasNext();) {
+                final INode w = (INode) iter2.next();
+                final Point q = (Point) pos.get(w);
+                
+                // --- find a closest translate of w
+                final Point d = (Point) q.minus(p).plus(Point.origin(dim));
+                final Vector s =
+                	Lattices.dirichletShifts(d, dirichlet, gram, 1)[0];
+                
+                // --- determine excluded translates and seeds
+                final Set excluded = new HashSet();
+                if (v.equals(w)) {
+                	excluded.add(Vector.zero(dim));
                 }
-                final INode w = (INode) item.getFirst();
-                final Vector t = (Vector) item.getSecond();
-                final Point q = (Point) ((Point) pos.get(w)).plus(t);
-                final Vector d = (Vector) q.minus(p);
-                final double dist = ((Real) Vector.dot(d, d, gram)).sqrt().doubleValue();
-                minDist = Math.min(minDist, dist);
+                final Set seeds = new HashSet();
+                seeds.add(Vector.zero(dim));
+                for (final Iterator inc = G.allIncidences(v).iterator(); inc
+						.hasNext();) {
+                	final IEdge e = (IEdge) inc.next();
+                	final INode u = e.target();
+                	if (u.equals(w)) {
+                		excluded.add(G.getShift(e));
+                		seeds.add(G.getShift(e));
+                	}
+                }
+                
+                // --- find closest translate that isn't a neighbor of v
+                for (final Iterator it_s = seeds.iterator(); it_s.hasNext();) {
+                	final Vector seed = (Vector) it_s.next();
+					for (final Iterator iter = cellNeighbors.iterator(); iter
+							.hasNext();) {
+						final Vector t = (Vector) ((Vector) iter.next())
+								.plus(s).plus(seed);
+						if (!excluded.contains(t)) {
+							final Point r = (Point) q.plus(t);
+							final Vector x = (Vector) r.minus(p);
+							final double dist = ((Real) Vector.dot(x, x, gram))
+									.doubleValue();
+							if (dist < minDist) {
+								minDist = dist;
+							}
+						}
+					}
+				}
             }
         }
         
         // --- return the result
-        return minDist;
+        if (minDist == Double.MAX_VALUE) {
+        	return -1.0;
+        } else {
+        	return Math.sqrt(minDist);
+        }
     }
     
     /**
