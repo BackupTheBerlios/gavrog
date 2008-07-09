@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * This class implements an embedding algorithm for periodic graphs.
  * 
  * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.8 2008/06/11 07:27:27 odf Exp $
+ * @version $Id: Embedder.java,v 1.9 2008/07/09 01:09:24 odf Exp $
  */
 public class Embedder {
 	final private static int EDGE = 1;
@@ -254,26 +254,8 @@ public class Embedder {
 		setGramMatrix(null);
 	}
 
-	static private int translationalFreedom(SpaceGroup group) {
-		final int d = group.getDimension();
-		final Set ops = group.primitiveOperators();
-		final Matrix M = new Matrix(d, d * ops.size());
-		final Matrix I = Matrix.one(d);
-		int i = 0;
-		for (final Iterator iter = ops.iterator(); iter.hasNext();) {
-			final Matrix op = ((Operator) iter.next()).getCoordinates();
-			final Matrix A = (Matrix) op.getSubMatrix(0, 0, d, d).minus(I);
-			M.setSubMatrix(0, i, A);
-			i += d;
-		}
-		final Matrix S = LinearAlgebra.rowNullSpace(M, false);
-
-		return S.numberOfRows();
-	}
-
 	public int degreesOfFreedom() {
-		return this.dimParSpace
-				- translationalFreedom(this.graph.getSpaceGroup());
+		return dimParSpace - graph.getSpaceGroup().shiftSpace().length;
 	}
 
 	private Matrix normalizedPositionSpace(final INode v) {

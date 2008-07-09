@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ import org.gavrog.jane.numbers.Whole;
  * translational part in the half-open interval [0,1).
  * 
  * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.24 2005/11/18 00:46:31 odf Exp $
+ * @version $Id: SpaceGroup.java,v 1.25 2008/07/09 01:09:26 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -399,4 +399,25 @@ public class SpaceGroup {
         // --- solve the system and return the solution
         return LinearAlgebra.columnNullSpace(A, true).transposed();
     }
+
+    /**
+     * Computes a basis for the space of translation vectors invariant under
+     * all group operations.
+     * 
+     * @return the shift space basis as an array of vectors.
+     */
+    public Vector[] shiftSpace() {
+		final int d = getDimension();
+		final Set ops = primitiveOperators();
+		final Matrix M = new Matrix(d, d * ops.size());
+		final Matrix I = Matrix.one(d);
+		int i = 0;
+		for (final Iterator iter = ops.iterator(); iter.hasNext();) {
+			final Matrix op = ((Operator) iter.next()).getCoordinates();
+			final Matrix A = (Matrix) op.getSubMatrix(0, 0, d, d).minus(I);
+			M.setSubMatrix(0, i, A);
+			i += d;
+		}
+		return Vector.fromMatrix(LinearAlgebra.rowNullSpace(M, false));
+	}
 }
