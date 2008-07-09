@@ -1,5 +1,5 @@
 /*
-Copyright 2006 Olaf Delgado-Friedrichs
+Copyright 2008 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -75,13 +75,13 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.9 2008/07/09 00:50:38 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.10 2008/07/09 01:09:58 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
 			+ "<font color=#202060>Version " + Version.full + "<br>"
-			+ "by Olaf Delgado-Friedrichs, 2001-2007</font></html>";
+			+ "by Olaf Delgado-Friedrichs, 2001-2008</font></html>";
 	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
