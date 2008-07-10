@@ -1,5 +1,6 @@
 Systre 1.1.5:
 
+- Translational freedom, if any, is used to improve the output node positions.
 - Bug fix: the smallest non-bonded distance reported was occasionally incorrect.
 - The embedding step can now be skipped altogether.
 - A connectivity value of 0 for an atom is now read as 'undetermined'.

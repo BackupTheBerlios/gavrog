@@ -51,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores and prints a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.7 2008/07/10 01:52:56 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.8 2008/07/10 04:40:24 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -88,7 +88,11 @@ public class ProcessedNet {
             } else if (t.isNegative()) {
                 return -1;
             }
-            int diff = cmpCoords(Vector.dot(s, s), Vector.dot(t, t));
+            int diff = count_zeroes(t) - count_zeroes(s);
+            if (diff != 0) {
+                return diff;
+            }
+            diff = cmpCoords(Vector.dot(s, s), Vector.dot(t, t));
             if (diff != 0) {
                 return diff;
             }
@@ -101,7 +105,17 @@ public class ProcessedNet {
             return 0;
         }
         
-        private int cmpCoords(final IArithmetic a, final IArithmetic b) {
+		private int count_zeroes(final Vector s) {
+			int n = 0;
+			for (int i = 0; i < s.getDimension(); ++i) {
+				if (((Real) s.get(i).abs()).doubleValue() < 1e-6) {
+					++n;
+				}
+			}
+			return n;
+		}
+
+		private int cmpCoords(final IArithmetic a, final IArithmetic b) {
             final double x = ((Real) a).doubleValue();
             final double y = ((Real) b).doubleValue();
             if (x < 0) {
@@ -156,7 +170,7 @@ public class ProcessedNet {
         	System.out.println("\t\t@@@ Computing cell parameters...");
         }
         
-        final CoordinateChange correction = processCellParameters(out,
+        CoordinateChange correction = processCellParameters(out,
 				cgdFormat, fullCell);
         
         // --- compute orbit graph with respect to a conventional unit cell
@@ -182,17 +196,40 @@ public class ProcessedNet {
 					correction));
 		}
         
-        // --- print the node positions
-        if (!cgdFormat) {
-			out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric")
-					+ " positions:");
+        // --- if there's translational freedom, shift some node to a nice place
+		final Vector tmp[] = graph.getSpaceGroup().shiftSpace();
+		if (tmp.length > 0) {
+			for (int i = 0; i < tmp.length; ++i) {
+				tmp[i] = (Vector) tmp[i].times(toStd).times(correction);
+			}
+			final Matrix shiftSpace = Vector.toMatrix(tmp);
+			final Operator proj = Operator.orthogonalProjection(shiftSpace,
+					Matrix.one(d));
+			final INode v = (INode) lifted.keySet().iterator().next();
+			final Point p = (Point) lifted.get(v);
+			final Vector s = (Vector) Point.origin(d).minus(p.times(proj));
+			final CoordinateChange corrective_shift = new CoordinateChange(
+					new Operator(s));
+			for (Iterator iter = lifted.keySet().iterator(); iter.hasNext();) {
+				final INode w = (INode) iter.next();
+				lifted.put(w, ((Point) lifted.get(w)).times(corrective_shift));
+			}
+			correction = (CoordinateChange) correction.times(corrective_shift);
 		}
+        
+		// --- find the node representatives to print
         final boolean allNodes = fullCell;
         if (DEBUG) {
         	System.out.println("\t\t@@@ Computing node representatives...");
         }
         
         final Map reps = nodeReps(cov, lifted, allNodes);
+        
+        // --- print the node positions
+        if (!cgdFormat) {
+			out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric")
+					+ " positions:");
+		}
         if (DEBUG) {
         	System.out.println("\t\t@@@ Printing node positions...");
         }

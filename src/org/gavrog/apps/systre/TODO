@@ -12,10 +12,6 @@ Open bugs:
 
 Planned/requested features:
 
-- For polar structures, put a vertex with maximal site symmetry at origin:
-	For class 1 (i.e. P1) put one vertex arbitrarily at 0,0,0.
-	For class m (Pm, Pc etc) one vertex at 0,y,0.
-	For classes 2, mm2, 4, 4mm, 3, 3m, 6, 6mm, one vertex at x,y,0.
 - Make choice of output formats more self-explanatory.
 
 - Print parametric positions for nodes and edge centers.
