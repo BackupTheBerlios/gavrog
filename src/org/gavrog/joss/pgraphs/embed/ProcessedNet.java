@@ -48,10 +48,10 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
- * Stores a graph with its name, embedding and space group symmetry.
+ * Stores and prints a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.6 2008/07/09 08:24:48 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.7 2008/07/10 01:52:56 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -137,8 +137,9 @@ public class ProcessedNet {
         this.embedder = embedder;
     }
 
-    public void writeEmbedding(final Writer stream, final boolean cgdFormat, boolean fullCell) {
-        final PrintWriter out = new PrintWriter(stream);
+    public void writeEmbedding(final Writer stream, final boolean cgdFormat,
+			boolean fullCell) {
+		final PrintWriter out = new PrintWriter(stream);
         
         // --- extract some data from the arguments
         if (DEBUG) {
@@ -146,21 +147,248 @@ public class ProcessedNet {
         }
         
         final int d = graph.getDimension();
-        final String extendedGroupName = finder.getExtendedGroupName();
         final CoordinateChange toStd = finder.getToStd();
-        final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
-        final boolean cellRelaxed = embedder.cellRelaxed();
         final boolean posRelaxed = embedder.positionsRelaxed();
+        final Matrix gram = embedder.getGramMatrix();
         
-        // --- get the relaxed Gram matrix
+        // --- process unit cell parameters (possibly correcting settings)
         if (DEBUG) {
         	System.out.println("\t\t@@@ Computing cell parameters...");
         }
         
-        final Matrix gram = embedder.getGramMatrix();
-        final CoordinateChange correction;
+        final CoordinateChange correction = processCellParameters(out,
+				cgdFormat, fullCell);
         
-        if (d == 3) {
+        // --- compute orbit graph with respect to a conventional unit cell
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing full unit cell...");
+        }
+        
+        final Cover cov = graph.conventionalCellCover();
+
+        // --- lift relaxed node positions to the conventional unit cell
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing full list of node positions...");
+        }
+        
+        final Map pos = embedder.getPositions();
+		final INode v0 = (INode) cov.nodes().next();
+		final Vector shift = (Vector) ((Point) pos.get(cov.image(v0))).times(
+				toStd).minus(cov.liftedPosition(v0, pos));
+		final Map lifted = new HashMap();
+		for (final Iterator nodes = cov.nodes(); nodes.hasNext();) {
+			final INode v = (INode) nodes.next();
+			lifted.put(v, cov.liftedPosition(v, pos).plus(shift).times(
+					correction));
+		}
+        
+        // --- print the node positions
+        if (!cgdFormat) {
+			out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric")
+					+ " positions:");
+		}
+        final boolean allNodes = fullCell;
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Computing node representatives...");
+        }
+        
+        final Map reps = nodeReps(cov, lifted, allNodes);
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Printing node positions...");
+        }
+        int last = 0;
+        for (final Iterator iter = reps.keySet().iterator(); iter.hasNext();) {
+			// --- extract the next node and its position
+			final INode v = (INode) iter.next();
+			final Point p = (Point) reps.get(v);
+			final String name;
+			if (allNodes) {
+				name = "" + (++last);
+			} else {
+				name = Strings.parsable((String) this.node2name.get(cov
+						.image(v)), false);
+			}
+
+			// --- print them
+			if (cgdFormat) {
+				out.print("  NODE " + name + " "
+						+ cov.new CoverNode(v).degree() + " ");
+			} else {
+				out.print("      Node " + name + ":   ");
+			}
+			for (int i = 0; i < d; ++i) {
+				out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
+			}
+			out.println();
+		}
+        
+        // --- print the edges
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Printing edges...");
+        }
+        
+        if (!cgdFormat) {
+            out.println("   Edges:");
+        }
+        final List ereps = edgeReps(cov, reps, lifted, correction, fullCell);
+        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
+            final Pair pair = (Pair) iter.next();
+            final Point p = ((PlacedNode) pair.getFirst()).p;
+            final Point q = ((PlacedNode) pair.getSecond()).p;
+
+            // --- print its start and end positions
+            if (cgdFormat) {
+                out.print("  EDGE ");
+            } else {
+                out.print("     ");
+            }
+            for (int i = 0; i < d; ++i) {
+                out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
+            }
+            if (cgdFormat) {
+                out.print("  ");
+            } else {
+                out.print("  <-> ");
+            }
+            for (int i = 0; i < d; ++i) {
+                out.print(" " + fmtReal5.format(((Real) q.get(i)).doubleValue()));
+            }
+            out.println();
+        }
+        
+        // --- print the edge centers
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ Printing edge centers...");
+        }
+        
+        if (!cgdFormat) {
+            out.println("   Edge centers:");
+        }
+        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
+            final Pair pair = (Pair) iter.next();
+            final Point p = ((PlacedNode) pair.getFirst()).p;
+            final Point q = ((PlacedNode) pair.getSecond()).p;
+
+            if (cgdFormat) {
+                out.print("# EDGE_CENTER ");
+            } else {
+                out.print("     ");
+            }
+            for (int i = 0; i < d; ++i) {
+            	final double s = ((Real) p.get(i)).doubleValue();
+            	final double t = ((Real) q.get(i)).doubleValue();
+                out.print(" " + fmtReal5.format((s + t) / 2));
+            }
+            out.println();
+        }
+        
+        // --- finish up
+        if (cgdFormat) {
+            out.println("END");
+            out.println();
+        } else {
+            writeStatistics(out, gram, pos);
+        }
+        out.flush();
+        if (DEBUG) {
+        	System.out.println("\t\t@@@ In writeEmbedding(): done!");
+        }
+        
+    }
+
+	/**
+	 * @param out
+	 * @param gram
+	 * @param pos
+	 */
+	private void writeStatistics(final PrintWriter out, final Matrix gram,
+			final Map pos) {
+		if (DEBUG) {
+			System.out.println("\t\t@@@ Printing statistics...");
+		}
+		
+		// --- write edge statistics
+		final String min = fmtReal5.format(embedder.minimalEdgeLength());
+		final String max = fmtReal5.format(embedder.maximalEdgeLength());
+		final String avg = fmtReal5.format(embedder.averageEdgeLength());
+		out.println();
+		out.println("   Edge statistics: minimum = " + min + ", maximum = "
+				+ max + ", average = " + avg);
+		
+		// --- compute and write angle statistics
+		double minAngle = Double.MAX_VALUE;
+		double maxAngle = 0.0;
+		double sumAngle = 0.0;
+		int count = 0;
+		
+		for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
+		    final INode v = (INode) nodes.next();
+		    final Point p = (Point) pos.get(v);
+		    final List incidences = graph.allIncidences(v);
+		    final List vectors = new ArrayList();
+		    for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
+		        final IEdge e = (IEdge) iter.next();
+		        final INode w = e.target();
+		        final Point q = (Point) pos.get(w);
+		        vectors.add(q.plus(graph.getShift(e)).minus(p));
+		    }
+		    final int m = vectors.size();
+		    for (int i = 0; i < m; ++i) {
+		        final Vector s = (Vector) vectors.get(i);
+		        final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
+		                .doubleValue();
+		        for (int j = i + 1; j < m; ++j) {
+		            final Vector t = (Vector) vectors.get(j);
+		            final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
+		                    .doubleValue();
+		            final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
+		            final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
+		            final double angle = Math.acos(arg) / Math.PI * 180;
+		            minAngle = Math.min(minAngle, angle);
+		            maxAngle = Math.max(maxAngle, angle);
+		            sumAngle += angle;
+		            ++count;
+		        }
+		    }
+		}
+		out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
+		        + ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
+		        + fmtReal5.format(sumAngle / count));
+		
+		// --- write the shortest non-bonded distance
+		final double dist = smallestNonBondedDistance(graph, embedder);
+		if (dist < 0) {
+			out.println("   Shortest non-bonded distance not determined.");
+		} else {
+			out.println("   Shortest non-bonded distance = "
+					+ fmtReal5.format(dist));
+		}
+		
+		// --- write the degrees of freedom as found by the embedder
+		if (embedder instanceof Embedder) {
+		    out.println();
+		    out.println("   Degrees of freedom: "
+		            + ((Embedder) embedder).degreesOfFreedom());
+		}
+	}
+
+	/**
+	 * @param out
+	 * @param cgdFormat
+	 * @param fullCell
+	 * @return
+	 */
+	private CoordinateChange processCellParameters(final PrintWriter out,
+			final boolean cgdFormat, boolean fullCell) {
+        final int d = graph.getDimension();
+        final String extendedGroupName = finder.getExtendedGroupName();
+        final CoordinateChange toStd = finder.getToStd();
+        final CoordinateChange fromStd = (CoordinateChange) toStd.inverse();
+        final boolean cellRelaxed = embedder.cellRelaxed();
+        final Matrix gram = embedder.getGramMatrix();
+        
+		final CoordinateChange correction;
+		if (d == 3) {
 			// --- correct to a reduced cell for monoclinic and triclinic groups
         	final CellCorrection cc = new CellCorrection(finder, gram);
 			correction = cc.getCoordinateChange();
@@ -250,12 +478,13 @@ public class ProcessedNet {
 			correction = new CoordinateChange(Operator.identity(d));
 
 			// --- compute the cell parameters
-			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram)).doubleValue());
-			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram)).doubleValue());
+			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram))
+					.doubleValue());
+			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram))
+					.doubleValue());
 			final double f = 180.0 / Math.PI;
-			final double gamma = Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
-					/ (a * b))
-					* f;
+			final double gamma = Math.acos(((Real) Vector.dot(x, y, gram))
+					.doubleValue() / (a * b)) * f;
 
 	        // --- print a header if necessary
 	        if (DEBUG) {
@@ -278,225 +507,27 @@ public class ProcessedNet {
 			}
 
 			if (cgdFormat) {
-				out.println("  CELL " + fmtReal5.format(a) + " " + fmtReal5.format(b)
-						+ " " + fmtReal4.format(gamma));
+				out.println("  CELL " + fmtReal5.format(a) + " "
+						+ fmtReal5.format(b) + " " + fmtReal4.format(gamma));
 			} else {
 				if (fullCell) {
-					out.println("   Coordinates below are given for a full conventional cell.");
+					out.println("   Coordinates are for a full conventional cell.");
 				}
 				out.println("   " + (cellRelaxed ? "R" : "Unr")
 						+ "elaxed cell parameters:");
 				out.println("       a = " + fmtReal5.format(a) + ", b = "
-						+ fmtReal5.format(b) + ", gamma = " + fmtReal4.format(gamma));
+						+ fmtReal5.format(b) + ", gamma = "
+						+ fmtReal4.format(gamma));
 			}
 		} else {
 			throw new RuntimeException("dimension must be 2 or 3");
 		}
-        
-        // --- compute graph representation with respect to a conventional unit
-		// cell
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Computing full unit cell...");
-        }
-        
-        final Cover cov = graph.conventionalCellCover();
+		return correction;
+	}
 
-        // --- compute the relaxed node positions in to the conventional unit
-		// cell
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Computing full list of node positions...");
-        }
-        
-        final Map pos = embedder.getPositions();
-        final INode v0 = (INode) cov.nodes().next();
-        final Vector shift = (Vector) ((Point) pos.get(cov.image(v0))).times(toStd)
-                .minus(cov.liftedPosition(v0, pos));
-        final Map lifted = new HashMap();
-        for (final Iterator nodes = cov.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            lifted.put(v, cov.liftedPosition(v, pos).plus(shift).times(correction));
-        }
-        
-        // --- print the node positions
-        if (!cgdFormat) {
-            out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric") + " positions:");
-        }
-        final boolean allNodes = fullCell;
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Computing node representatives...");
-        }
-        
-        final Map reps = nodeReps(cov, lifted, allNodes);
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Printing node positions...");
-        }
-        int last = 0;
-        for (final Iterator iter = reps.keySet().iterator(); iter.hasNext();) {
-            // --- extract the next node and its position
-            final INode v = (INode) iter.next();
-            final Point p = (Point) reps.get(v);
-            final String name;
-            if (allNodes) {
-				name = "" + (++last);
-			} else {
-				name = Strings.parsable((String) this.node2name.get(cov.image(v)), false);
-			}
-            
-            // --- print them
-            if (cgdFormat) {
-                out.print("  NODE " + name + " " + cov.new CoverNode(v).degree() + " ");
-            } else {
-                out.print("      Node " + name + ":   ");
-            }
-            for (int i = 0; i < d; ++i) {
-                out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
-            }
-            out.println();
-        }
-        
-        // --- print the edges
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Printing edges...");
-        }
-        
-        if (!cgdFormat) {
-            out.println("   Edges:");
-        }
-        final List ereps = edgeReps(cov, reps, lifted, correction, fullCell);
-        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
-            final Pair pair = (Pair) iter.next();
-            final Point p = ((PlacedNode) pair.getFirst()).p;
-            final Point q = ((PlacedNode) pair.getSecond()).p;
-
-            // --- print its start and end positions
-            if (cgdFormat) {
-                out.print("  EDGE ");
-            } else {
-                out.print("     ");
-            }
-            for (int i = 0; i < d; ++i) {
-                out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
-            }
-            if (cgdFormat) {
-                out.print("  ");
-            } else {
-                out.print("  <-> ");
-            }
-            for (int i = 0; i < d; ++i) {
-                out.print(" " + fmtReal5.format(((Real) q.get(i)).doubleValue()));
-            }
-            out.println();
-        }
-        
-        // --- print the edge centers
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ Printing edge centers...");
-        }
-        
-        if (!cgdFormat) {
-            out.println("   Edge centers:");
-        }
-        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
-            final Pair pair = (Pair) iter.next();
-            final Point p = ((PlacedNode) pair.getFirst()).p;
-            final Point q = ((PlacedNode) pair.getSecond()).p;
-
-            // --- print its start and end positions
-            if (cgdFormat) {
-                out.print("# EDGE_CENTER ");
-            } else {
-                out.print("     ");
-            }
-            for (int i = 0; i < d; ++i) {
-            	final double s = ((Real) p.get(i)).doubleValue();
-            	final double t = ((Real) q.get(i)).doubleValue();
-                out.print(" " + fmtReal5.format((s + t) / 2));
-            }
-            out.println();
-        }
-        
-        // --- finish up
-        if (cgdFormat) {
-            out.println("END");
-            out.println();
-        } else {
-            if (DEBUG) {
-            	System.out.println("\t\t@@@ Printing statistics...");
-            }
-            
-            // --- write edge statistics
-            final String min = fmtReal5.format(embedder.minimalEdgeLength());
-            final String max = fmtReal5.format(embedder.maximalEdgeLength());
-            final String avg = fmtReal5.format(embedder.averageEdgeLength());
-            out.println();
-            out.println("   Edge statistics: minimum = " + min + ", maximum = " + max
-                    + ", average = " + avg);
-            
-            // --- compute and write angle statistics
-            double minAngle = Double.MAX_VALUE;
-            double maxAngle = 0.0;
-            double sumAngle = 0.0;
-            int count = 0;
-            
-            for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
-                final INode v = (INode) nodes.next();
-                final Point p = (Point) pos.get(v);
-                final List incidences = graph.allIncidences(v);
-                final List vectors = new ArrayList();
-                for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
-                    final IEdge e = (IEdge) iter.next();
-                    final INode w = e.target();
-                    final Point q = (Point) pos.get(w);
-                    vectors.add(q.plus(graph.getShift(e)).minus(p));
-                }
-                final int m = vectors.size();
-                for (int i = 0; i < m; ++i) {
-                    final Vector s = (Vector) vectors.get(i);
-                    final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
-                            .doubleValue();
-                    for (int j = i + 1; j < m; ++j) {
-                        final Vector t = (Vector) vectors.get(j);
-                        final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
-                                .doubleValue();
-                        final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
-                        final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
-                        final double angle = Math.acos(arg) / Math.PI * 180;
-                        minAngle = Math.min(minAngle, angle);
-                        maxAngle = Math.max(maxAngle, angle);
-                        sumAngle += angle;
-                        ++count;
-                    }
-                }
-            }
-            out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
-                    + ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
-                    + fmtReal5.format(sumAngle / count));
-            
-            // --- write the shortest non-bonded distance
-            final double dist = smallestNonBondedDistance(graph, embedder);
-			if (dist < 0) {
-				out.println("   Shortest non-bonded distance not determined.");
-			} else {
-				out.println("   Shortest non-bonded distance = "
-						+ fmtReal5.format(dist));
-			}
-            
-            // --- write the degrees of freedom as found by the embedder
-            if (embedder instanceof Embedder) {
-                out.println();
-                out.println("   Degrees of freedom: "
-                        + ((Embedder) embedder).degreesOfFreedom());
-            }
-        }
-        out.flush();
-        if (DEBUG) {
-        	System.out.println("\t\t@@@ In writeEmbedding(): done!");
-        }
-        
-    }
-
-    private Map nodeReps(final PeriodicGraph cov, final Map lifted, boolean allNodes) {
-        final Map reps = new LinkedHashMap();
+    private Map nodeReps(final PeriodicGraph cov, final Map lifted,
+			boolean allNodes) {
+		final Map reps = new LinkedHashMap();
         for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
             // --- grab the next node orbit
             final Set orbit = (Set) orbits.next();
@@ -527,15 +558,16 @@ public class ProcessedNet {
         return reps;
     }
 
-    private List edgeReps(final PeriodicGraph cov, final Map reps, final Map lifted,
-            final CoordinateChange correction, boolean allEdges) {
+    private List edgeReps(final PeriodicGraph cov, final Map reps,
+			final Map lifted, final CoordinateChange correction,
+			boolean allEdges) {
         final List result = new LinkedList();
         
         for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
             // --- grab the next edge orbit
             final Set orbit = (Set) orbits.next();
             
-            // --- extract those edges starting or ending in a node that has been printed
+            // --- extract edges starting or ending in a node that was printed
             final List candidates = new ArrayList();
             for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
                 final IEdge e = (IEdge) iter.next();
@@ -553,11 +585,12 @@ public class ProcessedNet {
                 final INode v = e.source();
                 final INode w = e.target();
                 final Point p = (Point) lifted.get(v);
-                final Point q = (Point) ((Point) lifted.get(w)).plus(cov.getShift(e)
-                        .times(correction));
-                final Point p0 = p.modZ();
-                final Point q0 = (Point) q.minus(p.minus(p0));
-                candidates.set(i, new Pair(new PlacedNode(v, p0), new PlacedNode(w, q0)));
+                final Point q = (Point) ((Point) lifted.get(w)).plus(cov
+						.getShift(e).times(correction));
+				final Point p0 = p.modZ();
+				final Point q0 = (Point) q.minus(p.minus(p0));
+				candidates.set(i, new Pair(new PlacedNode(v, p0),
+						new PlacedNode(w, q0)));
             }
             
             // --- sort edges by end point positions
