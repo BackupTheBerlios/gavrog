@@ -17,6 +17,7 @@ limitations under the License.
 package org.gavrog.apps.systre;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Insets;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -55,6 +56,7 @@ import org.gavrog.joss.pgraphs.io.Output;
 import buoy.event.CommandEvent;
 import buoy.event.DocumentLinkEvent;
 import buoy.event.WindowClosingEvent;
+import buoy.event.WindowResizedEvent;
 import buoy.widget.BButton;
 import buoy.widget.BDialog;
 import buoy.widget.BDocumentViewer;
@@ -75,7 +77,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.10 2008/07/09 01:09:58 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.11 2008/07/11 02:14:40 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -182,12 +184,6 @@ public class SystreGUI extends BFrame {
         main.add(bottom, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
         
-        setContent(main);
-        
-        captureOutput();
-        
-        addEventLink(WindowClosingEvent.class, this, "doQuit");
-        
         nextButton.setEnabled(false);
         saveButton.setEnabled(false);
         
@@ -204,13 +200,27 @@ public class SystreGUI extends BFrame {
         outchsr.addChoosableFileFilter(new ExtensionFilter("out", "Systre Transcripts"));
         
         systre.addEventLink(String.class, this, "status");
-        status("Ready to go!");
-        
+        statusBar.setText("...");
+
+        setContent(main);
         pack();
 		final JFrame jf = (JFrame) getComponent();
 		jf.setSize(700, 600);
 		jf.validate();
-        setVisible(true);
+
+        addEventLink(WindowClosingEvent.class, this, "doQuit");
+        addEventLink(WindowResizedEvent.class, this, "resizeMessage");
+
+        captureOutput();
+        
+		setVisible(true);
+        
+        status("Ready to go!");
+    }
+    
+    public void resizeMessage() {
+    	final Dimension size = ((JFrame) getComponent()).getSize();
+    	status("Window resized to " + size.width + "x" + size.height + ".");
     }
     
     public void status(final String text) {
