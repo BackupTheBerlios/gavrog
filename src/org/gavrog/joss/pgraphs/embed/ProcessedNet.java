@@ -51,7 +51,7 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores and prints a graph with its name, embedding and space group symmetry.
  * 
  * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.8 2008/07/10 04:40:24 odf Exp $
+ * @version $Id: ProcessedNet.java,v 1.9 2008/07/12 08:44:04 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -340,11 +340,11 @@ public class ProcessedNet {
 	 */
 	private void writeStatistics(final PrintWriter out, final Matrix gram,
 			final Map pos) {
+		// --- write edge statistics
 		if (DEBUG) {
-			System.out.println("\t\t@@@ Printing statistics...");
+			System.out.println("\t\t@@@ Computing edge statistics...");
 		}
 		
-		// --- write edge statistics
 		final String min = fmtReal5.format(embedder.minimalEdgeLength());
 		final String max = fmtReal5.format(embedder.maximalEdgeLength());
 		final String avg = fmtReal5.format(embedder.averageEdgeLength());
@@ -353,6 +353,10 @@ public class ProcessedNet {
 				+ max + ", average = " + avg);
 		
 		// --- compute and write angle statistics
+		if (DEBUG) {
+			System.out.println("\t\t@@@ Computing angle statistics...");
+		}
+		
 		double minAngle = Double.MAX_VALUE;
 		double maxAngle = 0.0;
 		double sumAngle = 0.0;
@@ -391,9 +395,14 @@ public class ProcessedNet {
 		out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
 		        + ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
 		        + fmtReal5.format(sumAngle / count));
+		out.flush();
 		
 		// --- write the shortest non-bonded distance
-		final double dist = smallestNonBondedDistance(graph, embedder);
+		if (DEBUG) {
+			System.out.println("\t\t@@@ Computing shortest non-bonded distance...");
+		}
+		
+		final double dist = smallestNonBondedDistance(graph, pos, gram);
 		if (dist < 0) {
 			out.println("   Shortest non-bonded distance not determined.");
 		} else {
@@ -403,6 +412,10 @@ public class ProcessedNet {
 		
 		// --- write the degrees of freedom as found by the embedder
 		if (embedder instanceof Embedder) {
+			if (DEBUG) {
+				System.out.println("\t\t@@@ Computing degrees of freedom...");
+			}
+			
 		    out.println();
 		    out.println("   Degrees of freedom: "
 		            + ((Embedder) embedder).degreesOfFreedom());
@@ -446,6 +459,13 @@ public class ProcessedNet {
 			final Vector z = (Vector) Vector.unit(3, 2).times(ctmp);
 
 			// --- compute the cell parameters
+			if (DEBUG) {
+				System.out.println("\t\t\t x = " + x);
+				System.out.println("\t\t\t y = " + y);
+				System.out.println("\t\t\t z = " + z);
+				System.out.println("\t\t\t Gram = " + gram);
+				System.out.println("\t\t\t\t determinant = " + gram.determinant());
+			}
 			final double a = Math.sqrt(((Real) Vector.dot(x, x, gram))
 					.doubleValue());
 			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram))
@@ -651,18 +671,25 @@ public class ProcessedNet {
      * @return the smallest distance between nodes that are not connected.
      */
     private double smallestNonBondedDistance(final PeriodicGraph G,
-            final Embedder embedder) {
+            final Map pos, final Matrix gram) {
         // --- get some data about the graph and embedding
     	final int dim = G.getDimension();
-        final Matrix gram = embedder.getGramMatrix();
-        final Map pos = embedder.getPositions();
         
         // --- compute a Dirichlet domain for the translation lattice
         final Vector basis[] = Vector.rowVectors(Matrix.one(G.getDimension()));
+		if (DEBUG) {
+			System.out.println("\t\t\t@@@ Computing dirichlet vectors...");
+		}
         final Vector dirichlet[] = Lattices.dirichletVectors(basis, gram);
+		if (DEBUG) {
+			System.out.println("\t\t\t@@@ Computing reduced basis...");
+		}
+        final Vector reduced[] = Lattices.reducedLatticeBasis(basis, gram);
         
         // --- find vectors that address neighborhood of dirichlet domain
-        final Vector reduced[] = Lattices.reducedLatticeBasis(basis, gram);
+		if (DEBUG) {
+			System.out.println("\t\t\t@@@ Computing neighborhood vectors...");
+		}
         final Matrix M = Vector.toMatrix(reduced);
         final List cellNeighbors = new ArrayList();
         final int f[] = new int[dim];
@@ -684,6 +711,9 @@ public class ProcessedNet {
         double minDist = Double.MAX_VALUE;
 
         // --- loop over all pairs of points in the repeat unit
+		if (DEBUG) {
+			System.out.println("\t\t\t@@@ Looping over node pairs...");
+		}
         for (final Iterator iter1 = G.nodes(); iter1.hasNext();) {
             final INode v = (INode) iter1.next();
             final Point p = (Point) pos.get(v);
