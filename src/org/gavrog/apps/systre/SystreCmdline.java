@@ -74,7 +74,7 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.10 2008/07/09 00:50:38 odf Exp $
+ * @version $Id: SystreCmdline.java,v 1.11 2008/07/12 08:46:14 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -603,7 +603,7 @@ public class SystreCmdline extends EventSource {
         	status("Verifying the embedding...");
         	
             final IArithmetic det = embedder.getGramMatrix().determinant();
-            if (det.abs().isLessThan(new FloatingPoint(0.001))) {
+            if (det.isLessThan(new FloatingPoint(0.001))) {
                 out.println("==================================================");
                 final String msg = "!!! WARNING (INTERNAL) - "
 						+ "Unit cell degenerated in relaxation.";
