@@ -77,7 +77,7 @@ import buoy.widget.LayoutInfo;
  * A simple GUI for Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.12 2008/07/12 09:08:17 odf Exp $
+ * @version $Id: SystreGUI.java,v 1.13 2008/07/12 11:19:59 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -317,7 +317,21 @@ public class SystreGUI extends BFrame {
                         final BufferedWriter writer = new BufferedWriter(new FileWriter(
 								file, append));
                         final int n = filename.lastIndexOf('.');
-                        final String extension = filename.substring(n+1);
+                        String extension = filename.substring(n+1);
+                        if (extension != "out" && extension != "pgr"
+								&& extension != "cgd" && extension != "arc") {
+                        	final ExtensionFilter filter = (ExtensionFilter) outFileChooser
+									.getFileFilter();
+                        	if (filter.accept(new File("x.out"))) {
+                        		extension = "out";
+                        	} else if (filter.accept(new File("x.cgd"))) {
+                        		extension = "cgd";
+                        	} else if (filter.accept(new File("x.pgr"))) {
+                        		extension = "pgr";
+                        	} else if (filter.accept(new File("x.arc"))) {
+                        		extension = "arc";
+                        	}
+                        }
                         if (singleWrite) {
 							writeStructure(extension, writer, systre.getLastStructure(),
 									lastFinishedTranscript);
