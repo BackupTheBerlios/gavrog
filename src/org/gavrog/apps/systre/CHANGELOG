@@ -1,7 +1,12 @@
 Systre 1.1.5:
 
+  Bug fixes:
+    - The smallest non-bonded distance reported was occasionally incorrect.
+    - The test for degenerate unit cells could miss certain degeneracies.
+    - If the output file extension is unknown, a reasonable default is chosen.
+
+- Output can be saved to file after 'Cancel' even when the computation freezes.
 - Translational freedom, if any, is used to improve the output node positions.
-- Bug fix: the smallest non-bonded distance reported was occasionally incorrect.
 - The embedding step can now be skipped altogether.
 - A connectivity value of 0 for an atom is now read as 'undetermined'.
 - The GUI version now has an option to process whole files without stopping.
