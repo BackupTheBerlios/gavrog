@@ -1,0 +1,25 @@
+3dt 0.3.2:
+
+- Added a 'symmetrize' action to maximize symmetry in a tiling.
+- BUG FIX: the scene file output was broken in 0.3.1 and could not be read back.
+- Individual tiles can now be colored and uncolored (reverted to class color.)
+- New tilings are viewed along the Z (a.k.a. 001) axis by default.
+- Added menu items to align the camera direction with the unit cell axes.
+- Better automatic fitting of the scene to the viewing window.
+
+3dt 0.3.1:
+
+- The default scene for a new tiling is now a unit cell filled with tiles.
+- While processing a new tiling, its name and position in the file are now shown.
+- The viewing transformation is now saved to and restored from the scene file.
+- Added functionality to delete a whole orbit of tiles from the scene.
+- Switched to most current Buoy version.
+- BUG FIX: transitivity symbol repeated the number of vertex orbits.
+- BUG FIX: the shell scripts now work correctly on Mac and Linux.
+
+3dt 0.3.0:
+
+- An input file can now be given as a command line argument.
+- Added a 'dualize' function.
+- The current tiling, its net and the current scene can be saved to files.
+- Added an 'About' frame that shows the version number and such.

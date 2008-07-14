@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+IZPACK=$HOME/Software/IzPack
+BUOY="$HOME/Software/Buoy Folder"
+GAVROG_MAIN="$HOME/workspace/Gavrog Main"
+GAVROG_3DT="$HOME/workspace/Gavrog-3dt"
+
+jar cmf "$GAVROG_MAIN/SYSTRE.MF" Systre.jar \
+	-C "$BUOY" buoy -C "$GAVROG_MAIN/bin" org
+jar cf 3dt-Main.jar -C "$GAVROG_3DT/bin" org
+
+"$IZPACK/bin/compile" install.xml
+
+rm Systre.jar 3dt-Main.jar

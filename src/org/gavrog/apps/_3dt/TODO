@@ -1,0 +1,31 @@
+=====================================================
+
+In progress:
+
+(none)
+
+=====================================================
+
+Open bugs:
+
+- Sometimes popups don't show up on top of the OpenGL window.
+- Scene read back from file is shifted with center in upper left corner.
+- Sometimes unit cells are very flat.
+- Disabling and enabling of menu items is missing or clumsily implemented.
+
+Planned/requested features:
+
+- Better handling of size changes for the output part of the controls window.
+- Capture diagnostic output in a widget like in Systre.
+- Draw the skeleton.
+- Save function for analysis results like transitivity, space group, etc.
+- More display list generators.
+- Options to change defaults for group setting on input (as in Systre.)
+- Option to keep the unit cell and coordinates used in the input.
+- Implement a balance/naturalize function.
+- Draw tiles and dual tiles in one image.
+- Better Macintosh support (desktop shortcuts and such.)
+- Support for long tiling names (multi-line or something.)
+- Pick separate colors for face classes.
+
+=====================================================
