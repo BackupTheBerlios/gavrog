@@ -4,3 +4,4 @@ syntax: glob
 
 syntax: regexp
 ^bin/
+^Deploy/install.jar$
