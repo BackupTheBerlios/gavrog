@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 
+JAVA_HOME=/usr/lib/jvm/java-1.5.0-sun
 IZPACK=$HOME/Software/IzPack
-BUOY="$HOME/Software/Buoy Folder"
-GAVROG_MAIN="$HOME/workspace/Gavrog Main"
-GAVROG_3DT="$HOME/workspace/Gavrog-3dt"
+BUOY="$HOME/Software/Buoy"
+GAVROG_MAIN="$HOME/eclipse-workspace/Gavrog-combined"
+GAVROG_3DT="$HOME/eclipse-workspace/Gavrog-combined"
 
 jar cmf "$GAVROG_MAIN/SYSTRE.MF" Systre.jar \
 	-C "$BUOY" buoy -C "$GAVROG_MAIN/bin" org
