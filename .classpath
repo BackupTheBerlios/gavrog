@@ -5,5 +5,14 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path="/Buoy"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry kind="lib" path="Deploy/jogl/jogl.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/bsh.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/jReality.jar" sourcepath="/home/olaf/Software/jReality/src"/>
+	<classpathentry kind="lib" path="Deploy/jReality/jtem-beans.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/jterm.jar"/>
+	<classpathentry kind="lib" path="Deploy/sunflow/janino.jar"/>
+	<classpathentry kind="lib" path="Deploy/sunflow/sunflow.jar"/>
+	<classpathentry kind="lib" path="Deploy/XStream/xpp3.jar"/>
+	<classpathentry kind="lib" path="Deploy/XStream/xstream.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
