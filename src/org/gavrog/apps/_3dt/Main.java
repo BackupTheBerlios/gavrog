@@ -130,11 +130,11 @@ public class Main extends EventSource {
 	final private BFileChooser inFileChooser = new BFileChooser(
 			BFileChooser.OPEN_FILE, "Open data file");
 	final private BFileChooser outNetChooser = new BFileChooser(
-			BFileChooser.OPEN_FILE, "Save net");
+			BFileChooser.SAVE_FILE, "Save net");
 	final private BFileChooser outTilingChooser = new BFileChooser(
-			BFileChooser.OPEN_FILE, "Save tiling");
+			BFileChooser.SAVE_FILE, "Save tiling");
 	final private BFileChooser outSceneChooser = new BFileChooser(
-			BFileChooser.OPEN_FILE, "Save scene");
+			BFileChooser.SAVE_FILE, "Save scene");
 	
 	private String lastInputDirectory = System.getProperty("3dt.home") + "/Data";
 	private String lastNetOutputDirectory = System.getProperty("user.home");
