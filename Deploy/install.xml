@@ -12,7 +12,7 @@ Installation file for Gavrog, currently in particular for 3dt.
     -->
     <info>
         <appname>3dt</appname>
-        <appversion>alpha 0.3.1</appversion>
+        <appversion>alpha 0.3.2</appversion>
         <authors>
             <author name="Olaf Delgado-Friedrichs"
 	     email="odf@users.sourceforge.net"/>
