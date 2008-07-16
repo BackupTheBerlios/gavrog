@@ -1,5 +1,6 @@
 3dt 0.3.2:
 
+- Introduced a workaround for the invisible context menu problem on MacOS.
 - Added a 'symmetrize' action to maximize symmetry in a tiling.
 - BUG FIX: the scene file output was broken in 0.3.1 and could not be read back.
 - Individual tiles can now be colored and uncolored (reverted to class color.)
