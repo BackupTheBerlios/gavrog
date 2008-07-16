@@ -32,6 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,7 @@ import org.gavrog.box.gui.Invoke;
 import org.gavrog.box.gui.OptionCheckBox;
 import org.gavrog.box.gui.OptionColorBox;
 import org.gavrog.box.gui.OptionInputBox;
+import org.gavrog.box.gui.TextAreaOutputStream;
 import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -2208,11 +2210,8 @@ public class Main extends EventSource {
     
     public void showControls() {
     	if (this.controlsFrame == null) {
-			this.controlsFrame = new BFrame("3dt Controls");
-			this.controlsFrame.addEventLink(WindowClosingEvent.class, this,
-					"hideControls");
-			final BSplitPane content = new BSplitPane();
-			content.setOrientation(BSplitPane.HORIZONTAL);
+			final BSplitPane top = new BSplitPane();
+			top.setOrientation(BSplitPane.HORIZONTAL);
 			final BScrollPane scrollA = new BScrollPane(allOptions(),
 					BScrollPane.SCROLLBAR_AS_NEEDED,
 					BScrollPane.SCROLLBAR_AS_NEEDED);
@@ -2223,14 +2222,29 @@ public class Main extends EventSource {
 					BScrollPane.SCROLLBAR_AS_NEEDED,
 					BScrollPane.SCROLLBAR_AS_NEEDED);
 			scrollB.setBackground(textColor);
-			content.add(scrollA, 0);
-			content.add(scrollB, 1);
-			this.controlsFrame.setContent(content);
+			top.add(scrollA, 0);
+			top.add(scrollB, 1);
 			
+			final TextAreaOutputStream out = new TextAreaOutputStream();
+			final PrintStream sysout = new PrintStream(out);
+			System.setErr(sysout);
+			System.setOut(sysout);
+
+			final BSplitPane content = new BSplitPane();
+			content.setOrientation(BSplitPane.VERTICAL);
+			content.add(top, 0);
+			content.add(out.getWidget(), 1);
+
+			this.controlsFrame = new BFrame("3dt Controls");
+			this.controlsFrame.addEventLink(WindowClosingEvent.class, this,
+					"hideControls");
+			this.controlsFrame.setContent(content);
 			final JFrame jf = this.controlsFrame.getComponent();
-			jf.setSize(500, 400);
+			jf.setSize(600, 500);
 			jf.validate();
-			content.setDividerLocation(0.667);
+
+			top.setDividerLocation(300);
+			content.setDividerLocation(350);
 		}
     	this.controlsFrame.setVisible(true);
 		this.controlsFrame.repaint();

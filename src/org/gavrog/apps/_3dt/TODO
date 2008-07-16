@@ -15,7 +15,6 @@ Open bugs:
 
 Planned/requested features:
 
-- Capture diagnostic output in a widget like in Systre.
 - Draw the skeleton.
 - Save function for analysis results like transitivity, space group, etc.
 - More display list generators.

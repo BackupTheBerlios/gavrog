@@ -1,5 +1,6 @@
 3dt 0.3.2:
 
+- Diagnostic output and error messages are now displayed in the controls window.
 - Tiling names are no longer cut after 37 characters.
 - The size of the control window is no longer changed for each new tiling.
 - Introduced a workaround for the invisible context menu problem on MacOS.
