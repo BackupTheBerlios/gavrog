@@ -44,6 +44,7 @@ import java.util.Properties;
 import javax.swing.Action;
 import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
@@ -78,7 +79,7 @@ import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
 import buoy.widget.BLabel;
 import buoy.widget.BOutline;
-import buoy.widget.BSeparator;
+import buoy.widget.BScrollPane;
 import buoy.widget.BSplitPane;
 import buoy.widget.BStandardDialog;
 import buoy.widget.BTabbedPane;
@@ -1109,8 +1110,8 @@ public class Main extends EventSource {
 		String name = doc.getName();
 		if (name == null) {
 			name = "--";
-		} else if (name.length() > 37) {
-			name = name.substring(0, 37) + "...";
+//		} else if (name.length() > 37) {
+//			name = name.substring(0, 37) + "...";
 		}
 		setTInfo("name", name);
 		
@@ -1988,7 +1989,7 @@ public class Main extends EventSource {
             options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
             options.add(new OptionInputBox("Surface Detail", this,
                     "subdivisionLevel"));
-            options.add(new OptionInputBox("Edge Rounding", this,
+            options.add(new OptionInputBox("Edge Creasing", this,
 					"edgeRoundingLevel"));
             options.add(new OptionCheckBox("Smooth Face Shading", this,
 					"smoothFaces"));
@@ -2141,7 +2142,7 @@ public class Main extends EventSource {
 
     private Widget allOptions() {
 		final BTabbedPane options = new BTabbedPane();
-		options.setBackground(textColor);
+		options.setBackground(null);
 		options.add(optionsGeometry(), "Geometry");
 		options.add(optionsDisplay(), "Display");
 		options.add(optionsMaterial(), "Material");
@@ -2151,12 +2152,10 @@ public class Main extends EventSource {
     }
     
     private Widget tilingInfo() {
-		final ColumnContainer wrapper = new ColumnContainer();
-		wrapper.setBackground(textColor);
 		final RowContainer info = new RowContainer();
-		info.setDefaultLayout(new LayoutInfo(LayoutInfo.NORTH, LayoutInfo.NONE,
-				new Insets(5, 5, 5, 5), null));
 		info.setBackground(null);
+		info.setDefaultLayout(new LayoutInfo(LayoutInfo.NORTH, LayoutInfo.BOTH,
+				new Insets(10, 10, 10, 10), null));
 
 		final String[][] items = new String[][] {
 				{ "file", "File:" }, { "#", "#" }, { "name", "Name:" },
@@ -2182,16 +2181,8 @@ public class Main extends EventSource {
 		}
 		info.add(captions);
 		info.add(data);
-		wrapper.add(info, new LayoutInfo(LayoutInfo.NORTH, LayoutInfo.NONE,
-				null, null));
-		final Widget filler = new BSeparator();
-		filler.setBackground(null);
-		wrapper.add(filler, new LayoutInfo(LayoutInfo.CENTER,
-				LayoutInfo.VERTICAL, null, null));
-		return wrapper;
+		return info;
 	}
-    
-    private boolean controlsUpdateWaiting = false;
     
     private void setTInfo(final String key, final String value) {
     	Invoke.andWait(new Runnable() {
@@ -2199,17 +2190,6 @@ public class Main extends EventSource {
     	    	tInfoFields.get(key).setText(value);
     		}
     	});
-    	if (!controlsUpdateWaiting) {
-			controlsUpdateWaiting = true;
-			Invoke.later(new Runnable() {
-				public void run() {
-					controlsFrame.pack();
-					// TODO HACK: make sure controls frame is redrawn
-					controlsFrame.setVisible(true);
-					controlsUpdateWaiting = false;
-				}
-			});
-		}
     }
     
     private void setTInfo(final String key, final int value) {
@@ -2233,15 +2213,26 @@ public class Main extends EventSource {
 					"hideControls");
 			final BSplitPane content = new BSplitPane();
 			content.setOrientation(BSplitPane.HORIZONTAL);
-			content.add(allOptions(), 0);
-			content.add(tilingInfo(), 1);
+			final BScrollPane scrollA = new BScrollPane(allOptions(),
+					BScrollPane.SCROLLBAR_AS_NEEDED,
+					BScrollPane.SCROLLBAR_AS_NEEDED);
+			scrollA.setBackground(textColor);
+			scrollA.setForceWidth(true);
+			scrollA.setForceHeight(true);
+			final BScrollPane scrollB = new BScrollPane(tilingInfo(),
+					BScrollPane.SCROLLBAR_AS_NEEDED,
+					BScrollPane.SCROLLBAR_AS_NEEDED);
+			scrollB.setBackground(textColor);
+			content.add(scrollA, 0);
+			content.add(scrollB, 1);
 			this.controlsFrame.setContent(content);
-			this.controlsFrame.pack();
-			this.controlsFrame.setVisible(true);
+			
+			final JFrame jf = this.controlsFrame.getComponent();
+			jf.setSize(500, 400);
+			jf.validate();
 			content.setDividerLocation(0.667);
-		} else {
-			this.controlsFrame.setVisible(true);
 		}
+    	this.controlsFrame.setVisible(true);
 		this.controlsFrame.repaint();
 	}
     

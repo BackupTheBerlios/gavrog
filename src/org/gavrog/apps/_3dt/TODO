@@ -15,7 +15,6 @@ Open bugs:
 
 Planned/requested features:
 
-- Better handling of size changes for the output part of the controls window.
 - Capture diagnostic output in a widget like in Systre.
 - Draw the skeleton.
 - Save function for analysis results like transitivity, space group, etc.

@@ -1,5 +1,7 @@
 3dt 0.3.2:
 
+- Tiling names are no longer cut after 37 characters.
+- The size of the control window is no longer changed for each new tiling.
 - Introduced a workaround for the invisible context menu problem on MacOS.
 - Added a 'symmetrize' action to maximize symmetry in a tiling.
 - BUG FIX: the scene file output was broken in 0.3.1 and could not be read back.
