@@ -47,6 +47,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import org.gavrog.box.gui.Config;
 import org.gavrog.box.gui.ExtensionFilter;
@@ -106,6 +108,7 @@ import de.jreality.scene.tool.InputSlot;
 import de.jreality.scene.tool.Tool;
 import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
+import de.jreality.softviewer.SoftViewer;
 import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.ui.viewerapp.ViewerAppMenu;
 import de.jreality.ui.viewerapp.ViewerSwitch;
@@ -178,6 +181,7 @@ public class Main extends EventSource {
     private Color fogColor = Color.WHITE;
     private boolean fogToBackground = true;
     private double fieldOfView = 30.0;
+    private boolean useLeopardWorkaround = false;
 
     // --- the current document and the document list in which it lives
     private List<Document> documents;
@@ -201,7 +205,7 @@ public class Main extends EventSource {
 
 	// --- scene graph components
 	final private ViewerApp viewerApp;
-    final private Viewer viewer;
+	private int previousViewer = -1;
     final private JrScene scene;
     final private SceneGraphComponent world;
 
@@ -244,7 +248,6 @@ public class Main extends EventSource {
 		// --- create the viewing infrastructure
 		this.world = SceneGraphUtility.createFullSceneGraphComponent("world");
 		viewerApp = new ViewerApp(world);
-		this.viewer = viewerApp.getCurrentViewer();
 		this.scene = viewerApp.getJrScene();
         viewerApp.setAttachNavigator(false);
         viewerApp.setAttachBeanShell(false);
@@ -259,7 +262,7 @@ public class Main extends EventSource {
         this.unitCell = new SceneGraphComponent("unitCell");
         
         // --- remove the encompass tool (we'll have a menu entry for that)
-        final SceneGraphComponent root = this.viewer.getSceneRoot();
+        final SceneGraphComponent root = this.viewerApp.getCurrentViewer().getSceneRoot();
         final List tools = root.getTools();
         Tool encompass = null;
         for (final Iterator iter = tools.iterator(); iter.hasNext();) {
@@ -1661,7 +1664,7 @@ public class Main extends EventSource {
     }
 
     private void encompass() {
-    	encompass(this.viewer, this.scene);
+    	encompass(this.viewerApp.getCurrentViewer(), this.scene);
     }
     
 	public static void encompass(final Viewer viewer, final JrScene scene) {
@@ -1731,7 +1734,7 @@ public class Main extends EventSource {
 	}
 	
     private void updateCamera() {
-    	final Camera cam = CameraUtility.getCamera(this.viewer);
+    	final Camera cam = CameraUtility.getCamera(this.viewerApp.getCurrentViewer());
     	boolean re_encompass = false;
     	if (getPerspective() != cam.isPerspective()) {
     		cam.setPerspective(getPerspective());
@@ -1744,7 +1747,7 @@ public class Main extends EventSource {
     	if (re_encompass) {
     		encompass();
     	}
-        final Appearance a = this.viewer.getSceneRoot().getAppearance();
+        final Appearance a = this.viewerApp.getCurrentViewer().getSceneRoot().getAppearance();
         a.setAttribute(CommonAttributes.BACKGROUND_COLORS, Appearance.INHERITED);
         a.setAttribute(CommonAttributes.BACKGROUND_COLOR, getBackgroundColor());
         a.setAttribute(CommonAttributes.FOG_ENABLED, getUseFog());
@@ -1763,7 +1766,7 @@ public class Main extends EventSource {
     private void resumeRendering() {
     	this.world.addChild(this.tiling);
     	this.world.addChild(this.unitCell);
-    	this.viewer.render();
+    	this.viewerApp.getCurrentViewer().render();
     }
 
     private Transformation getViewingTransformation() {
@@ -1780,6 +1783,7 @@ public class Main extends EventSource {
     
     private JPopupMenu selectionPopup() {
     	if (_selectionPopup == null) {
+    		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
     		_selectionPopup = new JPopupMenu("Actions");
     		_selectionPopup.setLightWeightPopupEnabled(false);
     		_selectionPopup.add(actionAddTile());
@@ -1789,6 +1793,23 @@ public class Main extends EventSource {
     		_selectionPopup.add(actionRecolorTile());
     		_selectionPopup.add(actionUncolorTile());
     		_selectionPopup.add(actionRecolorTileClass());
+    		
+    		_selectionPopup.addPopupMenuListener(new PopupMenuListener() {
+				public void popupMenuCanceled(PopupMenuEvent e) {
+				}
+
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+					if (useLeopardWorkaround) {
+						restoreViewer();
+					}
+				}
+
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+					if (useLeopardWorkaround) {
+						forceSoftwareViewer();
+					}
+				}
+    		});
     	}
     	return _selectionPopup;
     }
@@ -1851,6 +1872,35 @@ public class Main extends EventSource {
 				}
             }
         }
+    }
+    
+    private void forceSoftwareViewer() {
+		final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
+		final Viewer viewers[] = vSwitch.getViewers();
+		final Viewer current = vSwitch.getCurrentViewer();
+		for (int i = 0; i < viewers.length; ++i) {
+			if (viewers[i] == current) {
+				this.previousViewer = i;
+				break;
+			}
+		}
+		for (int i = 0; i < viewers.length; ++i) {
+			if (viewers[i] instanceof SoftViewer) {
+				vSwitch.selectViewer(i);
+				vSwitch.getCurrentViewer().renderAsync();
+				break;
+			}
+		}
+	}
+    
+    @SuppressWarnings("unused")
+	private void restoreViewer() {
+    	if (this.previousViewer >= 0) {
+			final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
+			vSwitch.selectViewer(this.previousViewer);
+			vSwitch.getCurrentViewer().renderAsync();
+			this.previousViewer = -1;
+    	}
     }
     
     private BButton makeButton(final String label, final Object target,
@@ -1982,6 +2032,8 @@ public class Main extends EventSource {
                     "unitCellColor"));
             options.add(new OptionInputBox("Unit Cell Edge Width", this,
                     "unitCellEdgeWidth"));
+            options.add(new OptionCheckBox("MacOS Context Menu Workaround", this,
+            		"useLeopardWorkaround"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2624,4 +2676,16 @@ public class Main extends EventSource {
     		this.unitCellEdgeWidth = unitCellEdgeWidth;
     	}
     }
+
+	public boolean getUseLeopardWorkaround() {
+		return this.useLeopardWorkaround;
+	}
+
+	public void setUseLeopardWorkaround(boolean useLeopardWorkaround) {
+		if (useLeopardWorkaround != this.useLeopardWorkaround) {
+			dispatchEvent(new PropertyChangeEvent(this, "useLeopardWorkaround",
+					this.useLeopardWorkaround, useLeopardWorkaround));
+			this.useLeopardWorkaround = useLeopardWorkaround;
+		}
+	}
 }
