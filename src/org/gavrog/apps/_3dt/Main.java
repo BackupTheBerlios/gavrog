@@ -44,8 +44,8 @@ import java.util.Properties;
 
 import javax.swing.Action;
 import javax.swing.JColorChooser;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
@@ -77,8 +77,8 @@ import buoy.event.CommandEvent;
 import buoy.event.EventSource;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
+import buoy.widget.BDialog;
 import buoy.widget.BFileChooser;
-import buoy.widget.BFrame;
 import buoy.widget.BLabel;
 import buoy.widget.BOutline;
 import buoy.widget.BScrollPane;
@@ -202,8 +202,8 @@ public class Main extends EventSource {
 	private int selectedFace = -1;
     
     // --- gui elements
-	private BFrame aboutFrame;
-	private BFrame controlsFrame;
+	private BDialog aboutFrame;
+	private BDialog controlsFrame;
 	private HashMap<String, BLabel> tInfoFields;
 
 	// --- scene graph components
@@ -2235,11 +2235,11 @@ public class Main extends EventSource {
 			content.add(top, 0);
 			content.add(out.getWidget(), 1);
 
-			this.controlsFrame = new BFrame("3dt Controls");
+			this.controlsFrame = new BDialog("3dt Controls");
 			this.controlsFrame.addEventLink(WindowClosingEvent.class, this,
 					"hideControls");
 			this.controlsFrame.setContent(content);
-			final JFrame jf = this.controlsFrame.getComponent();
+			final JDialog jf = this.controlsFrame.getComponent();
 			jf.setSize(600, 500);
 			jf.validate();
 
@@ -2258,7 +2258,7 @@ public class Main extends EventSource {
     
     public void showAbout() {
     	if (this.aboutFrame == null) {
-			this.aboutFrame = new BFrame("About 3dt");
+			this.aboutFrame = new BDialog("About 3dt");
 			this.aboutFrame.addEventLink(WindowClosingEvent.class, this,
 					"hideAbout");
 			final BLabel label = new BLabel("<html><center><h2>Gavrog 3dt</h2>"
@@ -2266,6 +2266,7 @@ public class Main extends EventSource {
 					+ "<p>by Olaf Delgado-Friedrichs 1997-2007<p>"
 					+ "</center></html>");
 			final BOutline content = BOutline.createEmptyBorder(label, 20);
+			content.setBackground(textColor);
 			this.aboutFrame.setContent(content);
 			this.aboutFrame.pack();
 		}
