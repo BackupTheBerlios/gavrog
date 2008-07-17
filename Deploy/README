@@ -39,6 +39,49 @@ check the project website http://www.gavrog.org.
 
 ===========================================================================
 
+Interface basics:
+----------------
+
+When 3dt is started, two windows appear - "3dt Viewer", the other
+"3dt Controls".
+
+The viewer window contains the main menu and displays the
+tilings. Most of the menu should be either self-explanatory or reveal itself
+after a bit of experimentation. Please consider the File/Export submenu as
+partly experimental. Some things may not work at all, or may be very slow.
+Recommended ways of exporting images are either File/Export/Sunflow/Render
+or File/Export/Image, although I have occasionally seen the latter crash
+on X Window systems.
+
+The current scene can be rotated by dragging with the left mouse button
+pressed, moved around by dragging with the middle button and pulled or
+pushed by dragging with the middle mouse button while the <ctrl> key is
+pressed. Pressing the right mouse button over a face brings up a context
+menu that lets you add, remove and recolor tiles. There are also two
+shortcuts for quick scene manipulation: <shift>-<right-click> adds a tile
+at the face the mouse is over, whereas <ctrl>-<right-click> removes a tile.
+
+If the context menu does not show up, try to activeate the "MacOS context
+menu workaround" in the "Display" tab on the controls window.
+
+The controls window has three parts, which can be changed in size
+by dragging the separating bars. The top left one is used to modify
+settings for 3dt. These are saved to a file after a change and reloaded
+each time the program is started. Press the "Apply" button to make changes
+effective.
+
+CAVEAT: In the "Geometry" tab, be very careful with the "Surface Detail"
+setting. Normally, 2 is a good setting for interactive work and 3 for
+exporting images. At 3, and more so at 4, it will considerably slow down
+the program. Even higher values might make it unresponsive and possibly
+crash.
+
+The top right part of the controls window contains information about the
+current tile, and the bottom part shows any diagnostic output that might be
+produced.
+
+===========================================================================
+
 File formats I - Delaney symbols:
 --------------------------------
 
