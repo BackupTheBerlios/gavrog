@@ -23,7 +23,6 @@ Planned/requested features:
 - Implement a balance/naturalize function.
 - Draw tiles and dual tiles in one image.
 - Better Macintosh support (desktop shortcuts and such.)
-- Support for long tiling names (multi-line or something.)
 - Pick separate colors for face classes.
 
 =====================================================
