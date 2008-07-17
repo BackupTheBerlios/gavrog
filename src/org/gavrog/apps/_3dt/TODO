@@ -15,14 +15,18 @@ Open bugs:
 
 Planned/requested features:
 
+- Implement a balance/naturalize function.
 - Draw the skeleton.
+- Pick separate colors for face classes.
+- Option to keep the unit cell and coordinates used in the input.
+- Add ways to manipulate the lighting.
+- Determine sequence of operations to turn given tiling into a self-dual one.
+- Function to revert to default settings.
+
 - Save function for analysis results like transitivity, space group, etc.
 - More display list generators.
 - Options to change defaults for group setting on input (as in Systre.)
-- Option to keep the unit cell and coordinates used in the input.
-- Implement a balance/naturalize function.
 - Draw tiles and dual tiles in one image.
 - Better Macintosh support (desktop shortcuts and such.)
-- Pick separate colors for face classes.
 
 =====================================================
