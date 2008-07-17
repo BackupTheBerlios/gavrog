@@ -7,7 +7,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="lib" path="Deploy/jogl/jogl.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Gavrog-combined/Deploy/jogl-unix"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Gavrog/Deploy/jogl-unix"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="Deploy/jReality/bsh.jar"/>
@@ -20,7 +20,7 @@
 	<classpathentry kind="lib" path="Deploy/XStream/xstream.jar"/>
 	<classpathentry kind="lib" path="Deploy/jogl/gluegen-rt.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Gavrog-combined/Deploy/jogl-unix"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Gavrog/Deploy/jogl-unix"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
