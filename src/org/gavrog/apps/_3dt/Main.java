@@ -21,6 +21,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Frame;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -46,6 +47,7 @@ import javax.swing.Action;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
@@ -75,10 +77,12 @@ import org.gavrog.joss.tilings.Tiling.Tile;
 
 import buoy.event.CommandEvent;
 import buoy.event.EventSource;
+import buoy.event.MouseClickedEvent;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
 import buoy.widget.BDialog;
 import buoy.widget.BFileChooser;
+import buoy.widget.BFrame;
 import buoy.widget.BLabel;
 import buoy.widget.BOutline;
 import buoy.widget.BScrollPane;
@@ -2210,6 +2214,26 @@ public class Main extends EventSource {
     
     public void showControls() {
     	if (this.controlsFrame == null) {
+    		// The following is a bad hack to make the viewer application's
+    		// frame an acceptable parent for a Buoy dialog. We need a parented
+    		// dialog here to make sure the viewer's menu bar does not disappear
+    		// on MacOS.
+    		final JFrame vF = viewerApp.getFrame();
+    		final LayoutManager vL = vF.getContentPane().getLayout();
+    		final int vCO = vF.getDefaultCloseOperation();
+    	    class WrappedFrame extends BFrame {
+    	    	public WrappedFrame() {
+    	    		super();
+    	    		vF.getContentPane().setLayout(vL);
+    	    		vF.setDefaultCloseOperation(vCO);
+    	    	}
+    	    	
+    	    	protected JFrame createComponent() {
+    	    		return vF;
+    	    	}
+    	    };
+    	    final WrappedFrame viewerFrame = new WrappedFrame();
+    	    
 			final BSplitPane top = new BSplitPane();
 			top.setOrientation(BSplitPane.HORIZONTAL);
 			final BScrollPane scrollA = new BScrollPane(allOptions(),
@@ -2235,7 +2259,7 @@ public class Main extends EventSource {
 			content.add(top, 0);
 			content.add(out.getWidget(), 1);
 
-			this.controlsFrame = new BDialog("3dt Controls");
+			this.controlsFrame = new BDialog(viewerFrame, "3dt Controls", false);
 			this.controlsFrame.addEventLink(WindowClosingEvent.class, this,
 					"hideControls");
 			this.controlsFrame.setContent(content);
@@ -2258,8 +2282,10 @@ public class Main extends EventSource {
     
     public void showAbout() {
     	if (this.aboutFrame == null) {
-			this.aboutFrame = new BDialog("About 3dt");
+			this.aboutFrame = new BDialog(this.controlsFrame, "About 3dt", true);
 			this.aboutFrame.addEventLink(WindowClosingEvent.class, this,
+					"hideAbout");
+			this.aboutFrame.addEventLink(MouseClickedEvent.class, this,
 					"hideAbout");
 			final BLabel label = new BLabel("<html><center><h2>Gavrog 3dt</h2>"
 					+ "<p>Version " + Version.full + "</p>"
