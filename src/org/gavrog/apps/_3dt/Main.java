@@ -345,6 +345,9 @@ public class Main extends EventSource {
         menu.addAction(actionXView(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionYView(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionZView(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(action011View(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(action101View(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(action110View(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(action111View(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
@@ -1018,6 +1021,69 @@ public class Main extends EventSource {
 					KeyEvent.VK_Z, 0));
 		}
 		return _zViewAction;
+	}
+    
+    private AbstractJrAction _011ViewAction = null;
+
+	private Action action011View() {
+		if (_011ViewAction == null) {
+			final AbstractJrAction a = _011ViewAction = new AbstractJrAction(
+					"View along 011") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rotateScene(new Vector(0, 1, 1), new Vector(0, 0, 1));
+					encompass();
+				}
+			};
+			a.setShortDescription("View the scene along the 011 vector.");
+			a.setAcceleratorKey(KeyStroke.getKeyStroke(
+					KeyEvent.VK_A, 0));
+		}
+		return _011ViewAction;
+	}
+    
+    private AbstractJrAction _101ViewAction = null;
+
+	private Action action101View() {
+		if (_101ViewAction == null) {
+			final AbstractJrAction a = _101ViewAction = new AbstractJrAction(
+					"View along 101") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rotateScene(new Vector(1, 0, 1), new Vector(0, 0, 1));
+					encompass();
+				}
+			};
+			a.setShortDescription("View the scene along the 101 vector.");
+			a.setAcceleratorKey(KeyStroke.getKeyStroke(
+					KeyEvent.VK_B, 0));
+		}
+		return _101ViewAction;
+	}
+    
+    private AbstractJrAction _110ViewAction = null;
+
+	private Action action110View() {
+		if (_110ViewAction == null) {
+			final AbstractJrAction a = _110ViewAction = new AbstractJrAction(
+					"View along 110") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rotateScene(new Vector(1, 1, 0), new Vector(0, 0, 1));
+					encompass();
+				}
+			};
+			a.setShortDescription("View the scene along the 110 vector.");
+			a.setAcceleratorKey(KeyStroke.getKeyStroke(
+					KeyEvent.VK_C, 0));
+		}
+		return _110ViewAction;
 	}
     
     private AbstractJrAction _111ViewAction = null;
