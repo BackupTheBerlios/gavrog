@@ -28,6 +28,11 @@
 <body>
 <h1>Systre Help</h1>
 
+<p>
+<b>NOTE: The information in this document is based on the upcoming Systre 1.1.5
+release. Other versions of Systre may behave slightly differently.</b>
+</p>
+
 <ul>
 <li><a href="#introduction">Introduction</a></li>
 <li><a href="#installation">Installation</a></li>
@@ -103,10 +108,21 @@ with the Java executable.
 <p>
 Installing S<small>YSTRE</small> itself is very easy.  Just download
 the file <tt>Systre.jar</tt> and put it anywhere you like, for example
-on your desktop.
+on your desktop. A S<small>YSTRE</small> executable is also included
+in the 3dt distribution available from
+<a href="http://www.gavrog.org">http://www.gavrog.org</a>.
 </p>
 
 <h2><a name="usage">Usage</a></h2>
+<p>
+The 3dt installer automatically installs S<small>YSTRE</small> as well
+and creates a batch file <tt>Systre</tt> or <tt>Systre.bat</tt> in the
+<tt>bin</tt> subdirectory of your
+chosen installation location. Please refer to your operating system
+documentation on how to execute such files. On Windows and some Unix
+machines, the installer can also create desktop icons for both 3dt and
+S<small>YSTRE</small>.
+</p>
 
 <p>
 The simplest way to start S<small>YSTRE</small> is to double-click on
@@ -194,14 +210,10 @@ private archives of nets.
 
 <dd>
 <p>
-Enter the space group symbol as it appears in the International Tables
-except N overbar is written as -N and subscripts written as regular
-numbers. Examples: <tt>Fd-3m</tt>, <tt>I41/amd</tt>,
-<tt>P212121</tt>. Only the standard settings of the International
-tables are known at this time. Please note that for certain settings,
-S<small>YSTRE</small> may not yet recognize the abbreviated Herman-Mauguin
-symbols, thus it may be necessary to write, for example, A12/n1 or I12/a1
-rather than A2/n or I2/a.
+Enter the space group symbol as it appears in the International Tables,
+except that "bar 3", "bar 4" etc. are written as -3, -4 and so on and
+subscripts are written as regular numbers. Examples: <tt>Fd-3m</tt>,
+<tt>I41/amd</tt>, <tt>P212121</tt>.
 </p>
 </dd>
 
@@ -221,7 +233,7 @@ changed in the 'Options' dialog.
 <p>
 Another way to make sure that the correct origin choice is used is to
 append <tt>:1</tt> or <tt>:2</tt>, respectively, to the group name as
-in Example 4 above.
+in Example 4 below.
 </p>
 </dd>
 
@@ -348,7 +360,7 @@ END
 <p>
 If you encounter any problems, please check your input thoroughly.
 There are many opportunities for typos and S<small>YSTRE</small> is
-very sensitive for input errors, especially when edges are not given
+very sensitive to input errors, especially when edges are not given
 explicitly.
 </p>
 
@@ -367,15 +379,14 @@ S<small>YSTRE</small> identifies nodes by their barycentric positions,
 which is the key to its efficient algorithms. If different nodes
 <em>collide</em>, i.e., if they have identical barycentric positions,
 this method fails. The present version of S<small>YSTRE</small> is not
-able to handle nets with collisions and will produce an error
+able to handle some nets with collisions and will produce an error
 message.  This seems to be a fairly rare case, though, especially in
 nets that emerge from actual crystal structures.
 </p>
 
 <p>
-Furthermore, the present version of S<small>YSTRE</small> cannot
-handle nets of any other dimension than 3 (including plane nets) or
-non-connected nets.
+Furthermore, S<small>YSTRE</small> currently only works for nets of
+dimensions 2 (plane nets) and 3.
 </p>
 
 </dd>
@@ -384,10 +395,10 @@ non-connected nets.
 
 <dd>
 <p>
-The Java virtual machine by Sun does not seem to be completely stable.
-In rare cases, there are non-reproducible program crashes or
-miscalculations.  S<small>YSTRE</small> double-checks its computations
-very thoroughly, though, so that erroneous results are highly unlikely
+With some versions of the Java runtime environment, occasional program
+crashes or miscalculations have been experienced.  S<small>YSTRE</small>
+double-checks its computations very thoroughly, though, so that erroneous
+results are highly unlikely
 to go undetected.  Much more likely, the program will terminate for no
 apparent reason or produce an "<tt>INTERNAL ERROR</tt>" message. In
 those cases, the best strategy is to restart S<small>YSTRE</small> or
@@ -417,13 +428,16 @@ S<small>YSTRE</small> is released under the Apache
 License, Version 2.0, as below.<br> <br>
 
 <hr />
-<p align="center">
-Apache License<br>
-Version 2.0, January 2004<br>
+<p>
+<br />
+<b>
+Apache License<br />
+Version 2.0, January 2004<br />
+</b>
 <a href="http://www.apache.org/licenses/">http://www.apache.org/licenses/</a>
 </p>
 <p>
-
+<br />
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 </p>
 <p><b><a name="definitions">1. Definitions</a></b>.</p>
@@ -650,10 +664,9 @@ graphs and convexity of plane tilings. <em>Discr. Comput. Geom.</em>
 <h2><a name="acknowledgements">Acknowledgements</a></h2>
 
 <p>
-If I am the father of S<small>YSTRE</small>, Michael O'Keeffe is its
-godfather.  He first made me aware of the problems that
-S<small>YSTRE</small> aims to solve, has supported and guided its
-development over many years and even came up with the name.
+Michael O'Keeffe made me aware of the problems that
+S<small>YSTRE</small> aims to solve and has supported and guided its
+development over many years. He also came up with the name.
 </p>
 
 <p>
