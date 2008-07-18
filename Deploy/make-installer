@@ -4,12 +4,10 @@ JAVA_HOME=/usr/lib/jvm/java-1.5.0-sun
 export JAVA_HOME
 IZPACK=$HOME/Software/IzPack
 BUOY="$HOME/Software/Buoy"
-GAVROG_MAIN="$HOME/eclipse-workspace/Gavrog-combined"
-GAVROG_3DT="$HOME/eclipse-workspace/Gavrog-combined"
+GAVROG=$PWD/..
 
-jar cmf "$GAVROG_MAIN/SYSTRE.MF" Systre.jar \
-	-C "$BUOY" buoy -C "$GAVROG_MAIN/bin" org
-jar cf 3dt-Main.jar -C "$GAVROG_3DT/bin" org
+jar cmf "$GAVROG/SYSTRE.MF" Systre.jar -C "$BUOY" buoy -C "$GAVROG/bin" org
+jar cf 3dt-Main.jar -C "$GAVROG/bin" org
 
 "$IZPACK/bin/compile" install.xml
 
