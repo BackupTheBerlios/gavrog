@@ -292,15 +292,34 @@ public class SystreGUI extends BFrame {
         this.outFileChooser.setSelectedFile(new File(name + ".out"));
         final boolean success = this.outFileChooser.showDialog(this);
         if (success) {
-            final String filename = this.outFileChooser.getSelectedFile().getName();
+            String filename = this.outFileChooser.getSelectedFile().getName();
+            final int n = filename.lastIndexOf('.');
+            final String ext = filename.substring(n+1);
+            final String filetype;
+        	final ExtensionFilter filter = (ExtensionFilter) outFileChooser
+					.getFileFilter();
+			if (filter.accept(new File("x.cgd"))) {
+				filetype = "cgd";
+			} else if (filter.accept(new File("x.pgr"))) {
+				filetype = "pgr";
+			} else if (filter.accept(new File("x.arc"))) {
+				filetype = "arc";
+			} else {
+				filetype = "out";
+			}
+            if (!ext.equals(filetype)) {
+            	filename = filename + "." + filetype;
+            }
+            
             final File dir = this.outFileChooser.getDirectory();
             final File file = new File(dir, filename);
             final boolean append;
             if (file.exists()) {
-                final int choice = new BStandardDialog("Systre - File exists", "File \""
-                        + file + "\" exists. Overwrite?", BStandardDialog.QUESTION)
-                        .showOptionDialog(this, new String[] { "Overwrite", "Append",
-                                "Cancel" }, "Cancel");
+                final int choice = new BStandardDialog("Systre - File exists",
+						"File \"" + file + "\" exists. Overwrite?",
+						BStandardDialog.QUESTION).showOptionDialog(this,
+						new String[] { "Overwrite", "Append", "Cancel" },
+						"Cancel");
                 if (choice > 1) {
                     return;
                 } else {
@@ -316,24 +335,8 @@ public class SystreGUI extends BFrame {
                     try {
                         final BufferedWriter writer = new BufferedWriter(new FileWriter(
 								file, append));
-                        final int n = filename.lastIndexOf('.');
-                        String extension = filename.substring(n+1);
-                        if (extension != "out" && extension != "pgr"
-								&& extension != "cgd" && extension != "arc") {
-                        	final ExtensionFilter filter = (ExtensionFilter) outFileChooser
-									.getFileFilter();
-                        	if (filter.accept(new File("x.out"))) {
-                        		extension = "out";
-                        	} else if (filter.accept(new File("x.cgd"))) {
-                        		extension = "cgd";
-                        	} else if (filter.accept(new File("x.pgr"))) {
-                        		extension = "pgr";
-                        	} else if (filter.accept(new File("x.arc"))) {
-                        		extension = "arc";
-                        	}
-                        }
                         if (singleWrite) {
-							writeStructure(extension, writer, systre.getLastStructure(),
+							writeStructure(filetype, writer, systre.getLastStructure(),
 									lastFinishedTranscript);
 						} else {
 							for (final Iterator iter = bufferedNets.iterator(); iter
@@ -341,10 +344,10 @@ public class SystreGUI extends BFrame {
 								final Pair item = (Pair) iter.next();
 								final ProcessedNet net = (ProcessedNet) item.getFirst();
 								final String transcript = (String) item.getSecond();
-								writeStructure(extension, writer, net, transcript);
+								writeStructure(filetype, writer, net, transcript);
 							}
 							// -- save output from a possible frozen computation
-							writeStructure(extension, writer, null,
+							writeStructure(filetype, writer, null,
 									currentTranscript.toString());
 						}
 						writer.flush();

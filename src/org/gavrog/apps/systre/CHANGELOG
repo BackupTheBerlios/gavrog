@@ -3,7 +3,8 @@ Systre 1.1.5:
   Bug fixes:
     - The smallest non-bonded distance reported was occasionally incorrect.
     - The test for degenerate unit cells could miss certain degeneracies.
-    - If the output file extension is unknown, a reasonable default is chosen.
+    - The format of an output file is now determined by the file filter chosen.
+    - The file extension for an output file is now determined by the format.
 
 - Output can be saved to file after 'Cancel' even when the computation freezes.
 - Translational freedom, if any, is used to improve the output node positions.
