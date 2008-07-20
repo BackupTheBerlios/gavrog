@@ -7,7 +7,7 @@
     description="3d tiling viewer"
     iconFile="$INSTALL_PATH\Icons\3dt.ico"
     iconIndex="0"
-    initialState="normal"
+    initialState="noShow"
     programGroup="yes"
     desktop="yes"
     applications="no"
