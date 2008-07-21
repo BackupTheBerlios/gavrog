@@ -1,6 +1,6 @@
 <shortcuts>
   <skipIfNotSupported/>
-  <programGroup defaultName="Gavrog" location="Applications"/>
+  <programGroup defaultName="Gavrog" location="applications"/>
   <shortcut
     name="3dt"
     type="Application"
@@ -33,7 +33,7 @@
     startup="no">
   </shortcut>
   <shortcut
-    name="Uninstall Gavrog"
+    name="Uninstall 3dt and Systre"
     type="Application"
     encoding="UTF-8"
     target="$INSTALL_PATH\bin\uninstall"

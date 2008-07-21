@@ -11,8 +11,9 @@ Installation file for Gavrog, currently in particular for 3dt.
         The meaning of the tags should be natural ...
     -->
     <info>
-        <appname>3dt</appname>
-        <appversion>alpha 0.3.2</appversion>
+        <appname>3dt / Systre</appname>
+        <appversion>versions 0.3.2 (alpha) and 1.1.5 (beta)</appversion>
+        <appsubpath>3dt-0.3.2</appsubpath>
         <authors>
             <author name="Olaf Delgado-Friedrichs"
 	     email="odf@users.sourceforge.net"/>
