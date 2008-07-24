@@ -1218,8 +1218,8 @@ public class Main extends EventSource {
 			setViewingTransformation(doc.getTransformation());
 		} else {
 			rotateScene(new Vector(0,0,1), new Vector(1,0,0));
-			encompass();
 		}
+		encompass();
 		
 		// --- update the info display
 		final DSymbol ds = doc().getSymbol();
