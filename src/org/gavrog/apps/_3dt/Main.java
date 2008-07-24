@@ -1738,6 +1738,7 @@ public class Main extends EventSource {
 
     private void encompass() {
     	encompass(this.viewerApp.getCurrentViewer(), this.scene);
+    	this.viewerApp.getCurrentViewer().render();
     }
     
 	public static void encompass(final Viewer viewer, final JrScene scene) {
@@ -1960,7 +1961,7 @@ public class Main extends EventSource {
 		for (int i = 0; i < viewers.length; ++i) {
 			if (viewers[i] instanceof SoftViewer) {
 				vSwitch.selectViewer(i);
-				vSwitch.getCurrentViewer().renderAsync();
+				vSwitch.getCurrentViewer().render();
 				break;
 			}
 		}
@@ -1971,7 +1972,7 @@ public class Main extends EventSource {
     	if (this.previousViewer >= 0) {
 			final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
 			vSwitch.selectViewer(this.previousViewer);
-			vSwitch.getCurrentViewer().renderAsync();
+			vSwitch.getCurrentViewer().render();
 			this.previousViewer = -1;
     	}
     }
