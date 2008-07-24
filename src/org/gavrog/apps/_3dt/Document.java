@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.Random;
 
 import org.gavrog.box.collections.Cache;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
@@ -43,6 +44,7 @@ import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.Signature;
 import org.gavrog.joss.geometry.CoordinateChange;
@@ -117,6 +119,46 @@ public class Document extends DisplayList {
     // --- random number generator
 	private final static Random random = new Random();
 	
+	// --- convert a 2d symbol to 3d by extrusion
+	private DSymbol extrusion(final DelaneySymbol ds) {
+		if (ds.dim() != 2) {
+			throw new UnsupportedOperationException("dimension must be 2");
+		}
+		final int s = ds.size();
+		
+		final DynamicDSymbol tmp = new DynamicDSymbol(3);
+		final List elms_new = tmp.grow(s * 3);
+		final List elms_old = Iterators.asList(ds.elements());
+		
+		for (int i = 0; i < ds.size(); ++i) {
+			final Object Da = elms_new.get(i);
+			final Object Db = elms_new.get(i + s);
+			final Object Dc = elms_new.get(i + s + s);
+			
+			final Object D  = elms_old.get(i);
+			final int i0 = elms_old.indexOf(ds.op(0, D));
+			final int i1 = elms_old.indexOf(ds.op(1, D));
+			final int i2 = elms_old.indexOf(ds.op(2, D));
+			
+			tmp.redefineOp(0, Da, elms_new.get(i0));
+			tmp.redefineOp(1, Da, elms_new.get(i1));
+			tmp.redefineOp(2, Da, Db);
+			tmp.redefineOp(3, Da, Da);
+			
+			tmp.redefineOp(0, Db, elms_new.get(i0 + s));
+			tmp.redefineOp(1, Db, Dc);
+			tmp.redefineOp(2, Db, Da);
+			tmp.redefineOp(3, Db, elms_new.get(i2 + s));
+			
+			tmp.redefineOp(0, Dc, Dc);
+			tmp.redefineOp(1, Dc, Db);
+			tmp.redefineOp(2, Dc, elms_new.get(i1 + s + s));
+			tmp.redefineOp(3, Dc, elms_new.get(i2 + s + s));
+		}
+		
+		return new DSymbol(tmp);
+	}
+	
     /**
      * Constructs a tiling instance.
      * @param name the name of this instance.
@@ -124,15 +166,16 @@ public class Document extends DisplayList {
      */
     public Document(final String name, final DSymbol ds) {
         if (ds.dim() == 2) {
+            this.symbol = extrusion(ds);
             this.type = TILING_2D;
         } else if (ds.dim() == 3) {
+            this.symbol = ds;
             this.type = TILING_3D;
         } else {
         	final String msg = "only dimensions 2 and 3 supported";
             throw new UnsupportedOperationException(msg);
         }
         this.name = name;
-        this.symbol = ds;
     }
     
     public Document(final GenericParser.Block block) {
