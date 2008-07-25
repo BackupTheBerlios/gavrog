@@ -100,6 +100,7 @@ public class Document extends DisplayList {
     final private Object type;
     final private String name;
     private DSymbol symbol = null;
+    private DSymbol effective_symbol = null;
     private GenericParser.Block data = null;
     
     // --- The tile kind colors set for this instance
@@ -156,6 +157,27 @@ public class Document extends DisplayList {
 			tmp.redefineOp(3, Dc, elms_new.get(i2 + s + s));
 		}
 		
+		for (int i = 0; i < ds.size(); ++i) {
+			final Object Da = elms_new.get(i);
+			final Object Db = elms_new.get(i + s);
+			final Object Dc = elms_new.get(i + s + s);
+			
+			final Object D  = elms_old.get(i);
+			tmp.redefineV(0, 1, Da, ds.v(0, 1, D));
+			if (D.equals(ds.op(0, D))) {
+				tmp.redefineV(0, 1, Db, 2);
+			} else {
+				tmp.redefineV(0, 1, Db, 1);
+			}
+			tmp.redefineV(1, 2, Da, 1);
+			if (D.equals(ds.op(2, D))) {
+				tmp.redefineV(2, 3, Da, 2);
+			} else {
+				tmp.redefineV(2, 3, Da, 1);
+			}
+			tmp.redefineV(2, 3, Dc, ds.v(1, 2, D));
+		}
+			
 		return new DSymbol(tmp);
 	}
 	
@@ -166,10 +188,12 @@ public class Document extends DisplayList {
      */
     public Document(final String name, final DSymbol ds) {
         if (ds.dim() == 2) {
-            this.symbol = extrusion(ds);
+        	this.symbol = ds;
+            this.effective_symbol = extrusion(ds);
             this.type = TILING_2D;
         } else if (ds.dim() == 3) {
             this.symbol = ds;
+            this.effective_symbol = ds;
             this.type = TILING_3D;
         } else {
         	final String msg = "only dimensions 2 and 3 supported";
@@ -208,11 +232,20 @@ public class Document extends DisplayList {
         return this.symbol;
     }
     
+    private DSymbol getEffectiveSymbol() {
+    	if (this.effective_symbol == null) {
+    		if (this.data != null) {
+                this.effective_symbol = getSymbol();
+    		}
+    	}
+        return this.effective_symbol;
+    }
+    
     public Tiling getTiling() {
         try {
             return (Tiling) cache.get(TILING);
         } catch (Cache.NotFoundException ex) {
-            return (Tiling) cache.put(TILING, new Tiling(getSymbol()));
+            return (Tiling) cache.put(TILING, new Tiling(getEffectiveSymbol()));
         }
     }
 
@@ -248,7 +281,7 @@ public class Document extends DisplayList {
 		try {
 			return (List<Vector>) cache.get(CENTERING_VECTORS);
 		} catch (Cache.NotFoundException ex) {
-			final int dim = getSymbol().dim();
+			final int dim = getEffectiveSymbol().dim();
 			final String name = getFinder().getExtendedGroupName();
 			final CoordinateChange fromStd = getFinder().getFromStd();
 			final List<Vector> result = new ArrayList<Vector>();
@@ -328,7 +361,7 @@ public class Document extends DisplayList {
     }
     
     public List<Vector> centerIntoUnitCell(final Tiling.Tile t) {
-    	final int dim = getSymbol().dim();
+    	final int dim = getEffectiveSymbol().dim();
     	final CoordinateChange toStd = getFinder().getToStd();
     	final CoordinateChange fromStd = getFinder().getFromStd();
     	final DSPair c = new DSPair(dim, t.getChamber());
@@ -353,7 +386,7 @@ public class Document extends DisplayList {
     
     private Color[] getPalette() {
     	if (this.palette == null) {
-	    	final int n = getSymbol().numberOfOrbits(new IndexList(0, 1, 2));
+	    	int n = getEffectiveSymbol().numberOfOrbits(new IndexList(0, 1, 2));
 	        this.palette = new Color[n];
 	        fillPalette(this.palette);
     	}
@@ -395,7 +428,13 @@ public class Document extends DisplayList {
         try {
             return (String) cache.get(SIGNATURE);
         } catch (Cache.NotFoundException ex) {
-            final String sig = Signature.ofTiling(getTiling().getCover());
+        	final int dim = getSymbol().dim();
+        	final String sig;
+        	if (dim == 2) {
+        		 sig = Signature.ofTiling(getSymbol());
+        	} else {
+        		sig = Signature.ofTiling(getTiling().getCover());
+        	}
             return (String) cache.put(SIGNATURE, sig);
         }
     }
@@ -404,7 +443,15 @@ public class Document extends DisplayList {
     	try {
     		return (String) cache.get(SPACEGROUP);
     	} catch (Cache.NotFoundException ex) {
-    		return (String) cache.put(SPACEGROUP, getFinder().getGroupName());
+    		final int dim = getSymbol().dim();
+    		final SpaceGroupFinder finder;
+    		if (dim == 2) {
+    			finder = new SpaceGroupFinder(new Tiling(getSymbol())
+						.getSpaceGroup());
+    		} else {
+    			finder = getFinder();
+    		}
+    		return (String) cache.put(SPACEGROUP, finder.getGroupName());
     	}
     }
     
@@ -427,7 +474,7 @@ public class Document extends DisplayList {
     }
     
     public double[][] getUnitCellVectors() {
-		final int dim = getSymbol().dim();
+    	final int dim = getEffectiveSymbol().dim();
 		final double result[][] = new double[dim][];
 		for (int i = 0; i < dim; ++i) {
 			final Vector v = (Vector) Vector.unit(dim, i).times(
@@ -438,7 +485,7 @@ public class Document extends DisplayList {
 	}
 
 	public double[] getOrigin() {
-		final int dim = getSymbol().dim();
+		final int dim = getEffectiveSymbol().dim();
 		final Point o = (Point) Point.origin(dim).times(getCellToWorld());
 		return o.getCoordinates().asDoubleArray()[0];
 	}

@@ -1182,8 +1182,6 @@ public class Main extends EventSource {
 		String name = doc.getName();
 		if (name == null) {
 			name = "--";
-//		} else if (name.length() > 37) {
-//			name = name.substring(0, 37) + "...";
 		}
 		setTInfo("name", name);
 		
@@ -1224,6 +1222,7 @@ public class Main extends EventSource {
 		// --- update the info display
 		final DSymbol ds = doc().getSymbol();
 		setTInfo("size", ds.size());
+		setTInfo("dim", ds.dim());
 		setTInfo("trans", doc().getTransitivity());
 		setTInfo("minimal", ds.isMinimal());
 		setTInfo("dual", ds.equals(ds.dual()));
@@ -2232,6 +2231,7 @@ public class Main extends EventSource {
 
 		final String[][] items = new String[][] {
 				{ "file", "File:" }, { "#", "#" }, { "name", "Name:" },
+				{ "dim", "Dimension:" },
 				{ "size", "Complexity:" }, { "trans", "Transitivity:" },
 				{ "dual", "Self-dual:" }, { "sig", "Signature:" },
 				{ "group", "Symmetry:" }, { "minimal", "Max. Symmetric:" }

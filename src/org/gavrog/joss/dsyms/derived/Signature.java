@@ -71,7 +71,6 @@ public class Signature {
 		}
 		
 		final StringBuffer buf = new StringBuffer(100);
-		buf.append('[');
 		boolean first = true;
 		for (int i = 0; i < max; ++i) {
 			final int k = mult[i];
@@ -88,7 +87,6 @@ public class Signature {
 				}
 			}
 		}
-		buf.append(']');
 		
 		return buf.toString();
 	}
@@ -149,7 +147,9 @@ public class Signature {
 			if (k > 1) {
 				buf.append(k);
 			}
+			buf.append('[');
 			buf.append(faceSizeToTileSig(s));
+			buf.append(']');
 		}
 		
 		return buf.toString();
