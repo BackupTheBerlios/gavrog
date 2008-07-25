@@ -9,7 +9,6 @@ In progress:
 Open bugs:
 
 - Popups don't work with OpenGL on Mac Leopard (workaround exists.)
-- Scene read back from file is shifted with center in upper left corner.
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
 

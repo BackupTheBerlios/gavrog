@@ -1,5 +1,6 @@
 3dt 0.3.2:
 
+- Two-dimensional euclidean tilings are now supported (but displayed as 3d.)
 - The viewer menu is now displayed at the top of the screen on MacOS.
 - Diagnostic output and error messages are now displayed in the controls window.
 - Tiling names are no longer cut after 37 characters.
