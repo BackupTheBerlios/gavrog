@@ -228,6 +228,23 @@ public class DisplayList extends EventSource implements
 		}
 	}
 	
+	public boolean removeAll() {
+		final List<Item> toRemove = new LinkedList<Item>();
+		for (Item i: this) {
+			toRemove.add(i);
+		}
+		if (toRemove.isEmpty()) {
+			return false;
+		} else {
+			dispatchEvent(BEGIN);
+			for (Item i: toRemove) {
+				remove(i);
+			}
+			dispatchEvent(END);
+			return true;
+		}
+	}
+	
 	// --- list enquiries
 	/* (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()

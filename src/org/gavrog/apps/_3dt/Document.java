@@ -77,6 +77,7 @@ public class Document extends DisplayList {
     // --- the cache keys
 	final protected static Object TILES = new Tag();
     final protected static Object CELL_TO_WORLD = new Tag();
+    final protected static Object CELL_TO_EMBEDDER = new Tag();
     final protected static Object EMBEDDER = new Tag();
     final protected static Object EMBEDDER_OUTPUT = new Tag();
     final protected static Object FINDER = new Tag();
@@ -473,6 +474,15 @@ public class Document extends DisplayList {
     	}
     }
     
+    public CoordinateChange getCellToEmbedder() {
+		try {
+			return (CoordinateChange) cache.get(CELL_TO_EMBEDDER);
+		} catch (Cache.NotFoundException ex) {
+			return (CoordinateChange) cache.put(CELL_TO_EMBEDDER, getFinder()
+					.getToStd().inverse());
+		}
+    }
+    
     public double[][] getUnitCellVectors() {
     	final int dim = getEffectiveSymbol().dim();
 		final double result[][] = new double[dim][];
@@ -480,6 +490,15 @@ public class Document extends DisplayList {
 			final Vector v = (Vector) Vector.unit(dim, i).times(
 					getCellToWorld());
 			result[i] = v.getCoordinates().asDoubleArray()[0];
+		}
+		return result;
+	}
+
+    public Vector[] getUnitCellVectorsInEmbedderCoordinates() {
+    	final int dim = getEffectiveSymbol().dim();
+		final Vector result[] = new Vector[dim];
+		for (int i = 0; i < dim; ++i) {
+			result[i] = (Vector) Vector.unit(dim, i).times(getCellToEmbedder());
 		}
 		return result;
 	}

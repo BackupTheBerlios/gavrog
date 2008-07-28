@@ -167,6 +167,14 @@ public class Main extends EventSource {
     private Color unitCellColor = Color.BLACK;
     private double unitCellEdgeWidth = 0.02;
     
+    // --- scene options
+    private int minX = 0;
+    private int maxX = 0;
+    private int minY = 0;
+    private int maxY = 0;
+    private int minZ = 0;
+    private int maxZ = 0;
+    
 	// --- material options
 	private double ambientCoefficient = 0.0;
 	private Color ambientColor = Color.WHITE;
@@ -1725,9 +1733,12 @@ public class Main extends EventSource {
     private void makeCopies() {
     	if (doc().size() == 0) {
     		clearSceneGraph();
+    		final List<Vector> vecs = replicationVectors();
 	        for (final Tile b: doc().getTiles()) {
 	        	for (final Vector s: doc().centerIntoUnitCell(b)) {
-		            doc().add(b, s);
+	        		for (Vector v: vecs) {
+	        			doc().add(b, (Vector) s.plus(v));
+	        		}
 	        	}
 	        }
     	} else {
@@ -1735,6 +1746,30 @@ public class Main extends EventSource {
     	}
     }
 
+    private List<Vector> replicationVectors() {
+    	final Vector xyz[] = doc().getUnitCellVectorsInEmbedderCoordinates();
+    	final Vector vx = xyz[0];
+    	final Vector vy = xyz[1];
+    	final Vector vz = xyz[2];
+    	final int loX = getMinX();
+    	final int hiX = Math.max(minX, getMaxX()) + 1;
+    	final int loY = getMinY();
+    	final int hiY = Math.max(minY, getMaxY()) + 1;
+    	final int loZ = getMinZ();
+    	final int hiZ = Math.max(minZ, getMaxZ()) + 1;
+    	
+    	final List<Vector> result = new ArrayList<Vector>();
+    	for (int x = loX; x < hiX; ++x) {
+    		for (int y = loY; y < hiY; ++y) {
+    			for (int z = loZ; z < hiZ; ++z) {
+    				result.add((Vector) (vx.times(x)).plus(vy.times(y)).plus(
+							vz.times(z)));
+    			}
+    		}
+    	}
+    	return result;
+    }
+    
     private void encompass() {
     	encompass(this.viewerApp.getCurrentViewer(), this.scene);
     	this.viewerApp.getCurrentViewer().render();
@@ -1833,14 +1868,22 @@ public class Main extends EventSource {
     }
     
     private void suspendRendering() {
-    	SceneGraphUtility.removeChildren(this.world);
+    	Invoke.andWait(new Runnable() {
+			public void run() {
+		    	SceneGraphUtility.removeChildren(world);
+			}
+    	});
     }
     
     private void resumeRendering() {
-    	this.world.addChild(this.tiling);
-    	this.world.addChild(this.unitCell);
-    	this.viewerApp.getCurrentViewer().render();
-    }
+		Invoke.andWait(new Runnable() {
+			public void run() {
+				world.addChild(tiling);
+				world.addChild(unitCell);
+				viewerApp.getCurrentViewer().render();
+			}
+		});
+	}
 
     private Transformation getViewingTransformation() {
 		return this.scene.getPath("emptyPickPath").getLastComponent()
@@ -2089,6 +2132,43 @@ public class Main extends EventSource {
         return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
     
+    private Widget optionsScene() {
+    	final ColumnContainer options = emptyOptionsContainer();
+    	try {
+    		options.add(new OptionInputBox("x from", this, "minX"));
+    		options.add(new OptionInputBox("x to", this, "maxX"));
+    		options.add(new OptionInputBox("y from", this, "minY"));
+    		options.add(new OptionInputBox("y to", this, "maxY"));
+    		options.add(new OptionInputBox("z from", this, "minZ"));
+    		options.add(new OptionInputBox("z to", this, "maxZ"));
+        } catch (final Exception ex) {
+            log(ex.toString());
+            return null;
+    	}
+        
+        final Object apply = new Object() {
+			@SuppressWarnings("unused")
+			public void call() {
+				new Thread(new Runnable() {
+					public void run() {
+						suspendRendering();
+						doc().removeAll();
+						makeCopies();
+						if (doc().getTransformation() != null) {
+							setViewingTransformation(doc().getTransformation());
+						} else {
+							rotateScene(new Vector(0,0,1), new Vector(1,0,0));
+						}
+						encompass();
+						resumeRendering();
+						saveOptions();
+					}
+				}).start();
+			}
+        };
+        return optionsDialog(options, makeButton("Apply", apply, "call"));
+    }
+    
     private Widget optionsDisplay() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
@@ -2216,6 +2296,7 @@ public class Main extends EventSource {
 		final BTabbedPane options = new BTabbedPane();
 		options.setBackground(null);
 		options.add(optionsGeometry(), "Geometry");
+		options.add(optionsScene(), "Unit Cell Copies");
 		options.add(optionsDisplay(), "Display");
 		options.add(optionsMaterial(), "Material");
 		options.add(optionsEmbedding(), "Embedding");
@@ -2490,7 +2571,73 @@ public class Main extends EventSource {
     	}
     }
 
-    public int getEmbedderStepLimit() {
+	public int getMinX() {
+		return this.minX;
+	}
+
+	public void setMinX(int minX) {
+    	if (minX != this.minX) {
+    		dispatchEvent(new PropertyChangeEvent(this, "minX", this.minX, minX));
+    		this.minX = minX;
+    	}
+	}
+
+	public int getMaxX() {
+		return this.maxX;
+	}
+
+	public void setMaxX(int maxX) {
+    	if (maxX != this.maxX) {
+    		dispatchEvent(new PropertyChangeEvent(this, "maxX", this.maxX, maxX));
+    		this.maxX = maxX;
+    	}
+	}
+
+	public int getMinY() {
+		return this.minY;
+	}
+
+	public void setMinY(int minY) {
+    	if (minY != this.minY) {
+    		dispatchEvent(new PropertyChangeEvent(this, "minY", this.minY, minY));
+    		this.minY = minY;
+    	}
+	}
+
+	public int getMaxY() {
+		return this.maxY;
+	}
+
+	public void setMaxY(int maxY) {
+    	if (maxY != this.maxY) {
+    		dispatchEvent(new PropertyChangeEvent(this, "maxY", this.maxY, maxY));
+    		this.maxY = maxY;
+    	}
+	}
+
+	public int getMinZ() {
+		return this.minZ;
+	}
+
+	public void setMinZ(int minZ) {
+    	if (minZ != this.minZ) {
+    		dispatchEvent(new PropertyChangeEvent(this, "minZ", this.minZ, minZ));
+    		this.minZ = minZ;
+    	}
+	}
+
+	public int getMaxZ() {
+		return this.maxZ;
+	}
+
+	public void setMaxZ(int maxZ) {
+    	if (maxZ != this.maxZ) {
+    		dispatchEvent(new PropertyChangeEvent(this, "maxZ", this.maxZ, maxZ));
+    		this.maxZ = maxZ;
+    	}
+	}
+
+	public int getEmbedderStepLimit() {
         return embedderStepLimit;
     }
 
