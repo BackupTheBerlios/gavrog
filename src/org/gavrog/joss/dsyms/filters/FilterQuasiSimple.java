@@ -46,13 +46,16 @@ public class FilterQuasiSimple {
 		try {
 			boolean reverse = false;
 			boolean extended = false;
+			boolean simple = false;
 
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
 				if (args[i].equalsIgnoreCase("-r")) {
 					reverse = !reverse;
 				} else if (args[i].equalsIgnoreCase("-e")) {
-						extended = !extended;
+					extended = !extended;
+				} else if (args[i].equalsIgnoreCase("-s")) {
+					simple = !simple;
 				} else {
 					System.err.println("Unknown option '" + args[i] + "'");
 				}
@@ -89,7 +92,7 @@ public class FilterQuasiSimple {
 					.hasNext();) {
 				final DSymbol ds = (DSymbol) input.next();
 				++inCount;
-				if (isQuasiSimple(ds, extended) != reverse) {
+				if (isQuasiSimple(ds, extended, simple) != reverse) {
 					++outCount;
 					out.write(ds.toString());
 					out.write('\n');
@@ -113,7 +116,7 @@ public class FilterQuasiSimple {
 	 * @return true or false according to the result of the test.
 	 */
     private static boolean isQuasiSimple(final DSymbol ds,
-			final boolean extended) {
+			final boolean extended, final boolean simple) {
 		final List iVert = new IndexList(1, 2, 3);
 		final List iFace = new IndexList(0, 1);
 		for (final Iterator rVert = ds.orbitReps(iVert); rVert.hasNext();) {
@@ -132,7 +135,8 @@ public class FilterQuasiSimple {
 					E = cov.op(0, cov.op(1, E));
 					if (m == 3) {
 						++d;
-					} else if (m != 2 || (!extended && cov.m(1, 2, E) == 2)) {
+					} else if (simple || m != 2
+							|| (!extended && cov.m(1, 2, E) == 2)) {
 						return false;
 					}
 				} while (!E0.equals(E));
