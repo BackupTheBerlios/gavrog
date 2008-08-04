@@ -276,6 +276,22 @@ public class Main extends EventSource {
         this.tiling.addTool(new SelectionTool());
         this.unitCell = new SceneGraphComponent("unitCell");
         
+        // --- remove the encompass tool (we'll have a menu entry for that)
+        final SceneGraphComponent root = this.scene.getSceneRoot()
+				.getChildComponent(0);
+        final List tools = root.getTools();
+        Tool encompass = null;
+        for (final Iterator iter = tools.iterator(); iter.hasNext();) {
+            final Tool t = (Tool) iter.next();
+            if (t instanceof de.jreality.tools.EncompassTool) {
+                encompass = t;
+                break;
+            }
+        }
+        if (encompass != null) {
+            root.removeTool(encompass);
+        }
+        
         // --- add the mouse wheel zoom tool
         this.world.addTool(new ClickWheelCameraZoomTool());
         
