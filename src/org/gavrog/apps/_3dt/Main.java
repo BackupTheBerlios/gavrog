@@ -276,23 +276,8 @@ public class Main extends EventSource {
         this.tiling.addTool(new SelectionTool());
         this.unitCell = new SceneGraphComponent("unitCell");
         
-        // --- remove the encompass tool (we'll have a menu entry for that)
-        final SceneGraphComponent root = this.viewerApp.getCurrentViewer().getSceneRoot();
-        final List tools = root.getTools();
-        Tool encompass = null;
-        for (final Iterator iter = tools.iterator(); iter.hasNext();) {
-            final Tool t = (Tool) iter.next();
-            if (t instanceof de.jreality.tools.EncompassTool) {
-                encompass = t;
-                break;
-            }
-        }
-        if (encompass != null) {
-            root.removeTool(encompass);
-        }
-        
         // --- add the mouse wheel zoom tool
-        root.addTool(new ClickWheelCameraZoomTool());
+        this.world.addTool(new ClickWheelCameraZoomTool());
         
         // --- change the menu
         modifyDefaultMenu(viewerApp.getMenu());
@@ -963,7 +948,7 @@ public class Main extends EventSource {
             _encompassAction.setShortDescription(
             		"Adjust camera to fit scene to window");
             _encompassAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-                    KeyEvent.VK_E, 0));
+                    KeyEvent.VK_0, 0));
         }
         return _encompassAction;
     }
@@ -1771,8 +1756,7 @@ public class Main extends EventSource {
     }
     
     private void encompass() {
-    	encompass(this.viewerApp.getCurrentViewer(), this.scene);
-    	this.viewerApp.getCurrentViewer().render();
+    	encompass(viewerApp.getCurrentViewer(), scene);
     }
     
 	public static void encompass(final Viewer viewer, final JrScene scene) {

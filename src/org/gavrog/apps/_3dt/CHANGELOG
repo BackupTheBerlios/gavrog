@@ -1,5 +1,6 @@
 3dt 0.3.2:
 
+- For fitting the scene to the window, the '0' is now used instead of 'E'.
 - The range of unit cell copies to display can now be specified interactively.
 - Two-dimensional euclidean tilings are now supported (but displayed as 3d.)
 - The viewer menu is now displayed at the top of the screen on MacOS.
