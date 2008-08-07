@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -104,8 +105,9 @@ public class Document extends DisplayList {
     private DSymbol effective_symbol = null;
     private GenericParser.Block data = null;
     
-    // --- The tile kind colors set for this instance
-    private Color[] palette = null;
+    // --- The tile and face colors set for this instance
+    private Color[] tileClassColor = null;
+    private Map<Tiling.Facet, Color> facetClassColor = new HashMap<Tiling.Facet, Color>();
     
     // --- embedding options
     private int equalEdgePriority = 3;
@@ -386,12 +388,12 @@ public class Document extends DisplayList {
     }
     
     private Color[] getPalette() {
-    	if (this.palette == null) {
+    	if (this.tileClassColor == null) {
 	    	int n = getEffectiveSymbol().numberOfOrbits(new IndexList(0, 1, 2));
-	        this.palette = new Color[n];
-	        fillPalette(this.palette);
+	        this.tileClassColor = new Color[n];
+	        fillPalette(this.tileClassColor);
     	}
-    	return this.palette;
+    	return this.tileClassColor;
     }
     
     private void fillPalette(final Color[] palette) {
@@ -409,12 +411,12 @@ public class Document extends DisplayList {
     	return getPalette()[i];
     }
     
-    public Color getTileColor(final Tiling.Tile t) {
+    public Color getDefaultTileColor(final Tiling.Tile t) {
     	return getTileKindColor(t.getKind());
     }
     
-    public Color getTileColor(final int i) {
-    	return getTileColor(getTile(i));
+    public Color getDefaultTileColor(final int i) {
+    	return getDefaultTileColor(getTile(i));
     }
     
     public void setTileKindColor(final int i, final Color c) {

@@ -38,10 +38,12 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.JColorChooser;
@@ -218,7 +220,7 @@ public class Main extends EventSource {
 	private BDialog controlsFrame;
 	private HashMap<String, BLabel> tInfoFields;
 
-	// --- scene graph components
+	// --- scene graph components and associated properties
 	final private ViewerApp viewerApp;
 	private int previousViewer = -1;
     final private JrScene scene;
@@ -228,6 +230,9 @@ public class Main extends EventSource {
 	private SceneGraphComponent unitCell;
     private SceneGraphComponent templates[];
     private Appearance materials[];
+    
+    //TODO move the following to Document() later
+    private Map<Tiling.Facet, Color> faceColor = new HashMap<Tiling.Facet, Color>();
     
     /**
      * Constructs an instance.
@@ -869,7 +874,7 @@ public class Main extends EventSource {
 						node2item.get(selectedBodyNode).getTile().getKind();
 					final Color picked = 
 						JColorChooser.showDialog(viewerApp.getFrame(),
-								"Set Tile Color", doc().getTileColor(kind));
+								"Set Tile Color", doc().getDefaultTileColor(kind));
 					if (picked == null) {
 						return;
 					}
@@ -879,7 +884,7 @@ public class Main extends EventSource {
                     resumeRendering();
 				}
 			};
-			final String txt = "Set the color for all tiles of one kind.";
+			final String txt = "Set the color for all tiles of this kind.";
 			_tileClassRecolorAction.setShortDescription(txt);
     		_tileClassRecolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
 					KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK));
@@ -919,6 +924,76 @@ public class Main extends EventSource {
 					KeyEvent.VK_C, 0));
 		}
 		return _tileRecolorAction;
+	}
+    
+    private AbstractJrAction _facetClassRecolorAction = null;
+    
+    private Action actionRecolorFacetClass() {
+		if (_facetClassRecolorAction == null) {
+			_facetClassRecolorAction = new AbstractJrAction(
+					"Recolor Facet Class") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (selectedBodyNode == null || selectedFace < 0) {
+						return;
+					}
+					final DisplayList.Item item = node2item
+							.get(selectedBodyNode);
+					final Tiling.Facet f = item.getTile().facet(selectedFace);
+					Color c = faceColor.get(f);
+					if (c == null) {
+						c = doc().color(item);
+					}
+					final Color picked = 
+						JColorChooser.showDialog(viewerApp.getFrame(),
+								"Set the color for all facets of this kind", c);
+					if (picked == null) {
+						return;
+					}
+					
+                    suspendRendering();
+                    recolorFacetClass(item, f, picked);
+                    resumeRendering();
+				}
+			};
+			final String txt = "Set the color for this face.";
+			_facetClassRecolorAction.setShortDescription(txt);
+    		_facetClassRecolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
+					KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
+		}
+		return _facetClassRecolorAction;
+	}
+    
+    private AbstractJrAction _facetClassUncolorAction = null;
+    
+    private Action actionUncolorFacetClass() {
+		if (_facetClassUncolorAction == null) {
+			_facetClassUncolorAction = new AbstractJrAction(
+					"Uncolor Facet Class") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (selectedBodyNode == null || selectedFace < 0) {
+						return;
+					}
+					final DisplayList.Item item = node2item
+							.get(selectedBodyNode);
+					final Tiling.Facet f = item.getTile().facet(selectedFace);
+					
+                    suspendRendering();
+                    recolorFacetClass(item, f, null);
+                    resumeRendering();
+				}
+			};
+			final String txt = "Remove the special color for this face.";
+			_facetClassUncolorAction.setShortDescription(txt);
+//    		_facetClassUncolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
+//					KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
+		}
+		return _facetClassUncolorAction;
 	}
     
     private AbstractJrAction _tileUncolorAction = null;
@@ -1654,7 +1729,7 @@ public class Main extends EventSource {
     	this.materials = new Appearance[doc().getTiles().size()];
 		for (int i = 0; i < this.templates.length; ++i) {
 			this.materials[i] = new Appearance();
-			updateMaterial(this.materials[i], doc().getTileColor(i));
+			updateMaterial(this.materials[i], doc().getDefaultTileColor(i));
 		}
 	}
     
@@ -1681,8 +1756,24 @@ public class Main extends EventSource {
         log("    Updating materials...");
         startTimer(timer);
         
-    	for (int i = 0; i < this.templates.length; ++i) {
-            updateMaterial(this.materials[i], doc().getTileColor(i));
+        for (final Tile b: doc().getTiles()) {
+        	final int i = b.getIndex();
+        	final SceneGraphComponent sgc = this.templates[b.getIndex()];
+            updateMaterial(this.materials[i], doc().getDefaultTileColor(i));
+			for (Object node : sgc.getChildNodes()) {
+				if (node instanceof SceneGraphComponent) {
+					final SceneGraphComponent child = (SceneGraphComponent) node;
+					if (child.getName().startsWith("face:") && child.isVisible()) {
+						final int j = Integer.parseInt(child.getName().substring(5));
+						final Color c = this.faceColor.get(b.facet(j));
+						if (c != null) {
+							final Appearance a = new Appearance();
+							updateMaterial(a, c);
+							child.setAppearance(a);
+						}
+					}
+				}
+			}
     	}
         log("      " + getTimer(timer));
     }
@@ -1909,6 +2000,8 @@ public class Main extends EventSource {
     		_selectionPopup.add(actionRecolorTile());
     		_selectionPopup.add(actionUncolorTile());
     		_selectionPopup.add(actionRecolorTileClass());
+    		_selectionPopup.add(actionRecolorFacetClass());
+    		_selectionPopup.add(actionUncolorFacetClass());
     		
     		_selectionPopup.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {
@@ -2934,6 +3027,57 @@ public class Main extends EventSource {
 			dispatchEvent(new PropertyChangeEvent(this, "useLeopardWorkaround",
 					this.useLeopardWorkaround, useLeopardWorkaround));
 			this.useLeopardWorkaround = useLeopardWorkaround;
+		}
+	}
+
+	/**
+	 * @param item
+	 * @param f
+	 * @param color
+	 */
+	private void recolorFacetClass(final DisplayList.Item item,
+			final Tiling.Facet f, final Color color) {
+		//TODO find a cleaner way to determine equivalent faces
+		//TODO store face colors in Document and save with scene
+		final Tiling.Tile t = item.getTile();
+		final int kind = t.getKind();
+		final Object D0 = f.getChamber();
+		final DSCover ds = doc().getTiling().getCover();
+		final Set<Object> orb = new HashSet<Object>();
+		for (Iterator it = ds.elements(); it.hasNext();) {
+			final Object E0 = it.next();
+			if (ds.image(E0).equals(ds.image(D0))) {
+				Object E = E0;
+				do {
+					orb.add(E);
+					E = ds.op(0, E);
+					orb.add(E);
+					E = ds.op(1, E);
+				} while (!E0.equals(E));
+			}
+		}
+		
+		final SceneGraphComponent sgc = templates[kind];
+		for (Object node : sgc.getChildNodes()) {
+			if (node instanceof SceneGraphComponent) {
+				final SceneGraphComponent child = (SceneGraphComponent) node;
+				if (child.getName().startsWith("face:")) {
+					final int i = Integer.parseInt(child.getName().substring(5));
+					final Tiling.Facet fi = t.facet(i);
+					final Object E = fi.getChamber();
+					if (orb.contains(E)) {
+						if (color == null) {
+							faceColor.remove(fi);
+							child.setAppearance(null);
+						} else {
+							faceColor.put(fi, color);
+							final Appearance a = new Appearance();
+							updateMaterial(a, color);
+							child.setAppearance(a);
+						}
+					}
+				}
+			}
 		}
 	}
 }
