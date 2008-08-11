@@ -39,6 +39,8 @@ archive_read archive, "org/gavrog/apps/systre/zeolites.arc"
 Net.iterator(ARGV[0]).each do |net|
     if not net.locally_stable?
         puts ">>>unstable<<<"
+    elsif net.ladder?
+    	puts ">>>ladder<<<"
     elsif found = archive.get(net.minimal_image.systre_key)
         puts found.name
     else
