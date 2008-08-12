@@ -234,11 +234,27 @@ public class Main extends EventSource {
     //TODO move the following to Document() later
     private Map<Tiling.Facet, Color> faceColor = new HashMap<Tiling.Facet, Color>();
     
+    // --- command line options
+	private boolean expertMode;
+    
     /**
      * Constructs an instance.
      * @param args command-line arguments
      */
     public Main(final String[] args) {
+    	// --- parse command line options
+    	String infilename = null;
+    	int i = 0;
+    	if (args.length > i && args[i].equals("-x")) {
+    		this.expertMode = true;
+    		++i;
+    	} else {
+    		this.expertMode = false;
+    	}
+    	if (args.length > i) {
+    		infilename = args[1];
+    	}
+    	
         // --- retrieved stored user options
 		loadOptions();
 
@@ -313,8 +329,8 @@ public class Main extends EventSource {
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
         
         // --- open a file if specified on the command line
-        if (args.length > 0) {
-        	openFile(args[0]);
+        if (infilename != null) {
+        	openFile(infilename);
         }
     }
 
@@ -351,9 +367,11 @@ public class Main extends EventSource {
         k += 2; // jump over export submenu
 
         // --- modify the View menu
-        for (int i = 0; i < 10; ++i) {
-            menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 0);
-        }
+        if (!this.expertMode) {
+			for (int i = 0; i < 10; ++i) {
+				menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 0);
+			}
+		}
         k = 0;
         menu.addAction(actionEncompass(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionXView(), ViewerAppMenu.VIEW_MENU, k++);
