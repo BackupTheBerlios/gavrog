@@ -16,7 +16,8 @@ Planned/requested features:
 
 - Implement a balance/naturalize function.
 - Draw the skeleton.
-- Pick separate colors for face classes.
+- Pick separate colors for individual faces.
+- Hide face classes and individual faces.
 - Option to keep the unit cell and coordinates used in the input.
 - Add ways to manipulate the lighting.
 - Determine sequence of operations to turn given tiling into a self-dual one.
@@ -27,5 +28,11 @@ Planned/requested features:
 - Options to change defaults for group setting on input (as in Systre.)
 - Draw tiles and dual tiles in one image.
 - Better Macintosh support (desktop shortcuts and such.)
+
+- Draw polyhedra.
+- Undo/Redo.
+- Rotate by fixed amounts about fixed axes.
+- Rotate along the screen normal.
+- Relax face shapes to approximate minimal surfaces.
 
 =====================================================
