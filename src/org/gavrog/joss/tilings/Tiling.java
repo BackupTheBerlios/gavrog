@@ -636,9 +636,10 @@ public class Tiling {
      */
     public class Facet {
         final private List chambers;
+        final private int tile;
         final private int index;
     	
-    	private Facet(final Object D, final int index) {
+    	private Facet(final Object D, final int tile, final int index) {
     		final DelaneySymbol cover = getCover();
     		final int d = cover.dim();
             final Object E0 = coverOrientation(D) < 0 ? cover.op(0, D) : D;
@@ -655,6 +656,7 @@ public class Tiling {
             } else {
             	throw new UnsupportedOperationException("dimension must be 2 or 3");
             }
+            this.tile = tile;
             this.index = index;
     	}
 
@@ -672,6 +674,10 @@ public class Tiling {
 
         public int getIndex() {
             return this.index;
+        }
+
+        public int getTile() {
+            return this.tile;
         }
     }
     
@@ -712,14 +718,14 @@ public class Tiling {
                     Df = cover.op(d, Df);
                 }
                 final Vector t = edgeTranslation(d, Df);
-                this.facets[i] = new Facet(Df, i);
+                this.facets[i] = new Facet(Df, this.index, i);
                 final Object Dn = skel.chamberAtNode(e.target());
                 this.neighbors[i] = ((Integer) chamber2tile.get(Dn)).intValue();
                 this.neighborShifts[i] = t;
                 ++i;
                 if (e.source().equals(e.target())) {
                 	Df = cover.op(d, Df);
-                    this.facets[i] = new Facet(Df, i);
+                    this.facets[i] = new Facet(Df, this.index, i);
                     this.neighbors[i] = this.index;
                     this.neighborShifts[i] = (Vector) t.negative();
                     ++i;
