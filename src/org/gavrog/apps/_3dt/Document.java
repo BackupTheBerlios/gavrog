@@ -36,6 +36,7 @@ import java.util.Random;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
@@ -107,7 +108,8 @@ public class Document extends DisplayList {
     
     // --- The tile and face colors set for this instance
     private Color[] tileClassColor = null;
-    private Map<Tiling.Facet, Color> facetClassColor = new HashMap<Tiling.Facet, Color>();
+    private Map<Tiling.Facet, Color> facetClassColor =
+    	new HashMap<Tiling.Facet, Color>();
     
     // --- embedding options
     private int equalEdgePriority = 3;
@@ -421,6 +423,18 @@ public class Document extends DisplayList {
     
     public void setTileKindColor(final int i, final Color c) {
     	getPalette()[i] = c;
+    }
+
+    public Color getFacetKindColor(final Tiling.Facet f) {
+    	return this.facetClassColor.get(f);
+    }
+
+    public void setFacetKindColor(final Tiling.Facet f, final Color c) {
+    	this.facetClassColor.put(f, c);
+    }
+
+    public void removeFacetKindColor(final Tiling.Facet f) {
+    	this.facetClassColor.remove(f);
     }
     
     public void randomlyRecolorTiles() {
@@ -869,6 +883,20 @@ public class Document extends DisplayList {
 					}
 					writer.endNode();
 				}
+				for (final Tiling.Facet f: doc.facetClassColor.keySet()) {
+					final Color c = doc.facetClassColor.get(f);
+					if (c != null) {
+						writer.startNode("facet");
+						writer.addAttribute("templateNr",
+								String.valueOf(f.getTile()));
+						writer.addAttribute("index",
+								String.valueOf(f.getIndex()));
+						writer.startNode("color");
+						context.convertAnother(c);
+						writer.endNode();
+						writer.endNode();
+					}
+				}
 				writer.startNode("options");
 				context.convertAnother(doc.getProperties());
 				writer.endNode();
@@ -883,6 +911,7 @@ public class Document extends DisplayList {
 				DSymbol symbol = null;
 				final List<Color> palette = new LinkedList<Color>();
 				final List<Object[]> dlist = new LinkedList<Object[]>();
+				final Map<Pair, Color> fcolors = new HashMap<Pair, Color>();
 				Properties props = null;
 				Transformation trans = null;
 				
@@ -921,6 +950,21 @@ public class Document extends DisplayList {
 							reader.moveUp();
 						}
 						dlist.add(new Object[] { number, shift, color });
+					} else if ("facet".equals(reader.getNodeName())) {
+						final int tile =
+							new Integer(reader.getAttribute("templateNr"));
+						final int index =
+							new Integer(reader.getAttribute("index"));
+						Color color = null;
+						while (reader.hasMoreChildren()) {
+							reader.moveDown();
+							if ("color".equals(reader.getNodeName())) {
+								color = (Color) context.convertAnother(null,
+										Color.class);
+							}
+							reader.moveUp();
+						}
+						fcolors.put(new Pair(tile, index), color);
 					}
 					reader.moveUp();
 				}
@@ -938,6 +982,16 @@ public class Document extends DisplayList {
 						final Color c = (Color) val[2];
 						doc.add(t, s);
 						doc.recolor(t, s, c);
+					}
+					for (final Pair item: fcolors.keySet()) {
+						final Color c = fcolors.get(item);
+						if (c != null) {
+							final int tile = (Integer) item.getFirst();
+							final int index = (Integer) item.getSecond();
+							final Tiling.Tile t = doc.getTiles().get(tile);
+							final Tiling.Facet f = t.facet(index);
+							doc.setFacetKindColor(f, c);
+						}
 					}
 					doc.setTransformation(trans);
 				}

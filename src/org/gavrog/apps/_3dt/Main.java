@@ -231,9 +231,6 @@ public class Main extends EventSource {
     private SceneGraphComponent templates[];
     private Appearance materials[];
     
-    //TODO move the following to Document() later
-    private Map<Tiling.Facet, Color> faceColor = new HashMap<Tiling.Facet, Color>();
-    
     // --- command line options
 	private boolean expertMode;
     
@@ -960,7 +957,7 @@ public class Main extends EventSource {
 					final DisplayList.Item item = node2item
 							.get(selectedBodyNode);
 					final Tiling.Facet f = item.getTile().facet(selectedFace);
-					Color c = faceColor.get(f);
+					Color c = doc().getFacetKindColor(f);
 					if (c == null) {
 						c = doc().color(item);
 					}
@@ -971,8 +968,9 @@ public class Main extends EventSource {
 						return;
 					}
 					
-                    suspendRendering();
                     recolorFacetClass(f, picked);
+                    suspendRendering();
+                    updateMaterials();
                     resumeRendering();
 				}
 			};
@@ -1001,8 +999,9 @@ public class Main extends EventSource {
 							.get(selectedBodyNode);
 					final Tiling.Facet f = item.getTile().facet(selectedFace);
 					
+					uncolorFacetClass(f);
                     suspendRendering();
-                    recolorFacetClass(f, null);
+                    updateMaterials();
                     resumeRendering();
 				}
 			};
@@ -1779,16 +1778,23 @@ public class Main extends EventSource {
         	final SceneGraphComponent sgc = this.templates[b.getIndex()];
             updateMaterial(this.materials[i], doc().getDefaultTileColor(i));
 			for (Object node : sgc.getChildNodes()) {
-				if (node instanceof SceneGraphComponent) {
-					final SceneGraphComponent child = (SceneGraphComponent) node;
-					if (child.getName().startsWith("face:") && child.isVisible()) {
-						final int j = Integer.parseInt(child.getName().substring(5));
-						final Color c = this.faceColor.get(b.facet(j));
-						if (c != null) {
-							final Appearance a = new Appearance();
-							updateMaterial(a, c);
-							child.setAppearance(a);
-						}
+				if (!(node instanceof SceneGraphComponent)) {
+					continue;
+				}
+				final SceneGraphComponent child = (SceneGraphComponent) node;
+				if (!child.isVisible()) {
+					continue;
+				}
+				final String name = child.getName();
+				if (name.startsWith("face:")) {
+					final int j = Integer.parseInt(name.substring(5));
+					final Color c = doc().getFacetKindColor(b.facet(j));
+					if (c == null) {
+						child.setAppearance(null);
+					} else {
+						final Appearance a = new Appearance();
+						updateMaterial(a, c);
+						child.setAppearance(a);
 					}
 				}
 			}
@@ -3052,9 +3058,8 @@ public class Main extends EventSource {
 	 * @param f
 	 * @param color
 	 */
-	private void recolorFacetClass(final Tiling.Facet f, final Color color) {
-		//TODO find a cleaner way to determine equivalent faces
-		//TODO store face colors in Document and save with scene
+	private List<Tiling.Facet> equivalentFacets(final Tiling.Facet f) {
+		//TODO is there a cleaner implementation?
 		final Object D0 = f.getChamber();
 		final DSCover ds = doc().getTiling().getCover();
 		final Set<Object> orb = new HashSet<Object>();
@@ -3071,31 +3076,35 @@ public class Main extends EventSource {
 			}
 		}
 		
-        for (final Tile b : doc().getTiles()) {
-			final int i = b.getIndex();
-			final SceneGraphComponent sgc = templates[i];
-			for (Object node : sgc.getChildNodes()) {
-				if (node instanceof SceneGraphComponent) {
-					final SceneGraphComponent child = (SceneGraphComponent) node;
-					if (child.getName().startsWith("face:")) {
-						final int j = Integer.parseInt(child.getName()
-								.substring(5));
-						final Tiling.Facet fj = b.facet(j);
-						final Object E = fj.getChamber();
-						if (orb.contains(E)) {
-							if (color == null) {
-								faceColor.remove(fj);
-								child.setAppearance(null);
-							} else {
-								faceColor.put(fj, color);
-								final Appearance a = new Appearance();
-								updateMaterial(a, color);
-								child.setAppearance(a);
-							}
-						}
-					}
+		final List<Tiling.Facet> result = new ArrayList<Tiling.Facet>();
+		for (final Tile b : doc().getTiles()) {
+			for (int j = 0; j < b.size(); ++j) {
+				final Tiling.Facet fj = b.facet(j);
+				final Object E = fj.getChamber();
+				if (orb.contains(E)) {
+					result.add(fj);
 				}
 			}
+		}
+		return result;
+	}
+
+	/**
+	 * @param f
+	 * @param color
+	 */
+	private void recolorFacetClass(final Tiling.Facet f, final Color color) {
+		for (Tiling.Facet facet : equivalentFacets(f)) {
+			doc().setFacetKindColor(facet, color);
+		}
+	}
+
+	/**
+	 * @param f
+	 */
+	private void uncolorFacetClass(final Tiling.Facet f) {
+		for (Tiling.Facet facet : equivalentFacets(f)) {
+			doc().removeFacetKindColor(facet);
 		}
 	}
 }
