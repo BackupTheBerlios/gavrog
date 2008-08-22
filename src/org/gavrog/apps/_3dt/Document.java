@@ -27,12 +27,14 @@ import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.Iterators;
@@ -107,9 +109,11 @@ public class Document extends DisplayList {
     private GenericParser.Block data = null;
     
     // --- The tile and face colors set for this instance
+    //TODO this should probably be moved to the DisplayList class.
     private Color[] tileClassColor = null;
     private Map<Tiling.Facet, Color> facetClassColor =
     	new HashMap<Tiling.Facet, Color>();
+    private Set<Tiling.Facet> hiddenFacetClasses = new HashSet<Tiling.Facet>();
     
     // --- embedding options
     private int equalEdgePriority = 3;
@@ -435,6 +439,18 @@ public class Document extends DisplayList {
 
     public void removeFacetClassColor(final Tiling.Facet f) {
     	this.facetClassColor.remove(f);
+    }
+    
+    public boolean isHiddenFacetClass(final Tiling.Facet f) {
+    	return this.hiddenFacetClasses.contains(f);
+    }
+    
+    public void hideFacetClass(final Tiling.Facet f) {
+    	this.hiddenFacetClasses.add(f);
+    }
+    
+    public void showFacetClass(final Tiling.Facet f) {
+    	this.hiddenFacetClasses.remove(f);
     }
     
     public void randomlyRecolorTiles() {
@@ -897,6 +913,14 @@ public class Document extends DisplayList {
 						writer.endNode();
 					}
 				}
+				for (final Tiling.Facet f: doc.hiddenFacetClasses) {
+					writer.startNode("facet");
+					writer.addAttribute("templateNr",
+							String.valueOf(f.getTile()));
+					writer.addAttribute("index", String.valueOf(f.getIndex()));
+					writer.addAttribute("hidden", "true");
+					writer.endNode();
+				}
 				writer.startNode("options");
 				context.convertAnother(doc.getProperties());
 				writer.endNode();
@@ -912,6 +936,7 @@ public class Document extends DisplayList {
 				final List<Color> palette = new LinkedList<Color>();
 				final List<Object[]> dlist = new LinkedList<Object[]>();
 				final Map<Pair, Color> fcolors = new HashMap<Pair, Color>();
+				final Set<Pair> fhidden = new HashSet<Pair>();
 				Properties props = null;
 				Transformation trans = null;
 				
@@ -955,6 +980,10 @@ public class Document extends DisplayList {
 							new Integer(reader.getAttribute("templateNr"));
 						final int index =
 							new Integer(reader.getAttribute("index"));
+						final String hidden = reader.getAttribute("hidden");
+						if ("true".equalsIgnoreCase(hidden)) {
+							fhidden.add(new Pair(tile, index));
+						}
 						Color color = null;
 						while (reader.hasMoreChildren()) {
 							reader.moveDown();
@@ -992,6 +1021,13 @@ public class Document extends DisplayList {
 							final Tiling.Facet f = t.facet(index);
 							doc.setFacetClassColor(f, c);
 						}
+					}
+					for (final Pair item: fhidden) {
+						final int tile = (Integer) item.getFirst();
+						final int index = (Integer) item.getSecond();
+						final Tiling.Tile t = doc.getTiles().get(tile);
+						final Tiling.Facet f = t.facet(index);
+						doc.hideFacetClass(f);
 					}
 					doc.setTransformation(trans);
 				}

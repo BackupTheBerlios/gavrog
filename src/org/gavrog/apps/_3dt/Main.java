@@ -974,7 +974,7 @@ public class Main extends EventSource {
                     resumeRendering();
 				}
 			};
-			final String txt = "Set the color for this face.";
+			final String txt = "Set the color for this facet.";
 			_facetClassRecolorAction.setShortDescription(txt);
     		_facetClassRecolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
 					KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
@@ -1005,12 +1005,67 @@ public class Main extends EventSource {
                     resumeRendering();
 				}
 			};
-			final String txt = "Remove the special color for this face.";
+			final String txt = "Remove the special color for this facet.";
 			_facetClassUncolorAction.setShortDescription(txt);
-//    		_facetClassUncolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-//					KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
 		}
 		return _facetClassUncolorAction;
+	}
+    
+    private AbstractJrAction _facetClassHideAction = null;
+    
+    private Action actionHideFacetClass() {
+		if (_facetClassHideAction == null) {
+			_facetClassHideAction = new AbstractJrAction(
+					"Hide Facet Class") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (selectedBodyNode == null || selectedFace < 0) {
+						return;
+					}
+					final DisplayList.Item item = node2item
+							.get(selectedBodyNode);
+					final Tiling.Facet f = item.getTile().facet(selectedFace);
+					
+					hideFacetClass(f);
+                    suspendRendering();
+                    updateMaterials();
+                    resumeRendering();
+				}
+			};
+			final String txt = "Toggle visibility for this facet.";
+			_facetClassHideAction.setShortDescription(txt);
+		}
+		return _facetClassHideAction;
+	}
+    
+    private AbstractJrAction _showAllInTileAction = null;
+    
+    private Action actionShowAllInTile() {
+		if (_showAllInTileAction == null) {
+			_showAllInTileAction = new AbstractJrAction(
+					"Show All Facets in Tile") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (selectedBodyNode == null) {
+						return;
+					}
+					final DisplayList.Item item = node2item
+							.get(selectedBodyNode);
+					
+					showAllInTile(item.getTile());
+                    suspendRendering();
+                    updateMaterials();
+                    resumeRendering();
+				}
+			};
+			final String txt = "Show all facets in tiles of the selected kind.";
+			_showAllInTileAction.setShortDescription(txt);
+		}
+		return _showAllInTileAction;
 	}
     
     private AbstractJrAction _tileUncolorAction = null;
@@ -1624,8 +1679,8 @@ public class Main extends EventSource {
         embed();
         makeTiles();
         makeMaterials();
-        updateMaterials();
         updateDisplayProperties();
+        updateMaterials();
         suspendRendering();
         makeCopies();
         makeUnitCell();
@@ -1640,8 +1695,8 @@ public class Main extends EventSource {
         doc().invalidateEmbedding();
         embed();
         makeTiles();
-        updateMaterials();
         updateDisplayProperties();
+        updateMaterials();
         suspendRendering();
         refreshScene();
         makeUnitCell();
@@ -1782,13 +1837,11 @@ public class Main extends EventSource {
 					continue;
 				}
 				final SceneGraphComponent child = (SceneGraphComponent) node;
-				if (!child.isVisible()) {
-					continue;
-				}
 				final String name = child.getName();
 				if (name.startsWith("face:")) {
 					final int j = Integer.parseInt(name.substring(5));
-					final Color c = doc().getFacetClassColor(b.facet(j));
+					final Tiling.Facet f = b.facet(j);
+					final Color c = doc().getFacetClassColor(f);
 					if (c == null) {
 						child.setAppearance(null);
 					} else {
@@ -1796,6 +1849,7 @@ public class Main extends EventSource {
 						updateMaterial(a, c);
 						child.setAppearance(a);
 					}
+					child.setVisible(!doc().isHiddenFacetClass(f));
 				}
 			}
     	}
@@ -2026,6 +2080,8 @@ public class Main extends EventSource {
     		_selectionPopup.add(actionRecolorTileClass());
     		_selectionPopup.add(actionRecolorFacetClass());
     		_selectionPopup.add(actionUncolorFacetClass());
+    		_selectionPopup.add(actionHideFacetClass());
+    		_selectionPopup.add(actionShowAllInTile());
     		
     		_selectionPopup.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {
@@ -2236,8 +2292,8 @@ public class Main extends EventSource {
 				new Thread(new Runnable() {
 					public void run() {
 						makeTiles();
-						updateMaterials();
 						updateDisplayProperties();
+						updateMaterials();
 						suspendRendering();
 						refreshScene();
 						resumeRendering();
@@ -2314,6 +2370,7 @@ public class Main extends EventSource {
             public void call() {
             	suspendRendering();
                 updateDisplayProperties();
+                updateMaterials();
                 resumeRendering();
                 saveOptions();
             }
@@ -3089,22 +3146,33 @@ public class Main extends EventSource {
 		return result;
 	}
 
-	/**
-	 * @param f
-	 * @param color
-	 */
 	private void recolorFacetClass(final Tiling.Facet f, final Color color) {
-		for (Tiling.Facet facet : equivalentFacets(f)) {
+		for (Tiling.Facet facet: equivalentFacets(f)) {
 			doc().setFacetClassColor(facet, color);
 		}
 	}
 
-	/**
-	 * @param f
-	 */
 	private void uncolorFacetClass(final Tiling.Facet f) {
-		for (Tiling.Facet facet : equivalentFacets(f)) {
+		for (Tiling.Facet facet: equivalentFacets(f)) {
 			doc().removeFacetClassColor(facet);
+		}
+	}
+	
+	private void showAllInTile(final Tiling.Tile t) {
+		for (int i = 0; i < t.size(); ++i) {
+			showFacetClass(t.facet(i));
+		}
+	}
+	
+	private void showFacetClass(final Tiling.Facet f) {
+		for (Tiling.Facet facet : equivalentFacets(f)) {
+			doc().showFacetClass(facet);
+		}
+	}
+	
+	private void hideFacetClass(final Tiling.Facet f) {
+		for (Tiling.Facet facet : equivalentFacets(f)) {
+			doc().hideFacetClass(facet);
 		}
 	}
 }

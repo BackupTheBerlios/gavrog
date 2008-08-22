@@ -11,7 +11,7 @@
 - Added a 'symmetrize' action to maximize symmetry in a tiling.
 - BUG FIX: the scene file output was broken in 0.3.1 and could not be read back.
 - Individual tiles can now be colored and uncolored (reverted to class color.)
-- Facet classes can now be colored and uncolored.
+- Facet classes can now be colored, uncolored and hidden.
 - New tilings are viewed along the Z (a.k.a. 001) axis by default.
 - Menu items added to view along unit cell axes and diagonals.
 - Better automatic fitting of the scene to the viewing window.
