@@ -386,75 +386,56 @@ public class Main extends EventSource {
         menu.addAction(actionAbout(), HELP_MENU);
     }
     
-    private AbstractJrAction _aboutAction = null;
-    
     private Action actionAbout() {
-        if (_aboutAction == null) {
-            _aboutAction = new AbstractJrAction("About 3dt") {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    showAbout();
-                }
-            };
-        }
-        return _aboutAction;
+    	final String name = "About 3dt";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					showAbout();
+				}
+			}, null, null);
+    	}
+    	return ActionRegistry.instance().get(name);
     }
-    
-    private AbstractJrAction _showControlsAction = null;
     
     private Action actionShowControls() {
-        if (_showControlsAction == null) {
-            _showControlsAction = new AbstractJrAction("Show Controls") {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    showControls();
-                }
-            };
-        }
-        return _showControlsAction;
-    }
-    
-    private AbstractJrAction _openAction = null;
+		final String name = "Show Controls";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					showControls();
+				}
+			}, null, null);
+		}
+		return ActionRegistry.instance().get(name);
+	}
     
     private Action actionOpen() {
-        if (_openAction == null) {
-            _openAction = new AbstractJrAction("Open...") {
-                private static final long serialVersionUID = 1L;
-
-				@Override
-                public void actionPerformed(ActionEvent e) {
-                    inFileChooser
-                            .setDirectory(new File(getLastInputDirectory()));
-                    final boolean success = inFileChooser.showDialog(null);
-                    if (!success) {
-                        return;
-                    }
-                    setLastInputDirectory(inFileChooser.getDirectory()
+		final String name = "Open...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					inFileChooser.setDirectory(new File(getLastInputDirectory()));
+					final boolean success = inFileChooser.showDialog(null);
+					if (!success) {
+						return;
+					}
+					setLastInputDirectory(inFileChooser.getDirectory()
 							.getAbsolutePath());
-                    saveOptions();
-                    openFile(inFileChooser.getSelectedFile().getAbsolutePath());
-                }
-            };
-            _openAction.setShortDescription("Open a tiling file");
-            _openAction.setAcceleratorKey(KeyStroke.getKeyStroke(KeyEvent.VK_O,
-                    InputEvent.CTRL_MASK));
-        }
-        return _openAction;
+					saveOptions();
+					openFile(inFileChooser.getSelectedFile().getAbsolutePath());
+				}
+			}, "Open a tiling file",
+			KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
+		}
+		return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _saveTilingAction = null;
-    
     private Action actionSaveTiling() {
-        if (_saveTilingAction == null) {
-            _saveTilingAction = new AbstractJrAction("Save tiling...") {
-                private static final long serialVersionUID = 1L;
-
-				@Override
-                public void actionPerformed(ActionEvent e) {
+		final String name = "Save Tiling...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
                     outTilingChooser.setDirectory(new File(
 							getLastTilingOutputDirectory()));
                     final boolean success = outTilingChooser.showDialog(null);
@@ -486,23 +467,17 @@ public class Main extends EventSource {
                     	return;
                     }
                     log("Wrote file " + filename + ".");
-                }
-            };
-            _saveTilingAction.setShortDescription(
-            		"Save the raw tiling as a Delaney-Dress symbol");
-        }
-        return _saveTilingAction;
+				}
+			}, "Save the raw tiling as a Delaney-Dress symbol", null);
+		}
+		return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _saveNetAction = null;
-    
     private Action actionSaveNet() {
-        if (_saveNetAction == null) {
-            _saveNetAction = new AbstractJrAction("Save net...") {
-                private static final long serialVersionUID = 1L;
-
-				@Override
-                public void actionPerformed(ActionEvent e) {
+		final String name = "Save Net...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
                     outNetChooser.setDirectory(new File(
 							getLastNetOutputDirectory()));
                     final boolean success = outNetChooser.showDialog(null);
@@ -528,23 +503,17 @@ public class Main extends EventSource {
                     	return;
                     }
                     log("Wrote file " + filename + ".");
-                }
-            };
-            _saveNetAction.setShortDescription(
-            		"Save the raw net as a Systre file");
-        }
-        return _saveNetAction;
+				}
+			}, "Save the raw net as a Systre file", null);
+		}
+		return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _saveSceneAction = null;
-    
     private Action actionSaveScene() {
-        if (_saveSceneAction == null) {
-            _saveSceneAction = new AbstractJrAction("Save scene...") {
-                private static final long serialVersionUID = 1L;
-
-				@Override
-                public void actionPerformed(ActionEvent e) {
+		final String name = "Save Scene...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
                     outSceneChooser.setDirectory(new File(
 							getLastSceneOutputDirectory()));
                     final boolean success = outSceneChooser.showDialog(null);
@@ -571,124 +540,88 @@ public class Main extends EventSource {
                     	return;
                     }
                     log("Wrote file " + filename + ".");
-                }
-            };
-            _saveSceneAction.setShortDescription("Save the scene");
-        }
-        return _saveSceneAction;
+				}
+			}, "Save the scene", null);
+		}
+		return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _firstAction = null;
-    
     private Action actionFirst() {
-		if (_firstAction == null) {
-			_firstAction = new AbstractJrAction("First") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "First";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(1);
 				}
-			};
-			_firstAction.setShortDescription("Display the first tiling");
-			_firstAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_F, 0));
+			}, "Display the first tiling in this file",
+			KeyStroke.getKeyStroke(KeyEvent.VK_F, 0));
 		}
-
-		return _firstAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _nextAction = null;
-    
     private Action actionNext() {
-        if (_nextAction == null) {
-            _nextAction = new AbstractJrAction("Next") {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
+		final String name = "Next";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
                     doTiling(tilingCounter + 1);
-                }
-            };
-            _nextAction.setShortDescription("Display the next tiling");
-            _nextAction.setAcceleratorKey(KeyStroke.getKeyStroke(KeyEvent.VK_N,
-                    0));
-        }
-        
-        return _nextAction;
-    }
-    
-    private AbstractJrAction _previousAction = null;
+				}
+			}, "Display the next tiling in this file",
+			KeyStroke.getKeyStroke(KeyEvent.VK_N, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
     
     private Action actionPrevious() {
-		if (_previousAction == null) {
-			_previousAction = new AbstractJrAction("Previous") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Previous";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(tilingCounter - 1);
 				}
-			};
-			_previousAction.setShortDescription("Display the previous tiling");
-			_previousAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_P, 0));
+			}, "Display the previous tiling in this file",
+			KeyStroke.getKeyStroke(KeyEvent.VK_P, 0));
 		}
-        
-        return _previousAction;
-    }
-    
-    private AbstractJrAction _lastAction = null;
+		return ActionRegistry.instance().get(name);
+	}
     
     private Action actionLast() {
-		if (_lastAction == null) {
-			_lastAction = new AbstractJrAction("Last") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Last";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(documents.size());
 				}
-			};
-			_lastAction.setShortDescription("Display the last tiling");
-			_lastAction.setAcceleratorKey(KeyStroke.getKeyStroke(KeyEvent.VK_L,
-					0));
+			}, "Display the last tiling in this file",
+			KeyStroke.getKeyStroke(KeyEvent.VK_L, 0));
 		}
-
-		return _lastAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _jumpAction = null;
     final private BStandardDialog jumpDialog = new BStandardDialog("3dt Jump To",
     		"Number of tiling to jump to:", BStandardDialog.PLAIN);
     
     private Action actionJump() {
-		if (_jumpAction == null) {
-			_jumpAction = new AbstractJrAction("Jump To...") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Jump To...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    final String input = jumpDialog.showInputDialog(null, null,
-                            "");
-                    final int n;
-                    try {
-                        n = Integer.parseInt(input);
-                    } catch (final NumberFormatException ex) {
-                        return;
-                    }
-                    doTiling(n);
+					final String input = jumpDialog.showInputDialog(
+							null, null, "");
+					final int n;
+					try {
+						n = Integer.parseInt(input);
+					} catch (final NumberFormatException ex) {
+						return;
+					}
+					doTiling(n);
 				}
-			};
-			_jumpAction.setShortDescription("Jump to a specific tiling");
-			_jumpAction.setAcceleratorKey(KeyStroke.getKeyStroke(KeyEvent.VK_J,
-					0));
+			}, "Jump to a specific tiling",
+			KeyStroke.getKeyStroke(KeyEvent.VK_J, 0));
 		}
-
-		return _jumpAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _searchAction = null;
 	final private BStandardDialog searchDialog = new BStandardDialog(
 			"3dt Search", "Type a tiling's name or part of it:",
 			BStandardDialog.PLAIN);
@@ -696,14 +629,11 @@ public class Main extends EventSource {
 			"3dt Search", "No tiling found.", BStandardDialog.INFORMATION);
     
     private Action actionSearch() {
-		if (_searchAction == null) {
-			_searchAction = new AbstractJrAction("Search...") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Search...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    final String input = searchDialog.showInputDialog(null, null,
-                            "");
+                    String input = searchDialog.showInputDialog(null, null, "");
                     if (input != null && !input.equals("")) {
 	                    if (documents != null) {
 	                    	for (int n = 0; n < documents.size(); ++n) {
@@ -717,24 +647,17 @@ public class Main extends EventSource {
 	                    searchNotFound.showMessageDialog(null);
                     }
 				}
-			};
-			_searchAction.setShortDescription("Search for a tiling by name");
-			_searchAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_F, InputEvent.CTRL_MASK));
+			}, "Search for a tiling by name",
+			KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
 		}
-
-		return _searchAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _dualizeAction = null;
-    
     private Action actionDualize() {
-    	if (_dualizeAction == null) {
-    		_dualizeAction = new AbstractJrAction("Dualize") {
-    			private static final long serialVersionUID = 1L;
-    			
-    			@Override
-    			public void actionPerformed(ActionEvent e) {
+		final String name = "Dualize";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
     				final String name = doc().getName();
     				final String newName;
     				if (name != null) {
@@ -747,22 +670,16 @@ public class Main extends EventSource {
     				documents.add(tilingCounter, dual);
     				doTiling(tilingCounter + 1);
     			}
-    		};
-        	_dualizeAction.setShortDescription("Dualize the current tiling");
+    		}, "Dualize the current tiling", null);
     	}
-    	
-    	return _dualizeAction;
+    	return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _symmetrizeAction = null;
-    
     private Action actionSymmetrize() {
-    	if (_symmetrizeAction == null) {
-    		_symmetrizeAction = new AbstractJrAction("Symmetrize") {
-    			private static final long serialVersionUID = 1L;
-    			
-    			@Override
-    			public void actionPerformed(ActionEvent e) {
+		final String name = "Max. Symmetry";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
     				final String name = doc().getName();
     				final String newName;
     				if (name != null) {
@@ -775,34 +692,25 @@ public class Main extends EventSource {
     				documents.add(tilingCounter, minimal);
     				doTiling(tilingCounter + 1);
     			}
-    		};
-        	_symmetrizeAction.setShortDescription("symmetrize the current tiling");
+    		}, "Maximize the symmetry of the current tiling", null);
     	}
-    	
-    	return _symmetrizeAction;
+    	return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _recolorAction = null;
-    
     private Action actionRecolor() {
-        if (_recolorAction == null) {
-            _recolorAction = new AbstractJrAction("Recolor") {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
+		final String name = "Recolor";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
                     doc().randomlyRecolorTiles();
                     suspendRendering();
                     updateMaterials();
                     resumeRendering();
                 }
-            };
-            _recolorAction
-                    .setShortDescription("Pick new random colors for tiles");
-            _recolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-                    KeyEvent.VK_C, InputEvent.CTRL_MASK));
+            }, "Pick new random colors for tiles",
+            KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK));
         }
-        return _recolorAction;
+        return ActionRegistry.instance().get(name);
     }
     
     private AbstractJrAction _tileAddAction = null;
