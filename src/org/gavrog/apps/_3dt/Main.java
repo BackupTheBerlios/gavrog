@@ -893,7 +893,7 @@ public class Main extends EventSource {
 					if (picked == null) {
 						return;
 					}
-					doc().setTileKindColor(kind, picked);
+					doc().setTileClassColor(kind, picked);
                     suspendRendering();
                     updateMaterials();
                     resumeRendering();
@@ -957,7 +957,7 @@ public class Main extends EventSource {
 					final DisplayList.Item item = node2item
 							.get(selectedBodyNode);
 					final Tiling.Facet f = item.getTile().facet(selectedFace);
-					Color c = doc().getFacetKindColor(f);
+					Color c = doc().getFacetClassColor(f);
 					if (c == null) {
 						c = doc().color(item);
 					}
@@ -1788,7 +1788,7 @@ public class Main extends EventSource {
 				final String name = child.getName();
 				if (name.startsWith("face:")) {
 					final int j = Integer.parseInt(name.substring(5));
-					final Color c = doc().getFacetKindColor(b.facet(j));
+					final Color c = doc().getFacetClassColor(b.facet(j));
 					if (c == null) {
 						child.setAppearance(null);
 					} else {
@@ -3095,7 +3095,7 @@ public class Main extends EventSource {
 	 */
 	private void recolorFacetClass(final Tiling.Facet f, final Color color) {
 		for (Tiling.Facet facet : equivalentFacets(f)) {
-			doc().setFacetKindColor(facet, color);
+			doc().setFacetClassColor(facet, color);
 		}
 	}
 
@@ -3104,7 +3104,7 @@ public class Main extends EventSource {
 	 */
 	private void uncolorFacetClass(final Tiling.Facet f) {
 		for (Tiling.Facet facet : equivalentFacets(f)) {
-			doc().removeFacetKindColor(facet);
+			doc().removeFacetClassColor(facet);
 		}
 	}
 }

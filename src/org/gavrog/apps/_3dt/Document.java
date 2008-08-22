@@ -409,31 +409,31 @@ public class Document extends DisplayList {
         }
     }
     
-    public Color getTileKindColor(final int i) {
+    public Color getTileClassColor(final int i) {
     	return getPalette()[i];
     }
     
     public Color getDefaultTileColor(final Tiling.Tile t) {
-    	return getTileKindColor(t.getKind());
+    	return getTileClassColor(t.getKind());
     }
     
     public Color getDefaultTileColor(final int i) {
     	return getDefaultTileColor(getTile(i));
     }
     
-    public void setTileKindColor(final int i, final Color c) {
+    public void setTileClassColor(final int i, final Color c) {
     	getPalette()[i] = c;
     }
 
-    public Color getFacetKindColor(final Tiling.Facet f) {
+    public Color getFacetClassColor(final Tiling.Facet f) {
     	return this.facetClassColor.get(f);
     }
 
-    public void setFacetKindColor(final Tiling.Facet f, final Color c) {
+    public void setFacetClassColor(final Tiling.Facet f, final Color c) {
     	this.facetClassColor.put(f, c);
     }
 
-    public void removeFacetKindColor(final Tiling.Facet f) {
+    public void removeFacetClassColor(final Tiling.Facet f) {
     	this.facetClassColor.remove(f);
     }
     
@@ -973,7 +973,7 @@ public class Document extends DisplayList {
 					doc = new Document(name, symbol);
 					doc.setProperties(props);
 					for (int i = 0; i < palette.size(); ++i) {
-						doc.setTileKindColor(i, palette.get(i));
+						doc.setTileClassColor(i, palette.get(i));
 					}
 					for (final Object val[]: dlist) {
 						final int k = (Integer) val[0];
@@ -990,7 +990,7 @@ public class Document extends DisplayList {
 							final int index = (Integer) item.getSecond();
 							final Tiling.Tile t = doc.getTiles().get(tile);
 							final Tiling.Facet f = t.facet(index);
-							doc.setFacetKindColor(f, c);
+							doc.setFacetClassColor(f, c);
 						}
 					}
 					doc.setTransformation(trans);
