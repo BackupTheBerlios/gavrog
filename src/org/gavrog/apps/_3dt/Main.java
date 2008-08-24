@@ -96,6 +96,7 @@ import buoy.widget.ColumnContainer;
 import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 import buoy.widget.Widget;
+import de.jreality.geometry.BallAndStickFactory;
 import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedLineSetFactory;
@@ -106,6 +107,7 @@ import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Rn;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.Camera;
+import de.jreality.scene.IndexedLineSet;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.SceneGraphNode;
 import de.jreality.scene.SceneGraphPath;
@@ -1526,23 +1528,28 @@ public class Main extends EventSource {
         ilsf.setVertexCoordinates(corners);
         ilsf.setEdgeIndices(idcs);
 		ilsf.update();
-        
-        this.unitCell.setGeometry(ilsf.getIndexedLineSet());
-        updateUnitCellAppearance();
-    }
-    
-    private void updateUnitCellAppearance() {
+		final IndexedLineSet ils = ilsf.getIndexedLineSet();
+		
+		final BallAndStickFactory basf = new BallAndStickFactory(ils);
         final double r = getUnitCellEdgeWidth() / 2;
-        final Appearance a = new Appearance();
-        a.setAttribute(CommonAttributes.EDGE_DRAW, true);
-        a.setAttribute(CommonAttributes.TUBE_RADIUS, r);
-        a.setAttribute(CommonAttributes.VERTEX_DRAW, true);
-        a.setAttribute(CommonAttributes.POINT_RADIUS, r);
-        a.setAttribute(CommonAttributes.SPECULAR_COEFFICIENT, 0.0);
-        a.setAttribute(CommonAttributes.DIFFUSE_COEFFICIENT, 1.0);
-        a.setAttribute(CommonAttributes.AMBIENT_COEFFICIENT, 0.0);
-        a.setAttribute(CommonAttributes.DIFFUSE_COLOR, getUnitCellColor());
-        this.unitCell.setAppearance(a);
+        final Color c = getUnitCellColor();
+		basf.setBallRadius(r);
+		basf.setBallColor(c);
+		basf.setStickRadius(r);
+		basf.setStickColor(c);
+		basf.update();
+        
+		final SceneGraphComponent bas = basf.getSceneGraphComponent();
+		bas.setName("UnitCell");
+		final Appearance a = new Appearance();
+		updateMaterial(a, c);
+		a.setAttribute(CommonAttributes.EDGE_DRAW, false);
+		a.setAttribute(CommonAttributes.VERTEX_DRAW, false);
+		bas.setAppearance(a);
+		for (final SceneGraphComponent child: bas.getChildComponents()) {
+			child.setAppearance(null);
+		}
+        this.unitCell = basf.getSceneGraphComponent();
     }
     
     private void makeTiles() {
@@ -1676,7 +1683,9 @@ public class Main extends EventSource {
 		}
     	
     	this.unitCell.setVisible(getShowUnitCell());
-        updateUnitCellAppearance();
+    	if (getShowUnitCell()) {
+    		makeUnitCell();
+    	}
         log("      " + getTimer(timer));
     }
     
