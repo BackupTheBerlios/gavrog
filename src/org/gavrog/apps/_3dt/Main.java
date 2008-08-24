@@ -1534,9 +1534,7 @@ public class Main extends EventSource {
         final double r = getUnitCellEdgeWidth() / 2;
         final Color c = getUnitCellColor();
 		basf.setBallRadius(r);
-		basf.setBallColor(c);
 		basf.setStickRadius(r);
-		basf.setStickColor(c);
 		basf.update();
         
 		final SceneGraphComponent bas = basf.getSceneGraphComponent();
