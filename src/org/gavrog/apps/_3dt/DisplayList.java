@@ -144,6 +144,11 @@ public class DisplayList extends EventSource implements
 		final private Template template;
 		final private Vector shift;
 		
+		private Item(final Template t, final Vector shift) {
+			this.template = t;
+			this.shift = shift;
+		}
+		
 		private Item(final Tile tile, final Vector shift) {
 			this.template = new TTile(tile);
 			this.shift = shift;
@@ -291,8 +296,7 @@ public class DisplayList extends EventSource implements
 	}
 	
 	// --- primitive list modifications
-	public Item add(final Tile tile, final Vector shift) {
-		final Item inst = new Item(tile, shift);
+	private Item add(final Item inst) {
 		if (!this.map.containsKey(inst)) {
 			this.map.put(inst, null);
 			dispatchEvent(ADD, inst);
@@ -300,6 +304,18 @@ public class DisplayList extends EventSource implements
 		} else {
 			return null;
 		}
+	}
+	
+	public Item add(final Tile tile, final Vector shift) {
+		return add(new Item(tile, shift));
+	}
+
+	public Item add(final IEdge edge, final Vector shift) {
+		return add(new Item(edge, shift));
+	}
+
+	public Item add(final INode node, final Vector shift) {
+		return add(new Item(node, shift));
 	}
 
 	public boolean remove(final Item item) {

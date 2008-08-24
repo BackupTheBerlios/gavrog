@@ -70,8 +70,10 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.graphics.Surface;
+import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.io.Output;
 import org.gavrog.joss.tilings.Tiling;
 import org.gavrog.joss.tilings.Tiling.Facet;
@@ -100,10 +102,12 @@ import de.jreality.geometry.BallAndStickFactory;
 import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedLineSetFactory;
+import de.jreality.geometry.TubeUtility;
 import de.jreality.io.JrScene;
 import de.jreality.jogl.JOGLRenderer;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
+import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.Camera;
@@ -1411,6 +1415,28 @@ public class Main extends EventSource {
         this.item2node.put(item, sgc);
     }
     
+    private void addEdge(final DisplayList.Item item) {
+    	if (item == null) {
+    		return;
+    	}
+    	
+    	final IEdge e = item.getEdge();
+    	final Vector s =
+    		(Vector) item.getShift().times(doc().getEmbedderToWorld());
+    	final double p[] = ((Point) doc().edgeSourcePoint(e).plus(s))
+				.getCoordinates().asDoubleArray()[0];
+    	final double q[] = ((Point) doc().edgeTargetPoint(e).plus(s))
+				.getCoordinates().asDoubleArray()[0];
+        final SceneGraphComponent sgc = TubeUtility.tubeOneEdge(p, q,
+        		0.05, TubeUtility.octagonalCrossSection, Pn.EUCLIDEAN);
+        final Appearance a = new Appearance();
+        updateMaterial(a, Color.BLUE);
+        sgc.setAppearance(a);
+        this.net.addChild(sgc);
+        this.node2item.put(sgc, item);
+        this.item2node.put(item, sgc);
+    }
+    
     private void recolorTile(final DisplayList.Item item, final Color color) {
     	final Appearance a;
 		if (color != null) {
@@ -1431,19 +1457,27 @@ public class Main extends EventSource {
     
 	public void handleDisplayListEvent(final Object event) {
 		final DisplayList.Event e = (DisplayList.Event) event;
-		//log(e);
+		final DisplayList.Item item = e.getInstance();
+		
 		if (e.getEventType() == DisplayList.BEGIN) {
 		} else if (e.getEventType() == DisplayList.END) {
 		} else if (e.getEventType() == DisplayList.ADD) {
-			addTile(e.getInstance());
+			if (item.isTile()) {
+				addTile(item);
+			} else if (item.isEdge()) {
+				addEdge(item);
+			}
 		} else if (e.getEventType() == DisplayList.DELETE) {
-			final DisplayList.Item item = e.getInstance();
 			final SceneGraphNode node = item2node.get(item);
 			item2node.remove(item);
 			node2item.remove(node);
-			SceneGraphUtility.removeChildNode(tiling, node);
+			if (item.isTile()) {
+				SceneGraphUtility.removeChildNode(tiling, node);
+			}
 		} else if (e.getEventType() == DisplayList.RECOLOR) {
-			recolorTile(e.getInstance(), e.getNewColor());
+			if (item.isTile()) {
+				recolorTile(item, e.getNewColor());
+			}
 		}
 	}
 	
@@ -1468,6 +1502,7 @@ public class Main extends EventSource {
         updateMaterials();
         suspendRendering();
         makeCopies();
+        makeNet();
         makeUnitCell();
         resumeRendering();
         encompass();
@@ -1707,6 +1742,18 @@ public class Main extends EventSource {
     	}
     }
 
+    private void makeNet() {
+		final List<Vector> vecs = replicationVectors();
+    	for (final Iterator edges = doc().getNet().edges(); edges.hasNext();) {
+    		final IEdge e = (IEdge) edges.next();
+        	for (final Vector s: doc().centerIntoUnitCell(e)) {
+        		for (Vector v: vecs) {
+        			doc().add(e, (Vector) s.plus(v));
+        		}
+        	}
+    	}
+    }
+    
     private List<Vector> replicationVectors() {
     	final Vector xyz[] = doc().getUnitCellVectorsInEmbedderCoordinates();
     	final Vector vx = xyz[0];
@@ -2119,6 +2166,7 @@ public class Main extends EventSource {
 						suspendRendering();
 						doc().removeAll();
 						makeCopies();
+						makeNet();
 						if (doc().getTransformation() != null) {
 							setViewingTransformation(doc().getTransformation());
 						} else {

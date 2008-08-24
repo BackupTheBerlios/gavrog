@@ -57,6 +57,8 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.io.GenericParser;
 import org.gavrog.joss.pgraphs.io.NetParser;
@@ -369,12 +371,47 @@ public class Document extends DisplayList {
         return p.getCoordinates().asDoubleArray()[0];
     }
     
+    public double[] vertexPosition(final INode v) {
+    	return cornerPosition(0, getNet().chamberAtNode(v));
+    }
+    
+    public Point edgeSourcePoint(final IEdge e) {
+    	final Tiling.Skeleton net = getNet();
+    	final Object C = net.chamberAtNode(e.source());
+        final Point p0 = (Point) getPositions().get(new DSPair(0, C));
+        return (Point) p0.times(getEmbedderToWorld());
+    }
+    
+    public Point edgeTargetPoint(final IEdge e) {
+    	final Object D = getNet().chamberAtNode(e.target());
+    	final Vector s = getNet().getShift(e);
+        final Point q0 =
+        	(Point) ((Point) getPositions().get(new DSPair(0, D))).plus(s);
+        return (Point) q0.times(getEmbedderToWorld());
+    }
+    
     public List<Vector> centerIntoUnitCell(final Tiling.Tile t) {
     	final int dim = getEffectiveSymbol().dim();
+    	final DSPair c = new DSPair(dim, t.getChamber());
+    	return pointIntoUnitCell((Point) getPositions().get(c));
+    }
+    
+    public List<Vector> centerIntoUnitCell(final IEdge e) {
+    	final Tiling.Skeleton net = getNet();
+    	final Object C = net.chamberAtNode(e.source());
+    	final Object D = net.chamberAtNode(e.target());
+    	final Vector s = net.getShift(e);
+        final Point p = (Point) getPositions().get(new DSPair(0, C));
+        final Point q =
+        	(Point) ((Point) getPositions().get(new DSPair(0, D))).plus(s);
+    	return pointIntoUnitCell(
+    			(Point) p.plus(((Vector) q.minus(p)).times(0.5)));
+    }
+    
+    public List<Vector> pointIntoUnitCell(final Point p0) {
+    	final int dim = p0.getDimension();
     	final CoordinateChange toStd = getFinder().getToStd();
     	final CoordinateChange fromStd = getFinder().getFromStd();
-    	final DSPair c = new DSPair(dim, t.getChamber());
-    	final Point p0 = (Point) getPositions().get(c);
     	
     	final List<Vector> result = new ArrayList<Vector>();
     	for (final Vector s : getCenteringVectors()) {
