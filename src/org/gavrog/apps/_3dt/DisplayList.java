@@ -26,6 +26,8 @@ import java.util.Map;
 
 import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.tilings.Tiling.Tile;
 
 import buoy.event.EventSource;
@@ -48,44 +50,178 @@ public class DisplayList extends EventSource implements
 	public static EventType RECOLOR = new EventType("Recolor");
 	
 	// --- helper classes
-	public static class Item {
+	private abstract class Template {
+		public abstract int hashCode();
+		public abstract boolean equals(final Object arg);
+		public abstract String toString();
+	}
+	
+	private class TTile extends Template {
 		final private Tile tile;
-		final private Vector shift;
 		
-		private Item(final Tile tile, final Vector shift) {
+		private TTile(final Tile tile) {
 			this.tile = tile;
-			this.shift = shift;
 		}
 
 		public Tile getTile() {
 			return this.tile;
 		}
 
+		public int hashCode() {
+			return getTile().hashCode();
+		}
+		
+		public boolean equals(final Object arg) {
+			if (arg instanceof TTile) {
+				return getTile().equals(((TTile) arg).getTile());
+			} else {
+				return false;
+			}
+		}
+		
+		public String toString() {
+			return "T" + getTile().getIndex();
+		}
+	}
+	
+	private class TNode extends Template {
+		final private INode node;
+		
+		private TNode(final INode node) {
+			this.node = node;
+		}
+
+		public INode getNode() {
+			return this.node;
+		}
+
+		public int hashCode() {
+			return getNode().hashCode();
+		}
+		
+		public boolean equals(final Object arg) {
+			if (arg instanceof TNode) {
+				return getNode().equals(((TNode) arg).getNode());
+			} else {
+				return false;
+			}
+		}
+		
+		public String toString() {
+			return getNode().toString();
+		}
+	}
+		
+	private class TEdge extends Template {
+		final private IEdge edge;
+
+		private TEdge(final IEdge edge) {
+			this.edge = edge;
+		}
+
+		public IEdge getEdge() {
+			return this.edge;
+		}
+
+		public int hashCode() {
+			return getEdge().hashCode();
+		}
+
+		public boolean equals(final Object arg) {
+			if (arg instanceof TEdge) {
+				return getEdge().equals(((TEdge) arg).getEdge());
+			} else {
+				return false;
+			}
+		}
+
+		public String toString() {
+			return getEdge().toString();
+		}
+	}
+	
+	public class Item {
+		final private Template template;
+		final private Vector shift;
+		
+		private Item(final Tile tile, final Vector shift) {
+			this.template = new TTile(tile);
+			this.shift = shift;
+		}
+
+		private Item(final INode node, final Vector shift) {
+			this.template = new TNode(node);
+			this.shift = shift;
+		}
+
+		private Item(final IEdge edge, final Vector shift) {
+			this.template = new TEdge(edge);
+			this.shift = shift;
+		}
+
+		public boolean isTile() {
+			return this.template instanceof TTile;
+		}
+		
+		public boolean isNode() {
+			return this.template instanceof TNode;
+		}
+		
+		public boolean isEdge() {
+			return this.template instanceof TEdge;
+		}
+		
+		public Tile getTile() {
+			if (isTile()) {
+				return ((TTile) this.template).getTile();
+			} else {
+				throw new RuntimeException("illegal template class " +
+						this.template.getClass().getName());
+			}
+		}
+
+		public INode getNode() {
+			if (isNode()) {
+				return ((TNode) this.template).getNode();
+			} else {
+				throw new RuntimeException("illegal template class " +
+						this.template.getClass().getName());
+			}
+		}
+		
+		public IEdge getEdge() {
+			if (isEdge()) {
+				return ((TEdge) this.template).getEdge();
+			} else {
+				throw new RuntimeException("illegal template class " +
+						this.template.getClass().getName());
+			}
+		}
+		
 		public Vector getShift() {
 			return this.shift;
 		}
 		
 		public int hashCode() {
-			return this.tile.hashCode() * 37 + this.shift.hashCode();
+			return this.template.hashCode() * 37 + this.shift.hashCode();
 		}
 		
 		public boolean equals(final Object arg) {
 			final Item other = (Item) arg;
-			return other.tile.equals(this.tile)
+			return other.template.equals(this.template)
 					&& other.shift.equals(this.shift);
 		}
 		
 		public String toString() {
 			final StringBuffer buf = new StringBuffer(40);
-			buf.append("T");
-			buf.append(getTile().getIndex());
+			buf.append(this.template.toString());
 			buf.append(" + ");
 			buf.append(getShift());
 			return buf.toString();
 		}
 	}
 	
-	public static class Event {
+	public class Event {
 		final private EventType eventType;
 		final private Item instance;
 		final private Color oldColor;

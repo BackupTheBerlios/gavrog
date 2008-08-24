@@ -229,6 +229,7 @@ public class Main extends EventSource {
     final private SceneGraphComponent world;
 
     private SceneGraphComponent tiling;
+    private SceneGraphComponent net;
 	private SceneGraphComponent unitCell;
     private SceneGraphComponent templates[];
     private Appearance materials[];
@@ -281,20 +282,21 @@ public class Main extends EventSource {
 				"Gavrog Scene Files"));
 
 		// --- create the viewing infrastructure
-		this.world = SceneGraphUtility.createFullSceneGraphComponent("world");
+		this.world = SceneGraphUtility.createFullSceneGraphComponent("World");
 		viewerApp = new ViewerApp(world);
 		this.scene = viewerApp.getJrScene();
         viewerApp.setAttachNavigator(false);
         viewerApp.setAttachBeanShell(false);
         
         // --- create a root node for the tiling
-        this.tiling = new SceneGraphComponent("tiling");
-        final Appearance a = new Appearance();
-        this.tiling.setAppearance(a);
-        a.setAttribute(CommonAttributes.EDGE_DRAW, false);
-        a.setAttribute(CommonAttributes.VERTEX_DRAW, false);
+        this.tiling = new SceneGraphComponent("Tiling");
         this.tiling.addTool(new SelectionTool());
-        this.unitCell = new SceneGraphComponent("unitCell");
+        
+        // --- create a root node for the net
+        this.net = new SceneGraphComponent("Net");
+        
+        // --- create a node for the unit cell
+        this.unitCell = new SceneGraphComponent("UnitCell");
         
         // --- remove the encompass tool (we'll have a menu entry for that)
         final SceneGraphComponent root = this.scene.getSceneRoot()
@@ -1143,7 +1145,7 @@ public class Main extends EventSource {
 		try {
 			construct();
 		} catch (final Exception ex) {
-			SceneGraphUtility.removeChildren(this.tiling);
+			clearSceneGraph();
 			ex.printStackTrace();
 		}
 		log("  " + getTimer(timer));
@@ -1424,6 +1426,7 @@ public class Main extends EventSource {
 		item2node.clear();
 		node2item.clear();
         SceneGraphUtility.removeChildren(tiling);
+        SceneGraphUtility.removeChildren(net);
     }
     
 	public void handleDisplayListEvent(final Object event) {
@@ -1541,8 +1544,6 @@ public class Main extends EventSource {
 		bas.setName("UnitCell");
 		final Appearance a = new Appearance();
 		updateMaterial(a, c);
-		a.setAttribute(CommonAttributes.EDGE_DRAW, false);
-		a.setAttribute(CommonAttributes.VERTEX_DRAW, false);
 		bas.setAppearance(a);
 		for (final SceneGraphComponent child: bas.getChildComponents()) {
 			child.setAppearance(null);
@@ -1570,6 +1571,7 @@ public class Main extends EventSource {
     		return;
     	}
         SceneGraphUtility.removeChildren(this.tiling);
+        SceneGraphUtility.removeChildren(this.net);
         for (final DisplayList.Item item: doc()) {
         	addTile(item);
         	if (doc().color(item) != null) {
@@ -1593,6 +1595,8 @@ public class Main extends EventSource {
     private void updateMaterial(final Appearance a, final Color c) {
 		a.setAttribute(CommonAttributes.DIFFUSE_COLOR, c);
 
+        a.setAttribute(CommonAttributes.EDGE_DRAW, false);
+        a.setAttribute(CommonAttributes.VERTEX_DRAW, false);
 		a.setAttribute(CommonAttributes.AMBIENT_COEFFICIENT,
 				getAmbientCoefficient());
 		a.setAttribute(CommonAttributes.DIFFUSE_COEFFICIENT,
@@ -1835,6 +1839,7 @@ public class Main extends EventSource {
 		Invoke.andWait(new Runnable() {
 			public void run() {
 				world.addChild(tiling);
+				world.addChild(net);
 				world.addChild(unitCell);
 				viewerApp.getCurrentViewer().render();
 			}
