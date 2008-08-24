@@ -713,14 +713,10 @@ public class Main extends EventSource {
         return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _tileAddAction = null;
-    
     private Action actionAddTile() {
-    	if (_tileAddAction == null) {
-    		_tileAddAction = new AbstractJrAction("Add Tile") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Add Tile";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
@@ -728,68 +724,49 @@ public class Main extends EventSource {
 					doc().addNeighbor(node2item.get(selectedBodyNode),
 							selectedFace);
 				}
-    		};
-    		_tileAddAction.setShortDescription("Add a tile at the picked face.");
-    		_tileAddAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_A, 0));
+    		}, "Add a tile at the selected face.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_A, 0));
     	}
-    	return _tileAddAction;
+        return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _tileRemoveAction = null;
-    
     private Action actionRemoveTile() {
-    	if (_tileRemoveAction == null) {
-    		_tileRemoveAction = new AbstractJrAction("Remove Tile") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Remove Tile";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
 					}
 					doc().remove(node2item.get(selectedBodyNode));
 				}
-    		};
-    		_tileRemoveAction.setShortDescription("Remove the picked tile.");
-    		_tileRemoveAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_D, 0));
+    		}, "Remove the selected tile.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
     	}
-    	return _tileRemoveAction;
+        return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _tileKindRemoveAction = null;
-    
     private Action actionRemoveTileClass() {
-    	if (_tileKindRemoveAction == null) {
-    		_tileKindRemoveAction = new AbstractJrAction("Remove Tile Class") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
+		final String name = "Remove Tile Class";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
 					}
 					doc().removeKind(node2item.get(selectedBodyNode));
 				}
-    		};
-    		_tileKindRemoveAction.setShortDescription(
-    				"Remove the picked tile with all its symmetric images.");
-    		_tileKindRemoveAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_D, InputEvent.SHIFT_DOWN_MASK));
+    		}, "Remove the selected tile and all its symmetric images.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.SHIFT_DOWN_MASK));
     	}
-    	return _tileKindRemoveAction;
+        return ActionRegistry.instance().get(name);
     }
     
-    private AbstractJrAction _tileClassRecolorAction = null;
-    
     private Action actionRecolorTileClass() {
-		if (_tileClassRecolorAction == null) {
-			_tileClassRecolorAction = new AbstractJrAction("Recolor Tile Class") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Recolor Tile Class";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
 					}
@@ -806,25 +783,17 @@ public class Main extends EventSource {
                     updateMaterials();
                     resumeRendering();
 				}
-			};
-			final String txt = "Set the color for all tiles of this kind.";
-			_tileClassRecolorAction.setShortDescription(txt);
-    		_tileClassRecolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK));
+			}, "Set the color for all tiles of the selected kind.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK));
 		}
-		return _tileClassRecolorAction;
+        return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _tileRecolorAction = null;
-    
     private Action actionRecolorTile() {
-		if (_tileRecolorAction == null) {
-			_tileRecolorAction = new AbstractJrAction(
-					"Recolor Tile") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Recolor Tile";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
 					}
@@ -840,25 +809,17 @@ public class Main extends EventSource {
 					doc().recolor(item, picked);
                     resumeRendering();
 				}
-			};
-			final String txt = "Set the color for this tile.";
-			_tileRecolorAction.setShortDescription(txt);
-    		_tileRecolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_C, 0));
+			}, "Set the color for this tile.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
 		}
-		return _tileRecolorAction;
+        return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _facetClassRecolorAction = null;
-    
     private Action actionRecolorFacetClass() {
-		if (_facetClassRecolorAction == null) {
-			_facetClassRecolorAction = new AbstractJrAction(
-					"Recolor Facet Class") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Recolor Facet Class";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null || selectedFace < 0) {
 						return;
 					}
@@ -881,25 +842,17 @@ public class Main extends EventSource {
                     updateMaterials();
                     resumeRendering();
 				}
-			};
-			final String txt = "Set the color for this facet.";
-			_facetClassRecolorAction.setShortDescription(txt);
-    		_facetClassRecolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
+			}, "Set the color for all facets of the selected kind.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.SHIFT_DOWN_MASK));
 		}
-		return _facetClassRecolorAction;
+        return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _facetClassUncolorAction = null;
-    
     private Action actionUncolorFacetClass() {
-		if (_facetClassUncolorAction == null) {
-			_facetClassUncolorAction = new AbstractJrAction(
-					"Uncolor Facet Class") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Uncolor Facet Class";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null || selectedFace < 0) {
 						return;
 					}
@@ -912,52 +865,37 @@ public class Main extends EventSource {
                     updateMaterials();
                     resumeRendering();
 				}
-			};
-			final String txt = "Remove the special color for this facet.";
-			_facetClassUncolorAction.setShortDescription(txt);
+			}, "Use the tile color for all facets of the selected kind.", null);
 		}
-		return _facetClassUncolorAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _facetClassHideAction = null;
-    
     private Action actionHideFacetClass() {
-		if (_facetClassHideAction == null) {
-			_facetClassHideAction = new AbstractJrAction(
-					"Hide Facet Class") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Hide Facet Class";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null || selectedFace < 0) {
 						return;
 					}
-					final DisplayList.Item item = node2item
-							.get(selectedBodyNode);
-					final Tiling.Facet f = item.getTile().facet(selectedFace);
+					final DisplayList.Item it = node2item.get(selectedBodyNode);
+					final Tiling.Facet f = it.getTile().facet(selectedFace);
 					
 					hideFacetClass(f);
                     suspendRendering();
                     updateMaterials();
                     resumeRendering();
 				}
-			};
-			final String txt = "Toggle visibility for this facet.";
-			_facetClassHideAction.setShortDescription(txt);
+			}, "Toggle visibility for this facet.", null);
 		}
-		return _facetClassHideAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _showAllInTileAction = null;
-    
     private Action actionShowAllInTile() {
-		if (_showAllInTileAction == null) {
-			_showAllInTileAction = new AbstractJrAction(
-					"Show All Facets in Tile") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Show All Facets in Tile";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
 					}
@@ -969,23 +907,16 @@ public class Main extends EventSource {
                     updateMaterials();
                     resumeRendering();
 				}
-			};
-			final String txt = "Show all facets in tiles of the selected kind.";
-			_showAllInTileAction.setShortDescription(txt);
+			}, "Show all facets in tiles of the selected kind.", null);
 		}
-		return _showAllInTileAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _tileUncolorAction = null;
-    
     private Action actionUncolorTile() {
-		if (_tileUncolorAction == null) {
-			_tileUncolorAction = new AbstractJrAction(
-					"Uncolor Tile") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "Uncolor Tile";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					if (selectedBodyNode == null) {
 						return;
 					}
@@ -995,180 +926,121 @@ public class Main extends EventSource {
                     doc().recolor(item, null);
                     resumeRendering();
 				}
-			};
-			final String txt = "Remove the individual color for this tile.";
-			_tileUncolorAction.setShortDescription(txt);
-    		_tileUncolorAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_U, 0));
+			}, "Use the tile class color for selected tile.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_U, 0));
 		}
-		return _tileUncolorAction;
+		return ActionRegistry.instance().get(name);
 	}
-    
-    private AbstractJrAction _encompassAction = null;
     
     private Action actionEncompass() {
-        if (_encompassAction == null) {
-            _encompassAction = new AbstractJrAction("Fit To Scene") {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
+    	final String name = "Fit To Scene";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
                     encompass();
                 }
-            };
-            _encompassAction.setShortDescription(
-            		"Adjust camera to fit scene to window");
-            _encompassAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-                    KeyEvent.VK_0, 0));
+            }, "Adjust camera to fit scene to window",
+            KeyStroke.getKeyStroke(KeyEvent.VK_0, 0));
         }
-        return _encompassAction;
+        return ActionRegistry.instance().get(name);
     }
 
-    private AbstractJrAction _xViewAction = null;
-
 	private Action actionXView() {
-		if (_xViewAction == null) {
-			_xViewAction = new AbstractJrAction("View along X") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(1, 0, 0), new Vector(0, 1, 0));
+    	final String name = "View along X";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+					rotateScene(new Vector(1, 0, 0), new Vector(0, 0, 1));
 					encompass();
 				}
-			};
-			_xViewAction
-					.setShortDescription("View the scene along the X axis.");
-			_xViewAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_X, 0));
+			}, "View the scene along the X axis or 100 direction.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_X, 0));
 		}
-		return _xViewAction;
+        return ActionRegistry.instance().get(name);
 	}
 
-    private AbstractJrAction _yViewAction = null;
-
 	private Action actionYView() {
-		if (_yViewAction == null) {
-			_yViewAction = new AbstractJrAction("View along Y") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "View along Y";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					rotateScene(new Vector(0, 1, 0), new Vector(0, 0, 1));
 					encompass();
 				}
-			};
-			_yViewAction
-					.setShortDescription("View the scene along the Y axis.");
-			_yViewAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_Y, 0));
+			}, "View the scene along the Y axis or 010 direction.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_Y, 0));
 		}
-		return _yViewAction;
+		return ActionRegistry.instance().get(name);
 	}
-
-    private AbstractJrAction _zViewAction = null;
 
 	private Action actionZView() {
-		if (_zViewAction == null) {
-			_zViewAction = new AbstractJrAction("View along Z") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(0, 0, 1), new Vector(1, 0, 0));
+    	final String name = "View along Z";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+					rotateScene(new Vector(0, 0, 1), new Vector(0, 1, 0));
 					encompass();
 				}
-			};
-			_zViewAction
-					.setShortDescription("View the scene along the Z axis.");
-			_zViewAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_Z, 0));
+			}, "View the scene along the Z axis or 001 direction.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_Z, 0));
 		}
-		return _zViewAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _011ViewAction = null;
-
 	private Action action011View() {
-		if (_011ViewAction == null) {
-			final AbstractJrAction a = _011ViewAction = new AbstractJrAction(
-					"View along 011") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "View along 011";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					rotateScene(new Vector(0, 1, 1), new Vector(0, 0, 1));
 					encompass();
 				}
-			};
-			a.setShortDescription("View the scene along the 011 vector.");
-			a.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_A, 0));
+			}, "View the scene along the 011 direction.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_A, 0));
 		}
-		return _011ViewAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _101ViewAction = null;
-
 	private Action action101View() {
-		if (_101ViewAction == null) {
-			final AbstractJrAction a = _101ViewAction = new AbstractJrAction(
-					"View along 101") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "View along 101";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					rotateScene(new Vector(1, 0, 1), new Vector(0, 0, 1));
 					encompass();
 				}
-			};
-			a.setShortDescription("View the scene along the 101 vector.");
-			a.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_B, 0));
+			}, "View the scene along the 101 direction.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_B, 0));
 		}
-		return _101ViewAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _110ViewAction = null;
-
 	private Action action110View() {
-		if (_110ViewAction == null) {
-			final AbstractJrAction a = _110ViewAction = new AbstractJrAction(
-					"View along 110") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "View along 110";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					rotateScene(new Vector(1, 1, 0), new Vector(0, 0, 1));
 					encompass();
 				}
-			};
-			a.setShortDescription("View the scene along the 110 vector.");
-			a.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_C, 0));
+			}, "View the scene along the 110 direction.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_C, 0));
 		}
-		return _110ViewAction;
+		return ActionRegistry.instance().get(name);
 	}
     
-    private AbstractJrAction _111ViewAction = null;
-
 	private Action action111View() {
-		if (_111ViewAction == null) {
-			_111ViewAction = new AbstractJrAction("View along 111") {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
+    	final String name = "View along 111";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
 					rotateScene(new Vector(1, 1, 1), new Vector(0, 0, 1));
 					encompass();
 				}
-			};
-			_111ViewAction
-					.setShortDescription("View the scene along the 111 vector.");
-			_111ViewAction.setAcceleratorKey(KeyStroke.getKeyStroke(
-					KeyEvent.VK_D, 0));
+			}, "View the scene along the 111 vector.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
 		}
-		return _111ViewAction;
+		return ActionRegistry.instance().get(name);
 	}
     
     private void disableTilingChange() {
@@ -1279,7 +1151,7 @@ public class Main extends EventSource {
 		if (doc.getTransformation() != null) {
 			setViewingTransformation(doc.getTransformation());
 		} else {
-			rotateScene(new Vector(0,0,1), new Vector(1,0,0));
+			rotateScene(new Vector(0,0,1), new Vector(0,1,0));
 		}
 		encompass();
 		
@@ -2238,7 +2110,7 @@ public class Main extends EventSource {
 						if (doc().getTransformation() != null) {
 							setViewingTransformation(doc().getTransformation());
 						} else {
-							rotateScene(new Vector(0,0,1), new Vector(1,0,0));
+							rotateScene(new Vector(0,0,1), new Vector(0,1,0));
 						}
 						encompass();
 						resumeRendering();
