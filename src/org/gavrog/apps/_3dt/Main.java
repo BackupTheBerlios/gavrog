@@ -825,6 +825,23 @@ public class Main extends EventSource {
         return ActionRegistry.instance().get(name);
 	}
     
+    private Action actionUncolorTile() {
+    	final String name = "Uncolor Tile";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null) {
+	                    suspendRendering();
+	                    doc().recolor(selectedItem, null);
+	                    resumeRendering();
+					}
+				}
+			}, "Use the tile class color for selected tile.",
+			KeyStroke.getKeyStroke(KeyEvent.VK_U, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
     private Action actionRecolorFacetClass() {
     	final String name = "Recolor Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
@@ -909,22 +926,69 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
 	}
     
-    private Action actionUncolorTile() {
-    	final String name = "Uncolor Tile";
-    	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+    private Action actionAddEndNodes() {
+		final String name = "Add End Nodes";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
-	                    suspendRendering();
-	                    doc().recolor(selectedItem, null);
-	                    resumeRendering();
+						doc().addIncident(selectedItem);
 					}
 				}
-			}, "Use the tile class color for selected tile.",
-			KeyStroke.getKeyStroke(KeyEvent.VK_U, 0));
-		}
-		return ActionRegistry.instance().get(name);
-	}
+    		}, "Add the nodes at the ends of the selected edge.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_A, 0));
+    	}
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionRemoveEdge() {
+		final String name = "Remove Edge";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null) {
+						doc().remove(selectedItem);
+					}
+				}
+    		}, "Remove the selected edge.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
+    	}
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionConnectNode() {
+		final String name = "Connect Node";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null) {
+						if (doc().connectToExisting(selectedItem) == 0) {
+							doc().addIncident(selectedItem);
+						}
+					}
+				}
+    		},
+    		"Connect the selected node with all visible neighbors "
+    		+ " or add all neighbors.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_A, 0));
+    	}
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionRemoveNode() {
+		final String name = "Remove Node";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null) {
+						doc().remove(selectedItem);
+					}
+				}
+    		}, "Remove the selected node.",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
+    	}
+        return ActionRegistry.instance().get(name);
+    }
     
     private Action actionEncompass() {
     	final String name = "Fit To Scene";
@@ -1489,6 +1553,8 @@ public class Main extends EventSource {
 			node2item.remove(node);
 			if (item.isTile()) {
 				SceneGraphUtility.removeChildNode(tiling, node);
+			} else if (item.isEdge() || item.isNode()) {
+				SceneGraphUtility.removeChildNode(net, node);
 			}
 		} else if (e.getEventType() == DisplayList.RECOLOR) {
 			if (item.isTile()) {
@@ -1981,7 +2047,8 @@ public class Main extends EventSource {
     		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
     		_selectionPopupForNodes = new JPopupMenu("Node Actions");
     		_selectionPopupForNodes.setLightWeightPopupEnabled(false);
-    		_selectionPopupForNodes.add(actionAddTile());
+    		_selectionPopupForNodes.add(actionConnectNode());
+    		_selectionPopupForNodes.add(actionRemoveNode());
     		
     		_selectionPopupForNodes.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {
@@ -2010,7 +2077,8 @@ public class Main extends EventSource {
     		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
     		_selectionPopupForEdges = new JPopupMenu("Edge Actions");
     		_selectionPopupForEdges.setLightWeightPopupEnabled(false);
-    		_selectionPopupForEdges.add(actionRemoveTile());
+    		_selectionPopupForEdges.add(actionAddEndNodes());
+    		_selectionPopupForEdges.add(actionRemoveEdge());
     		
     		_selectionPopupForEdges.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {
@@ -2071,12 +2139,22 @@ public class Main extends EventSource {
                     }
                 }
                 try {
-					if (tc.getAxisState(addSlot).isPressed()
-							&& selectedItem.isTile()) {
-						actionAddTile().actionPerformed(null);
-					} else if (tc.getAxisState(removeSlot).isPressed()
-							&& selectedItem.isTile()) {
-						actionRemoveTile().actionPerformed(null);
+					if (tc.getAxisState(addSlot).isPressed()) {
+						if (selectedItem.isTile()) {
+							actionAddTile().actionPerformed(null);
+						} else if (selectedItem.isEdge()) {
+							actionAddEndNodes().actionPerformed(null);
+						} else if (selectedItem.isNode()) {
+							actionConnectNode().actionPerformed(null);
+						}
+					} else if (tc.getAxisState(removeSlot).isPressed()) {
+						if (selectedItem.isTile()) {
+							actionRemoveTile().actionPerformed(null);
+						} else if (selectedItem.isEdge()) {
+							actionRemoveEdge().actionPerformed(null);
+						} else if (selectedItem.isNode()) {
+							actionRemoveNode().actionPerformed(null);
+						}
 					} else  {
 						final java.awt.Component comp = viewerApp.getContent();
 						final java.awt.Point pos = comp.getMousePosition();

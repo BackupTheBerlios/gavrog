@@ -28,6 +28,7 @@ import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling.Tile;
 
 import buoy.event.EventSource;
@@ -311,7 +312,11 @@ public class DisplayList extends EventSource implements
 	}
 
 	public Item add(final IEdge edge, final Vector shift) {
-		return add(new Item(edge, shift));
+		final Item item = add(new Item(edge, shift));
+		if (item != null) {
+			addIncident(item);
+		}
+		return item;
 	}
 
 	public Item add(final INode node, final Vector shift) {
@@ -329,10 +334,6 @@ public class DisplayList extends EventSource implements
 		}
 	}
 	
-	public boolean remove(final Tile tile, final Vector shift) {
-		return remove(new Item(tile, shift));
-	}
-
 	public boolean recolor(final Item item, final Color newColor) {
 		if (this.map.containsKey(item)) {
 			final Color oldColor = color(item);
@@ -351,15 +352,75 @@ public class DisplayList extends EventSource implements
 	
 	// --- slightly less primitive list modifications
 	public Item addNeighbor(final Item item, final int face) {
-		return addNeighbor(item.getTile(), item.getShift(), face);
-	}
-
-	public Item addNeighbor(final Tile tile, final Vector shift,
-			final int face) {
+		final Tile tile = item.getTile();
+		final Vector shift = item.getShift();
 		final Vector newShift = (Vector) shift.plus(tile.neighborShift(face));
 		return add(tile.neighbor(face), newShift);
 	}
 
+	@SuppressWarnings("unchecked")
+	public int addIncident(final Item item) {
+		int count = 0;
+		if (item.isEdge()) {
+			final IEdge edge = item.getEdge();
+			final Vector shift = item.getShift();
+			final INode v = edge.source();
+			final INode w = edge.target();
+			final Vector s = ((PeriodicGraph) edge.owner()).getShift(edge);
+			if (add(v, shift) != null) {
+				++count;
+			}
+			if (add(w, (Vector) shift.plus(s)) != null) {
+				++count;
+			}
+		} else if (item.isNode()) {
+			final INode node = item.getNode();
+			final Vector shift = item.getShift();
+			final PeriodicGraph net = (PeriodicGraph) node.owner();
+			for (final IEdge e: (List<IEdge>) net.allIncidences(node)) {
+				final Vector s;
+				if (e.oriented().source().equals(node)) {
+					s = shift;
+				} else {
+					s = (Vector) shift.minus(net.getShift(e));
+				}
+				if (add(e, s) != null) {
+					++count;
+				}
+			}
+		}
+		return count;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public int connectToExisting(final Item item) {
+		int count = 0;
+		if (item.isNode()) {
+			final INode node = item.getNode();
+			final Vector shift = item.getShift();
+			final PeriodicGraph net = (PeriodicGraph) node.owner();
+			for (final IEdge e: (List<IEdge>) net.allIncidences(node)) {
+				final Vector s, t;
+				final INode w;
+				if (e.oriented().source().equals(node)) {
+					w = e.oriented().target();
+					s = shift;
+					t = (Vector) s.plus(net.getShift(e));
+				} else {
+					w = e.oriented().source();
+					t = shift;
+					s = (Vector) t.minus(net.getShift(e));
+				}
+				if (this.map.containsKey(new Item(w, t))) {
+					if (add(e, s) != null) {
+						++count;
+					}
+				}
+			}
+		}
+		return count;
+	}
+	
 	public boolean removeKind(final Item item) {
 		final int kind = item.getTile().getKind();
 		final List<Item> toRemove = new LinkedList<Item>();
