@@ -15,7 +15,6 @@ Open bugs:
 Planned/requested features:
 
 - Implement a balance/naturalize function.
-- Draw the skeleton.
 - Allow separate colors and visibility for individual faces.
 - Option to keep the unit cell and coordinates used in the input.
 - Add ways to manipulate the lighting.

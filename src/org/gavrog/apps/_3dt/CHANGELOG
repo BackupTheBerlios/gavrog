@@ -1,5 +1,6 @@
 3dt 0.3.2:
 
+- The underlying net of a tiling can now be displayed.
 - BUG FIX: unit cell now shows up in Sunflow renders with small field of view.
 - For fitting the scene to the window, the '0' is now used instead of 'E'.
 - The range of unit cell copies to display can now be specified interactively.
