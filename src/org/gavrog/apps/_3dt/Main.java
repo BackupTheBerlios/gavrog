@@ -1935,26 +1935,26 @@ public class Main extends EventSource {
 				.setTransformation(trans);
     }
     
-    private JPopupMenu _selectionPopup = null;
+    private JPopupMenu _selectionPopupForTiles = null;
     
-    private JPopupMenu selectionPopup() {
-    	if (_selectionPopup == null) {
+    private JPopupMenu selectionPopupForTiles() {
+    	if (_selectionPopupForTiles == null) {
     		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-    		_selectionPopup = new JPopupMenu("Actions");
-    		_selectionPopup.setLightWeightPopupEnabled(false);
-    		_selectionPopup.add(actionAddTile());
-    		_selectionPopup.add(actionRemoveTile());
-    		_selectionPopup.add(actionRemoveTileClass());
-    		_selectionPopup.addSeparator();
-    		_selectionPopup.add(actionRecolorTile());
-    		_selectionPopup.add(actionUncolorTile());
-    		_selectionPopup.add(actionRecolorTileClass());
-    		_selectionPopup.add(actionRecolorFacetClass());
-    		_selectionPopup.add(actionUncolorFacetClass());
-    		_selectionPopup.add(actionHideFacetClass());
-    		_selectionPopup.add(actionShowAllInTile());
+    		_selectionPopupForTiles = new JPopupMenu("Tile Actions");
+    		_selectionPopupForTiles.setLightWeightPopupEnabled(false);
+    		_selectionPopupForTiles.add(actionAddTile());
+    		_selectionPopupForTiles.add(actionRemoveTile());
+    		_selectionPopupForTiles.add(actionRemoveTileClass());
+    		_selectionPopupForTiles.addSeparator();
+    		_selectionPopupForTiles.add(actionRecolorTile());
+    		_selectionPopupForTiles.add(actionUncolorTile());
+    		_selectionPopupForTiles.add(actionRecolorTileClass());
+    		_selectionPopupForTiles.add(actionRecolorFacetClass());
+    		_selectionPopupForTiles.add(actionUncolorFacetClass());
+    		_selectionPopupForTiles.add(actionHideFacetClass());
+    		_selectionPopupForTiles.add(actionShowAllInTile());
     		
-    		_selectionPopup.addPopupMenuListener(new PopupMenuListener() {
+    		_selectionPopupForTiles.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {
 				}
 
@@ -1971,7 +1971,65 @@ public class Main extends EventSource {
 				}
     		});
     	}
-    	return _selectionPopup;
+    	return _selectionPopupForTiles;
+    }
+    
+    private JPopupMenu _selectionPopupForNodes = null;
+    
+    private JPopupMenu selectionPopupForNodes() {
+    	if (_selectionPopupForNodes == null) {
+    		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+    		_selectionPopupForNodes = new JPopupMenu("Node Actions");
+    		_selectionPopupForNodes.setLightWeightPopupEnabled(false);
+    		_selectionPopupForNodes.add(actionAddTile());
+    		
+    		_selectionPopupForNodes.addPopupMenuListener(new PopupMenuListener() {
+				public void popupMenuCanceled(PopupMenuEvent e) {
+				}
+
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+					if (useLeopardWorkaround) {
+						restoreViewer();
+					}
+				}
+
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+					if (useLeopardWorkaround) {
+						forceSoftwareViewer();
+					}
+				}
+    		});
+    	}
+    	return _selectionPopupForNodes;
+    }
+    
+    private JPopupMenu _selectionPopupForEdges = null;
+    
+    private JPopupMenu selectionPopupForEdges() {
+    	if (_selectionPopupForEdges == null) {
+    		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+    		_selectionPopupForEdges = new JPopupMenu("Edge Actions");
+    		_selectionPopupForEdges.setLightWeightPopupEnabled(false);
+    		_selectionPopupForEdges.add(actionRemoveTile());
+    		
+    		_selectionPopupForEdges.addPopupMenuListener(new PopupMenuListener() {
+				public void popupMenuCanceled(PopupMenuEvent e) {
+				}
+
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+					if (useLeopardWorkaround) {
+						restoreViewer();
+					}
+				}
+
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+					if (useLeopardWorkaround) {
+						forceSoftwareViewer();
+					}
+				}
+    		});
+    	}
+    	return _selectionPopupForEdges;
     }
     
     public class SelectionTool extends AbstractTool {
@@ -2019,16 +2077,33 @@ public class Main extends EventSource {
 					} else if (tc.getAxisState(removeSlot).isPressed()
 							&& selectedItem.isTile()) {
 						actionRemoveTile().actionPerformed(null);
-					} else if (selectedItem.isTile()) {
+					} else  {
 						final java.awt.Component comp = viewerApp.getContent();
 						final java.awt.Point pos = comp.getMousePosition();
-						Invoke.andWait(new Runnable() {
-							public void run() {
-								selectionPopup().show(comp, pos.x, pos.y);
-							}
-						});
-					} else {
-						log("Selected: " + selectedItem);
+						if (selectedItem.isTile()) {
+							Invoke.andWait(new Runnable() {
+								public void run() {
+									selectionPopupForTiles().show(comp, pos.x,
+											pos.y);
+								}
+							});
+						} else if (selectedItem.isNode()) {
+							Invoke.andWait(new Runnable() {
+								public void run() {
+									selectionPopupForNodes().show(comp, pos.x,
+											pos.y);
+								}
+							});
+						} else if (selectedItem.isEdge()) {
+							Invoke.andWait(new Runnable() {
+								public void run() {
+									selectionPopupForEdges().show(comp, pos.x,
+											pos.y);
+								}
+							});
+						} else {
+							log("Selected: " + selectedItem);
+						}
 					}
 				} catch (final Exception ex) {
 				}
