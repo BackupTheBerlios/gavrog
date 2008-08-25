@@ -364,7 +364,7 @@ public class DisplayList extends EventSource implements
 		final int kind = item.getTile().getKind();
 		final List<Item> toRemove = new LinkedList<Item>();
 		for (Item i: this) {
-			if (i.getTile().getKind() == kind) {
+			if (i.isTile() && i.getTile().getKind() == kind) {
 				toRemove.add(i);
 			}
 		}

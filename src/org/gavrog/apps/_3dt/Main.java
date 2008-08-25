@@ -227,7 +227,7 @@ public class Main extends EventSource {
     	new HashMap<DisplayList.Item, SceneGraphComponent>();
 
     // --- the last thing selected
-	private SceneGraphNode selectedBodyNode = null;
+	private DisplayList.Item selectedItem = null;
 	private int selectedFace = -1;
     
     // --- gui elements
@@ -735,11 +735,9 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
-						return;
+					if (selectedItem != null) {
+						doc().addNeighbor(selectedItem, selectedFace);
 					}
-					doc().addNeighbor(node2item.get(selectedBodyNode),
-							selectedFace);
 				}
     		}, "Add a tile at the selected face.",
     		KeyStroke.getKeyStroke(KeyEvent.VK_A, 0));
@@ -752,10 +750,9 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
-						return;
+					if (selectedItem != null) {
+						doc().remove(selectedItem);
 					}
-					doc().remove(node2item.get(selectedBodyNode));
 				}
     		}, "Remove the selected tile.",
     		KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
@@ -768,10 +765,9 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
-						return;
+					if (selectedItem != null) {
+						doc().removeKind(selectedItem);
 					}
-					doc().removeKind(node2item.get(selectedBodyNode));
 				}
     		}, "Remove the selected tile and all its symmetric images.",
     		KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.SHIFT_DOWN_MASK));
@@ -784,11 +780,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
+					if (selectedItem == null) {
 						return;
 					}
-					final int kind =
-						node2item.get(selectedBodyNode).getTile().getKind();
+					final int kind = selectedItem.getTile().getKind();
 					final Color picked = 
 						JColorChooser.showDialog(viewerApp.getFrame(),
 								"Set Tile Color", doc().getDefaultTileColor(kind));
@@ -811,19 +806,17 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
+					if (selectedItem == null) {
 						return;
 					}
-					final DisplayList.Item item = node2item
-							.get(selectedBodyNode);
 					final Color picked = 
 						JColorChooser.showDialog(viewerApp.getFrame(),
-								"Set Tile Color", doc().color(item));
+								"Set Tile Color", doc().color(selectedItem));
 					if (picked == null) {
 						return;
 					}
                     suspendRendering();
-					doc().recolor(item, picked);
+					doc().recolor(selectedItem, picked);
                     resumeRendering();
 				}
 			}, "Set the color for this tile.",
@@ -837,15 +830,13 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null || selectedFace < 0) {
+					if (selectedItem == null || selectedFace < 0) {
 						return;
 					}
-					final DisplayList.Item item = node2item
-							.get(selectedBodyNode);
-					final Tiling.Facet f = item.getTile().facet(selectedFace);
+					Tiling.Facet f = selectedItem.getTile().facet(selectedFace);
 					Color c = doc().getFacetClassColor(f);
 					if (c == null) {
-						c = doc().color(item);
+						c = doc().color(selectedItem);
 					}
 					final Color picked = 
 						JColorChooser.showDialog(viewerApp.getFrame(),
@@ -870,14 +861,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null || selectedFace < 0) {
+					if (selectedItem == null || selectedFace < 0) {
 						return;
 					}
-					final DisplayList.Item item = node2item
-							.get(selectedBodyNode);
-					final Tiling.Facet f = item.getTile().facet(selectedFace);
-					
-					uncolorFacetClass(f);
+					uncolorFacetClass(selectedItem.getTile().facet(selectedFace));
                     suspendRendering();
                     updateMaterials();
                     resumeRendering();
@@ -892,13 +879,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null || selectedFace < 0) {
+					if (selectedItem == null || selectedFace < 0) {
 						return;
 					}
-					final DisplayList.Item it = node2item.get(selectedBodyNode);
-					final Tiling.Facet f = it.getTile().facet(selectedFace);
-					
-					hideFacetClass(f);
+					hideFacetClass(selectedItem.getTile().facet(selectedFace));
                     suspendRendering();
                     updateMaterials();
                     resumeRendering();
@@ -913,16 +897,12 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
-						return;
+					if (selectedItem != null) {
+						showAllInTile(selectedItem.getTile());
+	                    suspendRendering();
+	                    updateMaterials();
+	                    resumeRendering();
 					}
-					final DisplayList.Item item = node2item
-							.get(selectedBodyNode);
-					
-					showAllInTile(item.getTile());
-                    suspendRendering();
-                    updateMaterials();
-                    resumeRendering();
 				}
 			}, "Show all facets in tiles of the selected kind.", null);
 		}
@@ -934,14 +914,11 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					if (selectedBodyNode == null) {
-						return;
+					if (selectedItem != null) {
+	                    suspendRendering();
+	                    doc().recolor(selectedItem, null);
+	                    resumeRendering();
 					}
-					final DisplayList.Item item = node2item
-							.get(selectedBodyNode);
-                    suspendRendering();
-                    doc().recolor(item, null);
-                    resumeRendering();
 				}
 			}, "Use the tile class color for selected tile.",
 			KeyStroke.getKeyStroke(KeyEvent.VK_U, 0));
@@ -2025,24 +2002,24 @@ public class Main extends EventSource {
             } else {
                 final SceneGraphPath selection = pr.getPickPath();
                 selectedFace = -1;
-				selectedBodyNode = null;
 				for (Iterator path = selection.iterator(); path.hasNext();) {
                     final SceneGraphNode node = (SceneGraphNode) path.next();
                     final String name = node.getName();
-                    if (name.startsWith("body")) {
-                        selectedBodyNode = node;
+                    final DisplayList.Item item = node2item.get(node);
+                    if (item != null) {
+                        selectedItem = item;
                     } else if (name.startsWith("face:")) {
                         selectedFace = Integer.parseInt(name.substring(5));
-                    } else if (name.startsWith("outline:")) {
-                        selectedFace = Integer.parseInt(name.substring(8));
                     }
                 }
                 try {
-					if (tc.getAxisState(addSlot).isPressed()) {
+					if (tc.getAxisState(addSlot).isPressed()
+							&& selectedItem.isTile()) {
 						actionAddTile().actionPerformed(null);
-					} else if (tc.getAxisState(removeSlot).isPressed()) {
+					} else if (tc.getAxisState(removeSlot).isPressed()
+							&& selectedItem.isTile()) {
 						actionRemoveTile().actionPerformed(null);
-					} else {
+					} else if (selectedItem.isTile()) {
 						final java.awt.Component comp = viewerApp.getContent();
 						final java.awt.Point pos = comp.getMousePosition();
 						Invoke.andWait(new Runnable() {
@@ -2050,6 +2027,8 @@ public class Main extends EventSource {
 								selectionPopup().show(comp, pos.x, pos.y);
 							}
 						});
+					} else {
+						log("Selected: " + selectedItem);
 					}
 				} catch (final Exception ex) {
 				}
