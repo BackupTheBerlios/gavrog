@@ -59,6 +59,7 @@ import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.io.GenericParser;
 import org.gavrog.joss.pgraphs.io.NetParser;
@@ -929,9 +930,26 @@ public class Document extends DisplayList {
 				context.convertAnother(doc.getPalette());
 				writer.endNode();
 				for (final DisplayList.Item item: doc) {
-					writer.startNode("tile");
-					writer.addAttribute("templateNr",
-							String.valueOf(item.getTile().getIndex()));
+					if (item.isTile()) {
+						writer.startNode("tile");
+						writer.addAttribute("templateNr",
+								String.valueOf(item.getTile().getIndex()));
+					} else if (item.isNode()) {
+						writer.startNode("node");
+						writer.addAttribute("id",
+								String.valueOf(item.getNode().id()));
+					} else if (item.isEdge()) {
+						final IEdge e = item.getEdge();
+						writer.startNode("edge");
+						writer.addAttribute("source",
+								String.valueOf(e.source().id()));
+						writer.addAttribute("target",
+								String.valueOf(e.target().id()));
+						writer.startNode("label");
+						context.convertAnother(((PeriodicGraph) e.owner())
+								.getShift(e));
+						writer.endNode();
+					}
 					writer.startNode("shift");
 					context.convertAnother(item.getShift());
 					writer.endNode();
@@ -1017,7 +1035,47 @@ public class Document extends DisplayList {
 							}
 							reader.moveUp();
 						}
-						dlist.add(new Object[] { number, shift, color });
+						dlist.add(new Object[] { "tile", shift, color, number });
+					} else if ("node".equals(reader.getNodeName())) {
+						final Long number = new Long(reader.getAttribute("id"));
+						Vector shift = null;
+						Color color = null;
+						while (reader.hasMoreChildren()) {
+							reader.moveDown();
+							if ("shift".equals(reader.getNodeName())) {
+								shift = (Vector) context.convertAnother(null,
+										Vector.class);
+							} else if ("color".equals(reader.getNodeName())) {
+								color = (Color) context.convertAnother(null,
+										Color.class);
+							}
+							reader.moveUp();
+						}
+						dlist.add(new Object[] { "node", shift, color, number });
+					} else if ("edge".equals(reader.getNodeName())) {
+						final Long source =
+							new Long(reader.getAttribute("source"));
+						final Long target =
+							new Long(reader.getAttribute("target"));
+						Vector label = null;
+						Vector shift = null;
+						Color color = null;
+						while (reader.hasMoreChildren()) {
+							reader.moveDown();
+							if ("label".equals(reader.getNodeName())) {
+								label = (Vector) context.convertAnother(null,
+										Vector.class);
+							} else if ("shift".equals(reader.getNodeName())) {
+									shift = (Vector) context.convertAnother(null,
+											Vector.class);
+							} else if ("color".equals(reader.getNodeName())) {
+								color = (Color) context.convertAnother(null,
+										Color.class);
+							}
+							reader.moveUp();
+						}
+						dlist.add(new Object[] { "edge", shift, color,
+								source, target, label });
 					} else if ("facet".equals(reader.getNodeName())) {
 						final int tile =
 							new Integer(reader.getAttribute("templateNr"));
@@ -1048,12 +1106,30 @@ public class Document extends DisplayList {
 						doc.setTileClassColor(i, palette.get(i));
 					}
 					for (final Object val[]: dlist) {
-						final int k = (Integer) val[0];
-						final Tiling.Tile t = doc.getTile(k);
+						final String kind = (String) val[0];
 						final Vector s = (Vector) val[1];
 						final Color c = (Color) val[2];
-						doc.add(t, s);
-						doc.recolor(t, s, c);
+						final Item item;
+						if (kind.equals("tile")) {
+							final int id = (Integer) val[3];
+							final Tiling.Tile t = doc.getTile(id);
+							item = doc.add(t, s);
+						} else if (kind.equals("node")) {
+							INode v = (INode) doc.getNet().getElement(val[3]);
+							item = doc.add(v, s);
+						} else if (kind.equals("edge")) {
+							final Tiling.Skeleton net = doc.getNet();
+							final INode v = (INode) net.getElement(val[3]);
+							final INode w = (INode) net.getElement(val[4]);
+							final Vector t = (Vector) val[5];
+							final IEdge e = (IEdge) net.getEdge(v, w, t);
+							item = doc.add(e, s);
+						} else {
+							item = null;
+						}
+						if (item != null) {
+							doc.recolor(item, c);
+						}
 					}
 					for (final Pair item: fcolors.keySet()) {
 						final Color c = fcolors.get(item);

@@ -1584,7 +1584,6 @@ public class Main extends EventSource {
         updateMaterials();
         suspendRendering();
         makeCopies();
-        makeNet();
         makeUnitCell();
         resumeRendering();
         encompass();
@@ -1827,31 +1826,27 @@ public class Main extends EventSource {
 	        		}
 	        	}
 	        }
+	    	for (final Iterator edges = doc().getNet().edges(); edges.hasNext();) {
+	    		final IEdge e = (IEdge) edges.next();
+	        	for (final Vector s: doc().centerIntoUnitCell(e)) {
+	        		for (Vector v: vecs) {
+	        			doc().add(e, (Vector) s.plus(v));
+	        		}
+	        	}
+	    	}
+	    	for (final Iterator nodes = doc().getNet().nodes(); nodes.hasNext();) {
+	    		final INode node = (INode) nodes.next();
+	        	for (final Vector s: doc().centerIntoUnitCell(node)) {
+	        		for (Vector v: vecs) {
+	        			doc().add(node, (Vector) s.plus(v));
+	        		}
+	        	}
+	    	}
     	} else {
     		refreshScene();
     	}
     }
 
-    private void makeNet() {
-		final List<Vector> vecs = replicationVectors();
-    	for (final Iterator edges = doc().getNet().edges(); edges.hasNext();) {
-    		final IEdge e = (IEdge) edges.next();
-        	for (final Vector s: doc().centerIntoUnitCell(e)) {
-        		for (Vector v: vecs) {
-        			doc().add(e, (Vector) s.plus(v));
-        		}
-        	}
-    	}
-    	for (final Iterator nodes = doc().getNet().nodes(); nodes.hasNext();) {
-    		final INode node = (INode) nodes.next();
-        	for (final Vector s: doc().centerIntoUnitCell(node)) {
-        		for (Vector v: vecs) {
-        			doc().add(node, (Vector) s.plus(v));
-        		}
-        	}
-    	}
-    }
-    
     private List<Vector> replicationVectors() {
     	final Vector xyz[] = doc().getUnitCellVectorsInEmbedderCoordinates();
     	final Vector vx = xyz[0];
@@ -2353,7 +2348,6 @@ public class Main extends EventSource {
 						suspendRendering();
 						doc().removeAll();
 						makeCopies();
-						makeNet();
 						if (doc().getTransformation() != null) {
 							setViewingTransformation(doc().getTransformation());
 						} else {
