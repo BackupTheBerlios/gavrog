@@ -74,6 +74,7 @@ import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.graphics.Surface;
 import org.gavrog.joss.pgraphs.basic.IEdge;
+import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.io.Output;
 import org.gavrog.joss.tilings.Tiling;
 import org.gavrog.joss.tilings.Tiling.Facet;
@@ -102,6 +103,7 @@ import de.jreality.geometry.BallAndStickFactory;
 import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedLineSetFactory;
+import de.jreality.geometry.SphereUtility;
 import de.jreality.geometry.TubeUtility;
 import de.jreality.io.JrScene;
 import de.jreality.jogl.JOGLRenderer;
@@ -174,6 +176,13 @@ public class Main extends EventSource {
 	private boolean showUnitCell = false;
     private Color unitCellColor = Color.BLACK;
     private double unitCellEdgeWidth = 0.02;
+    
+    // --- net options
+    private boolean showNet = false;
+    private Color netEdgeColor = Color.BLACK;
+    private Color netNodeColor = Color.RED;
+    private double netEdgeRadius = 0.05;
+    private double netNodeRadius = 0.075;
     
     // --- scene options
     private int minX = 0;
@@ -1420,6 +1429,8 @@ public class Main extends EventSource {
     		return;
     	}
     	
+    	final Color c = getNetEdgeColor();
+    	final double r = getNetEdgeRadius();
     	final IEdge e = item.getEdge();
     	final Vector s =
     		(Vector) item.getShift().times(doc().getEmbedderToWorld());
@@ -1427,10 +1438,36 @@ public class Main extends EventSource {
 				.getCoordinates().asDoubleArray()[0];
     	final double q[] = ((Point) doc().edgeTargetPoint(e).plus(s))
 				.getCoordinates().asDoubleArray()[0];
-        final SceneGraphComponent sgc = TubeUtility.tubeOneEdge(p, q,
-        		0.05, TubeUtility.octagonalCrossSection, Pn.EUCLIDEAN);
+        final SceneGraphComponent sgc = TubeUtility.tubeOneEdge(p, q, r,
+				TubeUtility.octagonalCrossSection, Pn.EUCLIDEAN);
         final Appearance a = new Appearance();
-        updateMaterial(a, Color.BLUE);
+        updateMaterial(a, c);
+        sgc.setAppearance(a);
+        this.net.addChild(sgc);
+        this.node2item.put(sgc, item);
+        this.item2node.put(item, sgc);
+    }
+    
+    private void addNode(final DisplayList.Item item) {
+    	if (item == null) {
+    		return;
+    	}
+    	
+    	final Color c = getNetNodeColor();
+    	final double r = getNetNodeRadius();
+    	final INode node = item.getNode();
+    	final Vector s =
+    		(Vector) item.getShift().times(doc().getEmbedderToWorld());
+    	final double p[] = ((Point) doc().nodePoint(node).plus(s))
+				.getCoordinates().asDoubleArray()[0];
+		SceneGraphComponent sgc = SceneGraphUtility
+				.createFullSceneGraphComponent("node");
+		MatrixBuilder.init(null, Pn.EUCLIDEAN).translate(p).scale(r).assignTo(
+				sgc.getTransformation());
+		sgc.setGeometry(SphereUtility.sphericalPatch(0.0, 0.0, 360.0, 180.0,
+				40, 20, 1.0));
+        final Appearance a = new Appearance();
+        updateMaterial(a, c);
         sgc.setAppearance(a);
         this.net.addChild(sgc);
         this.node2item.put(sgc, item);
@@ -1466,6 +1503,8 @@ public class Main extends EventSource {
 				addTile(item);
 			} else if (item.isEdge()) {
 				addEdge(item);
+			} else if (item.isNode()) {
+				addNode(item);
 			}
 		} else if (e.getEventType() == DisplayList.DELETE) {
 			final SceneGraphNode node = item2node.get(item);
@@ -1608,11 +1647,18 @@ public class Main extends EventSource {
         SceneGraphUtility.removeChildren(this.tiling);
         SceneGraphUtility.removeChildren(this.net);
         for (final DisplayList.Item item: doc()) {
-        	addTile(item);
-        	if (doc().color(item) != null) {
-        		recolorTile(item, doc().color(item));
+        	if (item.isTile()) {
+        		addTile(item);
+        		if (doc().color(item) != null) {
+        			recolorTile(item, doc().color(item));
+        		}
+        	} else if (item.isEdge()) {
+        		addEdge(item);
+        	} else if (item.isNode()) {
+        		addNode(item);
         	}
         }
+        this.net.setVisible(getShowNet());
     }
 
     private void makeMaterials() {
@@ -1723,6 +1769,7 @@ public class Main extends EventSource {
     	if (getShowUnitCell()) {
     		makeUnitCell();
     	}
+    	this.net.setVisible(getShowNet());
         log("      " + getTimer(timer));
     }
     
@@ -1749,6 +1796,14 @@ public class Main extends EventSource {
         	for (final Vector s: doc().centerIntoUnitCell(e)) {
         		for (Vector v: vecs) {
         			doc().add(e, (Vector) s.plus(v));
+        		}
+        	}
+    	}
+    	for (final Iterator nodes = doc().getNet().nodes(); nodes.hasNext();) {
+    		final INode node = (INode) nodes.next();
+        	for (final Vector s: doc().centerIntoUnitCell(node)) {
+        		for (Vector v: vecs) {
+        			doc().add(node, (Vector) s.plus(v));
         		}
         	}
     	}
@@ -2218,6 +2273,31 @@ public class Main extends EventSource {
         return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
     
+    private Widget optionsNet() {
+        final ColumnContainer options = emptyOptionsContainer();
+        try {
+            options.add(new OptionCheckBox("Show Net", this, "showNet"));
+            options.add(new OptionInputBox("Edge Radius", this, "netEdgeRadius"));
+            options.add(new OptionInputBox("Node Radius", this, "netNodeRadius"));
+            options.add(new OptionColorBox("Edge Color", this, "netEdgeColor"));
+            options.add(new OptionColorBox("Node Color", this, "netNodeColor"));
+        } catch (final Exception ex) {
+            log(ex.toString());
+            return null;
+        }
+        
+        final Object apply = new Object() {
+            @SuppressWarnings("unused")
+            public void call() {
+            	suspendRendering();
+            	refreshScene();
+                resumeRendering();
+                saveOptions();
+            }
+        };
+        return optionsDialog(options, makeButton("Apply", apply, "call"));
+    }
+    
     private Widget optionsMaterial() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
@@ -2312,6 +2392,7 @@ public class Main extends EventSource {
 		options.add(optionsGeometry(), "Geometry");
 		options.add(optionsScene(), "Unit Cell Copies");
 		options.add(optionsDisplay(), "Display");
+		options.add(optionsNet(), "Net");
 		options.add(optionsMaterial(), "Material");
 		options.add(optionsEmbedding(), "Embedding");
         options.add(optionsCamera(), "Camera");
@@ -2948,6 +3029,66 @@ public class Main extends EventSource {
 			dispatchEvent(new PropertyChangeEvent(this, "useLeopardWorkaround",
 					this.useLeopardWorkaround, useLeopardWorkaround));
 			this.useLeopardWorkaround = useLeopardWorkaround;
+		}
+	}
+
+	public boolean getShowNet() {
+		return this.showNet;
+	}
+
+	public void setShowNet(boolean showNet) {
+		if (showNet != this.showNet) {
+			dispatchEvent(new PropertyChangeEvent(this, "showNet",
+					this.showNet, showNet));
+			this.showNet = showNet;
+		}
+	}
+
+	public Color getNetEdgeColor() {
+		return this.netEdgeColor;
+	}
+
+	public void setNetEdgeColor(Color netEdgeColor) {
+		if (netEdgeColor != this.netEdgeColor) {
+			dispatchEvent(new PropertyChangeEvent(this, "netEdgeColor",
+					this.netEdgeColor, netEdgeColor));
+			this.netEdgeColor = netEdgeColor;
+		}
+	}
+
+	public Color getNetNodeColor() {
+		return this.netNodeColor;
+	}
+
+	public void setNetNodeColor(Color netNodeColor) {
+		if (netNodeColor != this.netNodeColor) {
+			dispatchEvent(new PropertyChangeEvent(this, "netNodeColor",
+					this.netNodeColor, netNodeColor));
+			this.netNodeColor = netNodeColor;
+		}
+	}
+
+	public double getNetEdgeRadius() {
+		return this.netEdgeRadius;
+	}
+
+	public void setNetEdgeRadius(double netEdgeRadius) {
+		if (netEdgeRadius != this.netEdgeRadius) {
+			dispatchEvent(new PropertyChangeEvent(this, "netEdgeRadius",
+					this.netEdgeRadius, netEdgeRadius));
+			this.netEdgeRadius = netEdgeRadius;
+		}
+	}
+
+	public double getNetNodeRadius() {
+		return this.netNodeRadius;
+	}
+
+	public void setNetNodeRadius(double netNodeRadius) {
+		if (netNodeRadius != this.netNodeRadius) {
+			dispatchEvent(new PropertyChangeEvent(this, "netNodeRadius",
+					this.netNodeRadius, netNodeRadius));
+			this.netNodeRadius = netNodeRadius;
 		}
 	}
 

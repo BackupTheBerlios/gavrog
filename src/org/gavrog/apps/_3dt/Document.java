@@ -371,15 +371,16 @@ public class Document extends DisplayList {
         return p.getCoordinates().asDoubleArray()[0];
     }
     
-    public double[] vertexPosition(final INode v) {
-    	return cornerPosition(0, getNet().chamberAtNode(v));
+    public Point nodePoint(final INode v) {
+    	final Object D = getNet().chamberAtNode(v);
+        final Point p = (Point) getPositions().get(new DSPair(0, D));
+        return (Point) p.times(getEmbedderToWorld());
     }
     
     public Point edgeSourcePoint(final IEdge e) {
-    	final Tiling.Skeleton net = getNet();
-    	final Object C = net.chamberAtNode(e.source());
-        final Point p0 = (Point) getPositions().get(new DSPair(0, C));
-        return (Point) p0.times(getEmbedderToWorld());
+    	final Object D = getNet().chamberAtNode(e.source());
+        final Point p = (Point) getPositions().get(new DSPair(0, D));
+        return (Point) p.times(getEmbedderToWorld());
     }
     
     public Point edgeTargetPoint(final IEdge e) {
@@ -406,6 +407,11 @@ public class Document extends DisplayList {
         	(Point) ((Point) getPositions().get(new DSPair(0, D))).plus(s);
     	return pointIntoUnitCell(
     			(Point) p.plus(((Vector) q.minus(p)).times(0.5)));
+    }
+    
+    public List<Vector> centerIntoUnitCell(final INode v) {
+    	final Object D = getNet().chamberAtNode(v);
+    	return pointIntoUnitCell((Point) getPositions().get(new DSPair(0, D)));
     }
     
     public List<Vector> pointIntoUnitCell(final Point p0) {
