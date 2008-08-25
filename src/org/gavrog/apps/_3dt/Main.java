@@ -1584,7 +1584,6 @@ public class Main extends EventSource {
         updateMaterials();
         suspendRendering();
         makeCopies();
-        makeUnitCell();
         resumeRendering();
         encompass();
     }
@@ -1807,10 +1806,8 @@ public class Main extends EventSource {
     				.translate(cneg).assignTo(sgc);
 		}
     	
+		makeUnitCell();
     	this.unitCell.setVisible(getShowUnitCell());
-    	if (getShowUnitCell()) {
-    		makeUnitCell();
-    	}
     	this.net.setVisible(getShowNet());
         log("      " + getTimer(timer));
     }
