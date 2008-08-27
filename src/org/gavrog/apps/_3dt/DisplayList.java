@@ -312,10 +312,12 @@ public class DisplayList extends EventSource implements
 	}
 
 	public Item add(final IEdge edge, final Vector shift) {
+		dispatchEvent(BEGIN);
 		final Item item = add(new Item(edge, shift));
 		if (item != null) {
 			addIncident(item);
 		}
+		dispatchEvent(END);
 		return item;
 	}
 
@@ -362,6 +364,7 @@ public class DisplayList extends EventSource implements
 	public int addIncident(final Item item) {
 		int count = 0;
 		if (item.isEdge()) {
+			dispatchEvent(BEGIN);
 			final IEdge edge = item.getEdge();
 			final Vector shift = item.getShift();
 			final INode v = edge.source();
@@ -373,7 +376,9 @@ public class DisplayList extends EventSource implements
 			if (add(w, (Vector) shift.plus(s)) != null) {
 				++count;
 			}
+			dispatchEvent(END);
 		} else if (item.isNode()) {
+			dispatchEvent(BEGIN);
 			final INode node = item.getNode();
 			final Vector shift = item.getShift();
 			final PeriodicGraph net = (PeriodicGraph) node.owner();
@@ -388,6 +393,7 @@ public class DisplayList extends EventSource implements
 					++count;
 				}
 			}
+			dispatchEvent(END);
 		}
 		return count;
 	}
@@ -396,6 +402,7 @@ public class DisplayList extends EventSource implements
 	public int connectToExisting(final Item item) {
 		int count = 0;
 		if (item.isNode()) {
+			dispatchEvent(BEGIN);
 			final INode node = item.getNode();
 			final Vector shift = item.getShift();
 			final PeriodicGraph net = (PeriodicGraph) node.owner();
@@ -417,6 +424,7 @@ public class DisplayList extends EventSource implements
 					}
 				}
 			}
+			dispatchEvent(END);
 		}
 		return count;
 	}
