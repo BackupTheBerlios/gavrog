@@ -735,7 +735,7 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					if (selectedItem != null) {
+					if (selectedItem != null && selectedFace >= 0) {
 						doc().addNeighbor(selectedItem, selectedFace);
 					}
 				}
@@ -771,6 +771,36 @@ public class Main extends EventSource {
 				}
     		}, "Remove the selected tile and all its symmetric images.",
     		KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.SHIFT_DOWN_MASK));
+    	}
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionAddFacetOutline() {
+    	final String name = "Add Facet Outline to Net";
+    	if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null && selectedFace >= 0) {
+						makeFacetOutline(selectedItem.getTile().facet(
+								selectedFace), selectedItem.getShift());
+					}
+				}
+			}, "Add all edges around the selected facet to the net.", null);
+    	}
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionAddTileOutline() {
+    	final String name = "Add Tile Outline to Net";
+    	if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null) {
+						makeTileOutline(selectedItem.getTile(),
+								selectedItem.getShift());
+					}
+				}
+			}, "Add all edges around the selected tile to the net.", null);
     	}
         return ActionRegistry.instance().get(name);
     }
@@ -1819,26 +1849,12 @@ public class Main extends EventSource {
 	        for (final Tile b: doc().getTiles()) {
 	        	for (final Vector s: doc().centerIntoUnitCell(b)) {
 	        		for (Vector v: vecs) {
-	        			doc().add(b, (Vector) s.plus(v));
+	        			final Vector shift = (Vector) s.plus(v);
+	        			doc().add(b, shift);
+	        			makeTileOutline(b, shift);
 	        		}
 	        	}
 	        }
-	    	for (final Iterator edges = doc().getNet().edges(); edges.hasNext();) {
-	    		final IEdge e = (IEdge) edges.next();
-	        	for (final Vector s: doc().centerIntoUnitCell(e)) {
-	        		for (Vector v: vecs) {
-	        			doc().add(e, (Vector) s.plus(v));
-	        		}
-	        	}
-	    	}
-	    	for (final Iterator nodes = doc().getNet().nodes(); nodes.hasNext();) {
-	    		final INode node = (INode) nodes.next();
-	        	for (final Vector s: doc().centerIntoUnitCell(node)) {
-	        		for (Vector v: vecs) {
-	        			doc().add(node, (Vector) s.plus(v));
-	        		}
-	        	}
-	    	}
     	} else {
     		refreshScene();
     	}
@@ -1866,6 +1882,23 @@ public class Main extends EventSource {
     		}
     	}
     	return result;
+    }
+    
+    private void makeFacetOutline(final Tiling.Facet f, final Vector s) {
+		for (int i = 0; i < f.size(); ++i) {
+			doc().add(f.edge(i),
+					(Vector) f.edgeShift(i).plus(s));
+		}
+    }
+    
+    private void makeTileOutline(final Tiling.Tile t, final Vector s) {
+		for (int k = 0; k < t.size(); ++k) {
+			final Tiling.Facet f = t.facet(k);
+			for (int i = 0; i < f.size(); ++i) {
+				doc().add(f.edge(i),
+						(Vector) f.edgeShift(i).plus(s));
+			}
+		}
     }
     
     private void encompass() {
@@ -2004,13 +2037,17 @@ public class Main extends EventSource {
     		_selectionPopupForTiles.add(actionRemoveTile());
     		_selectionPopupForTiles.add(actionRemoveTileClass());
     		_selectionPopupForTiles.addSeparator();
+    		_selectionPopupForTiles.add(actionHideFacetClass());
+    		_selectionPopupForTiles.add(actionShowAllInTile());
+    		_selectionPopupForTiles.addSeparator();
+    		_selectionPopupForTiles.add(actionAddFacetOutline());
+    		_selectionPopupForTiles.add(actionAddTileOutline());
+    		_selectionPopupForTiles.addSeparator();
     		_selectionPopupForTiles.add(actionRecolorTile());
     		_selectionPopupForTiles.add(actionUncolorTile());
     		_selectionPopupForTiles.add(actionRecolorTileClass());
     		_selectionPopupForTiles.add(actionRecolorFacetClass());
     		_selectionPopupForTiles.add(actionUncolorFacetClass());
-    		_selectionPopupForTiles.add(actionHideFacetClass());
-    		_selectionPopupForTiles.add(actionShowAllInTile());
     		
     		_selectionPopupForTiles.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {
