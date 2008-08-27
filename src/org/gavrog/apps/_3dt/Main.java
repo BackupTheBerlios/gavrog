@@ -141,6 +141,7 @@ public class Main extends EventSource {
 	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
 	private final static String TILING_MENU = "Tiling";
+	private final static String NET_MENU = "Net";
 	private final static String HELP_MENU = "Help";
 	
 	private final static String configFileName = System.getProperty("user.home")
@@ -366,6 +367,11 @@ public class Main extends EventSource {
         menu.addAction(actionSymmetrize(), TILING_MENU);
         menu.addSeparator(TILING_MENU);
         menu.addAction(actionRecolor(), TILING_MENU);
+        
+        // --- create and populate a new Net menu
+        menu.addMenu(new JMenu(NET_MENU), 2);
+        menu.addAction(actionUpdateNet(), NET_MENU);
+        menu.addAction(actionClearNet(), NET_MENU);
         
         // --- modify the File menu
         for (int i = 0; i < 5; ++i) {
@@ -726,6 +732,45 @@ public class Main extends EventSource {
                 }
             }, "Pick new random colors for tiles",
             KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK));
+        }
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionUpdateNet() {
+		final String name = "Update Net";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					final List<DisplayList.Item> tiles =
+						new ArrayList<DisplayList.Item>();
+                    for (final DisplayList.Item item: doc()) {
+                    	if (item.isTile()) {
+                    		tiles.add(item);
+                    	}
+                    }
+                    suspendRendering();
+                    for (final DisplayList.Item item: tiles) {
+                    	makeTileOutline(item.getTile(), item.getShift());
+                    }
+                    resumeRendering();
+                }
+            }, "Add all edges and nodes in the outlines of visible tiles.",
+            null);
+        }
+        return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionClearNet() {
+		final String name = "Clear Net";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+                    suspendRendering();
+                    doc().removeAllEdges();
+                    doc().removeAllNodes();
+                    resumeRendering();
+                }
+            }, "Remove all nodes and edges of the net.", null);
         }
         return ActionRegistry.instance().get(name);
     }
@@ -1844,6 +1889,10 @@ public class Main extends EventSource {
     
     private void makeCopies() {
     	if (doc().size() == 0) {
+            final Stopwatch timer = new Stopwatch();
+            log("    Generating scene...");
+            startTimer(timer);
+            
     		clearSceneGraph();
     		final List<Vector> vecs = replicationVectors();
 	        for (final Tile b: doc().getTiles()) {
@@ -1851,10 +1900,11 @@ public class Main extends EventSource {
 	        		for (Vector v: vecs) {
 	        			final Vector shift = (Vector) s.plus(v);
 	        			doc().add(b, shift);
-	        			makeTileOutline(b, shift);
+	        			//makeTileOutline(b, shift);
 	        		}
 	        	}
 	        }
+	        log("      " + getTimer(timer));
     	} else {
     		refreshScene();
     	}

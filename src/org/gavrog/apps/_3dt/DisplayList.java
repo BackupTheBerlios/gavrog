@@ -466,6 +466,63 @@ public class DisplayList extends EventSource implements
 		}
 	}
 	
+	public boolean removeAllTiles() {
+		final List<Item> toRemove = new LinkedList<Item>();
+		for (Item i: this) {
+			if (i.isTile()) {
+				toRemove.add(i);
+			}
+		}
+		if (toRemove.isEmpty()) {
+			return false;
+		} else {
+			dispatchEvent(BEGIN);
+			for (Item i: toRemove) {
+				remove(i);
+			}
+			dispatchEvent(END);
+			return true;
+		}
+	}
+	
+	public boolean removeAllEdges() {
+		final List<Item> toRemove = new LinkedList<Item>();
+		for (Item i: this) {
+			if (i.isEdge()) {
+				toRemove.add(i);
+			}
+		}
+		if (toRemove.isEmpty()) {
+			return false;
+		} else {
+			dispatchEvent(BEGIN);
+			for (Item i: toRemove) {
+				remove(i);
+			}
+			dispatchEvent(END);
+			return true;
+		}
+	}
+	
+	public boolean removeAllNodes() {
+		final List<Item> toRemove = new LinkedList<Item>();
+		for (Item i: this) {
+			if (i.isNode()) {
+				toRemove.add(i);
+			}
+		}
+		if (toRemove.isEmpty()) {
+			return false;
+		} else {
+			dispatchEvent(BEGIN);
+			for (Item i: toRemove) {
+				remove(i);
+			}
+			dispatchEvent(END);
+			return true;
+		}
+	}
+	
 	// --- list enquiries
 	/* (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
