@@ -1936,8 +1936,7 @@ public class Main extends EventSource {
     
     private void makeFacetOutline(final Tiling.Facet f, final Vector s) {
 		for (int i = 0; i < f.size(); ++i) {
-			doc().add(f.edge(i),
-					(Vector) f.edgeShift(i).plus(s));
+			doc().add(f.edge(i), (Vector) f.edgeShift(i).plus(s));
 		}
     }
     
@@ -1945,8 +1944,7 @@ public class Main extends EventSource {
 		for (int k = 0; k < t.size(); ++k) {
 			final Tiling.Facet f = t.facet(k);
 			for (int i = 0; i < f.size(); ++i) {
-				doc().add(f.edge(i),
-						(Vector) f.edgeShift(i).plus(s));
+				doc().add(f.edge(i), (Vector) f.edgeShift(i).plus(s));
 			}
 		}
     }

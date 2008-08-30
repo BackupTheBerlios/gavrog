@@ -383,13 +383,7 @@ public class DisplayList extends EventSource implements
 			final Vector shift = item.getShift();
 			final PeriodicGraph net = (PeriodicGraph) node.owner();
 			for (final IEdge e: (List<IEdge>) net.allIncidences(node)) {
-				final Vector s;
-				if (e.oriented().source().equals(node)) {
-					s = shift;
-				} else {
-					s = (Vector) shift.minus(net.getShift(e));
-				}
-				if (add(e, s) != null) {
+				if (add(e, shift) != null) {
 					++count;
 				}
 			}

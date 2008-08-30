@@ -674,17 +674,7 @@ public class Tiling {
 		}
 		
 		public Vector edgeShift(final int i) {
-			final Skeleton net = getSkeleton();
-			final Object C = chamber(i);
-			final IEdge e = net.edgeForChamber(C);
-			final Object D = net.chamberAtEdge(e);
-			final List orbit =
-				Iterators.asList(getCover().orbit(new IndexList(2, 3), D));
-			if (orbit.contains(C)) {
-				return (Vector) cornerShift(0, C);
-			} else {
-				return (Vector) cornerShift(0, getCover().op(1, C));
-			}
+			return (Vector) cornerShift(0, chamber(i));
 		}
 		
 		public Object getChamber() {
