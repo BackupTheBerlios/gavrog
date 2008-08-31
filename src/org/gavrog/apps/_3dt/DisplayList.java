@@ -209,13 +209,50 @@ public class DisplayList extends EventSource implements
 		}
 		
 		public int hashCode() {
-			return this.template.hashCode() * 37 + this.shift.hashCode();
+			if (isEdge()) {
+				final IEdge e = getEdge();
+				final long a = (Long) e.source().id();
+				final long b = (Long) e.target().id();
+				final Vector s = ((PeriodicGraph) e.owner()).getShift(e);
+				if (a <= b) {
+					return (((int) a * 37 + (int) b) * 37 + s.hashCode()) * 37
+							+ this.shift.hashCode();
+				} else {
+					return (((int) b * 37 + (int) a) * 37
+							+ s.negative().hashCode()) * 37
+							+ this.shift.plus(s).hashCode();
+				}
+			} else {
+				return this.template.hashCode() * 37 + this.shift.hashCode();				
+			}
 		}
 		
 		public boolean equals(final Object arg) {
 			final Item other = (Item) arg;
-			return other.template.equals(this.template)
-					&& other.shift.equals(this.shift);
+			if (isEdge()) {
+				if (!other.isEdge()) {
+					return false;
+				}
+				final IEdge e1 = getEdge();
+				final IEdge e2 = other.getEdge();
+				if (!e1.owner().equals(e2.owner())) {
+					return false;
+				}
+				final long a1 = (Long) e1.source().id();
+				final long b1 = (Long) e1.target().id();
+				final Vector s1 = ((PeriodicGraph) e1.owner()).getShift(e1);
+				final long a2 = (Long) e2.source().id();
+				final long b2 = (Long) e2.target().id();
+				final Vector s2 = ((PeriodicGraph) e2.owner()).getShift(e2);
+				
+				return (a1 == a2 && b1 == b2 && s1.equals(s2)
+								&& this.shift.equals(other.shift))
+						|| (a1 == b2 && b1 == a2 && s1.equals(s2.negative())
+								&& this.shift.plus(s1).equals(other.shift));
+			} else {
+				return other.template.equals(this.template)
+						&& other.shift.equals(this.shift);
+			}
 		}
 		
 		public String toString() {
