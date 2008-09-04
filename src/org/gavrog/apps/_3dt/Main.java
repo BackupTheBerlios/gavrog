@@ -19,6 +19,7 @@ package org.gavrog.apps._3dt;
 
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Insets;
 import java.awt.LayoutManager;
@@ -46,6 +47,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -53,6 +55,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
@@ -126,7 +129,8 @@ import de.jreality.scene.tool.Tool;
 import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.softviewer.SoftViewer;
-import de.jreality.ui.viewerapp.SunflowMenu;
+import de.jreality.sunflow.RenderOptions;
+import de.jreality.sunflow.Sunflow;
 import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.ui.viewerapp.ViewerAppMenu;
 import de.jreality.ui.viewerapp.ViewerSwitch;
@@ -135,6 +139,7 @@ import de.jreality.ui.viewerapp.actions.file.ExportImage;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.Rectangle3D;
 import de.jreality.util.SceneGraphUtility;
+import de.jtem.beans.DimensionPanel;
 
 public class Main extends EventSource {
 	// --- some constants used in the GUI
@@ -158,11 +163,15 @@ public class Main extends EventSource {
 			BFileChooser.SAVE_FILE, "Save tiling");
 	final private BFileChooser outSceneChooser = new BFileChooser(
 			BFileChooser.SAVE_FILE, "Save scene");
+	final private BFileChooser outSunflowChooser = new BFileChooser(
+			BFileChooser.SAVE_FILE, "Save image");
+	final private DimensionPanel dimPanel = new DimensionPanel();
 	
 	private String lastInputDirectory = System.getProperty("3dt.home") + "/Data";
 	private String lastNetOutputDirectory = System.getProperty("user.home");
 	private String lastTilingOutputDirectory = System.getProperty("user.home");
 	private String lastSceneOutputDirectory = System.getProperty("user.home");
+	private String lastSunflowRenderDirectory = System.getProperty("user.home");
     
     // --- geometry options
 	private double edgeWidth = 0.02;
@@ -296,6 +305,15 @@ public class Main extends EventSource {
 		chooser.addChoosableFileFilter(new ExtensionFilter("gsl",
 				"Gavrog Scene Files"));
 
+		chooser = (JFileChooser) outSunflowChooser.getComponent();
+		chooser.addChoosableFileFilter(new ExtensionFilter(new String[] {
+				"png", "tga", "hdr" }, "Images files"));
+		dimPanel.setDimension(new Dimension(800, 600));
+		TitledBorder title = BorderFactory.createTitledBorder(BorderFactory
+				.createEtchedBorder(), "Dimension");
+		dimPanel.setBorder(title);
+		chooser.setAccessory(dimPanel);
+
 		// --- create the viewing infrastructure
 		this.world = SceneGraphUtility.createFullSceneGraphComponent("World");
 		viewerApp = new ViewerApp(world);
@@ -387,7 +405,7 @@ public class Main extends EventSource {
         menu.addSeparator(ViewerAppMenu.FILE_MENU, k++);
         
         menu.removeMenuItem(ViewerAppMenu.FILE_MENU, k);
-        menu.addAction(new ExportImage("Screen Shot", viewerApp
+        menu.addAction(new ExportImage("Screen Shot...", viewerApp
 				.getViewerSwitch(), null) {
         	public void actionPerformed(ActionEvent e) {
         		forceSoftwareViewer();
@@ -395,6 +413,7 @@ public class Main extends EventSource {
         		restoreViewer();
         	}
         }, ViewerAppMenu.FILE_MENU, k++);
+        menu.addAction(actionSunflowRender(), ViewerAppMenu.FILE_MENU, k++);
         
         ++k; // jump over separator
 
@@ -416,11 +435,6 @@ public class Main extends EventSource {
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
 
-        // --- add a Sunflow menu
-        final JMenu sunflow = new SunflowMenu(viewerApp);
-        sunflow.setText("Raytracer");
-        menu.addMenu(sunflow, 4);
-        
         // --- create a help menu
         menu.addMenu(new JMenu(HELP_MENU));
         menu.addAction(actionAbout(), HELP_MENU);
@@ -582,6 +596,46 @@ public class Main extends EventSource {
                     log("Wrote file " + filename + ".");
 				}
 			}, "Save the scene", null);
+		}
+		return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionSunflowRender() {
+		final String name = "Raytraced Image...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					dimPanel.setDimension(viewerApp.getCurrentViewer()
+							.getViewingComponentSize());
+                    outSunflowChooser.setDirectory(
+                    		new File(getLastSunflowRenderDirectory()));
+                    final boolean success = outSunflowChooser.showDialog(null);
+                    if (!success) {
+                        return;
+                    }
+                    final File dir = outSunflowChooser.getDirectory();
+                    setLastSunflowRenderDirectory(dir.getAbsolutePath());
+                    saveOptions();
+                    String filename = outSunflowChooser.getSelectedFile().getName();
+                    if (filename.indexOf('.') < 0) {
+                    	filename += ".png";
+                    }
+                    final File path = new File(dir, filename);
+                    try {
+                    	final RenderOptions opts = new RenderOptions();
+                    	opts.setProgressiveRender(false);
+                    	opts.setAaMin(0);
+                    	opts.setAaMax(2);
+                    	Sunflow.renderAndSave(viewerApp.getCurrentViewer(),
+								opts, dimPanel.getDimension(), path);
+                    } catch (Throwable ex) {
+                    	log(ex.toString());
+                    	return;
+                    }
+                    log("Wrote raytraced image to file " + filename + ".");
+				}
+			}, "Render the scene using the Sunflow raytracer",
+				KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_MASK));
 		}
 		return ActionRegistry.instance().get(name);
     }
@@ -3125,6 +3179,19 @@ public class Main extends EventSource {
 					this.lastTilingOutputDirectory, lastTilingOutputDirectory));
     		this.lastTilingOutputDirectory = lastTilingOutputDirectory;
     	}
+	}
+
+	public String getLastSunflowRenderDirectory() {
+		return this.lastSunflowRenderDirectory;
+	}
+
+	public void setLastSunflowRenderDirectory(String lastSunflowRenderDirectory) {
+		if (lastSunflowRenderDirectory != this.lastSunflowRenderDirectory) {
+			dispatchEvent(new PropertyChangeEvent(this,
+					"lastSunflowRenderDirectory",
+					this.lastSunflowRenderDirectory, lastSunflowRenderDirectory));
+			this.lastSunflowRenderDirectory = lastSunflowRenderDirectory;
+		}
 	}
 
 	public int getEdgeRoundingLevel() {
