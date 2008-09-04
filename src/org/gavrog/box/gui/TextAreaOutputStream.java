@@ -50,8 +50,18 @@ public class TextAreaOutputStream extends OutputStream {
     
     public void write(int b) throws IOException {
         final char c = (char) b;
-        buffer.append(c);
-        if (c == '\n' || buffer.length() > 1023) {
+        if (Character.isISOControl(c)) {
+        	if (c == '\r' || c == '\n') {
+        		buffer.append('\n');
+        		flush();
+        	} else if (c <= 0x1f) {
+        		buffer.append('^');
+        		buffer.append((char) (c + 0x40));
+        	}
+        } else {
+        	buffer.append(c);
+        }
+        if (buffer.length() > 1023) {
             flush();
         }
     }
