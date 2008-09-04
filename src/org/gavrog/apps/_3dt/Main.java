@@ -179,7 +179,7 @@ public class Main extends EventSource {
     private double unitCellEdgeWidth = 0.02;
     
     // --- net options
-    private boolean showNet = false;
+    private boolean showNet = true;
     private Color netEdgeColor = Color.BLACK;
     private Color netNodeColor = Color.RED;
     private double netEdgeRadius = 0.05;
@@ -207,7 +207,6 @@ public class Main extends EventSource {
     private boolean useBarycentricPositions = false;
     
     // --- camera options
-    private boolean perspective = true;
     private Color backgroundColor = Color.WHITE;
     private boolean useFog = false;
     private double fogDensity = 0.1;
@@ -2022,10 +2021,10 @@ public class Main extends EventSource {
     private void updateCamera() {
     	final Camera cam = CameraUtility.getCamera(this.viewerApp.getCurrentViewer());
     	boolean re_encompass = false;
-    	if (getPerspective() != cam.isPerspective()) {
-    		cam.setPerspective(getPerspective());
-            re_encompass = true;
-    	}
+//    	if (getPerspective() != cam.isPerspective()) {
+//    		cam.setPerspective(getPerspective());
+//            re_encompass = true;
+//    	}
     	if (getFieldOfView() != cam.getFieldOfView()) {
         	cam.setFieldOfView(getFieldOfView());
             re_encompass = true;
@@ -2570,8 +2569,6 @@ public class Main extends EventSource {
         try {
 			options.add(new OptionInputBox("Field Of View (in degrees)", this,
 					"fieldOfView"));
-            options.add(new OptionCheckBox("Perspective View", this,
-					"perspective"));
 			options.add(new OptionColorBox("Background Color", this,
 					"backgroundColor"));
 			options.add(new OptionCheckBox("Use Fog", this, "useFog"));
@@ -3049,18 +3046,6 @@ public class Main extends EventSource {
     	}
 	}
 
-    public boolean getPerspective() {
-        return perspective;
-    }
-
-    public void setPerspective(boolean perspective) {
-    	if (perspective != this.perspective) {
-    		dispatchEvent(new PropertyChangeEvent(this, "perspective",
-    				this.perspective, perspective));
-    		this.perspective = perspective;
-    	}
-    }
-
 	public Color getBackgroundColor() {
 		return backgroundColor;
 	}
@@ -3177,7 +3162,12 @@ public class Main extends EventSource {
 	}
 
 	public void setFieldOfView(double fieldOfView) {
-		this.fieldOfView = fieldOfView;
+    	if (fieldOfView != this.fieldOfView) {
+    		fieldOfView = Math.max(fieldOfView, 1.0);
+    		dispatchEvent(new PropertyChangeEvent(this, "fieldOfView",
+    				this.fieldOfView, fieldOfView));
+    		this.fieldOfView = fieldOfView;
+    	}
 	}
 
 	public boolean getUseFog() {
