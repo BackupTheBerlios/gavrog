@@ -3163,7 +3163,7 @@ public class Main extends EventSource {
 
 	public void setFieldOfView(double fieldOfView) {
     	if (fieldOfView != this.fieldOfView) {
-    		fieldOfView = Math.max(fieldOfView, 1.0);
+    		fieldOfView = Math.max(fieldOfView, 0.1);
     		dispatchEvent(new PropertyChangeEvent(this, "fieldOfView",
     				this.fieldOfView, fieldOfView));
     		this.fieldOfView = fieldOfView;
