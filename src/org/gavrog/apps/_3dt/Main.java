@@ -126,10 +126,12 @@ import de.jreality.scene.tool.Tool;
 import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.softviewer.SoftViewer;
+import de.jreality.ui.viewerapp.SunflowMenu;
 import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.ui.viewerapp.ViewerAppMenu;
 import de.jreality.ui.viewerapp.ViewerSwitch;
 import de.jreality.ui.viewerapp.actions.AbstractJrAction;
+import de.jreality.ui.viewerapp.actions.file.ExportImage;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.Rectangle3D;
 import de.jreality.util.SceneGraphUtility;
@@ -383,7 +385,18 @@ public class Main extends EventSource {
         menu.addAction(actionSaveNet(), ViewerAppMenu.FILE_MENU, k++);
         menu.addAction(actionSaveScene(), ViewerAppMenu.FILE_MENU, k++);
         menu.addSeparator(ViewerAppMenu.FILE_MENU, k++);
-        k += 2; // jump over export submenu
+        
+        menu.removeMenuItem(ViewerAppMenu.FILE_MENU, k);
+        menu.addAction(new ExportImage("Screen Shot", viewerApp
+				.getViewerSwitch(), null) {
+        	public void actionPerformed(ActionEvent e) {
+        		forceSoftwareViewer();
+        		super.actionPerformed(e);
+        		restoreViewer();
+        	}
+        }, ViewerAppMenu.FILE_MENU, k++);
+        
+        ++k; // jump over separator
 
         // --- modify the View menu
         if (!this.expertMode) {
@@ -403,6 +416,11 @@ public class Main extends EventSource {
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
 
+        // --- add a Sunflow menu
+        final JMenu sunflow = new SunflowMenu(viewerApp);
+        sunflow.setText("Raytracer");
+        menu.addMenu(sunflow, 4);
+        
         // --- create a help menu
         menu.addMenu(new JMenu(HELP_MENU));
         menu.addAction(actionAbout(), HELP_MENU);
