@@ -1,6 +1,7 @@
 syntax: glob
 *~
 *.class
+*.orig
 
 syntax: regexp
 ^bin/
