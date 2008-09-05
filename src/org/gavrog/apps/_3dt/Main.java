@@ -2113,7 +2113,7 @@ public class Main extends EventSource {
     	encompass(false);
     }
     
-   private void encompass(final boolean centerOnly) {
+    private void encompass(final boolean centerOnly) {
     	encompass(viewerApp.getCurrentViewer(), scene, centerOnly);
     }
     
@@ -2194,6 +2194,7 @@ public class Main extends EventSource {
 		final Matrix scene = new Matrix(sceneRoot.getTransformation());
 		MatrixBuilder.euclidean().rotate(angle, axis).times(scene).assignTo(
 				sceneRoot);
+		//TODO proper rotation around scene center
 		encompass(true);
 	}
 	
