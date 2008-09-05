@@ -1,6 +1,6 @@
 3dt 0.3.2:
 
-- Added keyboard controlled rotations (left, right, up, down).
+- Added keyboard controlled rotations (left, right, up, down etc.)
 - Restructed the "File" menu for easier image export.
 - The underlying net of a tiling can now be displayed.
 - BUG FIX: unit cell now shows up in Sunflow renders with small field of view.

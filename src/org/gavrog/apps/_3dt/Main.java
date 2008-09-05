@@ -438,6 +438,9 @@ public class Main extends EventSource {
         menu.addAction(actionRotateLeft(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionRotateUp(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionRotateDown(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionRotateClockwise(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionRotateCounterClockwise(), ViewerAppMenu.VIEW_MENU,
+        		k++);
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
 
@@ -1301,6 +1304,34 @@ public class Main extends EventSource {
 				}
 			}, "Rotate the scene downward by 5 degrees",
 				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
+	private Action actionRotateClockwise() {
+    	final String name = "Rotate Clockwise";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				rotateScene(new double[] { 0, 0, 1 }, -Math.PI / 36);
+				}
+			}, "Rotate the scene clockwise by 5 degrees",
+				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,
+							InputEvent.CTRL_DOWN_MASK));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
+	private Action actionRotateCounterClockwise() {
+    	final String name = "Rotate Counter-Clockwise";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				rotateScene(new double[] { 0, 0, 1 }, Math.PI / 36);
+				}
+			}, "Rotate the scene counter-clockwise by 5 degrees",
+				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,
+							InputEvent.CTRL_DOWN_MASK));
 		}
 		return ActionRegistry.instance().get(name);
 	}
