@@ -131,6 +131,7 @@ import de.jreality.shader.CommonAttributes;
 import de.jreality.softviewer.SoftViewer;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
+import de.jreality.tools.ClickWheelCameraZoomTool;
 import de.jreality.ui.viewerapp.ViewerApp;
 import de.jreality.ui.viewerapp.ViewerAppMenu;
 import de.jreality.ui.viewerapp.ViewerSwitch;
