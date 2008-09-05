@@ -434,6 +434,11 @@ public class Main extends EventSource {
         menu.addAction(action110View(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(action111View(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionRotateRight(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionRotateLeft(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionRotateUp(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionRotateDown(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
 
         // --- create a help menu
@@ -1155,7 +1160,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(1, 0, 0), new Vector(0, 0, 1));
+					setViewingTransformation(new Vector(1, 0, 0), new Vector(0, 0, 1));
 					encompass();
 				}
 			}, "View the scene along the X axis or 100 direction.",
@@ -1169,7 +1174,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(0, 1, 0), new Vector(0, 0, 1));
+					setViewingTransformation(new Vector(0, 1, 0), new Vector(0, 0, 1));
 					encompass();
 				}
 			}, "View the scene along the Y axis or 010 direction.",
@@ -1183,7 +1188,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(0, 0, 1), new Vector(0, 1, 0));
+					setViewingTransformation(new Vector(0, 0, 1), new Vector(0, 1, 0));
 					encompass();
 				}
 			}, "View the scene along the Z axis or 001 direction.",
@@ -1197,7 +1202,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(0, 1, 1), new Vector(0, 0, 1));
+					setViewingTransformation(new Vector(0, 1, 1), new Vector(0, 0, 1));
 					encompass();
 				}
 			}, "View the scene along the 011 direction.",
@@ -1211,7 +1216,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(1, 0, 1), new Vector(0, 0, 1));
+					setViewingTransformation(new Vector(1, 0, 1), new Vector(0, 0, 1));
 					encompass();
 				}
 			}, "View the scene along the 101 direction.",
@@ -1225,7 +1230,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(1, 1, 0), new Vector(0, 0, 1));
+					setViewingTransformation(new Vector(1, 1, 0), new Vector(0, 0, 1));
 					encompass();
 				}
 			}, "View the scene along the 110 direction.",
@@ -1239,11 +1244,63 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					rotateScene(new Vector(1, 1, 1), new Vector(0, 0, 1));
+					setViewingTransformation(new Vector(1, 1, 1), new Vector(0, 0, 1));
 					encompass();
 				}
 			}, "View the scene along the 111 vector.",
 			KeyStroke.getKeyStroke(KeyEvent.VK_D, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
+	private Action actionRotateRight() {
+    	final String name = "Rotate Right";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				rotateScene(new double[] { 0, 1, 0 }, Math.PI / 36);
+				}
+			}, "Rotate the scene to the right by 5 degrees",
+				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
+	private Action actionRotateLeft() {
+    	final String name = "Rotate Left";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				rotateScene(new double[] { 0, 1, 0 }, -Math.PI / 36);
+				}
+			}, "Rotate the scene to the left by 5 degrees",
+				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
+	private Action actionRotateUp() {
+    	final String name = "Rotate Up";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				rotateScene(new double[] { 1, 0, 0 }, -Math.PI / 36);
+				}
+			}, "Rotate the scene upward by 5 degrees",
+				KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
+    
+	private Action actionRotateDown() {
+    	final String name = "Rotate Down";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				rotateScene(new double[] { 1, 0, 0 }, Math.PI / 36);
+				}
+			}, "Rotate the scene downward by 5 degrees",
+				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0));
 		}
 		return ActionRegistry.instance().get(name);
 	}
@@ -1356,7 +1413,7 @@ public class Main extends EventSource {
 		if (doc.getTransformation() != null) {
 			setViewingTransformation(doc.getTransformation());
 		} else {
-			rotateScene(new Vector(0,0,1), new Vector(0,1,0));
+			setViewingTransformation(new Vector(0,0,1), new Vector(0,1,0));
 		}
 		encompass();
 		
@@ -2022,11 +2079,16 @@ public class Main extends EventSource {
     }
     
     private void encompass() {
-    	encompass(viewerApp.getCurrentViewer(), scene);
+    	encompass(false);
     }
     
-	public static void encompass(final Viewer viewer, final JrScene scene) {
-		// --- extract parameters from viewer
+   private void encompass(final boolean centerOnly) {
+    	encompass(viewerApp.getCurrentViewer(), scene, centerOnly);
+    }
+    
+	public static void encompass(final Viewer viewer, final JrScene scene,
+			final boolean centerOnly) {
+		// --- extract parameters from scene and viewer
 		final SceneGraphPath avatarPath = scene.getPath("avatarPath");
 		final SceneGraphPath scenePath = scene.getPath("emptyPickPath");
 		final SceneGraphPath cameraPath = scene.getPath("cameraPath");
@@ -2063,10 +2125,13 @@ public class Main extends EventSource {
 
 		// --- compute new camera position and adjust near/far clipping planes
 		final double[] c = bounds.getCenter();
-		c[2] += front + camdist;
-		
-		camera.setFar(camdist + front + 5 * radius);
-		camera.setNear(0.1 * camdist);
+		if (centerOnly) {
+			c[2] = 0;
+		} else {
+			c[2] += front + camdist;
+			camera.setFar(camdist + front + 5 * radius);
+			camera.setNear(0.1 * camdist);
+		}
 		
 		// --- adjust the avatar position to make scene fit
 		final Matrix camMatrix = new Matrix();
@@ -2078,7 +2143,7 @@ public class Main extends EventSource {
 				camMatrix.getColumn(3)).assignTo(avatar);
 	}
 
-	public void rotateScene(final Vector eye, final Vector up) {
+	public void setViewingTransformation(final Vector eye, final Vector up) {
 		final SceneGraphComponent root = this.scene.getPath("emptyPickPath")
 				.getLastComponent();
 		final CoordinateChange c = doc().getCellToWorld();
@@ -2091,13 +2156,19 @@ public class Main extends EventSource {
 		MatrixBuilder.euclidean(new Matrix(b)).assignTo(root);
 	}
 	
+	public void rotateScene(final double axis[], final double angle) {
+		final SceneGraphPath scenePath = scene.getPath("emptyPickPath");
+		final SceneGraphComponent sceneRoot = scenePath.getLastComponent();
+
+		final Matrix scene = new Matrix(sceneRoot.getTransformation());
+		MatrixBuilder.euclidean().rotate(angle, axis).times(scene).assignTo(
+				sceneRoot);
+		encompass(true);
+	}
+	
     private void updateCamera() {
     	final Camera cam = CameraUtility.getCamera(this.viewerApp.getCurrentViewer());
     	boolean re_encompass = false;
-//    	if (getPerspective() != cam.isPerspective()) {
-//    		cam.setPerspective(getPerspective());
-//            re_encompass = true;
-//    	}
     	if (getFieldOfView() != cam.getFieldOfView()) {
         	cam.setFieldOfView(getFieldOfView());
             re_encompass = true;
@@ -2505,7 +2576,7 @@ public class Main extends EventSource {
 						if (doc().getTransformation() != null) {
 							setViewingTransformation(doc().getTransformation());
 						} else {
-							rotateScene(new Vector(0,0,1), new Vector(0,1,0));
+							setViewingTransformation(new Vector(0,0,1), new Vector(0,1,0));
 						}
 						encompass();
 						resumeRendering();
