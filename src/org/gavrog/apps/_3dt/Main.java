@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -391,6 +392,7 @@ public class Main extends EventSource {
         // --- create and populate a new Net menu
         menu.addMenu(new JMenu(NET_MENU), 2);
         menu.addAction(actionUpdateNet(), NET_MENU);
+        menu.addAction(actionGrowNet(), NET_MENU);
         menu.addAction(actionClearNet(), NET_MENU);
         
         // --- modify the File menu
@@ -839,6 +841,41 @@ public class Main extends EventSource {
         }
         return ActionRegistry.instance().get(name);
     }
+    
+    private Action actionGrowNet() {
+		final String name = "Grow Net";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					final List<DisplayList.Item> nodes =
+						new LinkedList<DisplayList.Item>();
+					for (DisplayList.Item item: doc()) {
+						if (item.isNode()) {
+							nodes.add(item);
+						}
+					}
+					suspendRendering();
+					int count = 0;
+					for (DisplayList.Item item: nodes) {
+						if (item.isNode()) {
+							count += doc().connectToExisting(item);
+						}
+					}
+					if (count == 0) {
+						for (DisplayList.Item item: nodes) {
+							if (item.isNode()) {
+								count += doc().addIncident(item);
+							}
+						}
+					}
+					resumeRendering();
+				}
+			}, "Add all missing edges between or all edges incident with "
+				+ "visible nodes.",
+				KeyStroke.getKeyStroke(KeyEvent.VK_G, 0));
+		}
+		return ActionRegistry.instance().get(name);
+	}
     
     private Action actionClearNet() {
 		final String name = "Clear Net";
