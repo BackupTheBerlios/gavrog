@@ -2653,11 +2653,6 @@ public class Main extends EventSource {
 						suspendRendering();
 						doc().removeAll();
 						makeCopies();
-						if (doc().getTransformation() != null) {
-							setViewingTransformation(doc().getTransformation());
-						} else {
-							setViewingTransformation(new Vector(0,0,1), new Vector(0,1,0));
-						}
 						encompass();
 						resumeRendering();
 						saveOptions();
