@@ -54,6 +54,8 @@ public class TextAreaOutputStream extends OutputStream {
         	if (c == '\r' || c == '\n') {
         		buffer.append('\n');
         		flush();
+        	} else if (c == '\t') {
+        		buffer.append(c);
         	} else if (c <= 0x1f) {
         		buffer.append('^');
         		buffer.append((char) (c + 0x40));
