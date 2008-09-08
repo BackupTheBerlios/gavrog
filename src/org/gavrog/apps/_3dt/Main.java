@@ -2110,15 +2110,12 @@ public class Main extends EventSource {
     }
     
     private void encompass() {
-    	encompass(false);
+    	encompass(viewerApp.getCurrentViewer(), scene);
     }
     
-    private void encompass(final boolean centerOnly) {
-    	encompass(viewerApp.getCurrentViewer(), scene, centerOnly);
-    }
+    double lastCenter[] = null;
     
-	public static void encompass(final Viewer viewer, final JrScene scene,
-			final boolean centerOnly) {
+	public void encompass(final Viewer viewer, final JrScene scene) {
 		// --- extract parameters from scene and viewer
 		final SceneGraphPath avatarPath = scene.getPath("avatarPath");
 		final SceneGraphPath scenePath = scene.getPath("emptyPickPath");
@@ -2156,13 +2153,12 @@ public class Main extends EventSource {
 
 		// --- compute new camera position and adjust near/far clipping planes
 		final double[] c = bounds.getCenter();
-		if (centerOnly) {
-			c[2] = 0;
-		} else {
-			c[2] += front + camdist;
-			camera.setFar(camdist + front + 5 * radius);
-			camera.setNear(0.1 * camdist);
-		}
+		c[2] += front + camdist;
+		camera.setFar(camdist + front + 5 * radius);
+		camera.setNear(0.1 * camdist);
+		
+		// --- make rotateScene() recompute the center
+		lastCenter = null;
 		
 		// --- adjust the avatar position to make scene fit
 		final Matrix camMatrix = new Matrix();
@@ -2191,11 +2187,26 @@ public class Main extends EventSource {
 		final SceneGraphPath scenePath = scene.getPath("emptyPickPath");
 		final SceneGraphComponent sceneRoot = scenePath.getLastComponent();
 
-		final Matrix scene = new Matrix(sceneRoot.getTransformation());
-		MatrixBuilder.euclidean().rotate(angle, axis).times(scene).assignTo(
+		if (lastCenter == null) {
+			// --- compute the center of the scene in world coordinates
+			final Rectangle3D bounds = GeometryUtility
+					.calculateBoundingBox(sceneRoot);
+			if (bounds.isEmpty()) {
+				return;
+			} else {
+				lastCenter = new Matrix(sceneRoot.getTransformation())
+						.getInverse().multiplyVector(bounds.getCenter());
+			}
+		}
+		
+		// --- rotate around the last computed scene center
+		final Matrix tOld = new Matrix(sceneRoot.getTransformation());
+		final Matrix tNew = MatrixBuilder.euclidean().rotate(angle, axis)
+				.times(tOld).getMatrix();
+		final double p[] = tOld.multiplyVector(lastCenter);
+		final double q[] = tNew.multiplyVector(lastCenter);
+		MatrixBuilder.euclidean().translateFromTo(q, p).times(tNew).assignTo(
 				sceneRoot);
-		//TODO proper rotation around scene center
-		encompass(true);
 	}
 	
     private void updateCamera() {
