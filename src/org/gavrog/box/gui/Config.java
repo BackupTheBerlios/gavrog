@@ -31,19 +31,20 @@ import java.util.Properties;
  * @version $Id: Config.java,v 1.4 2007/05/24 23:17:51 odf Exp $
  */
 public class Config {
-	final private static Map mappedTypes = new HashMap();
+	final private static Map<Class, Class> mappedTypes =
+		new HashMap<Class, Class>();
 	static {
 		mappedTypes.put(int.class, Integer.class);
 		mappedTypes.put(long.class, Long.class);
 		mappedTypes.put(float.class, Float.class);
 		mappedTypes.put(double.class, Double.class);
-		mappedTypes.put(Color.class, ColorWrapper.class);
 		mappedTypes.put(boolean.class, Boolean.class);
+		mappedTypes.put(Color.class, ColorWrapper.class);
 	}
 	
-	public static Class wrapperType(final Class type) {
+	public static Class<?> wrapperType(final Class type) {
 		if (mappedTypes.containsKey(type)) {
-			return (Class) mappedTypes.get(type);
+			return mappedTypes.get(type);
 		} else {
 			return type;
 		}
@@ -57,8 +58,7 @@ public class Config {
 
 	public static String asString(final Object value) throws Exception {
 		final Class type = value.getClass();
-		final Class wrapperType = wrapperType(type);
-		if (wrapperType.equals(type)) {
+		if (wrapperType(type).equals(type)) {
 			return String.valueOf(value);
 		} else {
 			return String.valueOf(wrapperType(type).getConstructor(
