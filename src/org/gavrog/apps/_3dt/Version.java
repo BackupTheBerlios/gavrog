@@ -19,13 +19,13 @@ package org.gavrog.apps._3dt;
 public class Version {
 	final public static int major = 0;
 
-	final public static int minor = 3;
+	final public static int minor = 4;
 
-	final public static int patchLevel = 2;
+	final public static int patchLevel = 0;
 
 	final public static String maturity = "alpha";
 
-	final public static String date = "2008/09/08";
+	final public static String date = "2008/09/09";
 
 	final public static String extension = (maturity == null ? "" : " "
             + maturity)

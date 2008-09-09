@@ -24,6 +24,8 @@ import java.awt.Frame;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.geom.Rectangle2D;
@@ -226,6 +228,10 @@ public class Main extends EventSource {
     private Color fogColor = Color.WHITE;
     private boolean fogToBackground = true;
     private double fieldOfView = 30.0;
+    
+    // --- viewing options
+    private int viewerWidth = 800;
+    private int viewerHeight = 800;
     private boolean useLeopardWorkaround = false;
 
     // --- the current document and the document list in which it lives
@@ -360,6 +366,20 @@ public class Main extends EventSource {
         viewerApp.update();
         viewerApp.display();
         viewerApp.getFrame().setTitle("3dt Viewer");
+        updateViewerSize();
+        
+        viewerApp.getViewingComponent().addComponentListener(
+        	new ComponentListener() {
+			public void componentShown(ComponentEvent e) {}
+			public void componentHidden(ComponentEvent e) {}
+			public void componentMoved(ComponentEvent e) {}
+
+			public void componentResized(ComponentEvent e) {
+				setViewerWidth(viewerApp.getViewingComponent().getWidth());
+				setViewerHeight(viewerApp.getViewingComponent().getHeight());
+				saveOptions();
+			}
+        });
         
         // --- show the controls window
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
@@ -422,9 +442,12 @@ public class Main extends EventSource {
 
         // --- modify the View menu
         if (!this.expertMode) {
-			for (int i = 0; i < 10; ++i) {
+			for (int i = 0; i < 11; ++i) {
 				menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 0);
 			}
+			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 2);
+		} else {
+			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 13);
 		}
         k = 0;
         menu.addAction(actionEncompass(), ViewerAppMenu.VIEW_MENU, k++);
@@ -445,7 +468,8 @@ public class Main extends EventSource {
         		k++);
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
-
+        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
+        
         // --- create a help menu
         menu.addMenu(new JMenu(HELP_MENU));
         menu.addAction(actionAbout(), HELP_MENU);
@@ -2518,6 +2542,19 @@ public class Main extends EventSource {
     	}
     }
     
+    private void updateViewerSize() {
+    	final java.awt.Component viewer = viewerApp.getViewingComponent();
+    	// -- make sure to trigger a property change event
+    	viewer.setPreferredSize(null);
+    	// -- now set to the desired size
+    	viewer.setPreferredSize(new Dimension(getViewerWidth(),
+				getViewerHeight()));
+    	// -- update the parent frame
+    	viewerApp.getFrame().pack();
+    	// -- not completely sure what this does
+    	viewer.requestFocusInWindow();
+    }
+    
     private BButton makeButton(final String label, final Object target,
             final String method) {
     	final BButton button = new BButton(label);
@@ -2668,7 +2705,7 @@ public class Main extends EventSource {
         try {
             options.add(new OptionCheckBox("Draw Edges", this, "drawEdges"));
             options.add(new OptionCheckBox("Use Edge Color", this,
-            "useEdgeColor"));
+            		"useEdgeColor"));
             options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
             options.add(new OptionCheckBox("Draw Faces", this, "drawFaces"));
             options.add(new OptionInputBox("Relative Tile Size", this,
@@ -2679,8 +2716,6 @@ public class Main extends EventSource {
                     "unitCellColor"));
             options.add(new OptionInputBox("Unit Cell Edge Width", this,
                     "unitCellEdgeWidth"));
-            options.add(new OptionCheckBox("MacOS Context Menu Workaround", this,
-            		"useLeopardWorkaround"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2693,6 +2728,30 @@ public class Main extends EventSource {
                 updateDisplayProperties();
                 updateMaterials();
                 resumeRendering();
+                saveOptions();
+            }
+        };
+        return optionsDialog(options, makeButton("Apply", apply, "call"));
+    }
+    
+    private Widget optionsGUI() {
+        final ColumnContainer options = emptyOptionsContainer();
+        try {
+            options.add(new OptionInputBox("Viewer Width", this,
+            		"viewerWidth"));
+			options.add(new OptionInputBox("Viewer Height", this,
+					"viewerHeight"));
+            options.add(new OptionCheckBox("MacOS Context Menu Workaround",
+					this, "useLeopardWorkaround"));
+        } catch (final Exception ex) {
+            log(ex.toString());
+            return null;
+        }
+        
+        final Object apply = new Object() {
+            @SuppressWarnings("unused")
+            public void call() {
+            	updateViewerSize();
                 saveOptions();
             }
         };
@@ -2814,12 +2873,13 @@ public class Main extends EventSource {
 		final BTabbedPane options = new BTabbedPane();
 		options.setBackground(null);
 		options.add(optionsGeometry(), "Geometry");
-		options.add(optionsScene(), "Unit Cell Copies");
+		options.add(optionsScene(), "Unit Cells");
 		options.add(optionsDisplay(), "Display");
 		options.add(optionsNet(), "Net");
 		options.add(optionsMaterial(), "Material");
 		options.add(optionsEmbedding(), "Embedding");
         options.add(optionsCamera(), "Camera");
+        options.add(optionsGUI(), "GUI");
 		return options;
     }
     
@@ -2931,12 +2991,19 @@ public class Main extends EventSource {
 					"hideControls");
 			this.controlsFrame.setContent(content);
 			final JDialog jf = this.controlsFrame.getComponent();
-			jf.setSize(600, 500);
+			jf.setSize(600, vF.getHeight());
+			jf.setLocation(vF.getWidth(), 0);
 			jf.validate();
 
 			top.setDividerLocation(300);
 			content.setDividerLocation(350);
 		}
+    	if (!this.controlsFrame.isVisible()) {
+    		final JFrame vF = viewerApp.getFrame();
+    		final JDialog jf = this.controlsFrame.getComponent();
+    		jf.setSize(600, vF.getHeight());
+    		jf.setLocation(vF.getWidth(), 0);
+    	}
     	this.controlsFrame.setVisible(true);
 		this.controlsFrame.repaint();
 	}
@@ -3450,6 +3517,30 @@ public class Main extends EventSource {
     	}
     }
 
+    public int getViewerWidth() {
+    	return this.viewerWidth;
+    }
+    
+	public void setViewerWidth(int viewerWidth) {
+		if (viewerWidth != this.viewerWidth) {
+			dispatchEvent(new PropertyChangeEvent(this, "viewerWidth",
+					this.viewerWidth, viewerWidth));
+			this.viewerWidth = viewerWidth;
+		}
+	}
+
+    public int getViewerHeight() {
+    	return this.viewerHeight;
+    }
+    
+	public void setViewerHeight(int viewerHeight) {
+		if (viewerHeight != this.viewerHeight) {
+			dispatchEvent(new PropertyChangeEvent(this, "viewerHeight",
+					this.viewerHeight, viewerHeight));
+			this.viewerHeight = viewerHeight;
+		}
+	}
+
 	public boolean getUseLeopardWorkaround() {
 		return this.useLeopardWorkaround;
 	}
@@ -3527,7 +3618,6 @@ public class Main extends EventSource {
 	 * @param color
 	 */
 	private List<Tiling.Facet> equivalentFacets(final Tiling.Facet f) {
-		//TODO is there a cleaner implementation?
 		final Object D0 = f.getChamber();
 		final DSCover ds = doc().getTiling().getCover();
 		final Set<Object> orb = new HashSet<Object>();

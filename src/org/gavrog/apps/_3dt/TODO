@@ -1,16 +1,12 @@
 =====================================================
 
-In progress:
-
-(none)
-
-=====================================================
-
 Open bugs:
 
 - Popups don't work with OpenGL on Mac Leopard (workaround exists.)
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
+
+=====================================================
 
 Planned/requested features:
 
