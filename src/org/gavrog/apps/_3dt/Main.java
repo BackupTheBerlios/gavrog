@@ -443,6 +443,7 @@ public class Main extends EventSource {
         	}
         }, ViewerAppMenu.FILE_MENU, k++);
         menu.addAction(actionSunflowRender(), ViewerAppMenu.FILE_MENU, k++);
+        menu.addAction(actionSunflowPreview(), ViewerAppMenu.FILE_MENU, k++);
         
         ++k; // jump over separator
 
@@ -667,6 +668,8 @@ public class Main extends EventSource {
                     	opts.setProgressiveRender(false);
                     	opts.setAaMin(0);
                     	opts.setAaMax(2);
+                    	opts.setGiEngine("ambocc");
+                    	opts.setFilter("mitchell");
                     	Sunflow.renderAndSave(viewerApp.getCurrentViewer(),
 								opts, dimPanel.getDimension(), path);
                     } catch (Throwable ex) {
@@ -677,6 +680,27 @@ public class Main extends EventSource {
 				}
 			}, "Render the scene using the Sunflow raytracer",
 				KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_MASK));
+		}
+		return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionSunflowPreview() {
+		final String name = "Preview Raytraced...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+                    try {
+                    	final RenderOptions opts = new RenderOptions();
+                    	opts.setProgressiveRender(true);
+                    	final Viewer v = viewerApp.getCurrentViewer();
+                    	Sunflow.render(v, v.getViewingComponentSize(), opts);
+                    } catch (Throwable ex) {
+                    	log(ex.toString());
+                    	return;
+                    }
+				}
+			}, "Preview the Sunflow render",
+				KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
 		}
 		return ActionRegistry.instance().get(name);
     }
