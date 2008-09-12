@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- All net nodes now re-use the same geometry, thus saving process memory.
 - The controls window is positioned better with regard to the viewer.
 - The viewer size is now remembered between program runs.
 

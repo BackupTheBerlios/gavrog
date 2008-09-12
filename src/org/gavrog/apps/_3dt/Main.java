@@ -260,6 +260,12 @@ public class Main extends EventSource {
     final private JrScene scene;
     final private SceneGraphComponent world;
 
+    final public static SceneGraphComponent sphereTemplate = new SceneGraphComponent();
+	static {
+		sphereTemplate.setGeometry(SphereUtility.sphericalPatch(0.0, 0.0,
+				360.0, 180.0, 40, 20, 1.0));
+	}
+    
     private SceneGraphComponent tiling;
     private SceneGraphComponent net;
 	private SceneGraphComponent unitCell;
@@ -1801,8 +1807,7 @@ public class Main extends EventSource {
 				.createFullSceneGraphComponent("node");
 		MatrixBuilder.init(null, Pn.EUCLIDEAN).translate(p).scale(r).assignTo(
 				sgc.getTransformation());
-		sgc.setGeometry(SphereUtility.sphericalPatch(0.0, 0.0, 360.0, 180.0,
-				40, 20, 1.0));
+		sgc.addChild(sphereTemplate);
         final Appearance a = new Appearance();
         updateMaterial(a, c);
         sgc.setAppearance(a);
