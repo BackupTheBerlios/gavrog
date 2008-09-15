@@ -38,14 +38,6 @@ public class Stopwatch {
     	}
     }
     
-    public void start() {
-        if (this.isRunning) {
-            throw new RuntimeException("already running");
-        }
-        this.start = time();
-        this.isRunning = true;
-    }
-    
     private static long time() {
     	if (tb != null) {
     		final long t = tb.getCurrentThreadUserTime();
@@ -59,42 +51,44 @@ public class Stopwatch {
     	}
     }
     
+    public void start() {
+        if (!this.isRunning) {
+            this.start = time();
+            this.isRunning = true;
+        }
+    }
+    
     public void stop() {
 		if (this.isRunning) {
-			final long end = time();
-			this.accumulated += end - this.start;
+			this.accumulated += time() - this.start;
 			this.isRunning = false;
 		}
 	}
     
     public void reset() {
-        if (this.isRunning) {
-            throw new RuntimeException("cannot reset while running");
-        }
-        this.accumulated = 0;
+    	final boolean wasRunning = this.isRunning;
+    	stop();
+    	this.accumulated = 0;
+    	if (wasRunning) {
+        	start();
+    	}
     }
     
     /**
      * Reports the elapsed time on this timer in milliseconds.
-     * 
      * @return the elapsed time in milliseconds.
      */
     public long elapsed() {
-        if (this.isRunning) {
-            throw new RuntimeException("cannot read while running");
-        }
-        if (tb != null) {
-        	return this.accumulated / (int) 1e6;
-        } else {
-        	return this.accumulated;
-        }
+    	final boolean wasRunning = this.isRunning;
+    	stop();
+    	final long res = this.accumulated / (tb != null ? (int) 1e6 : 1);
+    	if (wasRunning) {
+    		start();
+    	}
+    	return res;
     }
     
     public String format() {
         return elapsed() / 10 / 100.0 + " seconds";
-    }
-    
-    public static void main(final String args[]) {
-    	
     }
 }
