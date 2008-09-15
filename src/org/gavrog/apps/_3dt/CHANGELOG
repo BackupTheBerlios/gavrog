@@ -5,13 +5,13 @@
 - All net nodes now re-use the same geometry, thus saving process memory.
 - The controls window is positioned better with regard to the viewer.
 - The viewer size is now remembered between program runs.
-
-3dt 0.3.2:
-
 - Added keyboard controlled rotations (left, right, up, down etc.)
 - Restructured the "File" menu for easier image export.
 - The underlying net of a tiling can now be displayed.
 - BUG FIX: unit cell now shows up in Sunflow renders with small field of view.
+
+3dt 0.3.2:
+
 - For fitting the scene to the window, the '0' is now used instead of 'E'.
 - The range of unit cell copies to display can now be specified interactively.
 - Two-dimensional euclidean tilings are now supported (but displayed as 3d.)
