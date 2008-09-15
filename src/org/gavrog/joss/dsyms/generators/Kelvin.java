@@ -143,6 +143,21 @@ public class Kelvin {
 		return buf.toString();
 	}
 	
+	public static void usage() {
+		System.err.print(
+			  "Usage: java -jar Kelvin.jar [OPTION]... K [FILE]\n"
+			+ "\n"
+			+ "Recognized options:\n"
+			+ "  -e        skip euclidicity test\n"
+			+ "  -i N      interval in seconds between writing checkpoints\n"
+			+ "  -p        skip pre-filtering by tile stabilizers\n"
+			+ "  -r A-B-C  resume generation at a checkpoint\n"
+			+ "  -s P/Q    generate the P-th of Q parts\n"
+			+ "  -v        run in verbose mode\n"
+			);
+		System.exit(1);
+	}
+	
 	public static void main(final String[] args) {
 		try {
 			boolean verbose = false;
@@ -186,11 +201,15 @@ public class Kelvin {
 					resume[1] = Integer.parseInt(tmp[1]);
 					resume[2] = Integer.parseInt(tmp[2]);
 				} else {
-					System.err.println("Unknown option '" + args[i] + "'");
+					usage();
 				}
 				++i;
 			}
 
+			if (args.length <= i) {
+				usage();
+			}
+			
 			final int k = Integer.parseInt(args[i]);
 			final Writer output;
 			if (args.length > i + 1) {
@@ -229,21 +248,20 @@ public class Kelvin {
 			output.write((testParts ? "on" : "off") + "\n");
 			output.write("#     euclidicity test:                ");
 			output.write((check ? "on" : "off") + "\n");
-			if (nrOfSections > 0) {
-				output.write("#    running section " + section + " of "
-						+ nrOfSections + " (cases " + start + " to "
-						+ (stop - 1) + " of " + n + ").\n");
-			}
 			if (checkpointInterval > 0) {
 				output.write("#     checkpoint interval:             ");
 				output.write(checkpointInterval + "sec\n");
 			} else {
 				output.write("#     checkpoints:                     off\n");
 			}
+			if (nrOfSections > 0) {
+				output.write("# Running section " + section + " of "
+						+ nrOfSections + " (cases " + start + " to "
+						+ (stop - 1) + " of " + n + ").\n");
+			}
 			if (resume != null) {
-				output.write("#     resume at:                       ");
-				output.write(String.format("%d %d %d\n", resume[0], resume[1],
-						resume[2]));
+				output.write(String.format("# Resuming at %d %d %d.\n",
+						resume[0], resume[1], resume[2]));
 			}
 			output.write("\n");
 			
