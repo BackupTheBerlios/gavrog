@@ -39,20 +39,28 @@ public class Kelvin {
 	final static private List iFaces2d = new IndexList(0, 1);
 	
 	public static class Generator extends FrankKasperExtended {
+		final Writer output;
 		final boolean countOnly;
 		final int start;
 		final int stop;
 		int count = 0;
+		final Stopwatch timer = new Stopwatch();
+		final int interval;
 		
 		public Generator(final int k,
 				         final boolean verbose,
 				         final boolean testParts,
 				         final boolean countOnly,
-				         final int start, final int stop) {
+				         final int start, final int stop,
+				         final int checkpointInterval,
+				         final Writer output) {
 			super(k, verbose, testParts);
 			this.countOnly = countOnly;
 			this.start = start;
 			this.stop = stop;
+			this.interval = checkpointInterval * 1000;
+			this.output = output;
+			this.timer.start();
 		}
 		
 		protected boolean partsListOkay(final List parts) {
@@ -68,6 +76,23 @@ public class Kelvin {
 		
 		public int getCount() {
 			return count;
+		}
+		
+		protected void handleCheckpoint() {
+			this.timer.stop();
+			if (interval > 0 && this.timer.elapsed() > interval) {
+				this.timer.reset();
+				writeCheckpoint();
+			}
+			this.timer.start();
+		}
+		
+		public void writeCheckpoint() {
+			try {
+				output.write(String.format("#@ CHECKPOINT %s\n",
+						getCheckpoint()));
+			} catch (Throwable ex) {
+			}
 		}
 	}
 	
@@ -125,18 +150,16 @@ public class Kelvin {
 			boolean verbose = false;
 			boolean testParts = true;
 			boolean check = true;
-			boolean countOnly = false;
 			int start = 0;
 			int stop = 0;
 			int section = 0;
 			int nrOfSections = 0;
+			int checkpointInterval = 3600;
 			
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
 				if (args[i].equals("-v")) {
 					verbose = !verbose;
-				} else if (args[i].equals("-c")) {
-					countOnly = !countOnly;
 				} else if (args[i].equals("-p")) {
 					testParts = !testParts;
 				} else if (args[i].equals("-e")) {
@@ -155,6 +178,8 @@ public class Kelvin {
 						System.err.println(msg);
 						System.exit(1);
 					}
+				} else if (args[i].equals("-i")) {
+					checkpointInterval = Integer.parseInt(args[++i]);
 				} else {
 					System.err.println("Unknown option '" + args[i] + "'");
 				}
@@ -179,7 +204,8 @@ public class Kelvin {
 			timer.start();
 			
 			if (nrOfSections > 0) {
-				Generator tmp = new Generator(k, verbose, testParts, true, 0, 0);
+				final Generator tmp = new Generator(k, verbose, testParts,
+						true, 0, 0, 0, null);
 				while (tmp.hasNext()) {
 					tmp.next();
 				}
@@ -190,8 +216,29 @@ public class Kelvin {
 				stop  = (int) Math.round(n / (double) m * s) + 1;
 			}
 			
+			output.write("# Program Kelvin with k = " + k + ".\n");
+			output.write("# Options:\n");
+			output.write("#     verbose mode:                    ");
+			output.write((verbose ? "on" : "off") + "\n");
+			output.write("#     vertex symmetries pre-filtering: ");
+			output.write((testParts ? "on" : "off") + "\n");
+			output.write("#     euclidicity test:                ");
+			output.write((check ? "on" : "off") + "\n");
+			if (nrOfSections > 0) {
+				output.write("#    running section " + section + " of "
+						+ nrOfSections + " (cases " + start + " to "
+						+ (stop - 1) + " of " + n + ").\n");
+			}
+			if (checkpointInterval > 0) {
+				output.write("#     checkpoint interval:             ");
+				output.write(checkpointInterval + "sec\n");
+			} else {
+				output.write("#     checkpoints:                     off\n");
+			}
+			output.write("\n");
+			
 			final Generator iter = new Generator(k, verbose, testParts,
-					countOnly, start, stop);
+					false, start, stop, checkpointInterval, output);
 
 			while (iter.hasNext()) {
 				final DSymbol out = ((DSymbol) iter.next()).dual();
@@ -203,11 +250,12 @@ public class Kelvin {
 						final boolean bad = tester.isBad();
 						final boolean ambiguous = tester.isAmbiguous();
 						eTestTimer.stop();
-						if (ambiguous) {
-							output.write("#@ name euclidicity dubious\n");
-							++countAmbiguous;
-						}
 						if (!bad) {
+							iter.writeCheckpoint();
+							if (ambiguous) {
+								output.write("#@ name euclidicity dubious\n");
+								++countAmbiguous;
+							}
 							output.write("# " + info(out) + "\n");
 							output.write(out + "\n");
 							++countGood;
@@ -220,46 +268,23 @@ public class Kelvin {
 			}
 			timer.stop();
 
-			output.write("\n# Program Kelvin with k = " + k + ".\n");
-			output.write("# Options:\n");
-			output.write("#     verbose mode:                    ");
-			output.write((verbose ? "on" : "off") + "\n");
-			output.write("#     vertex symmetries pre-filtering: ");
-			output.write((testParts ? "on" : "off") + "\n");
-			output.write("#     first stage counting only:       ");
-			output.write((countOnly ? "on" : "off") + "\n");
-			if (countOnly) {
-				output.write("#     (remaining options were ignored)\n");
-			} else {
-				output.write("#     euclidicity test:                ");
-				output.write((check ? "on" : "off") + "\n");
-				if (nrOfSections > 0) {
-					output.write("#    ran section " + section + " of "
-							+ nrOfSections + " (cases " + start + " to "
-							+ (stop - 1) + " of " + n + ").\n");
-				}
-			}
+			output.write("\n");
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
-			if (check && !countOnly) {
+			if (check) {
 				output.write("# Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
 			}
 			output.write("\n");
-			if (countOnly) {
-				output.write("# Counted " + iter.getCount()
-						+ " feasible spherical symbols.");
-			} else {
-				output.write("# " + iter.statistics() + "\n");
-				output.write("# Of the latter, " + countTileSizeOk
-						+ " had between 12 and 16 faces in each tile.\n");
-				if (check) {
-					output.write("# Of those, " + countGood
-							+ " were found euclidean.\n");
-					if (countAmbiguous > 0) {
-						output.write("# For " + countAmbiguous
+			output.write("# " + iter.statistics() + "\n");
+			output.write("# Of the latter, " + countTileSizeOk
+					+ " had between 12 and 16 faces in each tile.\n");
+			if (check) {
+				output.write("# Of those, " + countGood
+						+ " were found euclidean.\n");
+				if (countAmbiguous > 0) {
+					output.write("# For " + countAmbiguous
 							+ " symbols, euclidicity remains undetermined.\n");
-					}
 				}
 			}
 			output.flush();

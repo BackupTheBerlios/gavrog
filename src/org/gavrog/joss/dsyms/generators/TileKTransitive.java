@@ -46,6 +46,7 @@ public class TileKTransitive extends IteratorAdapter {
     private int count3dSets = 0;
     private int count3dSymbols = 0;
     private int countMinimal = 0;
+    private int checkpoint[] = new int[] { 0, 0, 0 };
 
     /**
      * Constructs an instance.
@@ -86,6 +87,9 @@ public class TileKTransitive extends IteratorAdapter {
                         }
                         final DSymbol ds = new DSymbol(tmp);
                         ++this.count2dSymbols;
+                        ++checkpoint[0];
+                        checkpoint[1] = checkpoint[2] = 0;
+                        handleCheckpoint();
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
@@ -96,6 +100,9 @@ public class TileKTransitive extends IteratorAdapter {
                 }
                 final DSymbol ds = (DSymbol) extended.next();
                 ++this.count3dSets;
+                ++checkpoint[1];
+                checkpoint[2] = 0;
+                handleCheckpoint();
                 if (this.verbose) {
                     System.err.println("    " + setAsString(ds));
                 }
@@ -103,6 +110,8 @@ public class TileKTransitive extends IteratorAdapter {
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++count3dSymbols;
+            ++checkpoint[2];
+            handleCheckpoint();
             if (this.verbose) {
                 System.err.println("        " + branchingAsString(ds));
                 System.err.flush();
@@ -114,6 +123,22 @@ public class TileKTransitive extends IteratorAdapter {
         }
     }
 
+    /**
+     * Retreives the current checkpoint value as a string.
+     * 
+     * @return the current checkpoint.
+     */
+    public String getCheckpoint() {
+    	return String.format("%d-%d-%d", checkpoint[0], checkpoint[1],
+				checkpoint[2]);
+    }
+    
+    /**
+     * Override this to record program checkpoints.
+     */
+    protected void handleCheckpoint() {
+    }
+    
     /**
      * Override this to restrict the equivariant tile combinations used.
      * 
