@@ -41,8 +41,10 @@ import org.gavrog.joss.dsyms.basic.IndexList;
  */
 
 public class FrankKasperExtended extends TileKTransitive {
-	final private static Set interesting_stabilizers = new HashSet();
-	final private static Set allowed_stabilizer_sets = new HashSet();
+	final private static Set<String> interesting_stabilizers =
+		new HashSet<String>();
+	final private static Set<String> allowed_stabilizer_sets =
+		new HashSet<String>();
 	static {
 		interesting_stabilizers.addAll(Arrays.asList(new String[] {
 				"*332", "2*2", "222", "2x", "332"
@@ -82,7 +84,7 @@ public class FrankKasperExtended extends TileKTransitive {
 			return true;
 		}
 		
-		final List stabs = new ArrayList();
+		final List<String> stabs = new ArrayList<String>();
 		
 		for (Iterator iter = parts.iterator(); iter.hasNext();) {
             final String type = guessOrbifoldSymbol((DSymbol) iter.next());
@@ -138,7 +140,7 @@ public class FrankKasperExtended extends TileKTransitive {
 	protected Iterator defineBranching(final DelaneySymbol ds) {
 		final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
 		final IndexList idx = new IndexList(0, 2, 3);
-		final List choices = new LinkedList();
+		final List<Object> choices = new LinkedList<Object>();
 		for (final Iterator reps = out.orbitReps(idx); reps.hasNext();) {
 			final Object D = reps.next();
 			final Object D0 = out.op(0, D);
@@ -160,7 +162,7 @@ public class FrankKasperExtended extends TileKTransitive {
 		return new IteratorAdapter() {
 			final int n = choices.size();
 			int count = 0;
-			final Set seen = new HashSet();
+			final Set<DSymbol> seen = new HashSet<DSymbol>();
 			int a[] = null;
 
 			protected Object findNext() throws NoSuchElementException {
@@ -207,11 +209,11 @@ public class FrankKasperExtended extends TileKTransitive {
 		return new ExtendTo3d(ds) {
 			protected List getExtraDeductions(final DelaneySymbol ds,
 					final Move move) {
-				final List out = new ArrayList();
+				final List<Move> out = new ArrayList<Move>();
 				final Object D = move.element;
 				Object E = D;
 				int r = 0;
-				List cuts = new ArrayList();
+				List<Object> cuts = new ArrayList<Object>();
 				do {
 					E = ds.op(2, E);
 					if (ds.definesOp(3, E)) {
