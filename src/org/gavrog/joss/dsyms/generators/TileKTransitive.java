@@ -47,6 +47,7 @@ public class TileKTransitive extends IteratorAdapter {
     private int count3dSymbols = 0;
     private int countMinimal = 0;
     private int checkpoint[] = new int[] { 0, 0, 0 };
+    private int resume[] = new int[] { 0, 0, 0 };
 
     /**
      * Constructs an instance.
@@ -66,6 +67,26 @@ public class TileKTransitive extends IteratorAdapter {
         this.symbols = null;
     }
 
+    /**
+     * Sets the point in the search tree at which the algorithm should resume.
+     * 
+     * @param resume specifies the checkpoint to resume execution at.
+     */
+    public void setResumePoint(final int resume[]) {
+        this.resume[0] = resume[0];
+        this.resume[1] = resume[1];
+        this.resume[2] = resume[2];
+    }
+
+    private boolean tooEarly(final int level) {
+    	for (int i = 0; i < level; ++i) {
+    		if (checkpoint[i] != resume[i]) {
+    			return checkpoint[i] < resume[i];
+    		}
+    	}
+    	return false;
+    }
+    
     /*
      * (non-Javadoc)
      * 
@@ -85,11 +106,14 @@ public class TileKTransitive extends IteratorAdapter {
                                 .hasNext();) {
                             tmp.append((DSymbol) iter.next());
                         }
-                        final DSymbol ds = new DSymbol(tmp);
-                        ++this.count2dSymbols;
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
+                        if (tooEarly(1)) {
+                        	continue;
+                        }
                         handleCheckpoint();
+                        final DSymbol ds = new DSymbol(tmp);
+                        ++this.count2dSymbols;
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
@@ -99,19 +123,25 @@ public class TileKTransitive extends IteratorAdapter {
                     }
                 }
                 final DSymbol ds = (DSymbol) extended.next();
-                ++this.count3dSets;
                 ++checkpoint[1];
                 checkpoint[2] = 0;
+                if (tooEarly(2)) {
+                	continue;
+                }
                 handleCheckpoint();
+                ++this.count3dSets;
                 if (this.verbose) {
                     System.err.println("    " + setAsString(ds));
                 }
                 symbols = defineBranching(ds);
             }
             final DSymbol ds = (DSymbol) symbols.next();
-            ++count3dSymbols;
             ++checkpoint[2];
+            if (tooEarly(3)) {
+            	continue;
+            }
             handleCheckpoint();
+            ++count3dSymbols;
             if (this.verbose) {
                 System.err.println("        " + branchingAsString(ds));
                 System.err.flush();

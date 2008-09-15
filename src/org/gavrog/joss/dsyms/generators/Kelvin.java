@@ -79,16 +79,14 @@ public class Kelvin {
 		}
 		
 		protected void handleCheckpoint() {
-			this.timer.stop();
 			if (interval > 0 && this.timer.elapsed() > interval) {
-				this.timer.reset();
 				writeCheckpoint();
 			}
-			this.timer.start();
 		}
 		
 		public void writeCheckpoint() {
 			try {
+				this.timer.reset();
 				output.write(String.format("#@ CHECKPOINT %s\n",
 						getCheckpoint()));
 			} catch (Throwable ex) {
@@ -155,6 +153,7 @@ public class Kelvin {
 			int section = 0;
 			int nrOfSections = 0;
 			int checkpointInterval = 3600;
+			int resume[] = null;
 			
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
@@ -180,6 +179,12 @@ public class Kelvin {
 					}
 				} else if (args[i].equals("-i")) {
 					checkpointInterval = Integer.parseInt(args[++i]);
+				} else if (args[i].equals("-r")) {
+					final String tmp[] = args[++i].split("-");
+					resume = new int[] { 0, 0, 0 };
+					resume[0] = Integer.parseInt(tmp[0]);
+					resume[1] = Integer.parseInt(tmp[1]);
+					resume[2] = Integer.parseInt(tmp[2]);
 				} else {
 					System.err.println("Unknown option '" + args[i] + "'");
 				}
@@ -235,10 +240,18 @@ public class Kelvin {
 			} else {
 				output.write("#     checkpoints:                     off\n");
 			}
+			if (resume != null) {
+				output.write("#     resume at:                       ");
+				output.write(String.format("%d %d %d\n", resume[0], resume[1],
+						resume[2]));
+			}
 			output.write("\n");
 			
 			final Generator iter = new Generator(k, verbose, testParts,
 					false, start, stop, checkpointInterval, output);
+			if (resume != null) {
+				iter.setResumePoint(resume);
+			}
 
 			while (iter.hasNext()) {
 				final DSymbol out = ((DSymbol) iter.next()).dual();
