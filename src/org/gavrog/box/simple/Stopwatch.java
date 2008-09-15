@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,9 +28,15 @@ public class Stopwatch {
     private long accumulated = 0;
     private long start = 0;
     private boolean isRunning;
-    private static boolean java5 = System.getProperty("java.version")
-			.startsWith("1.5");
-    private static ThreadMXBean tb = ManagementFactory.getThreadMXBean();
+    private static ThreadMXBean tb;
+    static {
+    	try {
+    		tb = ManagementFactory.getThreadMXBean();
+    		tb.getCurrentThreadUserTime();
+    	} catch (Throwable ex) {
+    		tb = null;
+    	}
+    }
     
     public void start() {
         if (this.isRunning) {
@@ -41,7 +47,7 @@ public class Stopwatch {
     }
     
     private static long time() {
-    	if (java5) {
+    	if (tb != null) {
     		final long t = tb.getCurrentThreadUserTime();
     		if (t < 0) {
     			return System.nanoTime();
@@ -68,11 +74,16 @@ public class Stopwatch {
         this.accumulated = 0;
     }
     
+    /**
+     * Reports the elapsed time on this timer in milliseconds.
+     * 
+     * @return the elapsed time in milliseconds.
+     */
     public long elapsed() {
         if (this.isRunning) {
             throw new RuntimeException("cannot read while running");
         }
-        if (java5) {
+        if (tb != null) {
         	return this.accumulated / (int) 1e6;
         } else {
         	return this.accumulated;
@@ -81,5 +92,9 @@ public class Stopwatch {
     
     public String format() {
         return elapsed() / 10 / 100.0 + " seconds";
+    }
+    
+    public static void main(final String args[]) {
+    	
     }
 }
