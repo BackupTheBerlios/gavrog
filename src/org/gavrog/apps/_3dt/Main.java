@@ -218,7 +218,7 @@ public class Main extends EventSource {
 	
     // --- embedding options
     private int equalEdgePriority = 2;
-    private int embedderStepLimit = 10000;
+    private int embedderStepLimit = 100000;
     private boolean useBarycentricPositions = false;
     
     // --- camera options
