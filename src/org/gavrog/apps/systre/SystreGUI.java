@@ -66,6 +66,7 @@ import buoy.widget.BLabel;
 import buoy.widget.BOutline;
 import buoy.widget.BScrollBar;
 import buoy.widget.BScrollPane;
+import buoy.widget.BSeparator;
 import buoy.widget.BStandardDialog;
 import buoy.widget.BTextArea;
 import buoy.widget.BorderContainer;
@@ -394,7 +395,7 @@ public class SystreGUI extends BFrame {
     public void doOptions() {
 		final BDialog dialog = new BDialog(this, "Systre - Options", true);
 		final ColumnContainer column = new ColumnContainer();
-		column.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
+		column.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.HORIZONTAL,
                 defaultInsets, null));
         column.setBackground(textColor);
         try {
@@ -404,10 +405,12 @@ public class SystreGUI extends BFrame {
 					"useBuiltinArchive"));
 			column.add(new OptionCheckBox("Process '.arc' files like normal input",
 					this, "readArchivesAsInput"));
+			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Prefer Second Origin On Input",
 					SpaceGroupCatalogue.class, "preferSecondOrigin"));
 			column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
 					SpaceGroupCatalogue.class, "preferHexagonal"));
+			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Compute an Embedding", this.systre,
 					"computeEmbedding"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
@@ -416,10 +419,12 @@ public class SystreGUI extends BFrame {
 					this.systre, "relaxPasses"));
 			column.add(new OptionInputBox("Relaxation Step Limit",
 					this.systre, "relaxSteps"));
+			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Output Complete Unit Cell Contents",
 					this.systre, "outputFullCell"));
 			column.add(new OptionCheckBox("Save only last net finished", this,
 					"singleWrite"));
+			column.add(new BSeparator());
 		} catch (final Exception ex) {
 			reportException(ex, "FATAL", "serious internal problem", true);
 			return;

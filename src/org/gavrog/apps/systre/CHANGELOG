@@ -6,6 +6,7 @@ Systre 1.1.5:
     - The format of an output file is now determined by the file filter chosen.
     - The file extension for an output file is now determined by the format.
 
+- Improved the layout for the option dialog.
 - Output can be saved to file after 'Cancel' even when the computation freezes.
 - Translational freedom, if any, is used to improve the output node positions.
 - The embedding step can now be skipped altogether.

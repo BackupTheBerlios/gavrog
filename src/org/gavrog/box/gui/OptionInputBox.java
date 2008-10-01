@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,22 +12,6 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-*/
-
-/*
-Copyright 2005 Olaf Delgado-Friedrichs
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 */
 
 
@@ -43,10 +27,10 @@ import buoy.event.EventSource;
 import buoy.event.ValueChangedEvent;
 import buoy.widget.BLabel;
 import buoy.widget.BTextField;
+import buoy.widget.BorderContainer;
 import buoy.widget.LayoutInfo;
-import buoy.widget.RowContainer;
 
-public class OptionInputBox extends RowContainer {
+public class OptionInputBox extends BorderContainer {
 	private boolean eventsLocked = false;
 	
 	private BTextField input;
@@ -64,11 +48,11 @@ public class OptionInputBox extends RowContainer {
 		super();
 		this.setBackground(null);
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
-				new Insets(2, 5, 2, 5), null));
+				new Insets(2, 10, 2, 10), null));
 
 		this.input = new BTextField(size);
-		this.add(input);
-		this.add(new BLabel(label));
+		this.add(input, BorderContainer.WEST);
+		this.add(new BLabel(label), BorderContainer.EAST);
 
 		final PropertyDescriptor prop = Config.namedProperty(target, option);
 		if (prop == null) {
@@ -79,7 +63,7 @@ public class OptionInputBox extends RowContainer {
 		final Method setter = prop.getWriteMethod();
 		final Class optionType = setter.getParameterTypes()[0];
 
-		this.input.setText(Config.asString(getter.invoke(target, null)));
+		this.input.setText(Config.asString(getter.invoke(target)));
 		this.input.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {

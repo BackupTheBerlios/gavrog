@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- Improved the layout for the option dialogs.
 - A disabled unit cell no longer creeps up when reembedding.
 - A dialog is now shown before writing over an existing file.
 - All recoloring dialogs now show the current color as the default.
