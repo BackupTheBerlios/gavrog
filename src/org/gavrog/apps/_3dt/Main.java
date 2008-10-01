@@ -1978,7 +1978,6 @@ public class Main extends EventSource {
         updateMaterials();
         suspendRendering();
         refreshScene();
-        makeUnitCell();
         resumeRendering();
         encompass();
     }
