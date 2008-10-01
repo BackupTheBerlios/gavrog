@@ -527,6 +527,13 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
     }
     
+    private int showOverwriteDialog(final File file, final String[] choices,
+    		final String defaultChoice) {
+    	return new BStandardDialog("3dt - File exists", "File \"" + file
+				+ "\" already exists. Overwrite?", BStandardDialog.QUESTION)
+				.showOptionDialog(null, choices, defaultChoice);
+    }
+    
     private Action actionSaveTiling() {
 		final String name = "Save Tiling...";
 		if (ActionRegistry.instance().get(name) == null) {
@@ -546,11 +553,23 @@ public class Main extends EventSource {
                     if (filename.indexOf('.') < 0) {
                     	filename += ".ds";
                     }
-                    final String path = new File(dir, filename)
-							.getAbsolutePath();
+                    final File file = new File(dir, filename);
+                    final boolean append;
+                    if (file.exists()) {
+                        int choice = showOverwriteDialog(file, new String[] {
+								"Overwrite", "Append", "Cancel" }, "Cancel");
+                        if (choice > 1) {
+                            return;
+                        } else {
+                            append = choice == 1;
+                        }
+                    } else {
+                        append = false;
+                    }
+                    final String path = file.getAbsolutePath();
                     try {
                     	final DelaneySymbol ds = doc().getSymbol();
-                    	final Writer out = new FileWriter(path);
+                    	final Writer out = new FileWriter(path, append);
                     	if (doc().getName() != null) {
                     		out.write("#@ name " + doc().getName() + "\n");
                     	}
@@ -587,10 +606,22 @@ public class Main extends EventSource {
                     if (filename.indexOf('.') < 0) {
                     	filename += ".pgr";
                     }
-                    final String path = new File(dir, filename)
-							.getAbsolutePath();
+                    final File file = new File(dir, filename);
+                    final boolean append;
+                    if (file.exists()) {
+                        int choice = showOverwriteDialog(file, new String[] {
+								"Overwrite", "Append", "Cancel" }, "Cancel");
+                        if (choice > 1) {
+                            return;
+                        } else {
+                            append = choice == 1;
+                        }
+                    } else {
+                        append = false;
+                    }
+                    final String path = file.getAbsolutePath();
                     try {
-                    	final Writer out = new FileWriter(path);
+                    	final Writer out = new FileWriter(path, append);
                     	Output.writePGR(out, doc().getNet(), doc().getName());
                     	out.flush();
                     	out.close();
@@ -623,8 +654,15 @@ public class Main extends EventSource {
                     if (filename.indexOf('.') < 0) {
                     	filename += ".gsl";
                     }
-                    final String path = new File(dir, filename)
-							.getAbsolutePath();
+                    final File file = new File(dir, filename);
+                    if (file.exists()) {
+                        int choice = showOverwriteDialog(file, new String[] {
+								"Overwrite", "Cancel" }, "Cancel");
+                        if (choice > 0) {
+                            return;
+                        }
+                    }
+                    final String path = file.getAbsolutePath();
                     try {
                     	final Writer out = new FileWriter(path);
                     	doc().setTransformation(getViewingTransformation());
@@ -662,7 +700,14 @@ public class Main extends EventSource {
                     if (filename.indexOf('.') < 0) {
                     	filename += ".png";
                     }
-                    final File path = new File(dir, filename);
+                    final File file = new File(dir, filename);
+                    if (file.exists()) {
+                        int choice = showOverwriteDialog(file, new String[] {
+								"Overwrite", "Cancel" }, "Cancel");
+                        if (choice > 0) {
+                            return;
+                        }
+                    }
                     try {
                     	final RenderOptions opts = new RenderOptions();
                     	opts.setProgressiveRender(false);
@@ -671,7 +716,7 @@ public class Main extends EventSource {
                     	opts.setGiEngine("ambocc");
                     	opts.setFilter("mitchell");
                     	Sunflow.renderAndSave(viewerApp.getCurrentViewer(),
-								opts, dimPanel.getDimension(), path);
+								opts, dimPanel.getDimension(), file);
                     } catch (Throwable ex) {
                     	log(ex.toString());
                     	return;
@@ -1021,6 +1066,10 @@ public class Main extends EventSource {
         return ActionRegistry.instance().get(name);
     }
     
+    private Color pickColor(final String title, final Color oldColor) {
+    	return JColorChooser.showDialog(viewerApp.getFrame(), title, oldColor);
+	}
+    
     private Action actionRecolorTileClass() {
     	final String name = "Recolor Tile Class";
     	if (ActionRegistry.instance().get(name) == null) {
@@ -1030,9 +1079,8 @@ public class Main extends EventSource {
 						return;
 					}
 					final int kind = selectedItem.getTile().getKind();
-					final Color picked = 
-						JColorChooser.showDialog(viewerApp.getFrame(),
-								"Set Tile Color", doc().getDefaultTileColor(kind));
+					final Color c= doc().getTileClassColor(kind);
+					final Color picked = pickColor("Set Tile Class Color", c);
 					if (picked == null) {
 						return;
 					}
@@ -1055,9 +1103,12 @@ public class Main extends EventSource {
 					if (selectedItem == null) {
 						return;
 					}
-					final Color picked = 
-						JColorChooser.showDialog(viewerApp.getFrame(),
-								"Set Tile Color", doc().color(selectedItem));
+					Color c = doc().color(selectedItem);
+					if (c == null) {
+						final int kind = selectedItem.getTile().getKind();
+						c = doc().getTileClassColor(kind);
+					}
+					final Color picked = pickColor("Set Tile Color", c);
 					if (picked == null) {
 						return;
 					}
@@ -1101,9 +1152,12 @@ public class Main extends EventSource {
 					if (c == null) {
 						c = doc().color(selectedItem);
 					}
-					final Color picked = 
-						JColorChooser.showDialog(viewerApp.getFrame(),
-								"Set the color for all facets of this kind", c);
+					if (c == null) {
+						final int kind = selectedItem.getTile().getKind();
+						c = doc().getTileClassColor(kind);
+					}
+					final Color picked = pickColor(
+							"Set the color for all facets of this kind", c);
 					if (picked == null) {
 						return;
 					}

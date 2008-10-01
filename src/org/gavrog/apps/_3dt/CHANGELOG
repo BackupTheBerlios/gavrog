@@ -1,5 +1,7 @@
 3dt 0.4.0:
 
+- A dialog is now shown before writing over an existing file.
+- All recoloring dialogs now show the current color as the default.
 - Changed filter settings for Sunflow (raytracer) to obtain crisper images.
 - Brought back the Sunflow preview option.
 - All net nodes now re-use the same geometry, thus saving process memory.
