@@ -53,17 +53,15 @@ public class OptionCheckBox extends BorderContainer {
 				: target.getClass());
 		final String optionCap = Strings.capitalized(option);
 		final Method getter = klazz.getMethod("get" + optionCap);
-		final Method setter = klazz.getMethod("set" + optionCap,
-				new Class[] { boolean.class });
+		final Method setter = klazz.getMethod("set" + optionCap, boolean.class);
 
-		box.setState(((Boolean) getter.invoke(target)).booleanValue());
+		box.setState((Boolean) getter.invoke(target));
 
 		box.addEventLink(ValueChangedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
-						setter.invoke(target, new Object[] { (Boolean)
-								box.getState() });
+						setter.invoke(target, (Boolean) box.getState());
 					} catch (final Exception ex) {
 					}
 					releaseLock();
