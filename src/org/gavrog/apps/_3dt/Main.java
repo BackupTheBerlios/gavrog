@@ -2758,17 +2758,25 @@ public class Main extends EventSource {
         return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
     
+    private Widget sceneSlider(final String label, final String option)
+			throws Exception {
+		final OptionSliderBox slider = new OptionSliderBox(label, this, option,
+				-2, 2, 1, 1, true);
+		slider.setShowLabels(false);
+		return slider;
+	}
+
     private Widget optionsScene() {
     	final ColumnContainer options = emptyOptionsContainer();
     	try {
-    		options.add(new OptionInputBox("x from", this, "minX"));
-    		options.add(new OptionInputBox("- to", this, "maxX"));
+    		options.add(sceneSlider("x from", "minX"));
+    		options.add(sceneSlider("- to", "maxX"));
             options.add(separator());
-    		options.add(new OptionInputBox("y from", this, "minY"));
-    		options.add(new OptionInputBox("- to", this, "maxY"));
+    		options.add(sceneSlider("y from", "minY"));
+    		options.add(sceneSlider("- to", "maxY"));
             options.add(separator());
-    		options.add(new OptionInputBox("z from", this, "minZ"));
-    		options.add(new OptionInputBox("- to", this, "maxZ"));
+    		options.add(sceneSlider("z from", "minZ"));
+    		options.add(sceneSlider("- to", "maxZ"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
