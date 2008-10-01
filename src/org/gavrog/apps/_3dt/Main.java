@@ -68,6 +68,7 @@ import org.gavrog.box.gui.Invoke;
 import org.gavrog.box.gui.OptionCheckBox;
 import org.gavrog.box.gui.OptionColorBox;
 import org.gavrog.box.gui.OptionInputBox;
+import org.gavrog.box.gui.OptionSliderBox;
 import org.gavrog.box.gui.TextAreaOutputStream;
 import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.dsyms.basic.DSCover;
@@ -228,7 +229,7 @@ public class Main extends EventSource {
     private double fogDensity = 0.1;
     private Color fogColor = Color.WHITE;
     private boolean fogToBackground = true;
-    private double fieldOfView = 30.0;
+    private double fieldOfView = 25.0;
     
     // --- viewing options
     private int viewerWidth = 800;
@@ -2726,10 +2727,10 @@ public class Main extends EventSource {
         try {
             options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
             options.add(separator());
-            options.add(new OptionInputBox("Surface Detail", this,
-                    "subdivisionLevel"));
-            options.add(new OptionInputBox("Edge Creasing", this,
-					"edgeRoundingLevel"));
+            options.add(new OptionSliderBox("Surface Detail", this,
+					"subdivisionLevel", 0, 3, 1, 1, true));
+			options.add(new OptionSliderBox("Edge Creasing", this,
+					"edgeRoundingLevel", 0, 3, 1, 1, true));
             options.add(separator());
             options.add(new OptionCheckBox("Smooth Face Shading", this,
 					"smoothFaces"));
@@ -2794,8 +2795,10 @@ public class Main extends EventSource {
     private Widget optionsDisplay() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-            options.add(new OptionInputBox("Relative Tile Size", this,
-            "tileSize"));
+        	final OptionSliderBox slider = new OptionSliderBox("Tile Size in %",
+					this, "tileSize", 10, 100, 20, 5, false);
+        	slider.setFactor(0.01);
+        	options.add(slider);
             options.add(new OptionCheckBox("Draw Faces", this, "drawFaces"));
             options.add(new OptionCheckBox("Draw Edges", this, "drawEdges"));
             options.add(separator());
@@ -2830,7 +2833,7 @@ public class Main extends EventSource {
     private Widget optionsGUI() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-            options.add(new OptionInputBox("Viewer Width", this,
+        	options.add(new OptionInputBox("Viewer Width", this,
             		"viewerWidth"));
 			options.add(new OptionInputBox("Viewer Height", this,
 					"viewerHeight"));
@@ -2944,8 +2947,8 @@ public class Main extends EventSource {
     private Widget optionsCamera() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-			options.add(new OptionInputBox("Field Of View (in degrees)", this,
-					"fieldOfView"));
+			options.add(new OptionSliderBox("Field Of View", this,
+			"fieldOfView", 0, 120, 20, 5, false));
 			options.add(new OptionColorBox("Background Color", this,
 					"backgroundColor"));
             options.add(separator());
@@ -3095,7 +3098,7 @@ public class Main extends EventSource {
 			jf.setLocation(vF.getWidth(), 0);
 			jf.validate();
 
-			top.setDividerLocation(300);
+			top.setDividerLocation(350);
 			content.setDividerLocation(350);
 		}
     	if (!this.controlsFrame.isVisible()) {
@@ -3562,7 +3565,7 @@ public class Main extends EventSource {
 
 	public void setFieldOfView(double fieldOfView) {
     	if (fieldOfView != this.fieldOfView) {
-    		fieldOfView = Math.max(fieldOfView, 0.1);
+    		fieldOfView = Math.max(fieldOfView, 0.5);
     		dispatchEvent(new PropertyChangeEvent(this, "fieldOfView",
     				this.fieldOfView, fieldOfView));
     		this.fieldOfView = fieldOfView;
