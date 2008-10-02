@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- Added the ability to blend edge and tile colors.
 - For files with multiple tilings, the user now selects which to show first.
 - Improved the layout for the option dialogs.
 - A disabled unit cell no longer creeps up when reembedding.
