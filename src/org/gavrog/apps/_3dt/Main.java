@@ -188,6 +188,7 @@ public class Main extends EventSource {
 	// --- display options
 	private Color edgeColor = Color.BLACK;
 	private boolean useEdgeColor = true;
+	private double edgeOpacity = 1.0;
 	private boolean drawEdges = true;
 	private boolean drawFaces = true;
 	private double tileSize = 0.9;
@@ -1203,7 +1204,7 @@ public class Main extends EventSource {
 					}
 					hideFacetClass(selectedItem.getTile().facet(selectedFace));
                     suspendRendering();
-                    updateMaterials();
+                    updateDisplayProperties();
                     resumeRendering();
 				}
 			}, "Toggle visibility for this facet.", null);
@@ -1219,7 +1220,7 @@ public class Main extends EventSource {
 					if (selectedItem != null) {
 						showAllInTile(selectedItem.getTile());
 	                    suspendRendering();
-	                    updateMaterials();
+	                    updateDisplayProperties();
 	                    resumeRendering();
 					}
 				}
@@ -2115,6 +2116,14 @@ public class Main extends EventSource {
 				getSpecularExponent());
     }
     
+    private Color blendColors(final Color c1, final Color c2, final double f) {
+    	return new Color(
+    			(int) (c1.getRed()   * (1-f) + c2.getRed()   * f + 0.5),
+    			(int) (c1.getGreen() * (1-f) + c2.getGreen() * f + 0.5),
+    			(int) (c1.getBlue()  * (1-f) + c2.getBlue()  * f + 0.5)
+    			);
+	}
+    
     private void updateMaterials() {
     	if (this.templates == null) {
     		return;
@@ -2125,8 +2134,9 @@ public class Main extends EventSource {
         
         for (final Tile b: doc().getTiles()) {
         	final int i = b.getIndex();
+        	final Color tileColor = doc().getDefaultTileColor(i);
+            updateMaterial(this.materials[i], tileColor);
         	final SceneGraphComponent sgc = this.templates[b.getIndex()];
-            updateMaterial(this.materials[i], doc().getDefaultTileColor(i));
 			for (Object node : sgc.getChildNodes()) {
 				if (!(node instanceof SceneGraphComponent)) {
 					continue;
@@ -2144,7 +2154,14 @@ public class Main extends EventSource {
 						updateMaterial(a, c);
 						child.setAppearance(a);
 					}
-					child.setVisible(!doc().isHiddenFacetClass(f));
+				} else if (name.startsWith("outline")) {
+					final Appearance a = new Appearance();
+					final double f = getEdgeOpacity();
+					if (f > 0) {
+						a.setAttribute(CommonAttributes.DIFFUSE_COLOR,
+								blendColors(tileColor, getEdgeColor(), f));
+					}
+					child.setAppearance(a);
 				}
 			}
     	}
@@ -2159,25 +2176,22 @@ public class Main extends EventSource {
         log("    Updating display properties...");
         startTimer(timer);
         
-    	for (int i = 0; i < this.templates.length; ++i) {
-    		final SceneGraphComponent sgc = templates[i];
-    		for (Iterator iter = sgc.getChildNodes().iterator(); iter.hasNext();) {
-    			final Object node = iter.next();
-    			if (node instanceof SceneGraphComponent) {
-    				final SceneGraphComponent child = (SceneGraphComponent) node;
-    				if (child.getName().startsWith("outline")) {
-    					child.setVisible(getDrawEdges());
-    					if (child.isVisible()) {
-    						final Appearance a = new Appearance();
-    						if (getUseEdgeColor()) {
-    							a.setAttribute(CommonAttributes.DIFFUSE_COLOR,
-										getEdgeColor());
-    						}
-    						child.setAppearance(a);
-    					}
-    				} else if (child.getName().startsWith("face:")) {
-    					child.setVisible(getDrawFaces());
-    				}
+        for (final Tile b : doc().getTiles()) {
+			final int i = b.getIndex();
+			final SceneGraphComponent sgc = this.templates[b.getIndex()];
+			for (Iterator iter = sgc.getChildNodes().iterator(); iter.hasNext();) {
+				final Object node = iter.next();
+				if (node instanceof SceneGraphComponent) {
+					final SceneGraphComponent child = (SceneGraphComponent) node;
+					final String name = child.getName();
+					if (name.startsWith("outline")) {
+						child.setVisible(getDrawEdges());
+					} else if (name.startsWith("face:")) {
+						final int j = Integer.parseInt(name.substring(5));
+						final Tiling.Facet f = b.facet(j);
+						child.setVisible(getDrawFaces()
+								&& !doc().isHiddenFacetClass(f));
+					}
 				}
 			}
             final double[] center = doc().cornerPosition(3,
@@ -2726,15 +2740,21 @@ public class Main extends EventSource {
         return dialog;
     }
     
-    private Widget optionsGeometry() {
+    private Widget optionsTiles() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-            options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
-            options.add(separator());
             options.add(new OptionSliderBox("Surface Detail", this,
 					"subdivisionLevel", 0, 3, 1, 1, true));
+            options.add(separator());
+            options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
 			options.add(new OptionSliderBox("Edge Creasing", this,
 					"edgeRoundingLevel", 0, 3, 1, 1, true));
+            options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
+            final OptionSliderBox slider = new OptionSliderBox("Edge Blending",
+					this, "edgeOpacity", 0, 100, 20, 5, false);
+        	slider.setFactor(0.01);
+        	slider.setShowLabels(false);
+            options.add(slider);
             options.add(separator());
             options.add(new OptionCheckBox("Smooth Face Shading", this,
 					"smoothFaces"));
@@ -2807,16 +2827,13 @@ public class Main extends EventSource {
     private Widget optionsDisplay() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-        	final OptionSliderBox slider = new OptionSliderBox("Tile Size in %",
-					this, "tileSize", 10, 100, 20, 5, false);
+        	final OptionSliderBox slider = new OptionSliderBox("Tile Size",
+					this, "tileSize", 0, 100, 20, 5, false);
         	slider.setFactor(0.01);
+        	slider.setShowLabels(false);
         	options.add(slider);
             options.add(new OptionCheckBox("Draw Faces", this, "drawFaces"));
             options.add(new OptionCheckBox("Draw Edges", this, "drawEdges"));
-            options.add(separator());
-            options.add(new OptionCheckBox("Use Edge Color", this,
-            		"useEdgeColor"));
-            options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
             options.add(separator());
             options.add(new OptionCheckBox("Show Unit Cell", this,
 					"showUnitCell"));
@@ -2987,7 +3004,7 @@ public class Main extends EventSource {
     private Widget allOptions() {
 		final BTabbedPane options = new BTabbedPane();
 		options.setBackground(null);
-		options.add(optionsGeometry(), "Geometry");
+		options.add(optionsTiles(), "Tiles");
 		options.add(optionsScene(), "Unit Cells");
 		options.add(optionsDisplay(), "Display");
 		options.add(optionsNet(), "Net");
@@ -3200,8 +3217,20 @@ public class Main extends EventSource {
     	}
     }
 
+    public double getEdgeOpacity() {
+        return edgeOpacity;
+    }
+
+    public void setEdgeOpacity(double edgeOpacity) {
+    	if (edgeOpacity != this.edgeOpacity) {
+    		dispatchEvent(new PropertyChangeEvent(this, "edgeOpacity",
+    				this.edgeOpacity, edgeOpacity));
+    		this.edgeOpacity = edgeOpacity;
+    	}
+    }
+
     public boolean getUseEdgeColor() {
-        return useEdgeColor;
+        return true;
     }
 
     public void setUseEdgeColor(boolean useEdgeColor) {
@@ -3209,6 +3238,9 @@ public class Main extends EventSource {
     		dispatchEvent(new PropertyChangeEvent(this, "useEdgeColor",
     				this.useEdgeColor, useEdgeColor));
     		this.useEdgeColor = useEdgeColor;
+    		if (useEdgeColor == false) {
+    			setEdgeOpacity(0.0);
+    		}
     	}
     }
 
