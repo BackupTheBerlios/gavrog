@@ -292,7 +292,7 @@ public class Main extends EventSource {
     		this.expertMode = false;
     	}
     	if (args.length > i) {
-    		infilename = args[1];
+    		infilename = args[i];
     	}
     	
         // --- retrieved stored user options
@@ -805,7 +805,7 @@ public class Main extends EventSource {
 	}
     
     final private BStandardDialog jumpDialog = new BStandardDialog("3dt Jump To",
-    		"Number of tiling to jump to:", BStandardDialog.PLAIN);
+    		"Number of tiling to display:", BStandardDialog.PLAIN);
     
     private Action actionJump() {
 		final String name = "Jump To...";
@@ -813,7 +813,7 @@ public class Main extends EventSource {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final String input = jumpDialog.showInputDialog(
-							null, null, "");
+							null, null, String.valueOf(tilingCounter + 1));
 					final int n;
 					try {
 						n = Integer.parseInt(input);
@@ -1518,7 +1518,11 @@ public class Main extends EventSource {
         }
         setTInfo("file", filename);
         tilingCounter = 0;
-        doTiling(1);
+        if (documents.size() == 1) {
+        	doTiling(1);
+        } else {
+        	actionJump().actionPerformed(null);
+        }
     }
     
     private void doTiling(final int n) {
