@@ -333,6 +333,10 @@ public class Main extends EventSource {
 
 		// --- create the viewing infrastructure
 		this.world = SceneGraphUtility.createFullSceneGraphComponent("World");
+		final Appearance a = new Appearance();
+		updateAppearance(a);
+		this.world.setAppearance(a);
+		
 		viewerApp = new ViewerApp(world);
 		this.scene = viewerApp.getJrScene();
         viewerApp.setAttachNavigator(false);
@@ -1871,7 +1875,7 @@ public class Main extends EventSource {
         final SceneGraphComponent sgc = TubeUtility.tubeOneEdge(p, q, r,
 				TubeUtility.octagonalCrossSection, Pn.EUCLIDEAN);
         final Appearance a = new Appearance();
-        updateMaterial(a, c);
+        setColor(a, c);
         sgc.setAppearance(a);
         this.net.addChild(sgc);
         this.node2item.put(sgc, item);
@@ -1896,7 +1900,7 @@ public class Main extends EventSource {
 				sgc.getTransformation());
 		sgc.addChild(sphereTemplate);
         final Appearance a = new Appearance();
-        updateMaterial(a, c);
+        setColor(a, c);
         sgc.setAppearance(a);
         this.net.addChild(sgc);
         this.node2item.put(sgc, item);
@@ -1907,7 +1911,7 @@ public class Main extends EventSource {
     	final Appearance a;
 		if (color != null) {
 			a = new Appearance();
-			updateMaterial(a, color);
+			setColor(a, color);
 		} else {
 			a = this.materials[item.getTile().getIndex()];
 		}
@@ -2041,7 +2045,7 @@ public class Main extends EventSource {
 		final SceneGraphComponent bas = basf.getSceneGraphComponent();
 		bas.setName("UnitCell");
 		final Appearance a = new Appearance();
-		updateMaterial(a, c);
+		setColor(a, c);
 		bas.setAppearance(a);
 		for (final SceneGraphComponent child: bas.getChildComponents()) {
 			child.setAppearance(null);
@@ -2093,13 +2097,15 @@ public class Main extends EventSource {
     	this.materials = new Appearance[doc().getTiles().size()];
 		for (int i = 0; i < this.templates.length; ++i) {
 			this.materials[i] = new Appearance();
-			updateMaterial(this.materials[i], doc().getDefaultTileColor(i));
+			setColor(this.materials[i], doc().getDefaultTileColor(i));
 		}
 	}
     
-    private void updateMaterial(final Appearance a, final Color c) {
-		a.setAttribute(CommonAttributes.DIFFUSE_COLOR, c);
-
+    private void setColor(final Appearance a, final Color c) {
+    	a.setAttribute(CommonAttributes.DIFFUSE_COLOR, c);
+    }
+    
+    private void updateAppearance(final Appearance a) {
         a.setAttribute(CommonAttributes.EDGE_DRAW, false);
         a.setAttribute(CommonAttributes.VERTEX_DRAW, false);
 		a.setAttribute(CommonAttributes.AMBIENT_COEFFICIENT,
@@ -2130,10 +2136,12 @@ public class Main extends EventSource {
         log("    Updating materials...");
         startTimer(timer);
         
+        updateAppearance(this.world.getAppearance());
+        
         for (final Tile b: doc().getTiles()) {
         	final int i = b.getIndex();
         	final Color tileColor = doc().getDefaultTileColor(i);
-            updateMaterial(this.materials[i], tileColor);
+            setColor(this.materials[i], tileColor);
         	final SceneGraphComponent sgc = this.templates[b.getIndex()];
 			for (Object node : sgc.getChildNodes()) {
 				if (!(node instanceof SceneGraphComponent)) {
@@ -2149,15 +2157,14 @@ public class Main extends EventSource {
 						child.setAppearance(null);
 					} else {
 						final Appearance a = new Appearance();
-						updateMaterial(a, c);
+						setColor(a, c);
 						child.setAppearance(a);
 					}
 				} else if (name.startsWith("outline")) {
 					final Appearance a = new Appearance();
 					final double f = getEdgeOpacity();
 					if (f > 0) {
-						a.setAttribute(CommonAttributes.DIFFUSE_COLOR,
-								blendColors(tileColor, getEdgeColor(), f));
+						setColor(a, blendColors(tileColor, getEdgeColor(), f));
 					}
 					child.setAppearance(a);
 				}
