@@ -1987,9 +1987,9 @@ public class Main extends EventSource {
         doc().invalidateEmbedding();
         embed();
         makeTiles();
-        suspendRendering();
         updateDisplayProperties();
         updateMaterials();
+        suspendRendering();
         refreshScene();
         resumeRendering();
     }
@@ -2788,10 +2788,10 @@ public class Main extends EventSource {
 			public void call() {
 				new Thread(new Runnable() {
 					public void run() {
-						suspendRendering();
 						makeTiles();
 						updateDisplayProperties();
 						updateMaterials();
+						suspendRendering();
 						refreshScene();
 						resumeRendering();
 						saveOptions();
