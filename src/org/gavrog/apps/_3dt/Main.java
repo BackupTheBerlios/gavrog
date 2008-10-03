@@ -1819,7 +1819,7 @@ public class Main extends EventSource {
 			final String tag = fTag[i];
 			final Surface surfPart = surf.extract(tag);
 			if (tag.startsWith("face:")) {
-				surfPart.relax(getTileRelaxationSteps());
+				surfPart.pull(getTileRelaxationSteps());
 			}
 			
 			// --- make a geometry that jReality can use
@@ -2764,8 +2764,8 @@ public class Main extends EventSource {
         try {
         	options.add(slider("Surface Detail", "subdivisionLevel", 0, 3, 1,
 					1, true, true, false));
-			options.add(slider("Smoothness", "tileRelaxationSteps", 0, 20, 5, 1,
-					true, true, false));
+			options.add(slider("Surface Tension", "tileRelaxationSteps", 0, 20,
+					5, 1, true, true, false));
 			options.add(separator());
 			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
 			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 3, 1,

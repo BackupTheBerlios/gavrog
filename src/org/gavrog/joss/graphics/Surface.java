@@ -331,7 +331,7 @@ public class Surface {
         return surf;
     }
     
-    public void relax(final int steps) {
+    public void average(final int steps) {
 		for (int s = 0; s < steps; ++s) {
 			// --- shortcuts
 			final int nv = this.vertices.length;
@@ -362,6 +362,45 @@ public class Surface {
 					vertices[i][0] = sum[i][0] * f;
 					vertices[i][1] = sum[i][1] * f;
 					vertices[i][2] = sum[i][2] * f;
+				}
+			}
+		}
+	}
+    
+    public void pull(final int steps) {
+		for (int s = 0; s < steps; ++s) {
+			// --- shortcuts
+			final int nv = this.vertices.length;
+			final int nf = this.faces.length;
+
+			// --- compute vertex degrees and coordinate sums
+			final double normal[][] = new double[nv][3];
+			final double center[][] = new double[nv][3];
+			final int weight[] = new int[nv];
+	    	final double tmp[] = new double[3];
+
+			for (int i = 0; i < nf; ++i) {
+				final int[] face = this.faces[i];
+				final int n = face.length;
+				for (int j = 0; j < n; ++j) {
+					final int u = face[(j+n-1) % n];
+					final int v = face[j];
+					final int w = face[(j+1) % n];
+					Vec.crossProduct(tmp, vertices[u], vertices[w]);
+					Vec.plus(normal[v], normal[v], tmp);
+					Vec.plus(center[v], center[v], vertices[u]);
+					Vec.plus(center[v], center[v], vertices[w]);
+					weight[v] += 2;
+				}
+			}
+
+			// --- compute new positions
+			for (int i = 0; i < nv; ++i) {
+				if (fixed[i] <= 0) {
+					Vec.times(center[i], 1.0 / weight[i], center[i]);
+					Vec.minus(tmp, vertices[i], center[i]);
+					Vec.projection(tmp, tmp, normal[i]);
+					Vec.minus(vertices[i], vertices[i], tmp);
 				}
 			}
 		}
