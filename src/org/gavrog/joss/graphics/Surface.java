@@ -49,11 +49,12 @@ public class Surface {
 	final public static Attribute TAG = new Attribute("tag");
 
 	private static class AttributeKey {
-		final Object targetType;
+		final Target targetType;
 		final int index;
-		final Object attribute;
+		final Attribute attribute;
 		
-		public AttributeKey(final Object type, final int idx, final Object key) {
+		public AttributeKey(final Target type, final int idx,
+				final Attribute key) {
 			this.targetType = type;
 			this.index = idx;
 			this.attribute = key;
@@ -75,18 +76,18 @@ public class Surface {
     final public double[][] vertices;
     final public int[][] faces;
     final public int[] fixed;
-    final private Map attributes;
+    final private Map<AttributeKey, Object> attributes;
     
     public Surface(
 			final double[][] vertices, final int[][] faces, final int fixed[]) {
         this.vertices = (double[][]) vertices.clone();
         this.faces = (int[][]) faces.clone();
         this.fixed = (int[]) fixed.clone();
-        this.attributes = new HashMap();
+        this.attributes = new HashMap<AttributeKey, Object>();
     }
     
-    public void setAttribute(final Object targetType, final int targetIndex,
-			final Object attributeKey, final Object attributeValue) {
+    public void setAttribute(final Target targetType, final int targetIndex,
+			final Attribute attributeKey, final Object attributeValue) {
 		this.attributes.put(new AttributeKey(targetType, targetIndex,
 				attributeKey), attributeValue);
 	}
@@ -97,14 +98,14 @@ public class Surface {
 				attributeValue));
 	}
 
-	public Object getAttribute(final Object targetType, final int targetIndex,
-			final Object attributeKey) {
+	public Object getAttribute(final Target targetType, final int targetIndex,
+			final Attribute attributeKey) {
 		return this.attributes.get(new AttributeKey(targetType, targetIndex,
 				attributeKey));
 	}
     
-	public boolean getBooleanAttribute(final Object targetType,
-			final int targetIndex, final Object attributeKey) {
+	public boolean getBooleanAttribute(final Target targetType,
+			final int targetIndex, final Attribute attributeKey) {
 		final Object val = getAttribute(targetType, targetIndex, attributeKey);
 		return val == null || ((Boolean) val).booleanValue();
 	}
@@ -510,8 +511,8 @@ public class Surface {
         for (final Iterator iter = this.attributes.keySet().iterator(); iter
 				.hasNext();) {
 			final AttributeKey key = (AttributeKey) iter.next();
-			final Object type = key.targetType;
-			final Object attr = key.attribute;
+			final Target type = key.targetType;
+			final Attribute attr = key.attribute;
 			final Object val = this.attributes.get(key);
 			if (key.targetType == FACE) {
 				final int o2n[] = mapF[key.index];
@@ -534,8 +535,8 @@ public class Surface {
 
     public static Surface fromOutline(final double corners[][],
     		final int fixBorder) {
-    	final List vertices = new ArrayList();
-    	final List faces = new ArrayList();
+    	final List<double[]> vertices = new ArrayList<double[]>();
+    	final List<int[]> faces = new ArrayList<int[]>();
     	final double tmp[] = new double[3];
     	int startInner = 0;
     	for (int i = 0; i < corners.length; ++i) {
