@@ -179,16 +179,16 @@ public class Main extends EventSource {
 	private String lastSceneOutputDirectory = System.getProperty("user.home");
 	private String lastSunflowRenderDirectory = System.getProperty("user.home");
     
-    // --- geometry options
-	private double edgeWidth = 0.02;
-	private boolean smoothFaces = true;
+    // --- tile options
 	private int subdivisionLevel = 2;
+	private int tileRelaxationSteps = 3;
+	private double edgeWidth = 0.02;
 	private int edgeRoundingLevel = 2;
+	private Color edgeColor = Color.BLACK;
+	private double edgeOpacity = 1.0;
+	private boolean smoothFaces = true;
 	
 	// --- display options
-	private Color edgeColor = Color.BLACK;
-	private boolean useEdgeColor = true;
-	private double edgeOpacity = 1.0;
 	private boolean drawEdges = true;
 	private boolean drawFaces = true;
 	private double tileSize = 0.9;
@@ -1818,6 +1818,9 @@ public class Main extends EventSource {
 		for (int i = 0; i <= b.size(); ++i) {
 			final String tag = fTag[i];
 			final Surface surfPart = surf.extract(tag);
+			if (tag.startsWith("face:")) {
+				surfPart.relax(getTileRelaxationSteps());
+			}
 			
 			// --- make a geometry that jReality can use
 			final IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
@@ -2745,21 +2748,33 @@ public class Main extends EventSource {
         return dialog;
     }
     
+    private OptionSliderBox slider(final String label, final String option,
+			final int min, final int max, final int major, final int minor,
+			final boolean snap, final boolean ticks, final boolean labels)
+			throws Exception {
+		final OptionSliderBox slider = new OptionSliderBox(label, this, option,
+				min, max, major, minor, snap);
+		slider.setShowTicks(ticks);
+		slider.setShowLabels(labels);
+		return slider;
+	}
+    
     private Widget optionsTiles() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-            options.add(new OptionSliderBox("Surface Detail", this,
-					"subdivisionLevel", 0, 3, 1, 1, true));
-            options.add(separator());
-            options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
-			options.add(new OptionSliderBox("Edge Creasing", this,
-					"edgeRoundingLevel", 0, 3, 1, 1, true));
-            options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
-            final OptionSliderBox slider = new OptionSliderBox("Edge Blending",
-					this, "edgeOpacity", 0, 100, 20, 5, false);
-        	slider.setFactor(0.01);
-        	slider.setShowLabels(false);
-            options.add(slider);
+        	options.add(slider("Surface Detail", "subdivisionLevel", 0, 3, 1,
+					1, true, true, false));
+			options.add(slider("Smoothing", "tileRelaxationSteps", 0, 5, 1, 1,
+					true, true, false));
+			options.add(separator());
+			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
+			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 3, 1,
+					1, true, true, false));
+			options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
+			final OptionSliderBox slider = slider("Edge Blending",
+					"edgeOpacity", 0, 100, 20, 5, false, true, false);
+			slider.setFactor(0.01);
+			options.add(slider);
             options.add(separator());
             options.add(new OptionCheckBox("Smooth Face Shading", this,
 					"smoothFaces"));
@@ -3237,15 +3252,10 @@ public class Main extends EventSource {
     }
 
     public void setUseEdgeColor(boolean useEdgeColor) {
-    	if (useEdgeColor != this.useEdgeColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "useEdgeColor",
-    				this.useEdgeColor, useEdgeColor));
-    		this.useEdgeColor = useEdgeColor;
-    		if (useEdgeColor == false) {
-    			setEdgeOpacity(0.0);
-    		}
-    	}
-    }
+		if (useEdgeColor == false) {
+			setEdgeOpacity(0.0);
+		}
+	}
 
     public boolean getDrawEdges() {
         return drawEdges;
@@ -3304,6 +3314,18 @@ public class Main extends EventSource {
     		dispatchEvent(new PropertyChangeEvent(this, "subdivisionLevel",
     				this.subdivisionLevel, subdivisionLevel));
     		this.subdivisionLevel = subdivisionLevel;
+    	}
+    }
+
+    public int getTileRelaxationSteps() {
+        return tileRelaxationSteps;
+    }
+
+    public void setTileRelaxationSteps(int tileRelaxationSteps) {
+    	if (tileRelaxationSteps != this.tileRelaxationSteps) {
+    		dispatchEvent(new PropertyChangeEvent(this, "tileRelaxationSteps",
+    				this.tileRelaxationSteps, tileRelaxationSteps));
+    		this.tileRelaxationSteps = tileRelaxationSteps;
     	}
     }
 

@@ -163,15 +163,6 @@ public class Surface {
     	return normals;
     }
     
-//    public void tagAll(final Object tag) {
-//        if (this.tags == null) {
-//            this.tags = new Object[this.faces.length];
-//        }
-//        for (int i = 0; i < this.faces.length; ++i) {
-//            this.tags[i] = tag;
-//        }
-//    }
-    
     public void tagAll(final Object tag) {
     	for (int i = 0; i < faces.length; ++i) {
     		setAttribute(FACE, i, TAG, tag);
@@ -339,6 +330,42 @@ public class Surface {
         
         return surf;
     }
+    
+    public void relax(final int steps) {
+		for (int s = 0; s < steps; ++s) {
+			// --- shortcuts
+			final int nv = this.vertices.length;
+			final int nf = this.faces.length;
+
+			// --- compute vertex degrees and coordinate sums
+			final double sum[][] = new double[nv][3];
+			final int weight[] = new int[nv];
+
+			for (int i = 0; i < nf; ++i) {
+				final int[] face = this.faces[i];
+				final int n = face.length;
+				for (int j = 0; j < n; ++j) {
+					final int u = face[(j+n-1) % n];
+					final int v = face[j];
+					final int w = face[(j+1) % n];
+					weight[v] += 2;
+					sum[v][0] += vertices[u][0] + vertices[w][0];
+					sum[v][1] += vertices[u][1] + vertices[w][1];
+					sum[v][2] += vertices[u][2] + vertices[w][2];
+				}
+			}
+
+			// --- compute new positions
+			for (int i = 0; i < nv; ++i) {
+				if (fixed[i] <= 0) {
+					final double f = 1.0 / weight[i];
+					vertices[i][0] = sum[i][0] * f;
+					vertices[i][1] = sum[i][1] * f;
+					vertices[i][2] = sum[i][2] * f;
+				}
+			}
+		}
+	}
     
     public Surface subdivision() {
         // --- shortcuts
