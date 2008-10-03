@@ -1581,6 +1581,7 @@ public class Main extends EventSource {
 		doc.addEventLink(DisplayList.Event.class, this,
 				"handleDisplayListEvent");
 		
+        suspendRendering();
 		log("Constructing geometry...");
 		startTimer(timer);
 		try {
@@ -1598,6 +1599,7 @@ public class Main extends EventSource {
 		} else {
 			setViewingTransformation(new Vector(0,0,1), new Vector(0,1,0));
 		}
+		resumeRendering();
 		encompass();
 		
 		// --- update the info display
@@ -1968,10 +1970,7 @@ public class Main extends EventSource {
         makeMaterials();
         updateDisplayProperties();
         updateMaterials();
-        suspendRendering();
         makeCopies();
-        resumeRendering();
-        encompass();
     }
 
     private void reembed() {
@@ -1981,12 +1980,11 @@ public class Main extends EventSource {
         doc().invalidateEmbedding();
         embed();
         makeTiles();
+        suspendRendering();
         updateDisplayProperties();
         updateMaterials();
-        suspendRendering();
         refreshScene();
         resumeRendering();
-        encompass();
     }
     
     private void embed() {
@@ -2768,10 +2766,10 @@ public class Main extends EventSource {
 			public void call() {
 				new Thread(new Runnable() {
 					public void run() {
+						suspendRendering();
 						makeTiles();
 						updateDisplayProperties();
 						updateMaterials();
-						suspendRendering();
 						refreshScene();
 						resumeRendering();
 						saveOptions();
@@ -2814,7 +2812,6 @@ public class Main extends EventSource {
 						suspendRendering();
 						doc().removeAll();
 						makeCopies();
-						encompass();
 						resumeRendering();
 						saveOptions();
 					}
@@ -2851,7 +2848,6 @@ public class Main extends EventSource {
             public void call() {
             	suspendRendering();
                 updateDisplayProperties();
-                updateMaterials();
                 resumeRendering();
                 saveOptions();
             }
