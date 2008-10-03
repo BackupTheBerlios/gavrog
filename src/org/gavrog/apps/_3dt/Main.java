@@ -2764,7 +2764,7 @@ public class Main extends EventSource {
         try {
         	options.add(slider("Surface Detail", "subdivisionLevel", 0, 3, 1,
 					1, true, true, false));
-			options.add(slider("Smoothing", "tileRelaxationSteps", 0, 5, 1, 1,
+			options.add(slider("Smoothness", "tileRelaxationSteps", 0, 20, 5, 1,
 					true, true, false));
 			options.add(separator());
 			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
@@ -2776,7 +2776,7 @@ public class Main extends EventSource {
 			slider.setFactor(0.01);
 			options.add(slider);
             options.add(separator());
-            options.add(new OptionCheckBox("Smooth Face Shading", this,
+            options.add(new OptionCheckBox("Smooth Shading", this,
 					"smoothFaces"));
         } catch (final Exception ex) {
             log(ex.toString());
