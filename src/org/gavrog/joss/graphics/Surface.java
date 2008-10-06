@@ -441,10 +441,43 @@ public class Surface {
 			// --- compute new positions
 			final double pos[][] = new double[nf][3];
 			for (int v = 0; v < nv; ++v) {
-				final int n = adj.get(v).size();
+				final Integer neighbors[] = new Integer[adj.get(v).size()];
+				adj.get(v).toArray(neighbors);
+				final int n = neighbors.length;
+				
+				// --- computer the average plane of the neighbors
 				final double normal[] = new double[3];
 				final double center[] = new double[3];
 		    	final double tmp[] = new double[3];
+		    	for (int j = 0; j < n; ++j) {
+		    		final int u = neighbors[j];
+		    		final int w = neighbors[(j+1)%n];
+					Vec.crossProduct(tmp, vertices[u], vertices[w]);
+					Vec.plus(normal, normal, tmp);
+					Vec.plus(center, center, vertices[u]);
+		    	}
+				Vec.times(center, 1.0 / n, center);
+				Vec.normalized(normal, normal);
+				
+				// --- find upper and lower centroids
+				final double c_lo[] = new double[3];
+				final double c_hi[] = new double[3];
+				int w_lo = 0;
+				int w_hi = 0;
+				for (int j = 0; j < n; ++j) {
+		    		final int u = neighbors[j];
+					Vec.minus(tmp, vertices[u], center);
+					final double d = Vec.innerProduct(normal, tmp);
+					if (d < -0.01) {
+						Vec.plus(c_lo, c_lo, vertices[u]);
+						++w_lo;
+					} else if (d > 0.01) {
+						Vec.plus(c_hi, c_hi, vertices[u]);
+						++w_hi;
+					}
+				}
+				Vec.times(c_lo, 1.0 / w_lo, c_lo);
+				Vec.times(c_hi, 1.0 / w_hi, c_hi);
 			}
 		}
     }
