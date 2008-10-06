@@ -20,9 +20,11 @@ package org.gavrog.joss.graphics;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.simple.NamedConstant;
 
@@ -369,15 +371,15 @@ public class Surface {
     
     public void pull(final int steps) {
 		for (int s = 0; s < steps; ++s) {
-			// --- shortcuts
+			// --- shortcuts and such
 			final int nv = this.vertices.length;
 			final int nf = this.faces.length;
+	    	final double tmp[] = new double[3];
 
-			// --- compute vertex degrees and coordinate sums
+			// --- gather information for computing average neighbor planes
 			final double normal[][] = new double[nv][3];
 			final double center[][] = new double[nv][3];
 			final int weight[] = new int[nv];
-	    	final double tmp[] = new double[3];
 
 			for (int i = 0; i < nf; ++i) {
 				final int[] face = this.faces[i];
@@ -394,10 +396,15 @@ public class Surface {
 				}
 			}
 
+			// --- finish average neighbor plane computations
+			for (int i = 0; i < nv; ++i) {
+				Vec.times(center[i], 1.0 / weight[i], center[i]);
+				Vec.normalized(normal[i], normal[i]);
+			}
+			
 			// --- compute new positions
 			for (int i = 0; i < nv; ++i) {
 				if (fixed[i] <= 0) {
-					Vec.times(center[i], 1.0 / weight[i], center[i]);
 					Vec.minus(tmp, vertices[i], center[i]);
 					Vec.projection(tmp, tmp, normal[i]);
 					Vec.minus(vertices[i], vertices[i], tmp);
@@ -405,6 +412,42 @@ public class Surface {
 			}
 		}
 	}
+    
+    public void pull_new(final int steps) {
+		for (int s = 0; s < steps; ++s) {
+			// --- shortcuts and such
+			final int nv = this.vertices.length;
+			final int nf = this.faces.length;
+
+	    	// --- prepare adjacency lists
+	    	final Map<Integer, Set<Integer>> adj =
+	    		new HashMap<Integer, Set<Integer>>();
+	    	for (int v = 0; v < nv; ++v) {
+	    		adj.put(v, new HashSet<Integer>());
+	    	}
+
+			// --- find neighbors of each vertex
+			for (int i = 0; i < nf; ++i) {
+				final int[] face = this.faces[i];
+				final int n = face.length;
+				for (int j = 0; j < n; ++j) {
+					final int v = face[j];
+					final int w = face[(j+1) % n];
+					adj.get(v).add(w);
+					adj.get(w).add(v);
+				}
+			}
+			
+			// --- compute new positions
+			final double pos[][] = new double[nf][3];
+			for (int v = 0; v < nv; ++v) {
+				final int n = adj.get(v).size();
+				final double normal[] = new double[3];
+				final double center[] = new double[3];
+		    	final double tmp[] = new double[3];
+			}
+		}
+    }
     
     public Surface subdivision() {
         // --- shortcuts
