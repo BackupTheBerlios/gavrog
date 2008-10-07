@@ -1977,7 +1977,12 @@ public class Main extends EventSource {
         makeMaterials();
         updateDisplayProperties();
         updateMaterials();
-        makeCopies();
+		if (doc().size() == 0) {
+			clearSceneGraph();
+			makeCopies();
+		} else {
+			refreshScene();
+		}
     }
 
     private void reembed() {
@@ -2219,27 +2224,21 @@ public class Main extends EventSource {
     }
     
     private void makeCopies() {
-    	if (doc().size() == 0) {
-            final Stopwatch timer = new Stopwatch();
-            log("    Generating scene...");
-            startTimer(timer);
-            
-    		clearSceneGraph();
-    		final List<Vector> vecs = replicationVectors();
-	        for (final Tile b: doc().getTiles()) {
-	        	for (final Vector s: doc().centerIntoUnitCell(b)) {
-	        		for (Vector v: vecs) {
-	        			final Vector shift = (Vector) s.plus(v);
-	        			doc().add(b, shift);
-	        			//makeTileOutline(b, shift);
-	        		}
-	        	}
-	        }
-	        log("      " + getTimer(timer));
-    	} else {
-    		refreshScene();
-    	}
-    }
+		final Stopwatch timer = new Stopwatch();
+		log("    Generating scene...");
+		startTimer(timer);
+
+		final List<Vector> vecs = replicationVectors();
+		for (final Tile b : doc().getTiles()) {
+			for (final Vector s : doc().centerIntoUnitCell(b)) {
+				for (Vector v : vecs) {
+					final Vector shift = (Vector) s.plus(v);
+					doc().add(b, shift);
+				}
+			}
+		}
+		log("      " + getTimer(timer));
+	}
 
     private List<Vector> replicationVectors() {
     	final Vector xyz[] = doc().getUnitCellVectorsInEmbedderCoordinates();
@@ -2802,25 +2801,27 @@ public class Main extends EventSource {
         return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
     
-    private Widget sceneSlider(final String label, final String option)
+    private Widget sceneSlider(final String label, final String option,
+    		final boolean ticks)
 			throws Exception {
 		final OptionSliderBox slider = new OptionSliderBox(label, this, option,
 				-2, 2, 1, 1, true);
-		slider.setShowLabels(false);
+		slider.setShowTicks(ticks);
+		slider.setShowLabels(ticks);
 		return slider;
 	}
 
     private Widget optionsScene() {
     	final ColumnContainer options = emptyOptionsContainer();
     	try {
-    		options.add(sceneSlider("x from", "minX"));
-    		options.add(sceneSlider("- to", "maxX"));
+    		options.add(sceneSlider("", "minX", false));
+    		options.add(sceneSlider("x Range", "maxX", true));
             options.add(separator());
-    		options.add(sceneSlider("y from", "minY"));
-    		options.add(sceneSlider("- to", "maxY"));
+    		options.add(sceneSlider("", "minY", false));
+    		options.add(sceneSlider("y Range", "maxY", true));
             options.add(separator());
-    		options.add(sceneSlider("z from", "minZ"));
-    		options.add(sceneSlider("- to", "maxZ"));
+    		options.add(sceneSlider("", "minZ", false));
+    		options.add(sceneSlider("z Range", "maxZ", true));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2829,27 +2830,29 @@ public class Main extends EventSource {
         final Object apply = new Object() {
 			@SuppressWarnings("unused")
 			public void call() {
-				new Thread(new Runnable() {
-					public void run() {
-						suspendRendering();
-						doc().removeAll();
-						makeCopies();
-						resumeRendering();
-						saveOptions();
-					}
-				}).start();
+				if (doc() != null) {
+					new Thread(new Runnable() {
+						public void run() {
+							suspendRendering();
+							doc().removeAllTiles();
+							makeCopies();
+							resumeRendering();
+							saveOptions();
+						}
+					}).start();
+				}
 			}
-        };
+		};
         return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
     
     private Widget optionsDisplay() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-        	final OptionSliderBox slider = new OptionSliderBox("Tile Size",
+        	final OptionSliderBox slider = new OptionSliderBox("Tile Size in %",
 					this, "tileSize", 0, 100, 20, 5, false);
         	slider.setFactor(0.01);
-        	slider.setShowLabels(false);
+        	//slider.setShowLabels(false);
         	options.add(slider);
             options.add(new OptionCheckBox("Draw Faces", this, "drawFaces"));
             options.add(new OptionCheckBox("Draw Edges", this, "drawEdges"));
@@ -3023,7 +3026,7 @@ public class Main extends EventSource {
 		final BTabbedPane options = new BTabbedPane();
 		options.setBackground(null);
 		options.add(optionsTiles(), "Tiles");
-		options.add(optionsScene(), "Unit Cells");
+		options.add(optionsScene(), "Fill Space");
 		options.add(optionsDisplay(), "Display");
 		options.add(optionsNet(), "Net");
 		options.add(optionsMaterial(), "Material");
