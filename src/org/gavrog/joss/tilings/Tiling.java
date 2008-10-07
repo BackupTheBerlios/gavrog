@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
-import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -188,7 +187,7 @@ public class Tiling {
             final int dim = getCover().dim();
             final Vector[] t = getTranslationVectors();
             final Map e2w = (Map) getTranslationGroup().getEdgeToWord();
-            final Map e2t = new HashMap();
+            final Map<Object, Vector> e2t = new HashMap<Object, Vector>();
             for (Iterator edges = e2w.keySet().iterator(); edges.hasNext();) {
                 final Object e = edges.next();
                 final FreeWord w = (FreeWord) e2w.get(e);
@@ -229,7 +228,7 @@ public class Tiling {
             return (Map) this.cache.get(CORNER_SHIFTS);
         } catch (Cache.NotFoundException ex) {
             final int dim = getCover().dim();
-            final HashMap c2s = new HashMap();
+            final HashMap<DSPair, Vector> c2s = new HashMap<DSPair, Vector>();
             for (int i = 0; i <= dim; ++i) {
                 final List idcs = IndexList.except(getCover(), i);
                 final Traversal trav = new Traversal(getCover(), idcs,
@@ -243,8 +242,8 @@ public class Tiling {
                     } else {
                         final Object Dk = getCover().op(k, D);
                         final Vector v = (Vector) c2s.get(new DSPair(i, Dk));
-                        c2s.put(new DSPair(i, D), v
-                                .minus(edgeTranslation(k, Dk)));
+                        c2s.put(new DSPair(i, D),
+                        		(Vector) v.minus(edgeTranslation(k, Dk)));
                     }
                 }
 
@@ -270,10 +269,14 @@ public class Tiling {
      * Class to represent a skeleton graph for this tiling.
      */
     public class Skeleton extends PeriodicGraph {
-        final private Map node2chamber = new HashMap();
-        final private Map chamber2node = new HashMap();
-        final private Map edge2chamber = new HashMap();
-        final private Map chamber2edge = new HashMap();
+        final private Map<INode, Object> node2chamber =
+        	new HashMap<INode, Object>();
+		final private Map<Object, INode> chamber2node =
+			new HashMap<Object, INode>();
+        final private Map<IEdge, Object> edge2chamber =
+        	new HashMap<IEdge, Object>();
+        final private Map<Object, IEdge> chamber2edge =
+        	new HashMap<Object, IEdge>();
         final private List nodeIdcs;
         final private List halfEdgeIdcs;
         final private boolean dual;
@@ -364,7 +367,7 @@ public class Tiling {
                 }
 
                 // --- compute affine maps from start chamber to its images
-                final Set syms = new HashSet();
+                final Set<Morphism> syms = new HashSet<Morphism>();
                 final Object E = cover.image(D0);
                 for (final Iterator elms = cover.elements(); elms.hasNext();) {
                     final Object D = elms.next();
@@ -384,8 +387,10 @@ public class Tiling {
             final DSMorphism map = new DSMorphism(cover, cover, D, E);
             final Operator op = Operator.fromLinear((Matrix) spanningMatrix(D)
                     .inverse().times(spanningMatrix(E)));
-            final Map src2img = new HashMap();
-            final Map img2src = new HashMap();
+            final Map<IGraphElement, IGraphElement> src2img =
+            	new HashMap<IGraphElement, IGraphElement>();
+            final Map<IGraphElement, IGraphElement> img2src =
+            	new HashMap<IGraphElement, IGraphElement>();
             for (final Iterator elms = cover.elements(); elms.hasNext();) {
                 final Object src = elms.next();
                 final Object img = map.get(src);
@@ -559,18 +564,18 @@ public class Tiling {
     public Map cornerPositions(final Map nodePositions) {
         final DelaneySymbol cover = getCover();
         final Skeleton skel = getSkeleton();
-        final Map result = new HashMap();
+        final Map<DSPair, Point> result = new HashMap<DSPair, Point>();
 
         for (final Iterator elms = cover.elements(); elms.hasNext();) {
             final Object D = elms.next();
             final Point p = (Point) nodePositions.get(skel.nodeForChamber(D));
             final Vector t = cornerShift(0, D);
-            result.put(new DSPair(0, D), p.plus(t));
+            result.put(new DSPair(0, D), (Point) p.plus(t));
         }
         final int dim = cover.dim();
-        List idcs = new LinkedList();
+        List<Integer> idcs = new LinkedList<Integer>();
         for (int i = 1; i <= dim; ++i) {
-            idcs.add(new Integer(i-1));
+            idcs.add(i-1);
             for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
                 final Object D = reps.next();
                 Matrix s = Point.origin(dim).getCoordinates();
@@ -587,7 +592,7 @@ public class Tiling {
                 for (Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
                     final Object E = orb.next();
                     final Vector t = cornerShift(i, E);
-                    result.put(new DSPair(i, E), p.plus(t));
+                    result.put(new DSPair(i, E), (Point) p.plus(t));
                 }
             }
         }
@@ -636,7 +641,7 @@ public class Tiling {
      * Represents a facet (co-dimension 1 constituent) of this tiling.
      */
     public class Facet {
-        final private List chambers;
+        final private List<Object> chambers;
         final private int tile;
         final private int index;
     	
@@ -644,7 +649,7 @@ public class Tiling {
     		final DelaneySymbol cover = getCover();
     		final int d = cover.dim();
             final Object E0 = coverOrientation(D) < 0 ? cover.op(0, D) : D;
-            this.chambers = new LinkedList();
+            this.chambers = new LinkedList<Object>();
             if (d == 3) {
 	            Object E = E0;
 	            do {
@@ -691,8 +696,10 @@ public class Tiling {
     }
     
     // --- maps cover chambers to tile numbers and tile kinds
-    final private Map chamber2tile = new HashMap();
-    final private Map chamber2kind = new HashMap();
+    final private Map<Object, Integer> chamber2tile =
+    	new HashMap<Object, Integer>();
+    final private Map<Object, Integer> chamber2kind =
+    	new HashMap<Object, Integer>();
 
     /**
      * Represents a tile (top-dimensional constituent) of this tiling.
@@ -710,9 +717,9 @@ public class Tiling {
         	final DSCover cover = getCover();
         	final Skeleton skel = getDualSkeleton();
             final Object D = skel.chamberAtNode(v);
-        	final Integer k = (Integer) chamber2tile.get(D);
+        	final Integer k = chamber2tile.get(D);
             this.index = k.intValue();
-            this.kind = ((Integer) chamber2kind.get(cover.image(D))).intValue();
+            this.kind = chamber2kind.get(cover.image(D));
 
             final int deg = v.degree();
         	this.facets = new Facet[deg];
@@ -729,7 +736,7 @@ public class Tiling {
                 final Vector t = edgeTranslation(d, Df);
                 this.facets[i] = new Facet(Df, this.index, i);
                 final Object Dn = skel.chamberAtNode(e.target());
-                this.neighbors[i] = ((Integer) chamber2tile.get(Dn)).intValue();
+                this.neighbors[i] = chamber2tile.get(Dn);
                 this.neighborShifts[i] = t;
                 ++i;
                 if (e.source().equals(e.target())) {
@@ -818,7 +825,7 @@ public class Tiling {
         }
         
         // --- construct the list of tiles with associated data
-        final List tiles = new ArrayList();
+        final List<Tile> tiles = new ArrayList<Tile>();
         for (Iterator nodes = getDualSkeleton().nodes(); nodes.hasNext();) {
             tiles.add(new Tile((INode) nodes.next()));
         }
