@@ -38,6 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -210,6 +211,7 @@ public class Main extends EventSource {
     private int maxY = 0;
     private int minZ = 0;
     private int maxZ = 0;
+    private boolean clearOnFill = true;
     
 	// --- material options
 	private double ambientCoefficient = 0.0;
@@ -2822,6 +2824,9 @@ public class Main extends EventSource {
             options.add(separator());
     		options.add(sceneSlider("", "minZ", false));
     		options.add(sceneSlider("z Range", "maxZ", true));
+            options.add(separator());
+    		options.add(new OptionCheckBox("Clear Existing", this,
+					"clearOnFill"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2830,17 +2835,19 @@ public class Main extends EventSource {
         final Object apply = new Object() {
 			@SuppressWarnings("unused")
 			public void call() {
-				if (doc() != null) {
-					new Thread(new Runnable() {
-						public void run() {
+				new Thread(new Runnable() {
+					public void run() {
+						if (doc() != null) {
 							suspendRendering();
-							doc().removeAllTiles();
+							if (getClearOnFill()) {
+								doc().removeAllTiles();
+							}
 							makeCopies();
 							resumeRendering();
-							saveOptions();
 						}
-					}).start();
-				}
+						saveOptions();
+					}
+				}).start();
 			}
 		};
         return optionsDialog(options, makeButton("Apply", apply, "call"));
@@ -3149,7 +3156,7 @@ public class Main extends EventSource {
 			jf.validate();
 
 			top.setDividerLocation(350);
-			content.setDividerLocation(350);
+			content.setDividerLocation(375);
 		}
     	if (!this.controlsFrame.isVisible()) {
     		final JFrame vF = viewerApp.getFrame();
@@ -3212,50 +3219,122 @@ public class Main extends EventSource {
     	});
     }
     
+
+	/**
+	 * @param f
+	 * @param color
+	 */
+	private List<Tiling.Facet> equivalentFacets(final Tiling.Facet f) {
+		final Object D0 = f.getChamber();
+		final DSCover ds = doc().getTiling().getCover();
+		final Set<Object> orb = new HashSet<Object>();
+		for (Iterator it = ds.elements(); it.hasNext();) {
+			final Object E0 = it.next();
+			if (ds.image(E0).equals(ds.image(D0))) {
+				Object E = E0;
+				do {
+					orb.add(E);
+					E = ds.op(0, E);
+					orb.add(E);
+					E = ds.op(1, E);
+				} while (!E0.equals(E));
+			}
+		}
+		
+		final List<Tiling.Facet> result = new ArrayList<Tiling.Facet>();
+		for (final Tile b : doc().getTiles()) {
+			for (int j = 0; j < b.size(); ++j) {
+				final Tiling.Facet fj = b.facet(j);
+				final Object E = fj.getChamber();
+				if (orb.contains(E)) {
+					result.add(fj);
+				}
+			}
+		}
+		return result;
+	}
+
+	private void recolorFacetClass(final Tiling.Facet f, final Color color) {
+		for (Tiling.Facet facet: equivalentFacets(f)) {
+			doc().setFacetClassColor(facet, color);
+		}
+	}
+
+	private void uncolorFacetClass(final Tiling.Facet f) {
+		for (Tiling.Facet facet: equivalentFacets(f)) {
+			doc().removeFacetClassColor(facet);
+		}
+	}
+	
+	private void showAllInTile(final Tiling.Tile t) {
+		for (int i = 0; i < t.size(); ++i) {
+			showFacetClass(t.facet(i));
+		}
+	}
+	
+	private void showFacetClass(final Tiling.Facet f) {
+		for (Tiling.Facet facet : equivalentFacets(f)) {
+			doc().showFacetClass(facet);
+		}
+	}
+	
+	private void hideFacetClass(final Tiling.Facet f) {
+		for (Tiling.Facet facet : equivalentFacets(f)) {
+			doc().hideFacetClass(facet);
+		}
+	}
+	
     // --- Property getters and setters
     
+	/**
+	 * Generic setter method. Uses introspection to find the field to set and
+	 * generates a PropertyChangeEvent if the value has changed.
+	 * @param name  the name of the field to set.
+	 * @param value the new value.
+	 */
+	private void _setField(final String name, final Object value) {
+		try {
+			final Field field = this.getClass().getDeclaredField(name);
+			final Object old = field.get(this);
+			if ((value == null) ? (old != null) : (!value.equals(old))) {
+				dispatchEvent(new PropertyChangeEvent(this, name, old, value));
+				field.set(this, value);
+			}
+		} catch (final Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
     public Color getEdgeColor() {
         return edgeColor;
     }
 
-    public void setEdgeColor(Color edgeColor) {
-    	if (edgeColor != this.edgeColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "edgeColor",
-					this.edgeColor, edgeColor));
-			this.edgeColor = edgeColor;
-    	}
+    public void setEdgeColor(final Color value) {
+    	_setField("edgeColor", value);
     }
 
     public double getEdgeWidth() {
         return edgeWidth;
     }
 
-    public void setEdgeWidth(double edgeWidth) {
-    	if (edgeWidth != this.edgeWidth) {
-    		dispatchEvent(new PropertyChangeEvent(this, "edgeWidth",
-    				this.edgeWidth, edgeWidth));
-    		this.edgeWidth = edgeWidth;
-    	}
+    public void setEdgeWidth(final double value) {
+    	_setField("edgeWidth", value);
     }
 
     public double getEdgeOpacity() {
         return edgeOpacity;
     }
 
-    public void setEdgeOpacity(double edgeOpacity) {
-    	if (edgeOpacity != this.edgeOpacity) {
-    		dispatchEvent(new PropertyChangeEvent(this, "edgeOpacity",
-    				this.edgeOpacity, edgeOpacity));
-    		this.edgeOpacity = edgeOpacity;
-    	}
+    public void setEdgeOpacity(final double value) {
+    	_setField("edgeOpacity", value);
     }
 
     public boolean getUseEdgeColor() {
         return true;
     }
 
-    public void setUseEdgeColor(boolean useEdgeColor) {
-		if (useEdgeColor == false) {
+    public void setUseEdgeColor(final boolean value) {
+		if (value == false) {
 			setEdgeOpacity(0.0);
 		}
 	}
@@ -3264,24 +3343,16 @@ public class Main extends EventSource {
         return drawEdges;
     }
 
-    public void setDrawEdges(boolean drawEdges) {
-    	if (drawEdges != this.drawEdges) {
-    		dispatchEvent(new PropertyChangeEvent(this, "drawEdges",
-    				this.drawEdges, drawEdges));
-    		this.drawEdges = drawEdges;
-    	}
+    public void setDrawEdges(final boolean value) {
+    	_setField("drawEdges", value);
     }
     
     public boolean getDrawFaces() {
         return drawFaces;
     }
 
-    public void setDrawFaces(boolean drawFaces) {
-    	if (drawFaces != this.drawFaces) {
-    		dispatchEvent(new PropertyChangeEvent(this, "drawFaces",
-    				this.drawFaces, drawFaces));
-    		this.drawFaces = drawFaces;
-    	}
+    public void setDrawFaces(final boolean value) {
+    	_setField("drawFaces", value);
     }
     
     public double getTileSize() {
@@ -3398,6 +3469,14 @@ public class Main extends EventSource {
     	}
 	}
 
+	public boolean getClearOnFill() {
+		return this.clearOnFill;
+	}
+	
+	public void setClearOnFill(final boolean value) {
+		_setField("clearOnFill", value);
+	}
+	
 	public int getEmbedderStepLimit() {
         return embedderStepLimit;
     }
@@ -3523,12 +3602,8 @@ public class Main extends EventSource {
 		return lastInputDirectory;
 	}
 
-	public void setLastInputDirectory(String lastInputDirectory) {
-    	if (lastInputDirectory != this.lastInputDirectory) {
-    		dispatchEvent(new PropertyChangeEvent(this, "lastInputDirectory",
-    				this.lastInputDirectory, lastInputDirectory));
-    		this.lastInputDirectory = lastInputDirectory;
-    	}
+	public void setLastInputDirectory(final String lastInputDirectory) {
+		_setField("lastInputDirectory", lastInputDirectory);
 	}
 
 	public String getLastNetOutputDirectory() {
@@ -3785,70 +3860,6 @@ public class Main extends EventSource {
 			dispatchEvent(new PropertyChangeEvent(this, "netNodeRadius",
 					this.netNodeRadius, netNodeRadius));
 			this.netNodeRadius = netNodeRadius;
-		}
-	}
-
-	/**
-	 * @param f
-	 * @param color
-	 */
-	private List<Tiling.Facet> equivalentFacets(final Tiling.Facet f) {
-		final Object D0 = f.getChamber();
-		final DSCover ds = doc().getTiling().getCover();
-		final Set<Object> orb = new HashSet<Object>();
-		for (Iterator it = ds.elements(); it.hasNext();) {
-			final Object E0 = it.next();
-			if (ds.image(E0).equals(ds.image(D0))) {
-				Object E = E0;
-				do {
-					orb.add(E);
-					E = ds.op(0, E);
-					orb.add(E);
-					E = ds.op(1, E);
-				} while (!E0.equals(E));
-			}
-		}
-		
-		final List<Tiling.Facet> result = new ArrayList<Tiling.Facet>();
-		for (final Tile b : doc().getTiles()) {
-			for (int j = 0; j < b.size(); ++j) {
-				final Tiling.Facet fj = b.facet(j);
-				final Object E = fj.getChamber();
-				if (orb.contains(E)) {
-					result.add(fj);
-				}
-			}
-		}
-		return result;
-	}
-
-	private void recolorFacetClass(final Tiling.Facet f, final Color color) {
-		for (Tiling.Facet facet: equivalentFacets(f)) {
-			doc().setFacetClassColor(facet, color);
-		}
-	}
-
-	private void uncolorFacetClass(final Tiling.Facet f) {
-		for (Tiling.Facet facet: equivalentFacets(f)) {
-			doc().removeFacetClassColor(facet);
-		}
-	}
-	
-	private void showAllInTile(final Tiling.Tile t) {
-		for (int i = 0; i < t.size(); ++i) {
-			showFacetClass(t.facet(i));
-		}
-	}
-	
-	private void showFacetClass(final Tiling.Facet f) {
-		for (Tiling.Facet facet : equivalentFacets(f)) {
-			doc().showFacetClass(facet);
-		}
-	}
-	
-	private void hideFacetClass(final Tiling.Facet f) {
-		for (Tiling.Facet facet : equivalentFacets(f)) {
-			doc().hideFacetClass(facet);
 		}
 	}
 }
