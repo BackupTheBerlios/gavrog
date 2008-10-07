@@ -1818,9 +1818,9 @@ public class Main extends EventSource {
 		for (int i = 0; i <= b.size(); ++i) {
 			final String tag = fTag[i];
 			final Surface surfPart = surf.extract(tag);
-			if (tag.startsWith("face:")) {
-				surfPart.pull(getTileRelaxationSteps());
-			}
+//			if (tag.startsWith("face:")) {
+//				surfPart.pull(getTileRelaxationSteps());
+//			}
 			
 			// --- make a geometry that jReality can use
 			final IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
