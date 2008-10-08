@@ -124,7 +124,7 @@ public class Document extends DisplayList {
     private boolean useBarycentricPositions = false;
 
     // --- saved user options
-    private Properties  properties = null;
+    private Properties  properties = new Properties();
     
     // --- The last remembered viewing transformation
     private Transformation transformation = null;
@@ -1164,11 +1164,12 @@ public class Document extends DisplayList {
     }
 
     public Properties getProperties() {
-		return this.properties;
+    	return (Properties) this.properties.clone();
 	}
 
 	public void setProperties(final Properties properties) {
-		this.properties = properties;
+		this.properties.clear();
+		this.properties.putAll(properties);
 	}
 
 	public Transformation getTransformation() {
