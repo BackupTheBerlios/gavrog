@@ -5,7 +5,6 @@ Open bugs:
 - Popups don't work with OpenGL on Mac Leopard (workaround exists.)
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
-- GUI options and load/save paths are stored together with document options.
 
 =====================================================
 
@@ -18,7 +17,6 @@ Planned/requested features:
 - Determine sequence of operations to turn given tiling into a self-dual one.
 - Function to revert to default settings.
 
-- Save function for analysis results like transitivity, space group, etc.
 - More display list generators.
 - Options to change defaults for group setting on input (as in Systre.)
 - Draw tiles and dual tiles in one image.

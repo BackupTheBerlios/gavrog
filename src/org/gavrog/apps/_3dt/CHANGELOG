@@ -1,5 +1,8 @@
 3dt 0.4.0:
 
+- Some basic info on each tiling is now saved in .ds files.
+- I/O paths and other interface attributes are no longer stored in scene files.
+- The "Fill Space" pane (formerly "Unit Cells") can now work additively.
 - Added the ability to blend edge and tile colors.
 - For files with multiple tilings, the user now selects which to show first.
 - Improved the layout for the option dialogs.
