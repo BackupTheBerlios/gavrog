@@ -2886,13 +2886,11 @@ public class Main extends EventSource {
     private Widget optionsGUI() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-        	options.add(new OptionInputBox("Viewer Width", this,
-            		"viewerWidth"));
-			options.add(new OptionInputBox("Viewer Height", this,
-					"viewerHeight"));
+        	options.add(new OptionInputBox("Viewer Width", ui, "viewerWidth"));
+			options.add(new OptionInputBox("Viewer Height", ui, "viewerHeight"));
             options.add(separator());
             options.add(new OptionCheckBox("MacOS Context Menu Workaround",
-					this, "useLeopardWorkaround"));
+					ui, "useLeopardWorkaround"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
