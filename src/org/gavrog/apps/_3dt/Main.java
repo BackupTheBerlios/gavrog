@@ -174,12 +174,6 @@ public class Main extends EventSource {
 			BFileChooser.SAVE_FILE, "Save image");
 	final private DimensionPanel dimPanel = new DimensionPanel();
 	
-	private String lastInputDirectory = System.getProperty("3dt.home") + "/Data";
-	private String lastNetOutputDirectory = System.getProperty("user.home");
-	private String lastTilingOutputDirectory = System.getProperty("user.home");
-	private String lastSceneOutputDirectory = System.getProperty("user.home");
-	private String lastSunflowRenderDirectory = System.getProperty("user.home");
-    
     // --- tile options
 	private int subdivisionLevel = 2;
 	private int tileRelaxationSteps = 3;
@@ -234,11 +228,9 @@ public class Main extends EventSource {
     private boolean fogToBackground = true;
     private double fieldOfView = 25.0;
     
-    // --- viewing options
-    private int viewerWidth = 800;
-    private int viewerHeight = 800;
-    private boolean useLeopardWorkaround = false;
-
+    // --- the currently active interface options
+    private InterfaceOptions ui = new InterfaceOptions();
+    
     // --- the current document and the document list in which it lives
     private List<Document> documents;
 	private int tilingCounter;
@@ -390,8 +382,8 @@ public class Main extends EventSource {
 			public void componentMoved(ComponentEvent e) {}
 
 			public void componentResized(ComponentEvent e) {
-				setViewerWidth(viewerApp.getViewingComponent().getWidth());
-				setViewerHeight(viewerApp.getViewingComponent().getHeight());
+				ui.setViewerWidth(viewerApp.getViewingComponent().getWidth());
+				ui.setViewerHeight(viewerApp.getViewingComponent().getHeight());
 				saveOptions();
 			}
         });
@@ -520,13 +512,14 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					inFileChooser.setDirectory(new File(getLastInputDirectory()));
+					inFileChooser.setDirectory(
+							new File(ui.getLastInputDirectory()));
 					final boolean success = inFileChooser.showDialog(null);
 					if (!success) {
 						return;
 					}
-					setLastInputDirectory(inFileChooser.getDirectory()
-							.getAbsolutePath());
+					ui.setLastInputDirectory(
+							inFileChooser.getDirectory().getAbsolutePath());
 					saveOptions();
 					openFile(inFileChooser.getSelectedFile().getAbsolutePath());
 				}
@@ -548,14 +541,14 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    outTilingChooser.setDirectory(new File(
-							getLastTilingOutputDirectory()));
+                    outTilingChooser.setDirectory(
+                    		new File(ui.getLastTilingOutputDirectory()));
                     final boolean success = outTilingChooser.showDialog(null);
                     if (!success) {
                         return;
                     }
                     final File dir = outTilingChooser.getDirectory();
-                    setLastTilingOutputDirectory(dir.getAbsolutePath());
+                    ui.setLastTilingOutputDirectory(dir.getAbsolutePath());
                     saveOptions();
                     String filename = outTilingChooser.getSelectedFile()
 							.getName();
@@ -602,14 +595,14 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    outNetChooser.setDirectory(new File(
-							getLastNetOutputDirectory()));
+                    outNetChooser.setDirectory(
+                    		new File(ui.getLastNetOutputDirectory()));
                     final boolean success = outNetChooser.showDialog(null);
                     if (!success) {
                         return;
                     }
                     final File dir = outNetChooser.getDirectory();
-                    setLastNetOutputDirectory(dir.getAbsolutePath());
+                    ui.setLastNetOutputDirectory(dir.getAbsolutePath());
                     saveOptions();
                     String filename = outNetChooser.getSelectedFile().getName();
                     if (filename.indexOf('.') < 0) {
@@ -650,14 +643,14 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    outSceneChooser.setDirectory(new File(
-							getLastSceneOutputDirectory()));
+                    outSceneChooser.setDirectory(
+                    		new File(ui.getLastSceneOutputDirectory()));
                     final boolean success = outSceneChooser.showDialog(null);
                     if (!success) {
                         return;
                     }
                     final File dir = outSceneChooser.getDirectory();
-                    setLastSceneOutputDirectory(dir.getAbsolutePath());
+                    ui.setLastSceneOutputDirectory(dir.getAbsolutePath());
                     saveOptions();
                     String filename = outSceneChooser.getSelectedFile().getName();
                     if (filename.indexOf('.') < 0) {
@@ -697,15 +690,16 @@ public class Main extends EventSource {
 					dimPanel.setDimension(viewerApp.getCurrentViewer()
 							.getViewingComponentSize());
                     outSunflowChooser.setDirectory(
-                    		new File(getLastSunflowRenderDirectory()));
+                    		new File(ui.getLastSunflowRenderDirectory()));
                     final boolean success = outSunflowChooser.showDialog(null);
                     if (!success) {
                         return;
                     }
                     final File dir = outSunflowChooser.getDirectory();
-                    setLastSunflowRenderDirectory(dir.getAbsolutePath());
+                    ui.setLastSunflowRenderDirectory(dir.getAbsolutePath());
                     saveOptions();
-                    String filename = outSunflowChooser.getSelectedFile().getName();
+                    String filename =
+                    	outSunflowChooser.getSelectedFile().getName();
                     if (filename.indexOf('.') < 0) {
                     	filename += ".png";
                     }
@@ -1576,7 +1570,7 @@ public class Main extends EventSource {
 		// --- get the user options saved in the document
 		if (doc.getProperties() != null) {
 			try {
-				Config.setProperties(this, doc.getProperties());
+				Config.pushProperties(doc.getProperties(), this);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -2460,13 +2454,13 @@ public class Main extends EventSource {
 				}
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					if (useLeopardWorkaround) {
+					if (ui.getUseLeopardWorkaround()) {
 						restoreViewer();
 					}
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					if (useLeopardWorkaround) {
+					if (ui.getUseLeopardWorkaround()) {
 						forceSoftwareViewer();
 					}
 				}
@@ -2490,13 +2484,13 @@ public class Main extends EventSource {
 				}
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					if (useLeopardWorkaround) {
+					if (ui.getUseLeopardWorkaround()) {
 						restoreViewer();
 					}
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					if (useLeopardWorkaround) {
+					if (ui.getUseLeopardWorkaround()) {
 						forceSoftwareViewer();
 					}
 				}
@@ -2520,13 +2514,13 @@ public class Main extends EventSource {
 				}
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					if (useLeopardWorkaround) {
+					if (ui.getUseLeopardWorkaround()) {
 						restoreViewer();
 					}
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					if (useLeopardWorkaround) {
+					if (ui.getUseLeopardWorkaround()) {
 						forceSoftwareViewer();
 					}
 				}
@@ -2658,8 +2652,8 @@ public class Main extends EventSource {
     	// -- make sure to trigger a property change event
     	viewer.setPreferredSize(null);
     	// -- now set to the desired size
-    	viewer.setPreferredSize(new Dimension(getViewerWidth(),
-				getViewerHeight()));
+    	viewer.setPreferredSize(
+    			new Dimension(ui.getViewerWidth(), ui.getViewerHeight()));
     	// -- update the parent frame
     	viewerApp.getFrame().pack();
     	// -- not completely sure what this does
@@ -2676,15 +2670,16 @@ public class Main extends EventSource {
     
     private void saveOptions() {
     	// --- pick up all property values for this instance
-    	final Properties ourProps;
+    	final Properties ourProps = new Properties();
 		try {
-			ourProps = Config.getProperties(this);
+			Config.pullProperties(ourProps, this);
+			if (doc() != null) {
+				doc().setProperties(ourProps);
+			}
+			Config.pullProperties(ourProps, ui);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			return;
-		}
-		if (doc() != null) {
-			doc().setProperties(ourProps);
 		}
 		
 		// --- write them to the configuration file
@@ -2721,7 +2716,8 @@ public class Main extends EventSource {
     	
 		// --- set the properties for this instance
     	try {
-    		Config.setProperties(this, ourProps);
+    		Config.pushProperties(ourProps, this);
+    		Config.pushProperties(ourProps, ui);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -3523,46 +3519,6 @@ public class Main extends EventSource {
 		_setField("backgroundColor", value);
 	}
 
-	public String getLastInputDirectory() {
-		return lastInputDirectory;
-	}
-
-	public void setLastInputDirectory(final String value) {
-		_setField("lastInputDirectory", value);
-	}
-
-	public String getLastNetOutputDirectory() {
-		return this.lastNetOutputDirectory;
-	}
-
-	public void setLastNetOutputDirectory(final String value) {
-		_setField("lastNetOutputDirectory", value);
-	}
-
-	public String getLastSceneOutputDirectory() {
-		return this.lastSceneOutputDirectory;
-	}
-
-	public void setLastSceneOutputDirectory(final String value) {
-		_setField("lastSceneOutputDirectory", value);
-	}
-
-	public String getLastTilingOutputDirectory() {
-		return this.lastTilingOutputDirectory;
-	}
-
-	public void setLastTilingOutputDirectory(final String value) {
-		_setField("lastTilingOutputDirectory", value);
-	}
-
-	public String getLastSunflowRenderDirectory() {
-		return this.lastSunflowRenderDirectory;
-	}
-
-	public void setLastSunflowRenderDirectory(final String value) {
-		_setField("lastSunflowRenderDirectory", value);
-	}
-
 	public int getEdgeRoundingLevel() {
 		return edgeRoundingLevel;
 	}
@@ -3634,30 +3590,6 @@ public class Main extends EventSource {
     public void setUnitCellEdgeWidth(final double value) {
     	_setField("unitCellEdgeWidth", value);
     }
-
-    public int getViewerWidth() {
-    	return this.viewerWidth;
-    }
-    
-	public void setViewerWidth(final int value) {
-		_setField("viewerWidth", value);
-	}
-
-    public int getViewerHeight() {
-    	return this.viewerHeight;
-    }
-    
-	public void setViewerHeight(final int value) {
-		_setField("viewerHeight", value);
-	}
-
-	public boolean getUseLeopardWorkaround() {
-		return this.useLeopardWorkaround;
-	}
-
-	public void setUseLeopardWorkaround(final boolean value) {
-		_setField("useLeopardWorkaround", value);
-	}
 
 	public boolean getShowNet() {
 		return this.showNet;
