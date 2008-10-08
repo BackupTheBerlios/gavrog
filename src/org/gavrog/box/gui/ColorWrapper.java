@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,8 +27,10 @@ import java.util.Map;
  * @version $Id: ColorWrapper.java,v 1.2 2007/05/22 05:03:08 odf Exp $
  */
 public class ColorWrapper extends Color {
-	final private static Map name2color = new HashMap();
-	final private static Map color2name = new HashMap();
+	final private static Map<String, Color> name2color =
+		new HashMap<String, Color>();
+	final private static Map<Color, String> color2name =
+		new HashMap<Color, String>();
 	static {
 		final Field fields[] = Color.class.getDeclaredFields();
 		for (int i = 0; i < fields.length; ++i) {

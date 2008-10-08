@@ -83,8 +83,7 @@ public class OptionColorBox extends BorderContainer {
 						dialog.setVisible(true);
 						if (currentColor != null) {
 							color.setBackground(currentColor);
-							setter.invoke(target,
-									new Object[] { currentColor });
+							setter.invoke(target,  currentColor);
 						}
 					} catch (final Exception ex) {
 					}

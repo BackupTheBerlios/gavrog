@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -52,8 +52,7 @@ public class Config {
 	
 	public static Object construct(final Class type, final String value)
 			throws Exception {
-		return wrapperType(type).getConstructor(new Class[] { String.class })
-				.newInstance(new Object[] { value });
+		return wrapperType(type).getConstructor(String.class).newInstance(value);
 	}
 
 	public static String asString(final Object value) throws Exception {
@@ -61,47 +60,50 @@ public class Config {
 		if (wrapperType(type).equals(type)) {
 			return String.valueOf(value);
 		} else {
-			return String.valueOf(wrapperType(type).getConstructor(
-					new Class[] { type }).newInstance(new Object[] { value }));
+			return String.valueOf(wrapperType(type).getConstructor(type)
+					.newInstance(value));
 		}
 	}
 	
-	public static void setProperties(final Object target, final Properties input)
+	public static void pushProperties(final Properties props, final Object obj)
 			throws Exception {
-		final Class type = target.getClass();
+		final Class type = obj.getClass();
 		final String prefix = type.getCanonicalName() + ".";
 		final BeanInfo info = Introspector.getBeanInfo(type);
-		final PropertyDescriptor props[] = info.getPropertyDescriptors();
-		for (int i = 0; i < props.length; ++i) {
-			if (props[i].getWriteMethod() == null) {
+		final PropertyDescriptor desc[] = info.getPropertyDescriptors();
+		for (int i = 0; i < desc.length; ++i) {
+			if (desc[i].getWriteMethod() == null) {
 				continue;
 			}
-			final String value = input.getProperty(prefix + props[i].getName());
+			final String value = props.getProperty(prefix + desc[i].getName());
 			if (value == null) {
 				continue;
 			}
-			final Method setter = props[i].getWriteMethod();
+			final Method setter = desc[i].getWriteMethod();
             final Class valueType = setter.getParameterTypes()[0];
-			setter.invoke(target, new Object[] { construct(valueType, value) });
+			setter.invoke(obj, construct(valueType, value));
+		}
+	}
+	
+	public static void pullProperties(final Properties props, final Object obj)
+			throws Exception {
+		final Class type = obj.getClass();
+		final String prefix = type.getCanonicalName() + ".";
+		final PropertyDescriptor desc[] =
+			Introspector.getBeanInfo(type).getPropertyDescriptors();
+		for (int i = 0; i < desc.length; ++i) {
+			if (desc[i].getWriteMethod() != null) {
+				props.setProperty(prefix + desc[i].getName(),
+						asString(desc[i].getReadMethod().invoke(obj)));
+			}
 		}
 	}
 
 	public static Properties getProperties(final Object source)
 			throws Exception {
-		final Class type = source.getClass();
-		final String prefix = type.getCanonicalName() + ".";
-		final BeanInfo info = Introspector.getBeanInfo(type);
-		final Properties result = new Properties();
-		final PropertyDescriptor props[] = info.getPropertyDescriptors();
-		for (int i = 0; i < props.length; ++i) {
-            if (props[i].getWriteMethod() == null) {
-                continue;
-            }
-            final Method getter = props[i].getReadMethod();
-            final Object value = getter.invoke(source, new Object[] {});
-            result.setProperty(prefix + props[i].getName(), asString(value));
-        }
-		return result;
+		final Properties props = new Properties();
+		pullProperties(props, source);
+		return props;
 	}
 	
 	public static PropertyDescriptor namedProperty(final Object source,

@@ -68,9 +68,8 @@ public class OptionInputBox extends BorderContainer {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
-						Object val = Config.construct(optionType, input
-								.getText());
-						setter.invoke(target, new Object[] { val });
+						setter.invoke(target,
+								Config.construct(optionType, input.getText()));
 					} catch (final Exception ex) {
 					}
 					releaseLock();

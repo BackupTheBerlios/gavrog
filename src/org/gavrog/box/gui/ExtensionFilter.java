@@ -1,5 +1,5 @@
 /*
- Copyright 2006 Olaf Delgado-Friedrichs
+ Copyright 2008 Olaf Delgado-Friedrichs
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.Set;
 import javax.swing.filechooser.FileFilter;
 
 public class ExtensionFilter extends FileFilter {
-	final private Set extensions = new HashSet();
+	final private Set<String> extensions = new HashSet<String>();
 	final private String description;
 
 	public ExtensionFilter(final String extensions[], final String description) {
