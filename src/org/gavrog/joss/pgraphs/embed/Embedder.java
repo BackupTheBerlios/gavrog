@@ -99,11 +99,7 @@ public class Embedder {
 				final double weight) {
 			this.v = v;
 			this.w = w;
-			final int d = s.getDimension();
-			this.shift = new double[d];
-			for (int i = 0; i < d; ++i) {
-				this.shift[i] = ((Real) s.get(i)).doubleValue();
-			}
+			this.shift = s.asDoubleArray();
 			this.type = type;
 			this.weight = weight;
 		}
@@ -114,10 +110,10 @@ public class Embedder {
 	final private int dimGraph;
 
 	// --- precomputed data used by the algorithm
-	final private Map node2sym;
-	final private Map node2images;
-	final private Map node2index;
-	final private Map node2mapping;
+	final private Map<INode, Operator> node2sym;
+	final private Map<INode, Map<INode, Operator>> node2images;
+	final private Map<INode, Integer> node2index;
+	final private Map<INode, double[][]> node2mapping;
 	final private int dimParSpace;
 	final private Matrix gramSpace;
 	final private int gramIndex[][];
@@ -147,14 +143,15 @@ public class Embedder {
 
 		this.node2sym = nodeSymmetrizations();
 
-		this.node2images = new HashMap();
-		final Set seen = new HashSet();
+		this.node2images = new HashMap<INode, Map<INode, Operator>>();
+		final Set<INode> seen = new HashSet<INode>();
 		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			if (!seen.contains(v)) {
 				final Point bv = (Point) getGraph().barycentricPlacement().get(
 						v);
-				final Map img2sym = new HashMap();
+				final Map<INode, Operator> img2sym =
+					new HashMap<INode, Operator>();
 				img2sym.put(v, new Operator(Matrix.one(dim + 1)));
 				seen.add(v);
 				for (final Iterator syms = this.graph.symmetries().iterator(); syms
@@ -197,8 +194,8 @@ public class Embedder {
 		k = this.gramSpace.numberOfRows();
 
 		// --- set up translating parameter space values into point coordinates
-		this.node2index = new HashMap();
-		this.node2mapping = new HashMap();
+		this.node2index = new HashMap<INode, Integer>();
+		this.node2mapping = new HashMap<INode, double[][]>();
 
 		for (final Iterator nodeReps = nodeOrbitReps(); nodeReps.hasNext();) {
 			final INode v = (INode) nodeReps.next();
@@ -228,7 +225,7 @@ public class Embedder {
 		this.dimParSpace = k;
 
 		// --- the encoded list of graph edge orbits
-		final List edgeList = new ArrayList();
+		final List<Edge> edgeList = new ArrayList<Edge>();
 		for (final Iterator iter = graph.edgeOrbits(); iter.hasNext();) {
 			final Set orbit = (Set) iter.next();
 			final IEdge e = (IEdge) orbit.iterator().next();
@@ -323,7 +320,7 @@ public class Embedder {
 	 * @return an iterator over the set of orbits.
 	 */
 	private Iterator angleOrbits() {
-		final HashSet angles = new HashSet();
+		final Set<Angle> angles = new HashSet<Angle>();
 		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			final List incidences = this.graph.allIncidences(v);
@@ -586,8 +583,8 @@ public class Embedder {
 			   this.penaltyFactor * (edgePenalty + anglePenalty);
 	}
 
-	private Map nodeSymmetrizations() {
-		final Map result = new HashMap();
+	private Map<INode, Operator> nodeSymmetrizations() {
+		final Map<INode, Operator> result = new HashMap<INode, Operator>();
 		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			final List stab = this.graph.nodeStabilizer(v);
@@ -721,8 +718,8 @@ public class Embedder {
 		return new Point(getPosition(v, this.p));
 	}
 
-	public Map getPositions() {
-		final Map pos = new HashMap();
+	public Map<INode, Point> getPositions() {
+		final Map<INode, Point> pos = new HashMap<INode, Point>();
 		for (final Iterator nodes = getGraph().nodes(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			pos.put(v, getPosition(v));
