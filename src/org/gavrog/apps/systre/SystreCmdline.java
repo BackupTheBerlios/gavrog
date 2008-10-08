@@ -1046,7 +1046,7 @@ public class SystreCmdline extends EventSource {
     	
 		// --- set the properties for this instance
     	try {
-    		Config.setProperties(this, ourProps);
+    		Config.pushProperties(ourProps, this);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
