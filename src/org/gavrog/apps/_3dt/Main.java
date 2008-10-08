@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -249,7 +250,7 @@ public class Main extends EventSource {
     // --- gui elements
 	private BDialog aboutFrame;
 	private BDialog controlsFrame;
-	private HashMap<String, BLabel> tInfoFields;
+	private Map<String, BLabel> tInfoFields;
 
 	// --- scene graph components and associated properties
 	final private ViewerApp viewerApp;
@@ -572,6 +573,12 @@ public class Main extends EventSource {
                     try {
                     	final DelaneySymbol ds = doc().getSymbol();
                     	final Writer out = new FileWriter(path, append);
+                    	for (final String key: tInfoFields.keySet()) {
+                    		if (!key.startsWith("_")) {
+                    			out.write("#@ info " + key + " = " +
+                    					tInfoFields.get(key).getText() + "\n");
+                    		}
+                    	}
                     	if (doc().getName() != null) {
                     		out.write("#@ name " + doc().getName() + "\n");
                     	}
@@ -1517,7 +1524,7 @@ public class Main extends EventSource {
         for (String key : tInfoFields.keySet()) {
             setTInfo(key, "");
         }
-        setTInfo("file", filename);
+        setTInfo("_file", filename);
         tilingCounter = 0;
         if (documents.size() == 1) {
         	doTiling(1);
@@ -1555,16 +1562,16 @@ public class Main extends EventSource {
 		final Stopwatch timer = new Stopwatch();
 
         for (String key : tInfoFields.keySet()) {
-        	if (key != "file") {
+        	if (key != "_file") {
         		setTInfo(key, "");
         	}
         }
-		setTInfo("#", tilingCounter + " of " + documents.size());
+		setTInfo("_num", tilingCounter + " of " + documents.size());
 		String name = doc.getName();
 		if (name == null) {
 			name = "--";
 		}
-		setTInfo("name", name);
+		setTInfo("_name", name);
 		
 		this.currentDocument = doc;
 		// --- get the user options saved in the document
@@ -1606,10 +1613,10 @@ public class Main extends EventSource {
 		final DSymbol ds = doc().getSymbol();
 		setTInfo("size", ds.size());
 		setTInfo("dim", ds.dim());
-		setTInfo("trans", doc().getTransitivity());
+		setTInfo("transitivity", doc().getTransitivity());
 		setTInfo("minimal", ds.isMinimal());
-		setTInfo("dual", ds.equals(ds.dual()));
-		setTInfo("sig", "pending...");
+		setTInfo("selfdual", ds.equals(ds.dual()));
+		setTInfo("signature", "pending...");
 		setTInfo("group", "pending...");
 
         final Document oldDoc = doc();
@@ -1618,7 +1625,7 @@ public class Main extends EventSource {
 			public void run() {
 				final String sig = oldDoc.getSignature();
 				if (doc() == oldDoc) {
-					setTInfo("sig", sig);
+					setTInfo("signature", sig);
 					viewerApp.getFrame().setVisible(true);
 				}
 				final String group = oldDoc.getGroupName();
@@ -3044,10 +3051,10 @@ public class Main extends EventSource {
 				new Insets(10, 10, 10, 10), null));
 
 		final String[][] items = new String[][] {
-				{ "file", "File:" }, { "#", "#" }, { "name", "Name:" },
+				{ "_file", "File:" }, { "_num", "#" }, { "_name", "Name:" },
 				{ "dim", "Dimension:" },
-				{ "size", "Complexity:" }, { "trans", "Transitivity:" },
-				{ "dual", "Self-dual:" }, { "sig", "Signature:" },
+				{ "size", "Complexity:" }, { "transitivity", "Transitivity:" },
+				{ "selfdual", "Self-dual:" }, { "signature", "Signature:" },
 				{ "group", "Symmetry:" }, { "minimal", "Max. Symmetric:" }
 		};
 
@@ -3059,7 +3066,7 @@ public class Main extends EventSource {
 		data.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
 				new Insets(2, 0, 2, 0), null));
 		data.setBackground(null);
-		this.tInfoFields = new HashMap<String, BLabel>();
+		this.tInfoFields = new LinkedHashMap<String, BLabel>();
 		for (int i = 0; i < items.length; ++i) {
 			final BLabel label = new BLabel();
 			this.tInfoFields.put(items[i][0], label);
