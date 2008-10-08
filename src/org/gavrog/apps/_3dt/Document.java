@@ -585,56 +585,6 @@ public class Document extends DisplayList {
 		return o.getCoordinates().asDoubleArray()[0];
 	}
     
-    // --- getters and setters for options
-    public int getEmbedderStepLimit() {
-        return this.embedderStepLimit;
-    }
-
-    public void setEmbedderStepLimit(int embedderStepLimit) {
-        if (embedderStepLimit != this.embedderStepLimit) {
-            invalidateEmbedding();
-            this.embedderStepLimit = embedderStepLimit;
-        }
-    }
-
-    public int getEqualEdgePriority() {
-        return this.equalEdgePriority;
-    }
-
-    public void setEqualEdgePriority(int equalEdgePriority) {
-        if (equalEdgePriority != this.equalEdgePriority) {
-            invalidateEmbedding();
-            this.equalEdgePriority = equalEdgePriority;
-        }
-    }
-
-    public boolean getUseBarycentricPositions() {
-        return this.useBarycentricPositions;
-    }
-
-    public void setUseBarycentricPositions(boolean useBarycentricPositions) {
-        if (useBarycentricPositions != this.useBarycentricPositions) {
-            invalidateEmbedding();
-            this.useBarycentricPositions = useBarycentricPositions;
-        }
-    }
-
-    public Properties getProperties() {
-		return this.properties;
-	}
-
-	public void setProperties(final Properties properties) {
-		this.properties = properties;
-	}
-
-	public Transformation getTransformation() {
-		return this.transformation;
-	}
-
-	public void setTransformation(final Transformation transformation) {
-		this.transformation = transformation;
-	}
-	
 	private static void add(final StringBuffer buf, final String key,
 			final Object val) {
     	final Class cl = val == null ? null : val.getClass();
@@ -1177,5 +1127,55 @@ public class Document extends DisplayList {
 		} catch (final FileNotFoundException ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+    // --- getters and setters for options
+    public int getEmbedderStepLimit() {
+        return this.embedderStepLimit;
+    }
+
+    public void setEmbedderStepLimit(int embedderStepLimit) {
+        if (embedderStepLimit != this.embedderStepLimit) {
+            invalidateEmbedding();
+            this.embedderStepLimit = embedderStepLimit;
+        }
+    }
+
+    public int getEqualEdgePriority() {
+        return this.equalEdgePriority;
+    }
+
+    public void setEqualEdgePriority(int equalEdgePriority) {
+        if (equalEdgePriority != this.equalEdgePriority) {
+            invalidateEmbedding();
+            this.equalEdgePriority = equalEdgePriority;
+        }
+    }
+
+    public boolean getUseBarycentricPositions() {
+        return this.useBarycentricPositions;
+    }
+
+    public void setUseBarycentricPositions(boolean useBarycentricPositions) {
+        if (useBarycentricPositions != this.useBarycentricPositions) {
+            invalidateEmbedding();
+            this.useBarycentricPositions = useBarycentricPositions;
+        }
+    }
+
+    public Properties getProperties() {
+		return this.properties;
+	}
+
+	public void setProperties(final Properties properties) {
+		this.properties = properties;
+	}
+
+	public Transformation getTransformation() {
+		return this.transformation;
+	}
+
+	public void setTransformation(final Transformation transformation) {
+		this.transformation = transformation;
 	}
 }

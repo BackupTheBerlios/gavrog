@@ -3359,114 +3359,80 @@ public class Main extends EventSource {
         return tileSize;
     }
 
-    public void setTileSize(double tileSize) {
-    	if (tileSize != this.tileSize) {
-    		dispatchEvent(new PropertyChangeEvent(this, "tileSize",
-    				this.tileSize, tileSize));
-    		this.tileSize = tileSize;
-    	}
+    public void setTileSize(final double value) {
+    	_setField("tileSize", value);
     }
     
     public boolean getSmoothFaces() {
         return smoothFaces;
     }
 
-    public void setSmoothFaces(boolean smoothFaces) {
-    	if (smoothFaces != this.smoothFaces) {
-    		dispatchEvent(new PropertyChangeEvent(this, "smoothFaces",
-    				this.smoothFaces, smoothFaces));
-    		this.smoothFaces = smoothFaces;
-    	}
+    public void setSmoothFaces(final boolean value) {
+    	_setField("smoothFaces", value);
     }
 
     public int getSubdivisionLevel() {
         return subdivisionLevel;
     }
 
-    public void setSubdivisionLevel(int subdivisionLevel) {
-    	if (subdivisionLevel != this.subdivisionLevel) {
-    		dispatchEvent(new PropertyChangeEvent(this, "subdivisionLevel",
-    				this.subdivisionLevel, subdivisionLevel));
-    		this.subdivisionLevel = subdivisionLevel;
-    	}
+    public void setSubdivisionLevel(final int value) {
+    	_setField("subdivisionLevel", value);
     }
 
     public int getTileRelaxationSteps() {
         return tileRelaxationSteps;
     }
 
-    public void setTileRelaxationSteps(int tileRelaxationSteps) {
-    	if (tileRelaxationSteps != this.tileRelaxationSteps) {
-    		dispatchEvent(new PropertyChangeEvent(this, "tileRelaxationSteps",
-    				this.tileRelaxationSteps, tileRelaxationSteps));
-    		this.tileRelaxationSteps = tileRelaxationSteps;
-    	}
+    public void setTileRelaxationSteps(final int value) {
+    	_setField("tileRelaxationSteps", value);
     }
 
 	public int getMinX() {
 		return this.minX;
 	}
 
-	public void setMinX(int minX) {
-    	if (minX != this.minX) {
-    		dispatchEvent(new PropertyChangeEvent(this, "minX", this.minX, minX));
-    		this.minX = minX;
-    	}
+	public void setMinX(final int value) {
+		_setField("minX", value);
 	}
 
 	public int getMaxX() {
 		return this.maxX;
 	}
 
-	public void setMaxX(int maxX) {
-    	if (maxX != this.maxX) {
-    		dispatchEvent(new PropertyChangeEvent(this, "maxX", this.maxX, maxX));
-    		this.maxX = maxX;
-    	}
+	public void setMaxX(final int value) {
+		_setField("maxX", value);
 	}
 
 	public int getMinY() {
 		return this.minY;
 	}
 
-	public void setMinY(int minY) {
-    	if (minY != this.minY) {
-    		dispatchEvent(new PropertyChangeEvent(this, "minY", this.minY, minY));
-    		this.minY = minY;
-    	}
+	public void setMinY(final int value) {
+		_setField("minY", value);
 	}
 
 	public int getMaxY() {
 		return this.maxY;
 	}
 
-	public void setMaxY(int maxY) {
-    	if (maxY != this.maxY) {
-    		dispatchEvent(new PropertyChangeEvent(this, "maxY", this.maxY, maxY));
-    		this.maxY = maxY;
-    	}
+	public void setMaxY(final int value) {
+		_setField("maxY", value);
 	}
 
 	public int getMinZ() {
 		return this.minZ;
 	}
 
-	public void setMinZ(int minZ) {
-    	if (minZ != this.minZ) {
-    		dispatchEvent(new PropertyChangeEvent(this, "minZ", this.minZ, minZ));
-    		this.minZ = minZ;
-    	}
+	public void setMinZ(final int value) {
+		_setField("minZ", value);
 	}
 
 	public int getMaxZ() {
 		return this.maxZ;
 	}
 
-	public void setMaxZ(int maxZ) {
-    	if (maxZ != this.maxZ) {
-    		dispatchEvent(new PropertyChangeEvent(this, "maxZ", this.maxZ, maxZ));
-    		this.maxZ = maxZ;
-    	}
+	public void setMaxZ(final int value) {
+		_setField("maxZ", value);
 	}
 
 	public boolean getClearOnFill() {
@@ -3481,385 +3447,255 @@ public class Main extends EventSource {
         return embedderStepLimit;
     }
 
-    public void setEmbedderStepLimit(int embedderStepLimit) {
-    	if (embedderStepLimit != this.embedderStepLimit) {
-    		dispatchEvent(new PropertyChangeEvent(this, "embedderStepLimit",
-    				this.embedderStepLimit, embedderStepLimit));
-    		this.embedderStepLimit = embedderStepLimit;
-    	}
+    public void setEmbedderStepLimit(final int value) {
+    	_setField("embedderStepLimit", value);
     }
 
     public int getEqualEdgePriority() {
         return equalEdgePriority;
     }
 
-    public void setEqualEdgePriority(int equalEdgePriority) {
-    	if (equalEdgePriority != this.equalEdgePriority) {
-    		dispatchEvent(new PropertyChangeEvent(this, "equalEdgePriority",
-    				this.equalEdgePriority, equalEdgePriority));
-    		this.equalEdgePriority = equalEdgePriority;
-    	}
+    public void setEqualEdgePriority(final int value) {
+    	_setField("equalEdgePriority", value);
     }
 
 	public boolean getUseBarycentricPositions() {
 		return useBarycentricPositions;
 	}
 
-	public void setUseBarycentricPositions(boolean useBarycentricPositions) {
-    	if (useBarycentricPositions != this.useBarycentricPositions) {
-			dispatchEvent(new PropertyChangeEvent(this,
-					"useBarycentricPositions", this.useBarycentricPositions,
-					useBarycentricPositions));
-			this.useBarycentricPositions = useBarycentricPositions;
-		}
+	public void setUseBarycentricPositions(final boolean value) {
+		_setField("useBarycentricPositions", value);
 	}
 
 	public double getAmbientCoefficient() {
 		return ambientCoefficient;
 	}
 
-	public void setAmbientCoefficient(double ambientCoefficient) {
-    	if (ambientCoefficient != this.ambientCoefficient) {
-    		dispatchEvent(new PropertyChangeEvent(this, "ambientCoefficient",
-    				this.ambientCoefficient, ambientCoefficient));
-    		this.ambientCoefficient = ambientCoefficient;
-    	}
+	public void setAmbientCoefficient(final double value) {
+		_setField("ambientCoefficient", value);
 	}
 
 	public Color getAmbientColor() {
 		return ambientColor;
 	}
 
-	public void setAmbientColor(Color ambientColor) {
-    	if (ambientColor != this.ambientColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "ambientColor",
-    				this.ambientColor, ambientColor));
-    		this.ambientColor = ambientColor;
-    	}
+	public void setAmbientColor(final Color value) {
+		_setField("ambientColor", value);
 	}
 
 	public double getDiffuseCoefficient() {
 		return diffuseCoefficient;
 	}
 
-	public void setDiffuseCoefficient(double diffuseCoefficient) {
-    	if (diffuseCoefficient != this.diffuseCoefficient) {
-    		dispatchEvent(new PropertyChangeEvent(this, "diffuseCoefficient",
-    				this.diffuseCoefficient, diffuseCoefficient));
-    		this.diffuseCoefficient = diffuseCoefficient;
-    	}
+	public void setDiffuseCoefficient(final double value) {
+		_setField("diffuseCoefficient", value);
 	}
 
 	public double getSpecularCoefficient() {
 		return specularCoefficient;
 	}
 
-	public void setSpecularCoefficient(double specularCoefficient) {
-    	if (specularCoefficient != this.specularCoefficient) {
-    		dispatchEvent(new PropertyChangeEvent(this, "specularCoefficient",
-    				this.specularCoefficient, specularCoefficient));
-    		this.specularCoefficient = specularCoefficient;
-    	}
+	public void setSpecularCoefficient(final double value) {
+		_setField("specularCoefficient", value);
 	}
 
 	public Color getSpecularColor() {
 		return specularColor;
 	}
 
-	public void setSpecularColor(Color specularColor) {
-    	if (specularColor != this.specularColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "specularColor",
-    				this.specularColor, specularColor));
-    		this.specularColor = specularColor;
-    	}
+	public void setSpecularColor(final Color value) {
+		_setField("specularColor", value);
 	}
 
 	public double getSpecularExponent() {
 		return specularExponent;
 	}
 
-	public void setSpecularExponent(double specularExponent) {
-    	if (specularExponent != this.specularExponent) {
-    		dispatchEvent(new PropertyChangeEvent(this, "specularExponent",
-    				this.specularExponent, specularExponent));
-    		this.specularExponent = specularExponent;
-    	}
+	public void setSpecularExponent(final double value) {
+		_setField("specularExponent", value);
 	}
 
 	public Color getBackgroundColor() {
 		return backgroundColor;
 	}
 
-	public void setBackgroundColor(Color backgroundColor) {
-    	if (backgroundColor != this.backgroundColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "backgroundColor",
-    				this.backgroundColor, backgroundColor));
-    		this.backgroundColor = backgroundColor;
-    	}
+	public void setBackgroundColor(final Color value) {
+		_setField("backgroundColor", value);
 	}
 
 	public String getLastInputDirectory() {
 		return lastInputDirectory;
 	}
 
-	public void setLastInputDirectory(final String lastInputDirectory) {
-		_setField("lastInputDirectory", lastInputDirectory);
+	public void setLastInputDirectory(final String value) {
+		_setField("lastInputDirectory", value);
 	}
 
 	public String getLastNetOutputDirectory() {
 		return this.lastNetOutputDirectory;
 	}
 
-	public void setLastNetOutputDirectory(String lastNetOutputDirectory) {
-    	if (lastNetOutputDirectory != this.lastNetOutputDirectory) {
-    		dispatchEvent(new PropertyChangeEvent(this,
-					"lastNetOutputDirectory", this.lastNetOutputDirectory,
-					lastNetOutputDirectory));
-    		this.lastNetOutputDirectory = lastNetOutputDirectory;
-    	}
+	public void setLastNetOutputDirectory(final String value) {
+		_setField("lastNetOutputDirectory", value);
 	}
 
 	public String getLastSceneOutputDirectory() {
 		return this.lastSceneOutputDirectory;
 	}
 
-	public void setLastSceneOutputDirectory(String lastSceneOutputDirectory) {
-    	if (lastSceneOutputDirectory != this.lastSceneOutputDirectory) {
-    		dispatchEvent(new PropertyChangeEvent(this,
-					"lastSceneOutputDirectory", this.lastSceneOutputDirectory,
-					lastSceneOutputDirectory));
-    		this.lastSceneOutputDirectory = lastSceneOutputDirectory;
-    	}
+	public void setLastSceneOutputDirectory(final String value) {
+		_setField("lastSceneOutputDirectory", value);
 	}
 
 	public String getLastTilingOutputDirectory() {
 		return this.lastTilingOutputDirectory;
 	}
 
-	public void setLastTilingOutputDirectory(String lastTilingOutputDirectory) {
-    	if (lastTilingOutputDirectory != this.lastTilingOutputDirectory) {
-    		dispatchEvent(new PropertyChangeEvent(this,
-					"lastTilingOutputDirectory",
-					this.lastTilingOutputDirectory, lastTilingOutputDirectory));
-    		this.lastTilingOutputDirectory = lastTilingOutputDirectory;
-    	}
+	public void setLastTilingOutputDirectory(final String value) {
+		_setField("lastTilingOutputDirectory", value);
 	}
 
 	public String getLastSunflowRenderDirectory() {
 		return this.lastSunflowRenderDirectory;
 	}
 
-	public void setLastSunflowRenderDirectory(String lastSunflowRenderDirectory) {
-		if (lastSunflowRenderDirectory != this.lastSunflowRenderDirectory) {
-			dispatchEvent(new PropertyChangeEvent(this,
-					"lastSunflowRenderDirectory",
-					this.lastSunflowRenderDirectory, lastSunflowRenderDirectory));
-			this.lastSunflowRenderDirectory = lastSunflowRenderDirectory;
-		}
+	public void setLastSunflowRenderDirectory(final String value) {
+		_setField("lastSunflowRenderDirectory", value);
 	}
 
 	public int getEdgeRoundingLevel() {
 		return edgeRoundingLevel;
 	}
 
-	public void setEdgeRoundingLevel(int edgeRoundingLevel) {
-    	if (edgeRoundingLevel != this.edgeRoundingLevel) {
-    		dispatchEvent(new PropertyChangeEvent(this, "edgeRoundingLevel",
-    				this.edgeRoundingLevel, edgeRoundingLevel));
-    		this.edgeRoundingLevel = edgeRoundingLevel;
-    	}
+	public void setEdgeRoundingLevel(final int value) {
+		_setField("edgeRoundingLevel", value);
 	}
 
 	public Color getFogColor() {
 		return fogColor;
 	}
 
-	public void setFogColor(Color fogColor) {
-    	if (fogColor != this.fogColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "fogColor",
-    				this.fogColor, fogColor));
-    		this.fogColor = fogColor;
-    	}
+	public void setFogColor(final Color value) {
+		_setField("fogColor", value);
 	}
 
 	public double getFogDensity() {
 		return fogDensity;
 	}
 
-	public void setFogDensity(double fogDensity) {
-    	if (fogDensity != this.fogDensity) {
-    		dispatchEvent(new PropertyChangeEvent(this, "fogDensity",
-    				this.fogDensity, fogDensity));
-    		this.fogDensity = fogDensity;
-    	}
+	public void setFogDensity(final double value) {
+		_setField("fogDensity", value);
 	}
 
 	public boolean getFogToBackground() {
 		return fogToBackground;
 	}
 
-	public void setFogToBackground(boolean fogToBackground) {
-    	if (fogToBackground != this.fogToBackground) {
-    		dispatchEvent(new PropertyChangeEvent(this, "fogToBackground",
-    				this.fogToBackground, fogToBackground));
-    		this.fogToBackground = fogToBackground;
-    	}
+	public void setFogToBackground(final boolean value) {
+		_setField("fogToBackground", value);
 	}
 
 	public double getFieldOfView() {
 		return this.fieldOfView;
 	}
 
-	public void setFieldOfView(double fieldOfView) {
-    	if (fieldOfView != this.fieldOfView) {
-    		fieldOfView = Math.max(fieldOfView, 0.5);
-    		dispatchEvent(new PropertyChangeEvent(this, "fieldOfView",
-    				this.fieldOfView, fieldOfView));
-    		this.fieldOfView = fieldOfView;
-    	}
+	public void setFieldOfView(final double value) {
+		_setField("fieldOfView", value);
 	}
 
 	public boolean getUseFog() {
 		return useFog;
 	}
 
-	public void setUseFog(boolean useFog) {
-    	if (useFog != this.useFog) {
-    		dispatchEvent(new PropertyChangeEvent(this, "useFog", this.useFog,
-					useFog));
-    		this.useFog = useFog;
-    	}
+	public void setUseFog(final boolean value) {
+		_setField("useFog", value);
 	}
 
 	public boolean getShowUnitCell() {
 		return this.showUnitCell;
 	}
 
-	public void setShowUnitCell(boolean showUnitCell) {
-    	if (showUnitCell != this.showUnitCell) {
-    		dispatchEvent(new PropertyChangeEvent(this, "showUnitCell",
-    				this.showUnitCell, showUnitCell));
-    		this.showUnitCell = showUnitCell;
-    	}
+	public void setShowUnitCell(final boolean value) {
+		_setField("showUnitCell", value);
 	}
 
     public Color getUnitCellColor() {
         return this.unitCellColor;
     }
 
-    public void setUnitCellColor(Color unitCellColor) {
-    	if (unitCellColor != this.unitCellColor) {
-    		dispatchEvent(new PropertyChangeEvent(this, "unitCellColor",
-    				this.unitCellColor, unitCellColor));
-    		this.unitCellColor = unitCellColor;
-    	}
+    public void setUnitCellColor(final Color value) {
+    	_setField("unitCellColor", value);
     }
 
     public double getUnitCellEdgeWidth() {
         return this.unitCellEdgeWidth;
     }
 
-    public void setUnitCellEdgeWidth(double unitCellEdgeWidth) {
-    	if (unitCellEdgeWidth != this.unitCellEdgeWidth) {
-    		dispatchEvent(new PropertyChangeEvent(this, "unitCellEdgeWidth",
-    				this.unitCellEdgeWidth, unitCellEdgeWidth));
-    		this.unitCellEdgeWidth = unitCellEdgeWidth;
-    	}
+    public void setUnitCellEdgeWidth(final double value) {
+    	_setField("unitCellEdgeWidth", value);
     }
 
     public int getViewerWidth() {
     	return this.viewerWidth;
     }
     
-	public void setViewerWidth(int viewerWidth) {
-		if (viewerWidth != this.viewerWidth) {
-			dispatchEvent(new PropertyChangeEvent(this, "viewerWidth",
-					this.viewerWidth, viewerWidth));
-			this.viewerWidth = viewerWidth;
-		}
+	public void setViewerWidth(final int value) {
+		_setField("viewerWidth", value);
 	}
 
     public int getViewerHeight() {
     	return this.viewerHeight;
     }
     
-	public void setViewerHeight(int viewerHeight) {
-		if (viewerHeight != this.viewerHeight) {
-			dispatchEvent(new PropertyChangeEvent(this, "viewerHeight",
-					this.viewerHeight, viewerHeight));
-			this.viewerHeight = viewerHeight;
-		}
+	public void setViewerHeight(final int value) {
+		_setField("viewerHeight", value);
 	}
 
 	public boolean getUseLeopardWorkaround() {
 		return this.useLeopardWorkaround;
 	}
 
-	public void setUseLeopardWorkaround(boolean useLeopardWorkaround) {
-		if (useLeopardWorkaround != this.useLeopardWorkaround) {
-			dispatchEvent(new PropertyChangeEvent(this, "useLeopardWorkaround",
-					this.useLeopardWorkaround, useLeopardWorkaround));
-			this.useLeopardWorkaround = useLeopardWorkaround;
-		}
+	public void setUseLeopardWorkaround(final boolean value) {
+		_setField("useLeopardWorkaround", value);
 	}
 
 	public boolean getShowNet() {
 		return this.showNet;
 	}
 
-	public void setShowNet(boolean showNet) {
-		if (showNet != this.showNet) {
-			dispatchEvent(new PropertyChangeEvent(this, "showNet",
-					this.showNet, showNet));
-			this.showNet = showNet;
-		}
+	public void setShowNet(final boolean value) {
+		_setField("showNet", value);
 	}
 
 	public Color getNetEdgeColor() {
 		return this.netEdgeColor;
 	}
 
-	public void setNetEdgeColor(Color netEdgeColor) {
-		if (netEdgeColor != this.netEdgeColor) {
-			dispatchEvent(new PropertyChangeEvent(this, "netEdgeColor",
-					this.netEdgeColor, netEdgeColor));
-			this.netEdgeColor = netEdgeColor;
-		}
+	public void setNetEdgeColor(final Color value) {
+		_setField("netEdgeColor", value);
 	}
 
 	public Color getNetNodeColor() {
 		return this.netNodeColor;
 	}
 
-	public void setNetNodeColor(Color netNodeColor) {
-		if (netNodeColor != this.netNodeColor) {
-			dispatchEvent(new PropertyChangeEvent(this, "netNodeColor",
-					this.netNodeColor, netNodeColor));
-			this.netNodeColor = netNodeColor;
-		}
+	public void setNetNodeColor(final Color value) {
+		_setField("netNodeColor", value);
 	}
 
 	public double getNetEdgeRadius() {
 		return this.netEdgeRadius;
 	}
 
-	public void setNetEdgeRadius(double netEdgeRadius) {
-		if (netEdgeRadius != this.netEdgeRadius) {
-			dispatchEvent(new PropertyChangeEvent(this, "netEdgeRadius",
-					this.netEdgeRadius, netEdgeRadius));
-			this.netEdgeRadius = netEdgeRadius;
-		}
+	public void setNetEdgeRadius(final double value) {
+		_setField("netEdgeRadius", value);
 	}
 
 	public double getNetNodeRadius() {
 		return this.netNodeRadius;
 	}
 
-	public void setNetNodeRadius(double netNodeRadius) {
-		if (netNodeRadius != this.netNodeRadius) {
-			dispatchEvent(new PropertyChangeEvent(this, "netNodeRadius",
-					this.netNodeRadius, netNodeRadius));
-			this.netNodeRadius = netNodeRadius;
-		}
+	public void setNetNodeRadius(final double value) {
+		_setField("netNodeRadius", value);
 	}
 }
