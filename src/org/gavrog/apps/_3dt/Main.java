@@ -1666,9 +1666,31 @@ public class Main extends EventSource {
 			// --- generate the base surface
 			final double p[][] = new double[n][3];
 			for (int j = 0; j < n; ++j) {
-				final double tmp[] = Rn.subtract(null, corners[j], center);
-				final double f = getEdgeWidth() / Rn.euclideanNorm(tmp);
-				Rn.linearCombination(p[j], 1 - f, corners[j], f, center);
+				final double u[] = corners[(j + n - 1) % n];
+				final double v[] = corners[j];
+				final double w[] = corners[(j + 1) % n];
+				final double vu[] = Rn.subtract(null, u, v);
+				final double vw[] = Rn.subtract(null, w, v);
+				final double vc[] = Rn.subtract(null, center, v);
+				Rn.normalize(vu, vu);
+				Rn.normalize(vw, vw);
+				final double d[] = Rn.add(null, vu, vw);
+				double f = Rn.innerProduct(d, vu);
+				final double tmp[] = Rn.times(null, f, vu);
+				Rn.subtract(tmp, d, tmp);
+				final double length = edgeWidth * Rn.euclideanNorm(d)
+						/ Rn.euclideanNorm(tmp);
+				Rn.crossProduct(tmp, vu, vw);
+				Rn.crossProduct(tmp, d, tmp);
+				Rn.normalize(tmp, tmp);
+				f = Rn.innerProduct(tmp, vc);
+				Rn.times(tmp, f, tmp);
+				Rn.subtract(tmp, vc, tmp);
+				f = length / Rn.euclideanNorm(tmp);
+				Rn.linearCombination(p[j], 1, corners[j], f, tmp);
+// final double tmp[] = Rn.subtract(null, corners[j], center);
+//				final double f = getEdgeWidth() / Rn.euclideanNorm(tmp);
+//				Rn.linearCombination(p[j], 1 - f, corners[j], f, center);
 			}
 			
             fSurf[i] = Surface.fromOutline(p, 1000);
@@ -3561,7 +3583,7 @@ public class Main extends EventSource {
 	}
 
 	public void setFieldOfView(final double value) {
-		_setField("fieldOfView", value);
+		_setField("fieldOfView", Math.max(value, 1.0));
 	}
 
 	public boolean getUseFog() {
