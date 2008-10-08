@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2008 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -154,6 +154,18 @@ public class Vector extends ArithmeticBase implements IArithmetic {
         this(image(v, M));
     }
 
+    /**
+     * Returns the coordinates as an array of double values.
+     * @return the coordinate array.
+     */
+    public double[] asDoubleArray() {
+        final double[] result = new double[getDimension()];
+        for (int i  = 0; i < getDimension(); ++i) {
+            result[i] = ((Real) get(i)).doubleValue();
+        }
+        return result;
+    }
+    
     /**
      * Applies an operator to a vector.
      * 

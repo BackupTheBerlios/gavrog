@@ -165,6 +165,14 @@ public class TestVector extends TestCase {
         assertEquals(A, v.getCoordinates());
     }
     
+    public void testAsDoubleArray() {
+    	final double[] c = v.asDoubleArray();
+    	assertEquals(3, c.length);
+    	assertEquals(1.0, c[0]);
+    	assertEquals(2.0, c[1]);
+    	assertEquals(3.0, c[2]);
+    }
+    
     public void testStaticZero() {
         final Vector z = new Vector(Matrix.zero(1, 5));
         assertEquals(z, Vector.zero(5));
@@ -223,7 +231,7 @@ public class TestVector extends TestCase {
                 new Vector(7, 8, 9),
         };
         assertEquals(A, Vector.toMatrix(rows));
-        final List list = new ArrayList();
+        final List<Vector> list = new ArrayList<Vector>();
         list.add(new Vector(1, 2, 3));
         list.add(new Vector(4, 5,6));
         list.add(new Vector(7, 8, 9));
