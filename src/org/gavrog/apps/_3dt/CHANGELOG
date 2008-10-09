@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- In "Open" and "Save" actions, full file names are now remembered.
 - If no creasing is applied, edges now have constant width.
 - Some basic info on each tiling is now saved in .ds files.
 - I/O paths and other interface attributes are no longer stored in scene files.

@@ -55,7 +55,6 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
@@ -95,7 +94,6 @@ import buoy.event.MouseClickedEvent;
 import buoy.event.WindowClosingEvent;
 import buoy.widget.BButton;
 import buoy.widget.BDialog;
-import buoy.widget.BFileChooser;
 import buoy.widget.BFrame;
 import buoy.widget.BLabel;
 import buoy.widget.BOutline;
@@ -163,16 +161,16 @@ public class Main extends EventSource {
 			+ "/.3dt";
 	
 	// --- file choosers
-	final private BFileChooser inFileChooser = new BFileChooser(
-			BFileChooser.OPEN_FILE, "Open data file");
-	final private BFileChooser outNetChooser = new BFileChooser(
-			BFileChooser.SAVE_FILE, "Save net");
-	final private BFileChooser outTilingChooser = new BFileChooser(
-			BFileChooser.SAVE_FILE, "Save tiling");
-	final private BFileChooser outSceneChooser = new BFileChooser(
-			BFileChooser.SAVE_FILE, "Save scene");
-	final private BFileChooser outSunflowChooser = new BFileChooser(
-			BFileChooser.SAVE_FILE, "Save image");
+	final private FileChooser inFileChooser =
+		new FileChooser(FileChooser.OPEN_FILE);
+	final private FileChooser outNetChooser =
+		new FileChooser(FileChooser.SAVE_FILE);
+	final private FileChooser outTilingChooser =
+		new FileChooser(FileChooser.SAVE_FILE);
+	final private FileChooser outSceneChooser =
+		new FileChooser(FileChooser.SAVE_FILE);
+	final private FileChooser outSunflowChooser =
+		new FileChooser(FileChooser.SAVE_FILE);
 	final private DimensionPanel dimPanel = new DimensionPanel();
 	
     // --- tile options
@@ -294,38 +292,9 @@ public class Main extends EventSource {
         // --- retrieved stored user options
 		loadOptions();
 
-		// --- init file choosers
-		JFileChooser chooser = (JFileChooser) inFileChooser.getComponent();
-		chooser.addChoosableFileFilter(new ExtensionFilter("ds",
-				"Delaney-Dress Symbol Files"));
-		chooser.addChoosableFileFilter(new ExtensionFilter("cgd",
-				"Geometric Description Files"));
-		chooser.addChoosableFileFilter(new ExtensionFilter("gsl",
-		"Gavrog Scene Files"));
-		chooser.addChoosableFileFilter(new ExtensionFilter(new String[] { "cgd",
-				"ds", "gsl" }, "All 3dt Files"));
+		// --- initialize the file choosers
+		setupFileChoosers();
 		
-		chooser = (JFileChooser) outNetChooser.getComponent();
-		chooser.addChoosableFileFilter(new ExtensionFilter("pgr",
-				"Raw Periodic Net Files (for Systre)"));
-		
-		chooser = (JFileChooser) outTilingChooser.getComponent();
-		chooser.addChoosableFileFilter(new ExtensionFilter("ds",
-				"Delaney-Dress Symbol Files"));
-
-		chooser = (JFileChooser) outSceneChooser.getComponent();
-		chooser.addChoosableFileFilter(new ExtensionFilter("gsl",
-				"Gavrog Scene Files"));
-
-		chooser = (JFileChooser) outSunflowChooser.getComponent();
-		chooser.addChoosableFileFilter(new ExtensionFilter(new String[] {
-				"png", "tga", "hdr" }, "Images files"));
-		dimPanel.setDimension(new Dimension(800, 600));
-		TitledBorder title = BorderFactory.createTitledBorder(BorderFactory
-				.createEtchedBorder(), "Dimension");
-		dimPanel.setBorder(title);
-		chooser.setAccessory(dimPanel);
-
 		// --- create the viewing infrastructure
 		this.world = SceneGraphUtility.createFullSceneGraphComponent("World");
 		final Appearance a = new Appearance();
@@ -484,6 +453,43 @@ public class Main extends EventSource {
         menu.addAction(actionAbout(), HELP_MENU);
     }
     
+    private void setupFileChoosers() {
+    	inFileChooser.setTitle("Open data file");
+		inFileChooser.addChoosableFileFilter(new ExtensionFilter("ds",
+				"Delaney-Dress Symbol Files"));
+		inFileChooser.addChoosableFileFilter(new ExtensionFilter("cgd",
+				"Geometric Description Files"));
+		inFileChooser.addChoosableFileFilter(new ExtensionFilter("gsl",
+				"Gavrog Scene Files"));
+		inFileChooser.addChoosableFileFilter(new ExtensionFilter(new String[] {
+				"cgd", "ds", "gsl" }, "All 3dt Files"));
+
+		outNetChooser.setTitle("Save net");
+		outNetChooser.addChoosableFileFilter(new ExtensionFilter("pgr",
+				"Raw Periodic Net Files (for Systre)"));
+		outNetChooser.setAppendEnabled(true);
+
+		outTilingChooser.setTitle("Save tiling");
+		outTilingChooser.addChoosableFileFilter(new ExtensionFilter("ds",
+				"Delaney-Dress Symbol Files"));
+		outTilingChooser.setAppendEnabled(true);
+
+		outSceneChooser.setTitle("Save scene");
+		outSceneChooser.addChoosableFileFilter(new ExtensionFilter("gsl",
+				"Gavrog Scene Files"));
+		outSceneChooser.setAppendEnabled(false);
+
+		outSunflowChooser.setTitle("Save image");
+		outSunflowChooser.addChoosableFileFilter(new ExtensionFilter(
+				new String[] { "png", "tga", "hdr" }, "Images files"));
+		dimPanel.setDimension(new Dimension(800, 600));
+		TitledBorder title = BorderFactory.createTitledBorder(BorderFactory
+				.createEtchedBorder(), "Dimension");
+		dimPanel.setBorder(title);
+		outSunflowChooser.setAccessory(dimPanel);
+		outSunflowChooser.setAppendEnabled(false);
+    }
+    
     private Action actionAbout() {
     	final String name = "About 3dt";
     	if (ActionRegistry.instance().get(name) == null) {
@@ -513,16 +519,12 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					inFileChooser.setDirectory(
-							new File(ui.getLastInputDirectory()));
-					final boolean success = inFileChooser.showDialog(null);
-					if (!success) {
-						return;
-					}
-					ui.setLastInputDirectory(
-							inFileChooser.getDirectory().getAbsolutePath());
+					final File file = inFileChooser.pickFile(
+							ui.getLastInputPath(), null);
+					if (file == null) return;
+					ui.setLastInputPath(file);
 					saveOptions();
-					openFile(inFileChooser.getSelectedFile().getAbsolutePath());
+					openFile(file.getAbsolutePath());
 				}
 			}, "Open a tiling file",
 			KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
@@ -530,49 +532,20 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
     }
     
-    private int showOverwriteDialog(final File file, final String[] choices,
-    		final String defaultChoice) {
-    	return new BStandardDialog("3dt - File exists", "File \"" + file
-				+ "\" already exists. Overwrite?", BStandardDialog.QUESTION)
-				.showOptionDialog(null, choices, defaultChoice);
-    }
-    
     private Action actionSaveTiling() {
 		final String name = "Save Tiling...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    outTilingChooser.setDirectory(
-                    		new File(ui.getLastTilingOutputDirectory()));
-                    final boolean success = outTilingChooser.showDialog(null);
-                    if (!success) {
-                        return;
-                    }
-                    final File dir = outTilingChooser.getDirectory();
-                    ui.setLastTilingOutputDirectory(dir.getAbsolutePath());
-                    saveOptions();
-                    String filename = outTilingChooser.getSelectedFile()
-							.getName();
-                    if (filename.indexOf('.') < 0) {
-                    	filename += ".ds";
-                    }
-                    final File file = new File(dir, filename);
-                    final boolean append;
-                    if (file.exists()) {
-                        int choice = showOverwriteDialog(file, new String[] {
-								"Overwrite", "Append", "Cancel" }, "Cancel");
-                        if (choice > 1) {
-                            return;
-                        } else {
-                            append = choice == 1;
-                        }
-                    } else {
-                        append = false;
-                    }
-                    final String path = file.getAbsolutePath();
+					final File file =outTilingChooser.pickFile(
+							ui.getLastTilingOutputPath(), "ds");
+					if (file == null) return;
+					ui.setLastTilingOutputPath(file);
+					saveOptions();
                     try {
                     	final DelaneySymbol ds = doc().getSymbol();
-                    	final Writer out = new FileWriter(path, append);
+                    	final boolean append = outTilingChooser.getAppend();
+                    	final Writer out = new FileWriter(file, append);
                     	for (final String key: tInfoFields.keySet()) {
                     		if (!key.startsWith("_")) {
                     			out.write("#@ info " + key + " = " +
@@ -590,7 +563,7 @@ public class Main extends EventSource {
                     	log(ex.toString());
                     	return;
                     }
-                    log("Wrote file " + filename + ".");
+                    log("Wrote file " + file.getName() + ".");
 				}
 			}, "Save the raw tiling as a Delaney-Dress symbol", null);
 		}
@@ -602,35 +575,14 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    outNetChooser.setDirectory(
-                    		new File(ui.getLastNetOutputDirectory()));
-                    final boolean success = outNetChooser.showDialog(null);
-                    if (!success) {
-                        return;
-                    }
-                    final File dir = outNetChooser.getDirectory();
-                    ui.setLastNetOutputDirectory(dir.getAbsolutePath());
-                    saveOptions();
-                    String filename = outNetChooser.getSelectedFile().getName();
-                    if (filename.indexOf('.') < 0) {
-                    	filename += ".pgr";
-                    }
-                    final File file = new File(dir, filename);
-                    final boolean append;
-                    if (file.exists()) {
-                        int choice = showOverwriteDialog(file, new String[] {
-								"Overwrite", "Append", "Cancel" }, "Cancel");
-                        if (choice > 1) {
-                            return;
-                        } else {
-                            append = choice == 1;
-                        }
-                    } else {
-                        append = false;
-                    }
-                    final String path = file.getAbsolutePath();
+					final File file = outNetChooser.pickFile(
+							ui.getLastNetOutputPath(), "pgr");
+					if (file == null) return;
+					ui.setLastNetOutputPath(file);
+					saveOptions();
                     try {
-                    	final Writer out = new FileWriter(path, append);
+                    	final boolean append = outNetChooser.getAppend();
+                    	final Writer out = new FileWriter(file, append);
                     	Output.writePGR(out, doc().getNet(), doc().getName());
                     	out.flush();
                     	out.close();
@@ -638,7 +590,7 @@ public class Main extends EventSource {
                     	log(ex.toString());
                     	return;
                     }
-                    log("Wrote file " + filename + ".");
+                    log("Wrote file " + file.getName() + ".");
 				}
 			}, "Save the raw net as a Systre file", null);
 		}
@@ -650,30 +602,13 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    outSceneChooser.setDirectory(
-                    		new File(ui.getLastSceneOutputDirectory()));
-                    final boolean success = outSceneChooser.showDialog(null);
-                    if (!success) {
-                        return;
-                    }
-                    final File dir = outSceneChooser.getDirectory();
-                    ui.setLastSceneOutputDirectory(dir.getAbsolutePath());
-                    saveOptions();
-                    String filename = outSceneChooser.getSelectedFile().getName();
-                    if (filename.indexOf('.') < 0) {
-                    	filename += ".gsl";
-                    }
-                    final File file = new File(dir, filename);
-                    if (file.exists()) {
-                        int choice = showOverwriteDialog(file, new String[] {
-								"Overwrite", "Cancel" }, "Cancel");
-                        if (choice > 0) {
-                            return;
-                        }
-                    }
-                    final String path = file.getAbsolutePath();
+					final File file = outSceneChooser.pickFile(
+							ui.getLastSceneOutputPath(), "gsl");
+					if (file == null) return;
+					ui.setLastSceneOutputPath(file);
+					saveOptions();
                     try {
-                    	final Writer out = new FileWriter(path);
+                    	final Writer out = new FileWriter(file);
                     	doc().setTransformation(getViewingTransformation());
                     	out.write(doc().toXML());
                     	out.flush();
@@ -682,7 +617,7 @@ public class Main extends EventSource {
                     	log(ex.toString());
                     	return;
                     }
-                    log("Wrote file " + filename + ".");
+                    log("Wrote file " + file.getName() + ".");
 				}
 			}, "Save the scene", null);
 		}
@@ -696,28 +631,11 @@ public class Main extends EventSource {
 				public void actionPerformed(ActionEvent e) {
 					dimPanel.setDimension(viewerApp.getCurrentViewer()
 							.getViewingComponentSize());
-                    outSunflowChooser.setDirectory(
-                    		new File(ui.getLastSunflowRenderDirectory()));
-                    final boolean success = outSunflowChooser.showDialog(null);
-                    if (!success) {
-                        return;
-                    }
-                    final File dir = outSunflowChooser.getDirectory();
-                    ui.setLastSunflowRenderDirectory(dir.getAbsolutePath());
-                    saveOptions();
-                    String filename =
-                    	outSunflowChooser.getSelectedFile().getName();
-                    if (filename.indexOf('.') < 0) {
-                    	filename += ".png";
-                    }
-                    final File file = new File(dir, filename);
-                    if (file.exists()) {
-                        int choice = showOverwriteDialog(file, new String[] {
-								"Overwrite", "Cancel" }, "Cancel");
-                        if (choice > 0) {
-                            return;
-                        }
-                    }
+					final File file = outSunflowChooser.pickFile(
+							ui.getLastSunflowRenderPath(), "png");
+					if (file == null) return;
+					ui.setLastSunflowRenderPath(file);
+					saveOptions();
                     try {
                     	final RenderOptions opts = new RenderOptions();
                     	opts.setProgressiveRender(false);
@@ -731,7 +649,7 @@ public class Main extends EventSource {
                     	log(ex.toString());
                     	return;
                     }
-                    log("Wrote raytraced image to file " + filename + ".");
+                    log("Wrote raytraced image to file " + file.getName() + ".");
 				}
 			}, "Render the scene using the Sunflow raytracer",
 				KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_MASK));

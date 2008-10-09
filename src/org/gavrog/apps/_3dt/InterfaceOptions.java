@@ -18,6 +18,7 @@
 package org.gavrog.apps._3dt;
 
 import java.beans.PropertyChangeEvent;
+import java.io.File;
 import java.lang.reflect.Field;
 
 import buoy.event.EventSource;
@@ -33,11 +34,13 @@ public class InterfaceOptions extends EventSource {
     private int viewerHeight = 800;
     private boolean useLeopardWorkaround = false;
 
-	private String lastInputDirectory = System.getProperty("3dt.home") + "/Data";
-	private String lastNetOutputDirectory = System.getProperty("user.home");
-	private String lastTilingOutputDirectory = System.getProperty("user.home");
-	private String lastSceneOutputDirectory = System.getProperty("user.home");
-	private String lastSunflowRenderDirectory = System.getProperty("user.home");
+    private String _3dtHome = System.getProperty("3dt.home");
+    private String userHome = System.getProperty("user.home");
+	private File lastInputPath = new File(_3dtHome + "/Data");
+	private File lastNetOutputPath = new File(userHome);
+	private File lastTilingOutputPath = new File(userHome);
+	private File lastSceneOutputPath = new File(userHome);
+	private File lastSunflowRenderPath = new File(userHome);
     
 	/**
 	 * Generic setter method. Uses introspection to find the field to set and
@@ -82,43 +85,43 @@ public class InterfaceOptions extends EventSource {
 		_setField("useLeopardWorkaround", value);
 	}
 
-	public String getLastInputDirectory() {
-		return lastInputDirectory;
+	public File getLastInputPath() {
+		return lastInputPath;
 	}
 
-	public void setLastInputDirectory(final String value) {
-		_setField("lastInputDirectory", value);
+	public void setLastInputPath(final File value) {
+		_setField("lastInputPath", value);
 	}
 
-	public String getLastNetOutputDirectory() {
-		return this.lastNetOutputDirectory;
+	public File getLastNetOutputPath() {
+		return this.lastNetOutputPath;
 	}
 
-	public void setLastNetOutputDirectory(final String value) {
-		_setField("lastNetOutputDirectory", value);
+	public void setLastNetOutputPath(final File value) {
+		_setField("lastNetOutputPath", value);
 	}
 
-	public String getLastSceneOutputDirectory() {
-		return this.lastSceneOutputDirectory;
+	public File getLastSceneOutputPath() {
+		return this.lastSceneOutputPath;
 	}
 
-	public void setLastSceneOutputDirectory(final String value) {
-		_setField("lastSceneOutputDirectory", value);
+	public void setLastSceneOutputPath(final File value) {
+		_setField("lastSceneOutputPath", value);
 	}
 
-	public String getLastTilingOutputDirectory() {
-		return this.lastTilingOutputDirectory;
+	public File getLastTilingOutputPath() {
+		return this.lastTilingOutputPath;
 	}
 
-	public void setLastTilingOutputDirectory(final String value) {
-		_setField("lastTilingOutputDirectory", value);
+	public void setLastTilingOutputPath(final File value) {
+		_setField("lastTilingOutputPath", value);
 	}
 
-	public String getLastSunflowRenderDirectory() {
-		return this.lastSunflowRenderDirectory;
+	public File getLastSunflowRenderPath() {
+		return this.lastSunflowRenderPath;
 	}
 
-	public void setLastSunflowRenderDirectory(final String value) {
-		_setField("lastSunflowRenderDirectory", value);
+	public void setLastSunflowRenderPath(final File value) {
+		_setField("lastSunflowRenderPath", value);
 	}
 }
