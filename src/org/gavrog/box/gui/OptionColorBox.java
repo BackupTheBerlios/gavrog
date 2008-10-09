@@ -80,6 +80,7 @@ public class OptionColorBox extends BorderContainer {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
+						chooser.setColor((Color) getter.invoke(target));
 						dialog.setVisible(true);
 						if (currentColor != null) {
 							color.setBackground(currentColor);
