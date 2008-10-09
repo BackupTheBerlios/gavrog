@@ -56,12 +56,16 @@ public class Config {
 	}
 
 	public static String asString(final Object value) throws Exception {
-		final Class type = value.getClass();
-		if (wrapperType(type).equals(type)) {
-			return String.valueOf(value);
+		if (value == null) {
+			return "";
 		} else {
-			return String.valueOf(wrapperType(type).getConstructor(type)
-					.newInstance(value));
+			final Class type = value.getClass();
+			if (wrapperType(type).equals(type)) {
+				return String.valueOf(value);
+			} else {
+				return String.valueOf(wrapperType(type).getConstructor(type)
+						.newInstance(value));
+			}
 		}
 	}
 	
@@ -72,7 +76,8 @@ public class Config {
 		final BeanInfo info = Introspector.getBeanInfo(type);
 		final PropertyDescriptor desc[] = info.getPropertyDescriptors();
 		for (int i = 0; i < desc.length; ++i) {
-			if (desc[i].getWriteMethod() == null) {
+			if (desc[i].getWriteMethod() == null
+					|| desc[i].getReadMethod() == null) {
 				continue;
 			}
 			final String value = props.getProperty(prefix + desc[i].getName());
@@ -92,10 +97,12 @@ public class Config {
 		final PropertyDescriptor desc[] =
 			Introspector.getBeanInfo(type).getPropertyDescriptors();
 		for (int i = 0; i < desc.length; ++i) {
-			if (desc[i].getWriteMethod() != null) {
-				props.setProperty(prefix + desc[i].getName(),
-						asString(desc[i].getReadMethod().invoke(obj)));
+			if (desc[i].getWriteMethod() == null
+					|| desc[i].getReadMethod() == null) {
+				continue;
 			}
+			props.setProperty(prefix + desc[i].getName(), asString(desc[i]
+					.getReadMethod().invoke(obj)));
 		}
 	}
 
