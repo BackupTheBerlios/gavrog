@@ -2,6 +2,52 @@ Thank you for downloading 3dt and Systre. This file contains some
 basic information and can be found under the name README in the folder
 you choose to install the program in.
 
+===========================================================================
+
+Introduction:
+------------
+
+The following will serve as a very basic introduction into the
+3-dimensional tiler (3dt) program. Everything not mentioned here will
+hopefully be fairly self-explanatory. If enough people are interested
+in the program, there might some day be a proper manual.
+
+Information on Systre, which is also part of this distribution, can be
+accessed by simply clicking the "Help" button within the program.
+
+Both Systre and 3dt are part of the Gavrog project. For news and
+updates on these programs and the project in general, you can always
+check the project website http://www.gavrog.org.
+
+
+===========================================================================
+
+Installation and prerequisites:
+------------------------------
+
+Gavrog requires a Java runtime environment (JRE) of version 1.5 or higher.
+Java is now a standard part of Mac OS X. On other systems, Java might
+already be installed as a prerequisite for other programs, such as a web
+browser. If that is not the case, the most straightforward way to get a
+JRE is to download it from http://java.com and follow the installation
+instructions given there. Set all path variables correctly for your system
+as instructed (this should be done automatically if you use a Windows
+installer), so that the java command can be recognized. If supported on
+your system, make sure that the file extension '.jar' is associated with
+the Java executable.
+
+You should now be able to execute the installer by either double-clicking
+on it's icon or, if that does not work, type the command
+
+	java -jar <name-of-installer-file>
+	
+in a terminal window. In the latter case, make sure you're in the same
+directory as the installer file or else include the full path in the file
+name.
+
+
+===========================================================================
+
 Calling the programs:
 --------------------
 
@@ -22,36 +68,14 @@ you choose to install the programs in when prompted by the installer.
 
 ===========================================================================
 
-Introduction:
-------------
-
-The following will serve as a very basic introduction into the
-3-dimensional tiler (3dt) program. Everything not mentioned here will
-hopefully be fairly self-explanatory. If enough people are interested
-in the program, there might some day be a proper manual.
-
-Information on Systre, which is also part of this distribution, can be
-accessed by simply clicking the "Help" button within the program.
-
-Both Systre and 3dt are part of the Gavrog project. For news and
-updates on these programs and the project in general, you can always
-check the project website http://www.gavrog.org.
-
-===========================================================================
-
 Interface basics:
 ----------------
 
-When 3dt is started, two windows appear - "3dt Viewer", the other
-"3dt Controls".
+When 3dt is started, two windows appear - "3dt Viewer" and "3dt Controls".
 
 The viewer window contains the main menu and displays the
 tilings. Most of the menu should be either self-explanatory or reveal itself
-after a bit of experimentation. Please consider the File/Export submenu as
-partly experimental. Some things may not work at all, or may be very slow.
-Recommended ways of exporting images are either File/Export/Sunflow/Render
-or File/Export/Image, although I have occasionally seen the latter crash
-on X Window systems.
+after a bit of experimentation.
 
 The current scene can be rotated by dragging with the left mouse button
 pressed, moved around by dragging with the middle button and pulled or
@@ -60,9 +84,15 @@ pressed. Pressing the right mouse button over a face brings up a context
 menu that lets you add, remove and recolor tiles. There are also two
 shortcuts for quick scene manipulation: <shift>-<right-click> adds a tile
 at the face the mouse is over, whereas <ctrl>-<right-click> removes a tile.
+Right-clicking on a node or edge of the underlying net of a tiling invokes
+similar behavior.
 
 If the context menu does not show up, try to activeate the "MacOS context
-menu workaround" in the "Display" tab on the controls window.
+menu workaround" in the "GUI" tab on the controls window.
+
+If the controls window is in the way, you can close it and later re-open
+it by selecting "View/Show Controls" on the viewer window. Please note that
+closing the viewer window terminates the program.
 
 The controls window has three parts, which can be changed in size
 by dragging the separating bars. The top left one is used to modify
@@ -70,15 +100,10 @@ settings for 3dt. These are saved to a file after a change and reloaded
 each time the program is started. Press the "Apply" button to make changes
 effective.
 
-CAVEAT: In the "Geometry" tab, be very careful with the "Surface Detail"
-setting. Normally, 2 is a good setting for interactive work and 3 for
-exporting images. At 3, and more so at 4, it will considerably slow down
-the program. Even higher values might make it unresponsive and possibly
-crash.
-
 The top right part of the controls window contains information about the
 current tile, and the bottom part shows any diagnostic output that might be
 produced.
+
 
 ===========================================================================
 
@@ -148,6 +173,7 @@ D-symbol in tabular form thus looks like this:
      1 |  1  |  1  |  1  |  2  ||   3  |   3  |   4
      2 |  2  |  2  |  2  |  1  ||   3  |   4  |   4
 
+
 ===========================================================================
 
 File formats II - face lists:
@@ -214,10 +240,7 @@ Without the extra symmetry, one would need to specify 32 triangles.
 
 ===========================================================================
 
-That's all folks!
-
-Have fun with the program and don't forget to keep in touch.
-
+That's all folks! Have fun with the program and please keep in touch.
 
     Olaf Delgado
 
