@@ -213,6 +213,7 @@ public class Main extends EventSource {
 	private double specularCoefficient = 0.1;
 	private double specularExponent = 15.0;
 	private Color specularColor = Color.WHITE;
+	private double faceTransparency = 0.0;
 	
     // --- embedding options
     private int equalEdgePriority = 2;
@@ -1822,6 +1823,7 @@ public class Main extends EventSource {
 				TubeUtility.octagonalCrossSection, Pn.EUCLIDEAN);
         final Appearance a = new Appearance();
         setColor(a, c);
+        a.setAttribute(CommonAttributes.TRANSPARENCY, 0.0);
         sgc.setAppearance(a);
         this.net.addChild(sgc);
         this.node2item.put(sgc, item);
@@ -1847,6 +1849,7 @@ public class Main extends EventSource {
 		sgc.addChild(sphereTemplate);
         final Appearance a = new Appearance();
         setColor(a, c);
+        a.setAttribute(CommonAttributes.TRANSPARENCY, 0.0);
         sgc.setAppearance(a);
         this.net.addChild(sgc);
         this.node2item.put(sgc, item);
@@ -2069,6 +2072,7 @@ public class Main extends EventSource {
 		a.setAttribute(CommonAttributes.SPECULAR_COLOR, getSpecularColor());
 		a.setAttribute(CommonAttributes.SPECULAR_EXPONENT,
 				getSpecularExponent());
+		a.setAttribute(CommonAttributes.TRANSPARENCY, getFaceTransparency());
     }
     
     private Color blendColors(final Color c1, final Color c2, final double f) {
@@ -2088,6 +2092,9 @@ public class Main extends EventSource {
         startTimer(timer);
         
         updateAppearance(this.world.getAppearance());
+        this.viewerApp.getCurrentViewer().getSceneRoot().getAppearance()
+				.setAttribute(CommonAttributes.TRANSPARENCY_ENABLED,
+						getFaceTransparency() > 0);
         
         for (final Tile b: doc().getTiles()) {
         	final int i = b.getIndex();
@@ -2117,6 +2124,7 @@ public class Main extends EventSource {
 					if (f > 0) {
 						setColor(a, blendColors(tileColor, getEdgeColor(), f));
 					}
+					a.setAttribute(CommonAttributes.TRANSPARENCY, 0.0);
 					child.setAppearance(a);
 				}
 			}
@@ -2332,7 +2340,8 @@ public class Main extends EventSource {
     	if (re_encompass) {
     		encompass();
     	}
-        final Appearance a = this.viewerApp.getCurrentViewer().getSceneRoot().getAppearance();
+        final Appearance a =
+        	this.viewerApp.getCurrentViewer().getSceneRoot().getAppearance();
         a.setAttribute(CommonAttributes.BACKGROUND_COLORS, Appearance.INHERITED);
         a.setAttribute(CommonAttributes.BACKGROUND_COLOR, getBackgroundColor());
         a.setAttribute(CommonAttributes.FOG_ENABLED, getUseFog());
@@ -2682,6 +2691,15 @@ public class Main extends EventSource {
     	return new BSeparator();
     }
     
+    private Widget label(final String txt, final BorderContainer.Position pos) {
+		final BorderContainer result = new BorderContainer();
+		result.setBackground(null);
+		result.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST,
+				LayoutInfo.NONE, new Insets(2, 10, 2, 10), null));
+		result.add(new BLabel(txt), pos);
+		return result;
+	}
+    
     private Widget optionsDialog(final Widget options, final Widget buttons) {
         final BorderContainer dialog = new BorderContainer();
         dialog.setBackground(textColor);
@@ -2708,6 +2726,8 @@ public class Main extends EventSource {
         try {
         	options.add(slider("Surface Detail", "subdivisionLevel", 0, 4, 1,
 					1, true, true, false));
+        	options.add(label("(decrease in case of memory problems)",
+					BorderContainer.EAST));
 			options.add(separator());
 			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
 			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 4, 1,
@@ -2895,6 +2915,14 @@ public class Main extends EventSource {
 					"ambientColor"));
 			options.add(new OptionInputBox("Ambient Coefficient", this,
 					"ambientCoefficient"));
+			options.add(separator());
+        	final OptionSliderBox slider =
+        		new OptionSliderBox("Transparency", this,
+        				"faceTransparency", 0, 100, 20, 5, false);
+        	slider.setFactor(0.01);
+        	options.add(slider);
+        	options.add(label("(must select 'Softviewer' in 'View' menu)",
+        			BorderContainer.EAST));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -3454,6 +3482,14 @@ public class Main extends EventSource {
 		_setField("specularExponent", value);
 	}
 
+	public double getFaceTransparency() {
+		return faceTransparency;
+	}
+	
+	public void setFaceTransparency(final double value) {
+		_setField("faceTransparency", value);
+	}
+	
 	public Color getBackgroundColor() {
 		return backgroundColor;
 	}
