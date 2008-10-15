@@ -5,11 +5,13 @@ Open bugs:
 - Popups don't work with OpenGL on Mac Leopard (workaround exists.)
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
+- Numbers don't match original file when derived files are constructed.
 
 =====================================================
 
 Planned/requested features:
 
+- Add some kind of safeguard against memory overflows.
 - Implement a balance/naturalize function.
 - Allow separate colors and visibility for individual faces.
 - Option to keep the unit cell and coordinates used in the input.

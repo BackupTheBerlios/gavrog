@@ -1,5 +1,7 @@
 3dt 0.4.0:
 
+- Changed the maximum level of surface detail to 4 (previously 3).
+
 - The color pickers in the option dialogs no longer ignore the current colors.
 - In "Open" and "Save" actions, full file names are now remembered.
 - If no creasing is applied, edges now have constant width.

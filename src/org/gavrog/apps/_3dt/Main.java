@@ -2706,13 +2706,11 @@ public class Main extends EventSource {
     private Widget optionsTiles() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-        	options.add(slider("Surface Detail", "subdivisionLevel", 0, 3, 1,
+        	options.add(slider("Surface Detail", "subdivisionLevel", 0, 4, 1,
 					1, true, true, false));
-//			options.add(slider("Surface Tension", "tileRelaxationSteps", 0, 10,
-//					5, 1, true, true, false));
 			options.add(separator());
 			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
-			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 3, 1,
+			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 4, 1,
 					1, true, true, false));
 			options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
 			final OptionSliderBox slider = slider("Color Blending",
