@@ -2921,7 +2921,7 @@ public class Main extends EventSource {
         				"faceTransparency", 0, 100, 20, 5, false);
         	slider.setFactor(0.01);
         	options.add(slider);
-        	options.add(label("(must select 'Softviewer' in 'View' menu)",
+        	options.add(label("(requires 'Softviewer' in 'View' menu)",
         			BorderContainer.EAST));
         } catch (final Exception ex) {
             log(ex.toString());
