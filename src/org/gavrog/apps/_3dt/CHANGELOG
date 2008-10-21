@@ -1,6 +1,9 @@
 3dt 0.4.0:
 
-- Faces can now be drawn transparently (SoftViewer and screen shots only).
+- The 'Dualize' and 'Max. Symmetry' actions now refuse to produce duplicates.
+- Unnamed tilings now receive default names of the form '#<n>'.
+- An arbitrary viewing direction can now be specified via a dialog box.
+- Users can now set the step size for rotations via the arrow keys.
 - Changed the maximum level of surface detail to 4 (previously 3).
 
 - The color pickers in the option dialogs no longer ignore the current colors.
