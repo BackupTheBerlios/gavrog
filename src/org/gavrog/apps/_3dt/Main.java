@@ -807,6 +807,12 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
+					final DSymbol ds = doc().getSymbol();
+					if (ds.equals(ds.dual())) {
+						messageBox("The tiling is self-dual.", "3dt Dualize",
+								BStandardDialog.INFORMATION);
+						return;
+					}
     				final String name = doc().getName();
     				final String newName;
     				if (name != null) {
@@ -814,8 +820,7 @@ public class Main extends EventSource {
     				} else {
     					newName = "#" + tilingCounter + " dual";
     				}
-    				final DSymbol ds = doc().getSymbol().dual();
-    				final Document dual = new Document(ds, newName);
+    				final Document dual = new Document(ds.dual(), newName);
     				documents.add(tilingCounter, dual);
     				doTiling(tilingCounter + 1);
     			}
@@ -829,6 +834,12 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
+					final DSymbol ds = doc().getSymbol();
+					if (ds.isMinimal()) {
+						messageBox("The tiling is already maximally symmetric.",
+								"3dt Max Symmetry", BStandardDialog.INFORMATION);
+						return;
+					}
     				final String name = doc().getName();
     				final String newName;
     				if (name != null) {
@@ -836,8 +847,8 @@ public class Main extends EventSource {
     				} else {
     					newName = "#" + tilingCounter + " symmetric";
     				}
-    				final DSymbol ds = (DSymbol) doc().getSymbol().minimal();
-    				final Document minimal = new Document(ds, newName);
+    				final Document minimal =
+    					new Document((DSymbol) ds.minimal(), newName);
     				documents.add(tilingCounter, minimal);
     				doTiling(tilingCounter + 1);
     			}
@@ -1517,7 +1528,11 @@ public class Main extends EventSource {
         new Thread(new Runnable() {
             public void run() {
                 tilingCounter = n;
-                processTiling(documents.get(tilingCounter - 1));
+                try {
+                	processTiling(documents.get(tilingCounter - 1));
+                } catch (final Exception ex) {
+        			ex.printStackTrace();
+                }
                 Invoke.later(new Runnable() {
                     public void run() {
                         frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
