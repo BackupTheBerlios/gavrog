@@ -249,6 +249,8 @@ public class Main extends EventSource {
     // --- gui elements
 	private BDialog aboutFrame;
 	private BDialog controlsFrame;
+	private BStandardDialog inputDialog = new BStandardDialog();
+	private BStandardDialog messageDialog = new BStandardDialog();
 	private Map<String, BLabel> tInfoFields;
 
 	// --- scene graph components and associated properties
@@ -493,6 +495,22 @@ public class Main extends EventSource {
 		outSunflowChooser.setAppendEnabled(false);
     }
     
+    private String getInput(final String message, final String title,
+    		final String defaultVal) {
+    	inputDialog.setMessage(message);
+    	inputDialog.setTitle(title);
+    	inputDialog.setStyle(BStandardDialog.PLAIN);
+    	return inputDialog.showInputDialog(null, null, defaultVal);
+    }
+    
+    private void messageBox(final String message, final String title,
+    		final BStandardDialog.Style style) {
+    	messageDialog.setMessage(message);
+    	messageDialog.setTitle(title);
+    	messageDialog.setStyle(style);
+    	messageDialog.showMessageDialog(null);
+    }
+    
     private Action actionAbout() {
     	final String name = "About 3dt";
     	if (ActionRegistry.instance().get(name) == null) {
@@ -733,16 +751,14 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
 	}
     
-    final private BStandardDialog jumpDialog = new BStandardDialog("3dt Jump To",
-    		"Number of tiling to display:", BStandardDialog.PLAIN);
-    
     private Action actionJump() {
 		final String name = "Jump To...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					final String input = jumpDialog.showInputDialog(
-							null, null, String.valueOf(tilingCounter + 1));
+					final String input = getInput("Jump to tiling #:",
+									"3dt Jump To",
+									String.valueOf(tilingCounter + 1));
 					final int n;
 					try {
 						n = Integer.parseInt(input);
@@ -757,18 +773,14 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
 	}
     
-	final private BStandardDialog searchDialog = new BStandardDialog(
-			"3dt Search", "Type a tiling's name or part of it:",
-			BStandardDialog.PLAIN);
-	final private BStandardDialog searchNotFound = new BStandardDialog(
-			"3dt Search", "No tiling found.", BStandardDialog.INFORMATION);
-    
     private Action actionSearch() {
 		final String name = "Search...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-                    String input = searchDialog.showInputDialog(null, null, "");
+					final String input = getInput(
+							"Type a tiling's name or part of it:", "3dt Search",
+							"");
                     if (input != null && !input.equals("")) {
 	                    if (documents != null) {
 	                    	for (int n = 0; n < documents.size(); ++n) {
@@ -779,7 +791,9 @@ public class Main extends EventSource {
 								}
 							}
 	                    }
-	                    searchNotFound.showMessageDialog(null);
+	                    messageBox("Found no tiling with '" + input
+	                    		+ "' in its name.", "3dt Search",
+	                    		BStandardDialog.INFORMATION);
                     }
 				}
 			}, "Search for a tiling by name",
@@ -1234,20 +1248,13 @@ public class Main extends EventSource {
         return ActionRegistry.instance().get(name);
     }
 
-	final private BStandardDialog viewAlongDialog = new BStandardDialog(
-			"3dt Viewing Direction", "View along (x y z):",
-			BStandardDialog.PLAIN);
-	final private BStandardDialog badDirection = new BStandardDialog(
-			"3dt Viewing Direction", "Illegal input.",
-			BStandardDialog.INFORMATION);
-	
     private Action actionViewAlong() {
     	final String name = "View along...";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-					final String input = viewAlongDialog
-									.showInputDialog(null, null, "");
+    				final String input = getInput("View along (x y z):",
+    						"3dt Viewing Direction", "");
 					final String fields[] = input.trim().split("\\s+");
 					try {
 						final double x = Double.parseDouble(fields[0]);
@@ -1263,7 +1270,9 @@ public class Main extends EventSource {
 						}
 						setViewingTransformation(eye, up);
 					} catch (final Exception ex) {
-						badDirection.showMessageDialog(null);
+						messageBox("Can't view along '" + input.trim() + "'.",
+								"3dt Viewing Direction",
+								BStandardDialog.INFORMATION);
 					}
 					encompass();
 				}
