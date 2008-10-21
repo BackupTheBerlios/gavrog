@@ -195,10 +195,10 @@ public class Document extends DisplayList {
 	
     /**
      * Constructs a tiling instance.
-     * @param name the name of this instance.
      * @param ds the Delaney symbol for the tiling.
+     * @param name the name of this instance.
      */
-    public Document(final String name, final DSymbol ds) {
+    public Document(final DSymbol ds, final String name) {
         if (ds.dim() == 2) {
         	this.symbol = ds;
             this.effective_symbol = extrusion(ds);
@@ -214,12 +214,17 @@ public class Document extends DisplayList {
         this.name = name;
     }
     
-    public Document(final GenericParser.Block block) {
+    public Document(final GenericParser.Block block, final String defaultName) {
     	if (! block.getType().equalsIgnoreCase("TILING")) {
     		throw new UnsupportedOperationException("only type TILING supported");
     	}
     	this.type = TILING_3D;
-    	this.name = block.getEntriesAsString("name");
+    	final String name = block.getEntriesAsString("name");
+    	if (name == null || name.length() == 0) {
+    		this.name = defaultName;
+    	} else {
+    		this.name = name;
+    	}
     	this.data = block;
     }
     
@@ -652,7 +657,7 @@ public class Document extends DisplayList {
 			while (!parser.atEnd()) {
 				final GenericParser.Block data = parser.parseDataBlock();
 				if (data.getType().equalsIgnoreCase("TILING")) {
-					result.add(new Document(data));
+					result.add(new Document(data, "#" + (result.size() + 1)));
 				} else {
 					++discarded;
 				}
@@ -691,7 +696,10 @@ public class Document extends DisplayList {
 					if (buffer.toString().trim().endsWith(">")) {
 						final DSymbol ds = new DSymbol(buffer.toString().trim());
 						buffer.delete(0, buffer.length());
-						result.add(new Document(name, ds));
+						if (name == null) {
+							name = "#" + (result.size() + 1);
+						}
+						result.add(new Document(ds, name));
 						name = null;
 					}
 				}
@@ -1050,7 +1058,7 @@ public class Document extends DisplayList {
 				}
 
 				if (symbol != null) {
-					doc = new Document(name, symbol);
+					doc = new Document(symbol, name);
 					doc.setProperties(props);
 					for (int i = 0; i < palette.size(); ++i) {
 						doc.setTileClassColor(i, palette.get(i));

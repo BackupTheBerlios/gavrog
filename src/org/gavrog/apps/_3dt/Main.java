@@ -801,7 +801,7 @@ public class Main extends EventSource {
     					newName = "#" + tilingCounter + " dual";
     				}
     				final DSymbol ds = doc().getSymbol().dual();
-    				final Document dual = new Document(newName, ds);
+    				final Document dual = new Document(ds, newName);
     				documents.add(tilingCounter, dual);
     				doTiling(tilingCounter + 1);
     			}
@@ -823,7 +823,7 @@ public class Main extends EventSource {
     					newName = "#" + tilingCounter + " symmetric";
     				}
     				final DSymbol ds = (DSymbol) doc().getSymbol().minimal();
-    				final Document minimal = new Document(newName, ds);
+    				final Document minimal = new Document(ds, newName);
     				documents.add(tilingCounter, minimal);
     				doTiling(tilingCounter + 1);
     			}
