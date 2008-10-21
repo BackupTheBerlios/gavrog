@@ -2726,7 +2726,7 @@ public class Main extends EventSource {
         try {
         	options.add(slider("Surface Detail", "subdivisionLevel", 0, 4, 1,
 					1, true, true, false));
-        	options.add(label("(decrease in case of memory problems)",
+        	options.add(label("(reduce in case of memory problems)",
 					BorderContainer.EAST));
 			options.add(separator());
 			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
@@ -2915,14 +2915,14 @@ public class Main extends EventSource {
 					"ambientColor"));
 			options.add(new OptionInputBox("Ambient Coefficient", this,
 					"ambientCoefficient"));
-			options.add(separator());
-        	final OptionSliderBox slider =
-        		new OptionSliderBox("Transparency", this,
-        				"faceTransparency", 0, 100, 20, 5, false);
-        	slider.setFactor(0.01);
-        	options.add(slider);
-        	options.add(label("(requires 'Softviewer' in 'View' menu)",
-        			BorderContainer.EAST));
+//			options.add(separator());
+//        	final OptionSliderBox slider =
+//        		new OptionSliderBox("Transparency", this,
+//        				"faceTransparency", 0, 100, 20, 5, false);
+//        	slider.setFactor(0.01);
+//        	options.add(slider);
+//        	options.add(label("(requires 'Softviewer' in 'View' menu)",
+//        			BorderContainer.EAST));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -3487,7 +3487,8 @@ public class Main extends EventSource {
 	}
 	
 	public void setFaceTransparency(final double value) {
-		_setField("faceTransparency", value);
+//		_setField("faceTransparency", value);
+		_setField("faceTransparency", 0.0);
 	}
 	
 	public Color getBackgroundColor() {
