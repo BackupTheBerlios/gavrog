@@ -1335,9 +1335,9 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 1, 0 }, Math.PI / 36);
+    				rotateScene(new double[] { 0, 1, 0 }, ui.getRotationStep() * Math.PI / 180.0);
 				}
-			}, "Rotate the scene to the right by 5 degrees",
+			}, "Rotate the scene to the right",
 				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0));
 		}
 		return ActionRegistry.instance().get(name);
@@ -1348,9 +1348,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 1, 0 }, -Math.PI / 36);
+    				rotateScene(new double[] { 0, 1, 0 },
+    						-ui.getRotationStep() * Math.PI / 180.0);
 				}
-			}, "Rotate the scene to the left by 5 degrees",
+			}, "Rotate the scene to the left",
 				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0));
 		}
 		return ActionRegistry.instance().get(name);
@@ -1361,9 +1362,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 1, 0, 0 }, -Math.PI / 36);
+    				rotateScene(new double[] { 1, 0, 0 },
+    						-ui.getRotationStep() * Math.PI / 180.0);
 				}
-			}, "Rotate the scene upward by 5 degrees",
+			}, "Rotate the scene upward",
 				KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0));
 		}
 		return ActionRegistry.instance().get(name);
@@ -1374,9 +1376,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 1, 0, 0 }, Math.PI / 36);
+    				rotateScene(new double[] { 1, 0, 0 },
+    						ui.getRotationStep() * Math.PI / 180.0);
 				}
-			}, "Rotate the scene downward by 5 degrees",
+			}, "Rotate the scene downward",
 				KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0));
 		}
 		return ActionRegistry.instance().get(name);
@@ -1387,9 +1390,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 0, 1 }, -Math.PI / 36);
+    				rotateScene(new double[] { 0, 0, 1 },
+    						-ui.getRotationStep() * Math.PI / 180.0);
 				}
-			}, "Rotate the scene clockwise by 5 degrees",
+			}, "Rotate the scene clockwise",
 				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,
 							InputEvent.CTRL_DOWN_MASK));
 		}
@@ -1401,9 +1405,10 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 0, 1 }, Math.PI / 36);
+    				rotateScene(new double[] { 0, 0, 1 },
+    						ui.getRotationStep() * Math.PI / 180.0);
 				}
-			}, "Rotate the scene counter-clockwise by 5 degrees",
+			}, "Rotate the scene counter-clockwise",
 				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,
 							InputEvent.CTRL_DOWN_MASK));
 		}
@@ -2851,6 +2856,9 @@ public class Main extends EventSource {
     private Widget optionsGUI() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
+        	options.add(new OptionSliderBox("Rotation Step", ui, "rotationStep",
+        			0, 45, 5, 1, true));
+            options.add(separator());
         	options.add(new OptionInputBox("Viewer Width", ui, "viewerWidth"));
 			options.add(new OptionInputBox("Viewer Height", ui, "viewerHeight"));
             options.add(separator());

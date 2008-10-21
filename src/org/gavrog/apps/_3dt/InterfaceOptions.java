@@ -32,6 +32,7 @@ import buoy.event.EventSource;
 public class InterfaceOptions extends EventSource {
     private int viewerWidth = 800;
     private int viewerHeight = 800;
+    private double rotationStep = 5.0;
     private boolean useLeopardWorkaround = false;
 
     private String _3dtHome = System.getProperty("3dt.home");
@@ -77,6 +78,14 @@ public class InterfaceOptions extends EventSource {
 		_setField("viewerHeight", value);
 	}
 
+	public double getRotationStep() {
+		return this.rotationStep;
+	}
+	
+	public void setRotationStep(final double value) {
+		_setField("rotationStep", Math.max(value, 0.1));
+	}
+	
 	public boolean getUseLeopardWorkaround() {
 		return this.useLeopardWorkaround;
 	}
