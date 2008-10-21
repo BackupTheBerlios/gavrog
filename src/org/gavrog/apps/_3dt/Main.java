@@ -430,6 +430,8 @@ public class Main extends EventSource {
 		}
         k = 0;
         menu.addAction(actionEncompass(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addAction(actionViewAlong(), ViewerAppMenu.VIEW_MENU, k++);
+        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionXView(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionYView(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionZView(), ViewerAppMenu.VIEW_MENU, k++);
@@ -1232,6 +1234,45 @@ public class Main extends EventSource {
         return ActionRegistry.instance().get(name);
     }
 
+	final private BStandardDialog viewAlongDialog = new BStandardDialog(
+			"3dt Viewing Direction", "View along (x y z):",
+			BStandardDialog.PLAIN);
+	final private BStandardDialog badDirection = new BStandardDialog(
+			"3dt Viewing Direction", "Illegal input.",
+			BStandardDialog.INFORMATION);
+	
+    private Action actionViewAlong() {
+    	final String name = "View along...";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+					final String input = viewAlongDialog
+									.showInputDialog(null, null, "");
+					final String fields[] = input.trim().split("\\s+");
+					try {
+						final double x = Double.parseDouble(fields[0]);
+						final double y = Double.parseDouble(fields[1]);
+						final double z = Double.parseDouble(fields[2]);
+						final Vector eye = new Vector(new double[] { x,
+								y, z });
+						final Vector up;
+						if (x == 0 && y == 0) {
+							up = new Vector(0, 1, 0);
+						} else {
+							up = new Vector(0, 0, 1);
+						}
+						setViewingTransformation(eye, up);
+					} catch (final Exception ex) {
+						badDirection.showMessageDialog(null);
+					}
+					encompass();
+				}
+    		}, "View the scene along an arbitrary dirextion",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_V, 0));
+    	}
+    	return ActionRegistry.instance().get(name);
+    }
+    
 	private Action actionXView() {
     	final String name = "View along X";
     	if (ActionRegistry.instance().get(name) == null) {
@@ -2299,6 +2340,9 @@ public class Main extends EventSource {
 	public void setViewingTransformation(final Vector eye, final Vector up) {
 		final SceneGraphComponent root = this.scene.getPath("emptyPickPath")
 				.getLastComponent();
+		if (doc() == null) {
+			return;
+		}
 		final CoordinateChange c = doc().getCellToWorld();
 		final Operator op = Operator.viewingRotation((Vector) eye.times(c),
 				(Vector) up.times(c));
