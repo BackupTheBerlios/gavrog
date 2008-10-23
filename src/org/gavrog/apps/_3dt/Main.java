@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -783,10 +785,18 @@ public class Main extends EventSource {
 							"Find tiling by name pattern or number:",
 							"3dt Search", String.valueOf(tilingCounter + 1));
                     if (input != null && !input.equals("")) {
+                    	final Pattern p;
+                    	try {
+                    		p = Pattern.compile(input, Pattern.CASE_INSENSITIVE);
+                    	} catch (final PatternSyntaxException ex) {
+							messageBox(ex.getMessage(), "3dt Search",
+									BStandardDialog.INFORMATION);
+							return;
+                    	}
 	                    if (documents != null) {
 							for (int n = 0; n < documents.size(); ++n) {
 								String name = documents .get(n).getName();
-								if (name != null && name.matches(".*" + input + ".*")) {
+								if (name != null && p.matcher(name).find()) {
 									doTiling(n + 1);
 									return;
 								}
