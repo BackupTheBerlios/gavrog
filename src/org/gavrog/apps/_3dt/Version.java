@@ -23,9 +23,9 @@ public class Version {
 
 	final public static int patchLevel = 0;
 
-	final public static String maturity = "preview2";
+	final public static String maturity = "beta";
 
-	final public static String date = "2008/10/21";
+	final public static String date = "2008/10/23";
 
 	final public static String extension = (maturity == null ? "" : " "
             + maturity)

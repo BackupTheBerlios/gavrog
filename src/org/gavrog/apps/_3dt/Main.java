@@ -20,7 +20,6 @@ package org.gavrog.apps._3dt;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
@@ -246,12 +245,14 @@ public class Main extends EventSource {
 	private DisplayList.Item selectedItem = null;
 	private int selectedFace = -1;
     
-    // --- gui elements
+    // --- gui elements and such
 	private BDialog aboutFrame;
 	private BDialog controlsFrame;
 	private BStandardDialog inputDialog = new BStandardDialog();
 	private BStandardDialog messageDialog = new BStandardDialog();
 	private Map<String, BLabel> tInfoFields;
+	private Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
+	private Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
 
 	// --- scene graph components and associated properties
 	final private ViewerApp viewerApp;
@@ -779,22 +780,27 @@ public class Main extends EventSource {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final String input = getInput(
-							"Type a tiling's name or part of it:", "3dt Search",
-							"");
+							"Find tiling by name (part of) or number:",
+							"3dt Search", String.valueOf(tilingCounter + 1));
                     if (input != null && !input.equals("")) {
 	                    if (documents != null) {
-	                    	for (int n = 0; n < documents.size(); ++n) {
-	                    		final String name = documents.get(n).getName();
+							for (int n = 0; n < documents.size(); ++n) {
+								String name = documents .get(n).getName();
 								if (name != null && name.contains(input)) {
 									doTiling(n + 1);
 									return;
 								}
 							}
-	                    }
-	                    messageBox("Found no tiling with '" + input
-	                    		+ "' in its name.", "3dt Search",
-	                    		BStandardDialog.INFORMATION);
-                    }
+							try {
+								final int n = Integer.parseInt(input);
+								doTiling(n);
+							} catch (NumberFormatException ex) {
+								messageBox("Found no tiling matching '"
+										+ input + "'.", "3dt Search",
+										BStandardDialog.INFORMATION);
+							}
+						}
+					}
 				}
 			}, "Search for a tiling by name",
 			KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
@@ -1477,45 +1483,88 @@ public class Main extends EventSource {
 	}
     
     private void disableTilingChange() {
-        actionOpen().setEnabled(false);
-        actionFirst().setEnabled(false);
-        actionNext().setEnabled(false);
-        actionPrevious().setEnabled(false);
-        actionLast().setEnabled(false);
-        actionJump().setEnabled(false);
-        actionSearch().setEnabled(false);
-    }
+		Invoke.andWait(new Runnable() {
+			public void run() {
+				actionOpen().setEnabled(false);
+				actionFirst().setEnabled(false);
+				actionNext().setEnabled(false);
+				actionPrevious().setEnabled(false);
+				actionLast().setEnabled(false);
+				actionJump().setEnabled(false);
+				actionSearch().setEnabled(false);
+			}
+		});
+	}
     
     private void enableTilingChange() {
-        actionOpen().setEnabled(true);
-        actionFirst().setEnabled(true);
-        actionNext().setEnabled(true);
-        actionPrevious().setEnabled(true);
-        actionLast().setEnabled(true);
-        actionJump().setEnabled(true);
-        actionSearch().setEnabled(true);
-    }
+		Invoke.andWait(new Runnable() {
+			public void run() {
+				actionOpen().setEnabled(true);
+				actionFirst().setEnabled(true);
+				actionNext().setEnabled(true);
+				actionPrevious().setEnabled(true);
+				actionLast().setEnabled(true);
+				actionJump().setEnabled(true);
+				actionSearch().setEnabled(true);
+			}
+		});
+	}
     
     private void openFile(final String path) {
     	final String filename = new File(path).getName();
-        try {
-        	documents = Document.load(path);
-        } catch (FileNotFoundException ex) {
-        	log("Could not find file " + filename);
-        	return;
-        }
-        log("File " + filename + " opened with " + documents.size() +
-        		" tiling" + (documents.size() > 1 ? "s" : "") + ".");
-        for (String key : tInfoFields.keySet()) {
-            setTInfo(key, "");
-        }
-        setTInfo("_file", filename);
-        tilingCounter = 0;
-        if (documents.size() == 1) {
-        	doTiling(1);
-        } else {
-        	actionJump().actionPerformed(null);
-        }
+        disableTilingChange();
+		busy();
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                	documents = Document.load(path);
+                	done();
+                	enableTilingChange();
+                	Invoke.later(new Runnable() {
+                		public void run() {
+							log("File " + filename + " opened with "
+									+ documents.size() + " tiling"
+									+ (documents.size() > 1 ? "s" : "") + ".");
+							for (String key : tInfoFields.keySet()) {
+								setTInfo(key, "");
+							}
+							setTInfo("_file", filename);
+						}
+                	});
+                    tilingCounter = 0;
+                    if (documents.size() == 1) {
+                    	doTiling(1);
+                    } else if (documents.size() > 1) {
+                    	actionSearch().actionPerformed(null);
+                    }
+                    return;
+                } catch (final FileNotFoundException ex) {
+                	log("Could not find file " + filename);
+                } catch (final Exception ex) {
+        			ex.printStackTrace();
+                }
+            	done();
+            	enableTilingChange();
+            }
+        }).start();
+    }
+    
+    private void busy() {
+    	Invoke.andWait(new Runnable() {
+    		public void run() {
+    	    	viewerApp.getFrame().setCursor(busyCursor);
+    	    	controlsFrame.setCursor(busyCursor);
+    		}
+    	});
+    }
+    
+    private void done() {
+    	Invoke.andWait(new Runnable() {
+    		public void run() {
+    	    	viewerApp.getFrame().setCursor(normalCursor);
+    	    	controlsFrame.setCursor(normalCursor);
+    		}
+    	});
     }
     
     private void doTiling(final int n) {
@@ -1523,8 +1572,7 @@ public class Main extends EventSource {
             return;
         }
         disableTilingChange();
-        final Frame frame = viewerApp.getFrame();
-        frame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        busy();
         new Thread(new Runnable() {
             public void run() {
                 tilingCounter = n;
@@ -1533,12 +1581,8 @@ public class Main extends EventSource {
                 } catch (final Exception ex) {
         			ex.printStackTrace();
                 }
-                Invoke.later(new Runnable() {
-                    public void run() {
-                        frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                        enableTilingChange();
-    					viewerApp.getFrame().setVisible(true);
-                    }});
+                done();
+                enableTilingChange();
             }
         }).start();
     }
@@ -1563,7 +1607,7 @@ public class Main extends EventSource {
 		setTInfo("_name", name);
 		
 		this.currentDocument = doc;
-		// --- get the user options saved in the document
+		// -- get the user options saved in the document
 		if (doc.getProperties() != null) {
 			try {
 				Config.pushProperties(doc.getProperties(), this);
@@ -1572,11 +1616,26 @@ public class Main extends EventSource {
 			}
 		}
 		
-		// --- set the callback for display list changes
+		// -- set the callback for display list changes
 		doc.removeEventLink(DisplayList.Event.class, this);
 		doc.addEventLink(DisplayList.Event.class, this,
 				"handleDisplayListEvent");
-		
+				
+		// -- update the info display
+		Invoke.later(new Runnable() {
+			public void run() {
+				final DSymbol ds = doc().getSymbol();
+				setTInfo("size", ds.size());
+				setTInfo("dim", ds.dim());
+				setTInfo("transitivity", doc().getTransitivity());
+				setTInfo("minimal", ds.isMinimal());
+				setTInfo("selfdual", ds.equals(ds.dual()));
+				setTInfo("signature", "pending...");
+				setTInfo("group", "pending...");
+			}
+		});
+
+		// -- render new tiling
         suspendRendering();
 		log("Constructing geometry...");
 		startTimer(timer);
@@ -1588,7 +1647,25 @@ public class Main extends EventSource {
 		}
 		log("  " + getTimer(timer));
 
-		// --- set camera and viewing transformation as specified in document
+		// -- update more of the info display
+        final Document oldDoc = doc();
+        
+		final Thread worker = new Thread(new Runnable() {
+			public void run() {
+				final String sig = oldDoc.getSignature();
+				if (doc() == oldDoc) {
+					setTInfo("signature", sig);
+				}
+				final String group = oldDoc.getGroupName();
+				if (doc() == oldDoc) {
+					setTInfo("group", group);
+				}
+			}
+		});
+		worker.setPriority(Thread.MIN_PRIORITY);
+		worker.start();
+		
+		// -- set camera and viewing transformation as specified in document
 		updateCamera();
 		if (doc.getTransformation() != null) {
 			setViewingTransformation(doc.getTransformation());
@@ -1597,35 +1674,6 @@ public class Main extends EventSource {
 		}
 		resumeRendering();
 		encompass();
-		
-		// --- update the info display
-		final DSymbol ds = doc().getSymbol();
-		setTInfo("size", ds.size());
-		setTInfo("dim", ds.dim());
-		setTInfo("transitivity", doc().getTransitivity());
-		setTInfo("minimal", ds.isMinimal());
-		setTInfo("selfdual", ds.equals(ds.dual()));
-		setTInfo("signature", "pending...");
-		setTInfo("group", "pending...");
-
-        final Document oldDoc = doc();
-        
-		final Thread worker = new Thread(new Runnable() {
-			public void run() {
-				final String sig = oldDoc.getSignature();
-				if (doc() == oldDoc) {
-					setTInfo("signature", sig);
-					viewerApp.getFrame().setVisible(true);
-				}
-				final String group = oldDoc.getGroupName();
-				if (doc() == oldDoc) {
-					setTInfo("group", group);
-					viewerApp.getFrame().setVisible(true);
-				}
-			}
-		});
-		worker.setPriority(Thread.MIN_PRIORITY);
-		worker.start();
 	}
     
     private SceneGraphComponent makeBody(final Tile b) {
