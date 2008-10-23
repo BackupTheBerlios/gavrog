@@ -780,13 +780,13 @@ public class Main extends EventSource {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final String input = getInput(
-							"Find tiling by name (part of) or number:",
+							"Find tiling by name pattern or number:",
 							"3dt Search", String.valueOf(tilingCounter + 1));
                     if (input != null && !input.equals("")) {
 	                    if (documents != null) {
 							for (int n = 0; n < documents.size(); ++n) {
 								String name = documents .get(n).getName();
-								if (name != null && name.contains(input)) {
+								if (name != null && name.matches(".*" + input + ".*")) {
 									doTiling(n + 1);
 									return;
 								}
@@ -2349,7 +2349,11 @@ public class Main extends EventSource {
     }
     
     private void encompass() {
-    	encompass(viewerApp.getCurrentViewer(), scene);
+    	Invoke.later(new Runnable() {
+    		public void run() {
+    	    	encompass(viewerApp.getCurrentViewer(), scene);
+    		}
+    	});
     }
     
     double lastCenter[] = null;
