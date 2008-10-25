@@ -426,10 +426,9 @@ public class Main extends EventSource {
 
         // --- modify the View menu
         if (!this.expertMode) {
-			for (int i = 0; i < 11; ++i) {
+			for (int i = 0; i < 15; ++i) {
 				menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 0);
 			}
-			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 2);
 		} else {
 			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 13);
 		}

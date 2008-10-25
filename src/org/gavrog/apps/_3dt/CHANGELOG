@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- Removed the 'fullscreen' and 'maximal size' menu entries.
 - The search (<ctrl>-f) action now uses regular expressions.
 - Simple tiling properties are now displayed first before rendering the tiling.
 - The 'Dualize' and 'Max. Symmetry' actions now refuse to produce duplicates.
