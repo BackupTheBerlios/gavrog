@@ -12,11 +12,11 @@ Installation file for Gavrog, currently in particular for 3dt.
     -->
     <info>
         <appname>3dt / Systre</appname>
-        <appversion>versions 0.4.0 (alpha) and 1.1.5 (beta)</appversion>
+        <appversion>versions 0.4.0 and 1.1.5</appversion>
         <appsubpath>3dt-0.4.0</appsubpath>
         <authors>
             <author name="Olaf Delgado-Friedrichs"
-	     email="odf@users.sourceforge.net"/>
+	     email="odf@users.berlios.de"/>
         </authors>
         <url>http://www.gavrog.org/</url>
 	<uninstaller write="yes"/>
@@ -25,7 +25,6 @@ Installation file for Gavrog, currently in particular for 3dt.
     
     <!-- 
         The gui preferences indication.
-        Sets the installer window to 640x480. It will not be able to change the size.
     -->
     <guiprefs width="850" height="490" resizable="yes">
         <modifier key="useHeadingPanel" value="yes"/>
