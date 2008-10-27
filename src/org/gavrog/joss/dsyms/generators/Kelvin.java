@@ -78,17 +78,17 @@ public class Kelvin {
 			return count;
 		}
 		
-		protected void handleCheckpoint() {
+		protected void handleCheckpoint(final boolean isOld) {
 			if (interval > 0 && this.timer.elapsed() > interval) {
-				writeCheckpoint();
+				writeCheckpoint(isOld);
 			}
 		}
 		
-		public void writeCheckpoint() {
+		public void writeCheckpoint(final boolean isOld) {
 			try {
 				this.timer.reset();
-				output.write(String.format("#@ CHECKPOINT %s\n",
-						getCheckpoint()));
+				output.write(String.format("%s CHECKPOINT %s\n",
+						isOld ? "# passing" : "#@", getCheckpoint()));
 			} catch (Throwable ex) {
 			}
 		}
@@ -200,6 +200,10 @@ public class Kelvin {
 					resume[0] = Integer.parseInt(tmp[0]);
 					resume[1] = Integer.parseInt(tmp[1]);
 					resume[2] = Integer.parseInt(tmp[2]);
+				} else if (args[i].equals("-x")) {
+					final String tmp[] = args[++i].split("-");
+					start = Integer.parseInt(tmp[0]);
+					stop = Integer.parseInt(tmp[1]) + 1;
 				} else {
 					usage();
 				}
@@ -227,19 +231,6 @@ public class Kelvin {
 			int n = 0;
 			timer.start();
 			
-			if (nrOfSections > 0) {
-				final Generator tmp = new Generator(k, verbose, testParts,
-						true, 0, 0, 0, null);
-				while (tmp.hasNext()) {
-					tmp.next();
-				}
-				n = tmp.getCount();
-				final int m = nrOfSections;
-				final int s = section;
-				start = (int) Math.round(n / (double) m * (s-1)) + 1;
-				stop  = (int) Math.round(n / (double) m * s) + 1;
-			}
-			
 			output.write("# Program Kelvin with k = " + k + ".\n");
 			output.write("# Options:\n");
 			output.write("#     verbose mode:                    ");
@@ -254,16 +245,34 @@ public class Kelvin {
 			} else {
 				output.write("#     checkpoints:                     off\n");
 			}
+			output.flush();
+			
+			if (nrOfSections > 0) {
+				final Generator tmp = new Generator(k, verbose, testParts,
+						true, 0, 0, 0, null);
+				while (tmp.hasNext()) {
+					tmp.next();
+				}
+				n = tmp.getCount();
+				final int m = nrOfSections;
+				final int s = section;
+				start = (int) Math.round(n / (double) m * (s-1)) + 1;
+				stop  = (int) Math.round(n / (double) m * s) + 1;
+			}
+			
 			if (nrOfSections > 0) {
 				output.write("# Running section " + section + " of "
 						+ nrOfSections + " (cases " + start + " to "
 						+ (stop - 1) + " of " + n + ").\n");
+			} else if (stop > 0) {
+				output.write("# Running cases " + start + " to " + stop + ".\n");
 			}
 			if (resume != null) {
 				output.write(String.format("# Resuming at %d %d %d.\n",
 						resume[0], resume[1], resume[2]));
 			}
 			output.write("\n");
+			output.flush();
 			
 			final Generator iter = new Generator(k, verbose, testParts,
 					false, start, stop, checkpointInterval, output);
@@ -282,7 +291,7 @@ public class Kelvin {
 						final boolean ambiguous = tester.isAmbiguous();
 						eTestTimer.stop();
 						if (!bad) {
-							iter.writeCheckpoint();
+							iter.writeCheckpoint(false);
 							if (ambiguous) {
 								output.write("#@ name euclidicity dubious\n");
 								++countAmbiguous;

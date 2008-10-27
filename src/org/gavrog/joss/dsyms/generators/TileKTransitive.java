@@ -108,10 +108,10 @@ public class TileKTransitive extends IteratorAdapter {
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
+                        handleCheckpoint(tooEarly(1));
                         if (tooEarly(1)) {
                         	continue;
                         }
-                        handleCheckpoint();
                         final DSymbol ds = new DSymbol(tmp);
                         ++this.count2dSymbols;
                         if (this.verbose) {
@@ -125,10 +125,10 @@ public class TileKTransitive extends IteratorAdapter {
                 final DSymbol ds = (DSymbol) extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
+                handleCheckpoint(tooEarly(2));
                 if (tooEarly(2)) {
                 	continue;
                 }
-                handleCheckpoint();
                 ++this.count3dSets;
                 if (this.verbose) {
                     System.err.println("    " + setAsString(ds));
@@ -137,10 +137,10 @@ public class TileKTransitive extends IteratorAdapter {
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++checkpoint[2];
+            handleCheckpoint(tooEarly(3));
             if (tooEarly(3)) {
             	continue;
             }
-            handleCheckpoint();
             ++count3dSymbols;
             if (this.verbose) {
                 System.err.println("        " + branchingAsString(ds));
@@ -165,8 +165,9 @@ public class TileKTransitive extends IteratorAdapter {
     
     /**
      * Override this to record program checkpoints.
+     * @param oldCheckpoint true if we're before the resume point
      */
-    protected void handleCheckpoint() {
+    protected void handleCheckpoint(boolean oldCheckpoint) {
     }
     
     /**
