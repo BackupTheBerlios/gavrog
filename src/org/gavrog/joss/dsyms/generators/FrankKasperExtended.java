@@ -206,7 +206,7 @@ public class FrankKasperExtended extends TileKTransitive {
 	}
 
 	protected Iterator extendTo3d(final DSymbol ds) {
-		return new ExtendTo3d(ds) {
+		return new CombineTiles(ds) {
 			protected List getExtraDeductions(final DelaneySymbol ds,
 					final Move move) {
 				final List<Move> out = new ArrayList<Move>();

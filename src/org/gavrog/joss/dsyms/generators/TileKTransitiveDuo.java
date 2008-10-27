@@ -180,7 +180,7 @@ public class TileKTransitiveDuo extends IteratorAdapter {
 	 */
     protected Iterator extendTo3d(final DSymbol ds) {
 		if (this.simple) {
-			return new ExtendTo3d(ds) {
+			return new CombineTiles(ds) {
 				protected List getExtraDeductions(final DelaneySymbol ds,
 						final Move move) {
 					final List out = new ArrayList();
@@ -229,7 +229,7 @@ public class TileKTransitiveDuo extends IteratorAdapter {
 				}
 			};
 		} else {
-			return new ExtendTo3d(ds);
+			return new CombineTiles(ds);
 		}
 	}
 
