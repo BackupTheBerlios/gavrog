@@ -89,6 +89,7 @@ public class Kelvin {
 				this.timer.reset();
 				output.write(String.format("%s CHECKPOINT %s\n",
 						isOld ? "# passing" : "#@", getCheckpoint()));
+				output.flush();
 			} catch (Throwable ex) {
 			}
 		}
