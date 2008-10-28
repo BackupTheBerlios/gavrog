@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- The random recoloring of tile classes is now 'more random'.
 - Removed the 'fullscreen' and 'maximal size' menu entries.
 - The search (<ctrl>-f) action now uses regular expressions.
 - Simple tiling properties are now displayed first before rendering the tiling.

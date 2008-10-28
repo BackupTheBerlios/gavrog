@@ -453,13 +453,27 @@ public class Document extends DisplayList {
     
     private void fillPalette(final Color[] palette) {
     	final int n = palette.length;
+    	final int map[] = randomPermutation(n);
         final float offset = random.nextFloat();
         final float s = 0.6f;
         final float b = 1.0f;
         for (int i = 0; i < n; ++i) {
             final float h = (i / (float) n + offset) % 1.0f;
-            palette[i] = Color.getHSBColor(h, s, b);
+            palette[map[i]] = Color.getHSBColor(h, s, b);
         }
+    }
+    
+    private int[] randomPermutation(final int n) {
+    	final int result[] = new int[n];
+    	final List<Integer> free = new ArrayList<Integer>();
+    	for (int i = 0; i < n; ++i) {
+    		free.add(i);
+    	}
+    	for (int i = 0; i < n; ++i) {
+    		final int j = random.nextInt(n - i);
+    		result[i] = free.remove(j);
+    	}
+    	return result;
     }
     
     public Color getTileClassColor(final int i) {
