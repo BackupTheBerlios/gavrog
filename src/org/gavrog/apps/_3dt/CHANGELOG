@@ -1,5 +1,6 @@
 3dt 0.4.0:
 
+- BUG FIX: no more corrupted scenes when reading back '.gsl' files.
 - The random recoloring of tile classes is now 'more random'.
 - Removed the 'fullscreen' and 'maximal size' menu entries.
 - The search (<ctrl>-f) action now uses regular expressions.

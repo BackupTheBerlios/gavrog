@@ -82,6 +82,16 @@ public class Tiling {
 	 * @param ds the Delaney symbol for the tiling.
 	 */
 	public Tiling(final DelaneySymbol ds) {
+		this(ds, null);
+	}
+	
+	/**
+	 * Constructs an instance.
+	 * 
+	 * @param ds the Delaney symbol for the tiling.
+	 * @param cover a pre-computed (pseudo-)toroidal cover of the tiling.
+	 */
+	public Tiling(final DelaneySymbol ds, final DSCover cover) {
         // --- check basic properties
         if (!ds.isComplete()) {
             throw new IllegalArgumentException("symbol must be complete");
@@ -97,17 +107,31 @@ public class Tiling {
 		final int dim = ds.dim();
 
 		// --- compute a torus cover
+		DSCover cov;
 		if (dim == 2) {
-			this.cov = Covers.toroidalCover2D(ds);
+			cov = Covers.toroidalCover2D(ds);
 		} else if (dim == 3) {
-			this.cov = Covers.pseudoToroidalCover3D(ds);
+			cov = Covers.pseudoToroidalCover3D(ds);
 		} else {
             final String msg = "symbol must be 2- or 3-dimensional";
 			throw new UnsupportedOperationException(msg);
 		}
 
-		if (this.cov == null) {
+		if (cov == null) {
 			throw new IllegalArgumentException("symbol is not euclidean");
+		}
+		
+		if (cover != null) {
+			// --- if a cover is given, check if it's legal
+			final Object D = ds.elements().next();
+			final Object E1 = cov.getCoverMorphism().getASource(D);
+			final Object E2 = cover.getCoverMorphism().getASource(D);
+			assert new DSMorphism(cov, cover, E1, E2).isIsomorphism();
+			new DSMorphism(cover, ds, E2, D);
+			this.cov = cover;
+		} else {
+			// --- otherwise use the computed cover
+			this.cov = cov;
 		}
 	}
 

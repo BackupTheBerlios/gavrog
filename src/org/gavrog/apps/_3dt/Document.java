@@ -43,6 +43,7 @@ import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
+import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
@@ -98,6 +99,7 @@ public class Document extends DisplayList {
     final private String name;
     private DSymbol symbol = null;
     private DSymbol effective_symbol = null;
+    private DSCover given_cover = null;
     private GenericParser.Block data = null;
     
     // --- The tile and face colors set for this instance
@@ -188,6 +190,16 @@ public class Document extends DisplayList {
      * @param name the name of this instance.
      */
     public Document(final DSymbol ds, final String name) {
+    	this(ds, name, null);
+	}
+	
+    /**
+     * Constructs a tiling instance.
+     * @param ds the Delaney symbol for the tiling.
+     * @param name the name of this instance.
+     * @param cov a pre-given (pseudo-) toroidal cover.
+     */
+    public Document(final DSymbol ds, final String name, final DSCover cov) {
         if (ds.dim() == 2) {
         	this.symbol = ds;
             this.effective_symbol = extrusion(ds);
@@ -201,6 +213,7 @@ public class Document extends DisplayList {
             throw new UnsupportedOperationException(msg);
         }
         this.name = name;
+        this.given_cover = cov;
     }
     
     public Document(final GenericParser.Block block, final String defaultName) {
@@ -251,7 +264,8 @@ public class Document extends DisplayList {
         try {
             return (Tiling) cache.get(TILING);
         } catch (Cache.NotFoundException ex) {
-            return (Tiling) cache.put(TILING, new Tiling(getEffectiveSymbol()));
+            return (Tiling) cache.put(TILING, new Tiling(getEffectiveSymbol(),
+					given_cover));
         }
     }
 

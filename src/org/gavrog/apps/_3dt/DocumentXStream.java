@@ -179,6 +179,7 @@ public class DocumentXStream extends XStream {
 				Document doc = null;
 				final String name = reader.getAttribute("name");
 				DSymbol symbol = null;
+				DSymbol cover = null;
 				final List<Color> palette = new LinkedList<Color>();
 				final List<Object[]> dlist = new LinkedList<Object[]>();
 				final Map<Pair, Color> fcolors = new HashMap<Pair, Color>();
@@ -190,6 +191,9 @@ public class DocumentXStream extends XStream {
 					reader.moveDown();
 					if ("symbol".equals(reader.getNodeName())) {
 						symbol = (DSymbol) context.convertAnother(null,
+								DSymbol.class);
+					} else if ("cover".equals(reader.getNodeName())) {
+						cover = (DSymbol) context.convertAnother(null,
 								DSymbol.class);
 					} else if ("palette".equals(reader.getNodeName())) {
 						while (reader.hasMoreChildren()) {
@@ -287,7 +291,12 @@ public class DocumentXStream extends XStream {
 				if (symbol == null) {
 					throw new RuntimeException("No D-Symbol on XML stream.");
 				} else {
-					doc = new Document(symbol, name);
+					if (cover != null) {
+						doc = new Document(symbol, name, new DSCover(cover,
+								symbol, new Integer(1)));
+					} else {
+						doc = new Document(symbol, name);
+					}
 					doc.setProperties(props);
 					for (int i = 0; i < palette.size(); ++i) {
 						doc.setTileClassColor(i, palette.get(i));
