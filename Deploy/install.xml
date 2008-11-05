@@ -16,7 +16,7 @@ Installation file for Gavrog, currently in particular for 3dt.
         <appsubpath>3dt-0.4.0</appsubpath>
         <authors>
             <author name="Olaf Delgado-Friedrichs"
-	     email="odf@users.berlios.de"/>
+	     email="odf@gavrog.org"/>
         </authors>
         <url>http://www.gavrog.org/</url>
 	<uninstaller write="yes"/>
