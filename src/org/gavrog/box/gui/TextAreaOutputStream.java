@@ -36,6 +36,7 @@ public class TextAreaOutputStream extends OutputStream {
     final private StringBuffer buffer;
     final private BScrollPane scrollPane;
 	final private BScrollBar vscroll;
+	private char last_seen = '\0';
 
     public TextAreaOutputStream() {
         buffer = new StringBuffer(128);
@@ -52,8 +53,10 @@ public class TextAreaOutputStream extends OutputStream {
         final char c = (char) b;
         if (Character.isISOControl(c)) {
         	if (c == '\r' || c == '\n') {
-        		buffer.append('\n');
-        		flush();
+        		if (last_seen != '\r') {
+        			buffer.append('\n');
+        			flush();
+        		}
         	} else if (c == '\t') {
         		buffer.append(c);
         	} else if (c <= 0x1f) {
@@ -66,6 +69,7 @@ public class TextAreaOutputStream extends OutputStream {
         if (buffer.length() > 1023) {
             flush();
         }
+        last_seen = c;
     }
     
     public void flush() {
