@@ -51,22 +51,20 @@ public class TextAreaOutputStream extends OutputStream {
     
     public void write(int b) throws IOException {
         final char c = (char) b;
-        if (Character.isISOControl(c)) {
-        	if (c == '\r' || c == '\n') {
-        		if (last_seen != '\r') {
-        			buffer.append('\n');
-        			flush();
-        		}
-        	} else if (c == '\t') {
-        		buffer.append(c);
-        	} else if (c <= 0x1f) {
-        		buffer.append('^');
-        		buffer.append((char) (c + 0x40));
-        	}
-        } else {
-        	buffer.append(c);
-        }
-        if (buffer.length() > 1023) {
+		if (c == '\n' || c == '\r') {
+			if (last_seen != '\r') {
+				buffer.append('\n');
+				flush();
+			}
+		} else if (c == '\t') {
+			buffer.append(c);
+		} else if (c < 0x20) {
+			buffer.append('^');
+			buffer.append((char) (c + 0x40));
+		} else if (!Character.isISOControl(c)) {
+			buffer.append(c);
+		}
+		if (buffer.length() > 1023) {
             flush();
         }
         last_seen = c;
