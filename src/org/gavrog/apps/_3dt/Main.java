@@ -378,7 +378,7 @@ public class Main extends EventSource {
     }
 
     private void modifyDefaultMenu(final ViewerAppMenu menu) {
-    	// --- remove the Edit menu
+    	// --- remove the menus we don't use
     	menu.removeMenu(ViewerAppMenu.EDIT_MENU);
     	
         // --- create and populate a new Tiling menu
@@ -429,13 +429,13 @@ public class Main extends EventSource {
         ++k; // jump over separator
 
         // --- modify the View menu
-        if (!this.expertMode) {
-			for (int i = 0; i < 15; ++i) {
-				menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 0);
-			}
-		} else {
+        if (this.expertMode) {
 			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 13);
+        	menu.getMenu(ViewerAppMenu.VIEW_MENU).setText("Expert");
+		} else {
+			menu.removeMenu(ViewerAppMenu.VIEW_MENU);
 		}
+        menu.addMenu(new JMenu(ViewerAppMenu.VIEW_MENU), 3);
         k = 0;
         menu.addAction(actionEncompass(), ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionViewAlong(), ViewerAppMenu.VIEW_MENU, k++);
@@ -457,7 +457,6 @@ public class Main extends EventSource {
         		k++);
         menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
         
         // --- create a help menu
         menu.addMenu(new JMenu(HELP_MENU));
