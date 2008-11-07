@@ -425,8 +425,6 @@ public class Main extends EventSource {
         }, ViewerAppMenu.FILE_MENU, k++);
         menu.addAction(actionSunflowRender(), ViewerAppMenu.FILE_MENU, k++);
         menu.addAction(actionSunflowPreview(), ViewerAppMenu.FILE_MENU, k++);
-        
-        ++k; // jump over separator
 
         // --- modify the View menu
         if (this.expertMode) {
