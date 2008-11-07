@@ -52,6 +52,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.media.opengl.GLException;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JColorChooser;
@@ -363,6 +364,9 @@ public class Main extends EventSource {
 				saveOptions();
 			}
         });
+        
+        // --- check if an installed OpenGL viewer actually works
+        Invoke.andWait(new Runnable() { public void run() { checkOpenGL(); }});
         
         // --- show the controls window
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
@@ -2708,6 +2712,29 @@ public class Main extends EventSource {
         }
     }
     
+    private void checkOpenGL() {
+		final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
+		final Viewer viewers[] = vSwitch.getViewers();
+		int softViewer = -1;
+		int joglViewer = -1;
+		for (int i = 0; i < viewers.length; ++i) {
+			if (viewers[i] instanceof SoftViewer) {
+				softViewer = i;
+			} else if (viewers[i] instanceof de.jreality.jogl.Viewer) {
+				joglViewer = i;
+			}
+		}
+		if (softViewer >= 0 && joglViewer >= 0) {
+			try {
+				vSwitch.selectViewer(joglViewer);
+				vSwitch.render();
+			} catch (GLException ex) {
+				vSwitch.selectViewer(softViewer);
+				vSwitch.render();
+			}
+		}
+    }
+    
     private void forceSoftwareViewer() {
 		final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
 		final Viewer viewers[] = vSwitch.getViewers();
@@ -2721,7 +2748,7 @@ public class Main extends EventSource {
 		for (int i = 0; i < viewers.length; ++i) {
 			if (viewers[i] instanceof SoftViewer) {
 				vSwitch.selectViewer(i);
-				vSwitch.getCurrentViewer().render();
+				vSwitch.render();
 				break;
 			}
 		}
@@ -2732,7 +2759,7 @@ public class Main extends EventSource {
     	if (this.previousViewer >= 0) {
 			final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
 			vSwitch.selectViewer(this.previousViewer);
-			vSwitch.getCurrentViewer().render();
+			vSwitch.render();
 			this.previousViewer = -1;
     	}
     }
