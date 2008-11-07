@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-JAVA_HOME=/usr/lib/jvm/java-1.5.0-sun
+JAVA_HOME=/usr/lib/jvm/java-6-sun
 export JAVA_HOME
 IZPACK=$HOME/Software/IzPack
 BUOY="$HOME/Software/Buoy"
