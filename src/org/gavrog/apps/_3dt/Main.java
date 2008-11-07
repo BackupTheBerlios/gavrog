@@ -381,27 +381,6 @@ public class Main extends EventSource {
     	// --- remove the menus we don't use
     	menu.removeMenu(ViewerAppMenu.EDIT_MENU);
     	
-        // --- create and populate a new Tiling menu
-        menu.addMenu(new JMenu(TILING_MENU), 1);
-        menu.addAction(actionFirst(), TILING_MENU);
-        menu.addAction(actionNext(), TILING_MENU);
-        menu.addAction(actionPrevious(), TILING_MENU);
-        menu.addAction(actionLast(), TILING_MENU);
-        menu.addSeparator(TILING_MENU);
-        menu.addAction(actionJump(), TILING_MENU);
-        menu.addAction(actionSearch(), TILING_MENU);
-        menu.addSeparator(TILING_MENU);
-        menu.addAction(actionDualize(), TILING_MENU);
-        menu.addAction(actionSymmetrize(), TILING_MENU);
-        menu.addSeparator(TILING_MENU);
-        menu.addAction(actionRecolor(), TILING_MENU);
-        
-        // --- create and populate a new Net menu
-        menu.addMenu(new JMenu(NET_MENU), 2);
-        menu.addAction(actionUpdateNet(), NET_MENU);
-        menu.addAction(actionGrowNet(), NET_MENU);
-        menu.addAction(actionClearNet(), NET_MENU);
-        
         // --- modify the File menu
         for (int i = 0; i < 5; ++i) {
             menu.removeMenuItem(ViewerAppMenu.FILE_MENU, 0);
@@ -426,6 +405,27 @@ public class Main extends EventSource {
         menu.addAction(actionSunflowRender(), ViewerAppMenu.FILE_MENU, k++);
         menu.addAction(actionSunflowPreview(), ViewerAppMenu.FILE_MENU, k++);
 
+        // --- create and populate a new Tiling menu
+        menu.addMenu(new JMenu(TILING_MENU), 1);
+        menu.addAction(actionFirst(), TILING_MENU);
+        menu.addAction(actionNext(), TILING_MENU);
+        menu.addAction(actionPrevious(), TILING_MENU);
+        menu.addAction(actionLast(), TILING_MENU);
+        menu.addSeparator(TILING_MENU);
+        menu.addAction(actionJump(), TILING_MENU);
+        menu.addAction(actionSearch(), TILING_MENU);
+        menu.addSeparator(TILING_MENU);
+        menu.addAction(actionDualize(), TILING_MENU);
+        menu.addAction(actionSymmetrize(), TILING_MENU);
+        menu.addSeparator(TILING_MENU);
+        menu.addAction(actionRecolor(), TILING_MENU);
+        
+        // --- create and populate a new Net menu
+        menu.addMenu(new JMenu(NET_MENU), 2);
+        menu.addAction(actionUpdateNet(), NET_MENU);
+        menu.addAction(actionGrowNet(), NET_MENU);
+        menu.addAction(actionClearNet(), NET_MENU);
+        
         // --- modify the View menu
         if (this.expertMode) {
 			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 13);
