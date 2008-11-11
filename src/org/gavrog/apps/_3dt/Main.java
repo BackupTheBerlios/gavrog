@@ -27,6 +27,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
@@ -323,6 +325,12 @@ public class Main extends EventSource {
         viewerFrame.validate();
         viewerFrame.setVisible(true);
         
+		viewerFrame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent arg0) {
+				System.exit(0);
+			}
+		});
+		
         viewerFrame.getViewingComponent().addComponentListener(
         	new ComponentListener() {
 			public void componentShown(ComponentEvent e) {}
