@@ -139,7 +139,6 @@ import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
-import de.jreality.tools.ClickWheelCameraZoomTool;
 import de.jreality.toolsystem.ToolSystem;
 import de.jreality.ui.viewerapp.ViewerSwitch;
 import de.jreality.ui.viewerapp.actions.AbstractJrAction;
@@ -262,14 +261,11 @@ public class Main extends EventSource {
 				360.0, 180.0, 40, 20, 1.0));
 	}
     
-    private SceneGraphComponent tiling;
-    private SceneGraphComponent net;
+    final private SceneGraphComponent tiling;
+    final private SceneGraphComponent net;
 	private SceneGraphComponent unitCell;
     private SceneGraphComponent templates[];
     private Appearance materials[];
-    
-    // --- command line options
-	private boolean expertMode;
     
     /**
      * Constructs an instance.
@@ -278,15 +274,8 @@ public class Main extends EventSource {
     public Main(final String[] args) {
     	// --- parse command line options
     	String infilename = null;
-    	int i = 0;
-    	if (args.length > i && args[i].equals("-x")) {
-    		this.expertMode = true;
-    		++i;
-    	} else {
-    		this.expertMode = false;
-    	}
-    	if (args.length > i) {
-    		infilename = args[i];
+    	if (args.length > 0) {
+    		infilename = args[0];
     	}
     	
         // --- retrieved stored user options
@@ -313,6 +302,11 @@ public class Main extends EventSource {
         // --- create a node for the unit cell
         this.unitCell = new SceneGraphComponent("UnitCell");
         
+        // --- add these to the scene
+		world.addChild(tiling);
+		world.addChild(net);
+		world.addChild(unitCell);
+		
         // --- add some lights
 		final Light l1 = new DirectionalLight();
 		l1.setIntensity(0.75);
@@ -348,8 +342,9 @@ public class Main extends EventSource {
 			public void componentMoved(ComponentEvent e) {}
 
 			public void componentResized(ComponentEvent e) {
-				ui.setViewerWidth(viewerFrame.getViewingComponent().getWidth());
-				ui.setViewerHeight(viewerFrame.getViewingComponent().getHeight());
+				final Dimension size = viewerFrame.getViewerSize();
+				ui.setViewerWidth((int) size.getWidth());
+				ui.setViewerHeight((int) size.getHeight());
 				saveOptions();
 			}
         });
@@ -2131,7 +2126,9 @@ public class Main extends EventSource {
 		for (final SceneGraphComponent child: bas.getChildComponents()) {
 			child.setAppearance(null);
 		}
-        this.unitCell = basf.getSceneGraphComponent();
+		world.removeChild(unitCell);
+        unitCell = basf.getSceneGraphComponent();
+        world.addChild(unitCell);
     }
     
     private void makeTiles() {
@@ -2487,30 +2484,19 @@ public class Main extends EventSource {
     }
     
     private void suspendRendering() {
-    	Invoke.andWait(new Runnable() {
-			public void run() {
-		    	SceneGraphUtility.removeChildren(world);
-			}
-    	});
+    	viewerFrame.pauseRendering();
     }
     
     private void resumeRendering() {
-		Invoke.andWait(new Runnable() {
-			public void run() {
-				world.addChild(tiling);
-				world.addChild(net);
-				world.addChild(unitCell);
-				viewerFrame.getViewer().render();
-			}
-		});
+    	viewerFrame.startRendering();
 	}
 
     private Transformation getViewingTransformation() {
-		return viewerFrame.getViewer().getSceneRoot().getTransformation();
+		return world.getTransformation();
     }
     
     private void setViewingTransformation(final Transformation trans) {
-    	viewerFrame.getViewer().getSceneRoot().setTransformation(trans);
+    	world.setTransformation(trans);
     }
     
     private JPopupMenu _selectionPopupForTiles = null;
@@ -2707,8 +2693,8 @@ public class Main extends EventSource {
     }
     
     private void updateViewerSize() {
-    	viewerFrame.setSize(new Dimension(ui.getViewerWidth(), ui
-				.getViewerHeight()));
+    	viewerFrame.setViewerSize(
+    			new Dimension(ui.getViewerWidth(), ui.getViewerHeight()));
     }
     
     private BButton makeButton(final String label, final Object target,

@@ -36,8 +36,8 @@ import de.jreality.scene.IndexedFaceSet;
 import de.jreality.scene.Light;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.SceneGraphPath;
-import de.jreality.scene.Viewer;
 import de.jreality.scene.Transformation;
+import de.jreality.scene.Viewer;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.tools.ClickWheelCameraZoomTool;
 import de.jreality.tools.DraggingTool;
@@ -53,7 +53,6 @@ public class ViewerFrame extends JFrame {
 	final Thread renderThread;
 	
 	Viewer viewer;
-	Dimension viewerSize;
 	boolean renderingEnabled = false;
 
 	public static void main(String args[]) {
@@ -67,7 +66,6 @@ public class ViewerFrame extends JFrame {
 				System.exit(0);
 			}
 		});
-		frame.setViewerSize(new Dimension(800, 600));
 		frame.setJMenuBar(new JMenuBar());
 		frame.getJMenuBar().add(new JMenu("File"));
 		final Light l1 = new DirectionalLight();
@@ -86,6 +84,10 @@ public class ViewerFrame extends JFrame {
 		frame.validate();
 		frame.setVisible(true);
 		frame.startRendering();
+
+		frame.setViewerSize(new Dimension(800, 600));
+		System.err.println(frame.getViewerSize());
+		System.err.println(frame.getViewer().getViewingComponentSize());
 	}
 
 	public ViewerFrame(final SceneGraphComponent content) {
@@ -129,6 +131,7 @@ public class ViewerFrame extends JFrame {
 		
 		setViewer(viewer);
 		setViewerSize(new Dimension(640, 400));
+		pack();
 		
 		renderThread = new Thread(new Runnable() {
 			public void run() {
@@ -182,14 +185,11 @@ public class ViewerFrame extends JFrame {
 	}
 	
 	public Dimension getViewerSize() {
-		return this.viewerSize;
+		return viewer.getViewingComponentSize();
 	}
 
-	public void setViewerSize(final Dimension viewerSize) {
-    	final Component c = (Component) viewer.getViewingComponent();
-    	c.setPreferredSize(null); // force event triggering
-    	c.setPreferredSize(viewerSize);
-    	pack();
-		this.viewerSize = c.getSize();
+	public void setViewerSize(final Dimension newSize) {
+		((Component) viewer.getViewingComponent()).setPreferredSize(newSize);
+		pack();
 	}
 }
