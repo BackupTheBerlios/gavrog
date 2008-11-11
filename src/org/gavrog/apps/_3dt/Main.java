@@ -325,7 +325,6 @@ public class Main extends EventSource {
         // --- set up the viewer window
         updateCamera();
         viewerFrame.setTitle("3dt Viewer");
-        updateViewerSize();
         viewerFrame.validate();
         viewerFrame.setVisible(true);
         
@@ -349,6 +348,8 @@ public class Main extends EventSource {
 			}
         });
         
+        Invoke.andWait(new Runnable() { public void run() { updateViewerSize(); }});
+
         // --- show the controls window
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
         
