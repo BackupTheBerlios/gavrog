@@ -124,7 +124,9 @@ import de.jreality.math.Pn;
 import de.jreality.math.Rn;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.Camera;
+import de.jreality.scene.DirectionalLight;
 import de.jreality.scene.IndexedLineSet;
+import de.jreality.scene.Light;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.SceneGraphNode;
 import de.jreality.scene.SceneGraphPath;
@@ -311,10 +313,18 @@ public class Main extends EventSource {
         // --- create a node for the unit cell
         this.unitCell = new SceneGraphComponent("UnitCell");
         
-        // --- add the mouse wheel zoom tool
-        viewerFrame.getViewer().getSceneRoot().addTool(
-				new ClickWheelCameraZoomTool());
-        
+        // --- add some lights
+		final Light l1 = new DirectionalLight();
+		l1.setIntensity(0.75);
+		final Transformation t1 = new Transformation();
+		MatrixBuilder.euclidean().rotateX(degrees(-30)).rotateY(degrees(-30))
+				.assignTo(t1);
+		viewerFrame.addLight(l1, t1);
+		final Light l2 = new DirectionalLight();
+		l2.setIntensity(0.75);
+		final Transformation t2 = new Transformation();
+		viewerFrame.addLight(l2, t2);
+		
         // --- create the menu bar
         viewerFrame.setJMenuBar(createMenus());
         
@@ -2417,7 +2427,7 @@ public class Main extends EventSource {
 		if (doc() == null) {
 			return;
 		}
-		final SceneGraphComponent root = viewerFrame.getViewer().getSceneRoot();
+		final SceneGraphComponent root = world;
 		final CoordinateChange c = doc().getCellToWorld();
 		final Operator op = Operator.viewingRotation((Vector) eye.times(c),
 				(Vector) up.times(c));
@@ -2429,7 +2439,7 @@ public class Main extends EventSource {
 	}
 	
 	public void rotateScene(final double axis[], final double angle) {
-		final SceneGraphComponent root = viewerFrame.getViewer().getSceneRoot();
+		final SceneGraphComponent root = world;
 
 		if (lastCenter == null) {
 			// --- compute the center of the scene in world coordinates
@@ -3249,6 +3259,10 @@ public class Main extends EventSource {
 		this.aboutFrame.setVisible(true);
 	}
     
+	public static double degrees(final double d) {
+		return d / 180.0 * Math.PI;
+	}
+	
     public static void main(final String[] args) {
         new Main(args);
     }

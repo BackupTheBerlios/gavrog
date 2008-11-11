@@ -37,8 +37,10 @@ import de.jreality.scene.Light;
 import de.jreality.scene.SceneGraphComponent;
 import de.jreality.scene.SceneGraphPath;
 import de.jreality.scene.Viewer;
-import de.jreality.scene.proxy.scene.Transformation;
+import de.jreality.scene.Transformation;
 import de.jreality.shader.CommonAttributes;
+import de.jreality.tools.ClickWheelCameraZoomTool;
+import de.jreality.tools.DraggingTool;
 import de.jreality.tools.RotateTool;
 import de.jreality.toolsystem.ToolSystem;
 
@@ -94,15 +96,16 @@ public class ViewerFrame extends JFrame {
 
 		rootNode.addChild(geometryNode);
 		rootNode.addChild(cameraNode);
-		cameraNode.addChild(lightNode);
+		rootNode.addChild(lightNode);
 
 		Camera camera = new Camera();
 		cameraNode.setCamera(camera);
 
 		geometryNode.addChild(content);
 		
-		RotateTool rotateTool = new RotateTool();
-		geometryNode.addTool(rotateTool);
+		content.addTool(new RotateTool());
+		content.addTool(new DraggingTool());
+		content.addTool(new ClickWheelCameraZoomTool());
 
 		MatrixBuilder.euclidean().translate(0, 0, 3).assignTo(cameraNode);
 
