@@ -29,7 +29,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.FileInputStream;
@@ -112,7 +111,6 @@ import buoy.widget.LayoutInfo;
 import buoy.widget.RowContainer;
 import buoy.widget.Widget;
 import de.jreality.geometry.BallAndStickFactory;
-import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.SphereUtility;
@@ -139,11 +137,9 @@ import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
-import de.jreality.toolsystem.ToolSystem;
 import de.jreality.ui.viewerapp.ViewerSwitch;
 import de.jreality.ui.viewerapp.actions.AbstractJrAction;
 import de.jreality.util.CameraUtility;
-import de.jreality.util.Rectangle3D;
 import de.jreality.util.SceneGraphUtility;
 import de.jtem.beans.DimensionPanel;
 
@@ -1407,7 +1403,8 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 1, 0 }, ui.getRotationStep() * Math.PI / 180.0);
+    				viewerFrame.rotateScene(new double[] { 0, 1, 0 },
+									ui.getRotationStep() * Math.PI / 180.0);
 				}
 			}, "Rotate the scene to the right",
 				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0));
@@ -1420,7 +1417,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 1, 0 },
+    				viewerFrame.rotateScene(new double[] { 0, 1, 0 },
     						-ui.getRotationStep() * Math.PI / 180.0);
 				}
 			}, "Rotate the scene to the left",
@@ -1434,7 +1431,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 1, 0, 0 },
+    				viewerFrame.rotateScene(new double[] { 1, 0, 0 },
     						-ui.getRotationStep() * Math.PI / 180.0);
 				}
 			}, "Rotate the scene upward",
@@ -1448,7 +1445,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 1, 0, 0 },
+    				viewerFrame.rotateScene(new double[] { 1, 0, 0 },
     						ui.getRotationStep() * Math.PI / 180.0);
 				}
 			}, "Rotate the scene downward",
@@ -1462,7 +1459,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 0, 1 },
+    				viewerFrame.rotateScene(new double[] { 0, 0, 1 },
     						-ui.getRotationStep() * Math.PI / 180.0);
 				}
 			}, "Rotate the scene clockwise",
@@ -1477,7 +1474,7 @@ public class Main extends EventSource {
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractJrAction(name) {
     			public void actionPerformed(ActionEvent e) {
-    				rotateScene(new double[] { 0, 0, 1 },
+    				viewerFrame.rotateScene(new double[] { 0, 0, 1 },
     						ui.getRotationStep() * Math.PI / 180.0);
 				}
 			}, "Rotate the scene counter-clockwise",
@@ -2355,72 +2352,14 @@ public class Main extends EventSource {
 		}
     }
     
-    private void encompass() {
+    public void encompass() {
     	Invoke.later(new Runnable() {
     		public void run() {
-    	    	encompass(viewerFrame.getViewer());
+    	    	viewerFrame.encompass();
     		}
     	});
     }
     
-    double lastCenter[] = null;
-    
-	public void encompass(final Viewer viewer) {
-		// --- extract parameters from scene and viewer
-		final ToolSystem ts = ToolSystem.toolSystemForViewer(viewer);
-		final SceneGraphPath avatarPath = ts.getAvatarPath();
-		final SceneGraphPath scenePath = ts.getEmptyPickPath();
-		final SceneGraphPath cameraPath = viewer.getCameraPath();
-		final double aspectRatio = CameraUtility.getAspectRatio(viewer);
-        final int signature = viewer.getSignature();
-		
-        // --- compute scene-to-avatar transformation
-		final Matrix toAvatar = new Matrix();
-		scenePath.getMatrix(toAvatar.getArray(), 0, scenePath.getLength() - 2);
-		toAvatar.multiplyOnRight(avatarPath.getInverseMatrix(null));
-		
-		// --- compute bounding box of scene
-		final Rectangle3D bounds = GeometryUtility.calculateBoundingBox(
-				toAvatar.getArray(), scenePath.getLastComponent());
-		if (bounds.isEmpty()) {
-			return;
-		}
-		
-		// --- compute best camera position based on bounding box and viewport
-        final Camera camera = (Camera) cameraPath.getLastElement();
-		final Rectangle2D vp = CameraUtility.getViewport(camera, aspectRatio);
-		final double[] e = bounds.getExtent();
-		final double radius = Math
-				.sqrt(e[0] * e[0] + e[2] * e[2] + e[1] * e[1]) / 2.0;
-		final double front = e[2] / 2;
-
-		final double xscale = e[0] / vp.getWidth();
-		final double yscale = e[1] / vp.getHeight();
-		double camdist = Math.max(xscale, yscale) * 1.1;
-		if (!camera.isPerspective()) {
-			camdist *= camera.getFocus(); // adjust for viewport scaling
-			camera.setFocus(camdist);
-		}
-
-		// --- compute new camera position and adjust near/far clipping planes
-		final double[] c = bounds.getCenter();
-		c[2] += front + camdist;
-		camera.setFar(camdist + front + 5 * radius);
-		camera.setNear(0.1 * camdist);
-		
-		// --- make rotateScene() recompute the center
-		lastCenter = null;
-		
-		// --- adjust the avatar position to make scene fit
-		final Matrix camMatrix = new Matrix();
-		cameraPath.getInverseMatrix(camMatrix.getArray(), avatarPath
-				.getLength());
-		final SceneGraphComponent avatar = avatarPath.getLastComponent();
-		final Matrix m = new Matrix(avatar.getTransformation());
-		MatrixBuilder.init(m, signature).translate(c).translate(
-				camMatrix.getColumn(3)).assignTo(avatar);
-	}
-
 	public void setViewingTransformation(final Vector eye, final Vector up) {
 		if (doc() == null) {
 			return;
@@ -2434,31 +2373,6 @@ public class Main extends EventSource {
 				a[1][0], a[1][1], a[1][2], a[1][3], a[2][0], a[2][1], a[2][2],
 				a[2][3], a[3][0], a[3][1], a[3][2], a[3][3] };
 		MatrixBuilder.euclidean(new Matrix(b)).assignTo(root);
-	}
-	
-	public void rotateScene(final double axis[], final double angle) {
-		final SceneGraphComponent root = world;
-
-		if (lastCenter == null) {
-			// --- compute the center of the scene in world coordinates
-			final Rectangle3D bounds = GeometryUtility
-					.calculateBoundingBox(root);
-			if (bounds.isEmpty()) {
-				return;
-			} else {
-				lastCenter = new Matrix(root.getTransformation())
-						.getInverse().multiplyVector(bounds.getCenter());
-			}
-		}
-		
-		// --- rotate around the last computed scene center
-		final Matrix tOld = new Matrix(root.getTransformation());
-		final Matrix tNew = MatrixBuilder.euclidean().rotate(angle, axis)
-				.times(tOld).getMatrix();
-		final double p[] = tOld.multiplyVector(lastCenter);
-		final double q[] = tNew.multiplyVector(lastCenter);
-		MatrixBuilder.euclidean().translateFromTo(q, p).times(tNew).assignTo(
-				root);
 	}
 	
     private void updateCamera() {

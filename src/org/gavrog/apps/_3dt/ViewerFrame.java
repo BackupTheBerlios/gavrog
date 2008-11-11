@@ -22,12 +22,15 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 
+import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.Primitives;
+import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.scene.Appearance;
 import de.jreality.scene.Camera;
@@ -43,17 +46,22 @@ import de.jreality.tools.ClickWheelCameraZoomTool;
 import de.jreality.tools.DraggingTool;
 import de.jreality.tools.RotateTool;
 import de.jreality.toolsystem.ToolSystem;
+import de.jreality.util.CameraUtility;
+import de.jreality.util.Rectangle3D;
 
 /**
  * @author Olaf Delgado
  * @version $Id:$
  */
 public class ViewerFrame extends JFrame {
+	final SceneGraphComponent contentNode;
 	final SceneGraphComponent lightNode;
 	final Thread renderThread;
 	
 	Viewer viewer;
 	boolean renderingEnabled = false;
+    double lastCenter[] = null;
+    
 
 	public static void main(String args[]) {
 		final SceneGraphComponent content = new SceneGraphComponent();
@@ -90,10 +98,16 @@ public class ViewerFrame extends JFrame {
 		System.err.println(frame.getViewer().getViewingComponentSize());
 	}
 
+	private static double degrees(final double d) {
+		return d / 180.0 * Math.PI;
+	}
+	
 	public ViewerFrame(final SceneGraphComponent content) {
 		SceneGraphComponent rootNode = new SceneGraphComponent();
 		SceneGraphComponent cameraNode = new SceneGraphComponent();
 		SceneGraphComponent geometryNode = new SceneGraphComponent();
+		
+		contentNode = content;
 		lightNode = new SceneGraphComponent();
 
 		rootNode.addChild(geometryNode);
@@ -151,10 +165,6 @@ public class ViewerFrame extends JFrame {
 		renderThread.start();
 	}
 	
-	public static double degrees(final double d) {
-		return d / 180.0 * Math.PI;
-	}
-	
 	public Component getViewingComponent() {
 		return (Component) viewer.getViewingComponent();
 	}
@@ -172,6 +182,87 @@ public class ViewerFrame extends JFrame {
 	
 	public void pauseRendering() {
 		renderingEnabled = false;
+	}
+	
+	public void encompass() {
+		// --- extract parameters from scene and viewer
+		final ToolSystem ts = ToolSystem.toolSystemForViewer(viewer);
+		final SceneGraphPath avatarPath = ts.getAvatarPath();
+		final SceneGraphPath scenePath = ts.getEmptyPickPath();
+		final SceneGraphPath cameraPath = viewer.getCameraPath();
+		final double aspectRatio = CameraUtility.getAspectRatio(viewer);
+        final int signature = viewer.getSignature();
+		
+        // --- compute scene-to-avatar transformation
+		final Matrix toAvatar = new Matrix();
+		scenePath.getMatrix(toAvatar.getArray(), 0, scenePath.getLength() - 2);
+		toAvatar.multiplyOnRight(avatarPath.getInverseMatrix(null));
+		
+		// --- compute bounding box of scene
+		final Rectangle3D bounds = GeometryUtility.calculateBoundingBox(
+				toAvatar.getArray(), scenePath.getLastComponent());
+		if (bounds.isEmpty()) {
+			return;
+		}
+		
+		// --- compute best camera position based on bounding box and viewport
+        final Camera camera = (Camera) cameraPath.getLastElement();
+		final Rectangle2D vp = CameraUtility.getViewport(camera, aspectRatio);
+		final double[] e = bounds.getExtent();
+		final double radius = Math
+				.sqrt(e[0] * e[0] + e[2] * e[2] + e[1] * e[1]) / 2.0;
+		final double front = e[2] / 2;
+
+		final double xscale = e[0] / vp.getWidth();
+		final double yscale = e[1] / vp.getHeight();
+		double camdist = Math.max(xscale, yscale) * 1.1;
+		if (!camera.isPerspective()) {
+			camdist *= camera.getFocus(); // adjust for viewport scaling
+			camera.setFocus(camdist);
+		}
+
+		// --- compute new camera position and adjust near/far clipping planes
+		final double[] c = bounds.getCenter();
+		c[2] += front + camdist;
+		camera.setFar(camdist + front + 5 * radius);
+		camera.setNear(0.1 * camdist);
+		
+		// --- make rotateScene() recompute the center
+		lastCenter = null;
+		
+		// --- adjust the avatar position to make scene fit
+		final Matrix camMatrix = new Matrix();
+		cameraPath.getInverseMatrix(camMatrix.getArray(), avatarPath
+				.getLength());
+		final SceneGraphComponent avatar = avatarPath.getLastComponent();
+		final Matrix m = new Matrix(avatar.getTransformation());
+		MatrixBuilder.init(m, signature).translate(c).translate(
+				camMatrix.getColumn(3)).assignTo(avatar);
+	}
+
+	public void rotateScene(final double axis[], final double angle) {
+		final SceneGraphComponent root = contentNode;
+
+		if (lastCenter == null) {
+			// --- compute the center of the scene in world coordinates
+			final Rectangle3D bounds = GeometryUtility
+					.calculateBoundingBox(root);
+			if (bounds.isEmpty()) {
+				return;
+			} else {
+				lastCenter = new Matrix(root.getTransformation())
+						.getInverse().multiplyVector(bounds.getCenter());
+			}
+		}
+		
+		// --- rotate around the last computed scene center
+		final Matrix tOld = new Matrix(root.getTransformation());
+		final Matrix tNew = MatrixBuilder.euclidean().rotate(angle, axis)
+				.times(tOld).getMatrix();
+		final double p[] = tOld.multiplyVector(lastCenter);
+		final double q[] = tNew.multiplyVector(lastCenter);
+		MatrixBuilder.euclidean().translateFromTo(q, p).times(tNew).assignTo(
+				root);
 	}
 	
 	public Viewer getViewer() {
