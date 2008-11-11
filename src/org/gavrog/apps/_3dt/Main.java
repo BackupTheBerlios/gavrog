@@ -326,6 +326,8 @@ public class Main extends EventSource {
         updateCamera();
         viewerFrame.setTitle("3dt Viewer");
         viewerFrame.validate();
+        updateViewerSize();
+
         viewerFrame.setVisible(true);
         
 		viewerFrame.addWindowListener(new WindowAdapter() {
@@ -348,8 +350,6 @@ public class Main extends EventSource {
 			}
         });
         
-        Invoke.andWait(new Runnable() { public void run() { updateViewerSize(); }});
-
         // --- show the controls window
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
         
@@ -2694,9 +2694,14 @@ public class Main extends EventSource {
     }
     
     private void updateViewerSize() {
-    	viewerFrame.setViewerSize(
-    			new Dimension(ui.getViewerWidth(), ui.getViewerHeight()));
-    }
+		final Dimension d = new Dimension(ui.getViewerWidth(), ui
+				.getViewerHeight());
+		Invoke.andWait(new Runnable() {
+			public void run() {
+				viewerFrame.setViewerSize(d);
+			}
+		});
+	}
     
     private BButton makeButton(final String label, final Object target,
             final String method) {
