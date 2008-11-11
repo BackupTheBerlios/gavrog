@@ -149,6 +149,10 @@ public class ViewerFrame extends JFrame {
 		return d / 180.0 * Math.PI;
 	}
 	
+	public Component getViewingComponent() {
+		return (Component) viewer.getViewingComponent();
+	}
+	
 	public void addLight(final Light light, final Transformation t) {
 		final SceneGraphComponent node = new SceneGraphComponent();
 		node.setLight(light);

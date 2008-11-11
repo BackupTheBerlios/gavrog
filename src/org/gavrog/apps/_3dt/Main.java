@@ -52,13 +52,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.media.opengl.GLException;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
@@ -115,7 +115,6 @@ import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.SphereUtility;
 import de.jreality.geometry.TubeUtility;
-import de.jreality.io.JrScene;
 import de.jreality.jogl.JOGLRenderer;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
@@ -132,18 +131,14 @@ import de.jreality.scene.Viewer;
 import de.jreality.scene.pick.PickResult;
 import de.jreality.scene.tool.AbstractTool;
 import de.jreality.scene.tool.InputSlot;
-import de.jreality.scene.tool.Tool;
 import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
-import de.jreality.softviewer.SoftViewer;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
 import de.jreality.tools.ClickWheelCameraZoomTool;
-import de.jreality.ui.viewerapp.ViewerApp;
-import de.jreality.ui.viewerapp.ViewerAppMenu;
+import de.jreality.toolsystem.ToolSystem;
 import de.jreality.ui.viewerapp.ViewerSwitch;
 import de.jreality.ui.viewerapp.actions.AbstractJrAction;
-import de.jreality.ui.viewerapp.actions.file.ExportImage;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.Rectangle3D;
 import de.jreality.util.SceneGraphUtility;
@@ -155,10 +150,6 @@ public class Main extends EventSource {
 	final private static Color buttonColor = new Color(224, 224, 240);
 	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
-	private final static String TILING_MENU = "Tiling";
-	private final static String NET_MENU = "Net";
-	private final static String HELP_MENU = "Help";
-	
 	private final static String configFileName = System.getProperty("user.home")
 			+ "/.3dt";
 	
@@ -258,9 +249,7 @@ public class Main extends EventSource {
 	private Cursor normalCursor = new Cursor(Cursor.DEFAULT_CURSOR);
 
 	// --- scene graph components and associated properties
-	final private ViewerApp viewerApp;
-	private int previousViewer = -1;
-    final private JrScene scene;
+	final private ViewerFrame viewerFrame;
     final private SceneGraphComponent world;
 
     final public static SceneGraphComponent sphereTemplate = new SceneGraphComponent();
@@ -308,10 +297,7 @@ public class Main extends EventSource {
 		updateAppearance(a);
 		this.world.setAppearance(a);
 		
-		viewerApp = new ViewerApp(world);
-		this.scene = viewerApp.getJrScene();
-        viewerApp.setAttachNavigator(false);
-        viewerApp.setAttachBeanShell(false);
+		viewerFrame = new ViewerFrame(world);
         
         // --- create a root node for the tiling
         this.tiling = new SceneGraphComponent("Tiling");
@@ -323,50 +309,32 @@ public class Main extends EventSource {
         // --- create a node for the unit cell
         this.unitCell = new SceneGraphComponent("UnitCell");
         
-        // --- remove the encompass tool (we'll have a menu entry for that)
-        final SceneGraphComponent root = this.scene.getSceneRoot()
-				.getChildComponent(0);
-        final List tools = root.getTools();
-        Tool encompass = null;
-        for (final Iterator iter = tools.iterator(); iter.hasNext();) {
-            final Tool t = (Tool) iter.next();
-            if (t instanceof de.jreality.tools.EncompassTool) {
-                encompass = t;
-                break;
-            }
-        }
-        if (encompass != null) {
-            root.removeTool(encompass);
-        }
-        
         // --- add the mouse wheel zoom tool
-        this.world.addTool(new ClickWheelCameraZoomTool());
+        viewerFrame.getViewer().getSceneRoot().addTool(
+				new ClickWheelCameraZoomTool());
         
-        // --- change the menu
-        modifyDefaultMenu(viewerApp.getMenu());
+        // --- create the menu bar
+        viewerFrame.setJMenuBar(createMenus());
         
         // --- set up the viewer window
         updateCamera();
-        viewerApp.update();
-        viewerApp.display();
-        viewerApp.getFrame().setTitle("3dt Viewer");
+        viewerFrame.setTitle("3dt Viewer");
         updateViewerSize();
+        viewerFrame.validate();
+        viewerFrame.setVisible(true);
         
-        viewerApp.getViewingComponent().addComponentListener(
+        viewerFrame.getViewingComponent().addComponentListener(
         	new ComponentListener() {
 			public void componentShown(ComponentEvent e) {}
 			public void componentHidden(ComponentEvent e) {}
 			public void componentMoved(ComponentEvent e) {}
 
 			public void componentResized(ComponentEvent e) {
-				ui.setViewerWidth(viewerApp.getViewingComponent().getWidth());
-				ui.setViewerHeight(viewerApp.getViewingComponent().getHeight());
+				ui.setViewerWidth(viewerFrame.getViewingComponent().getWidth());
+				ui.setViewerHeight(viewerFrame.getViewingComponent().getHeight());
 				saveOptions();
 			}
         });
-        
-        // --- check if an installed OpenGL viewer actually works
-        Invoke.andWait(new Runnable() { public void run() { checkOpenGL(); }});
         
         // --- show the controls window
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
@@ -375,90 +343,103 @@ public class Main extends EventSource {
         if (infilename != null) {
         	openFile(infilename);
         }
+        
+        // --- start rendering
+        viewerFrame.startRendering();
     }
 
-    private void modifyDefaultMenu(final ViewerAppMenu menu) {
-    	// --- remove the menus we don't use
-    	menu.removeMenu(ViewerAppMenu.EDIT_MENU);
+    private JMenuBar createMenus() {
+    	final JMenuBar menuBar = new JMenuBar();
     	
-        // --- modify the File menu
-        for (int i = 0; i < 5; ++i) {
-            menu.removeMenuItem(ViewerAppMenu.FILE_MENU, 0);
-        }
+        // --- create and populate the File menu
+    	final JMenu fileMenu = new JMenu("File");
+    	
+        fileMenu.add(actionOpen());
+        fileMenu.add(actionSaveTiling());
+        fileMenu.add(actionSaveNet());
+        fileMenu.add(actionSaveScene());
+        fileMenu.addSeparator();
         
-        int k = 0;
-        menu.addAction(actionOpen(), ViewerAppMenu.FILE_MENU, k++);
-        menu.addAction(actionSaveTiling(), ViewerAppMenu.FILE_MENU, k++);
-        menu.addAction(actionSaveNet(), ViewerAppMenu.FILE_MENU, k++);
-        menu.addAction(actionSaveScene(), ViewerAppMenu.FILE_MENU, k++);
-        menu.addSeparator(ViewerAppMenu.FILE_MENU, k++);
+        //TODO write a new screen shot action
+//        fileMenu.add(new ExportImage("Screen Shot...", viewerFrame
+//				.getViewerSwitch(), null) {
+//        	public void actionPerformed(ActionEvent e) {
+//        		viewerFrame.pauseRendering();
+//        		super.actionPerformed(e);
+//        		viewerFrame.startRendering();
+//        	}
+//        });
+        fileMenu.add(actionSunflowRender());
+        fileMenu.add(actionSunflowPreview());
         
-        menu.removeMenuItem(ViewerAppMenu.FILE_MENU, k);
-        menu.addAction(new ExportImage("Screen Shot...", viewerApp
-				.getViewerSwitch(), null) {
-        	public void actionPerformed(ActionEvent e) {
-        		forceSoftwareViewer();
-        		super.actionPerformed(e);
-        		restoreViewer();
-        	}
-        }, ViewerAppMenu.FILE_MENU, k++);
-        menu.addAction(actionSunflowRender(), ViewerAppMenu.FILE_MENU, k++);
-        menu.addAction(actionSunflowPreview(), ViewerAppMenu.FILE_MENU, k++);
+        menuBar.add(fileMenu);
 
-        // --- create and populate a new Tiling menu
-        menu.addMenu(new JMenu(TILING_MENU), 1);
-        menu.addAction(actionFirst(), TILING_MENU);
-        menu.addAction(actionNext(), TILING_MENU);
-        menu.addAction(actionPrevious(), TILING_MENU);
-        menu.addAction(actionLast(), TILING_MENU);
-        menu.addSeparator(TILING_MENU);
-        menu.addAction(actionJump(), TILING_MENU);
-        menu.addAction(actionSearch(), TILING_MENU);
-        menu.addSeparator(TILING_MENU);
-        menu.addAction(actionDualize(), TILING_MENU);
-        menu.addAction(actionSymmetrize(), TILING_MENU);
-        menu.addSeparator(TILING_MENU);
-        menu.addAction(actionRecolor(), TILING_MENU);
+        // --- create and populate the Tiling menu
+        final JMenu tilingMenu = new JMenu("Tiling");
         
-        // --- create and populate a new Net menu
-        menu.addMenu(new JMenu(NET_MENU), 2);
-        menu.addAction(actionUpdateNet(), NET_MENU);
-        menu.addAction(actionGrowNet(), NET_MENU);
-        menu.addAction(actionClearNet(), NET_MENU);
+        tilingMenu.add(actionFirst());
+        tilingMenu.add(actionNext());
+        tilingMenu.add(actionPrevious());
+        tilingMenu.add(actionLast());
+        tilingMenu.addSeparator();
         
-        // --- modify the View menu
-        if (this.expertMode) {
-			menu.removeMenuItem(ViewerAppMenu.VIEW_MENU, 13);
-        	menu.getMenu(ViewerAppMenu.VIEW_MENU).setText("Expert");
-		} else {
-			menu.removeMenu(ViewerAppMenu.VIEW_MENU);
-		}
-        menu.addMenu(new JMenu(ViewerAppMenu.VIEW_MENU), 3);
-        k = 0;
-        menu.addAction(actionEncompass(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionViewAlong(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionXView(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionYView(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionZView(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(action011View(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(action101View(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(action110View(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(action111View(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionRotateRight(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionRotateLeft(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionRotateUp(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionRotateDown(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionRotateClockwise(), ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionRotateCounterClockwise(), ViewerAppMenu.VIEW_MENU,
-        		k++);
-        menu.addSeparator(ViewerAppMenu.VIEW_MENU, k++);
-        menu.addAction(actionShowControls(), ViewerAppMenu.VIEW_MENU, k++);
+        tilingMenu.add(actionJump());
+        tilingMenu.add(actionSearch());
+        tilingMenu.addSeparator();
         
-        // --- create a help menu
-        menu.addMenu(new JMenu(HELP_MENU));
-        menu.addAction(actionAbout(), HELP_MENU);
+        tilingMenu.add(actionDualize());
+        tilingMenu.add(actionSymmetrize());
+        tilingMenu.addSeparator();
+        
+        tilingMenu.add(actionRecolor());
+        
+        menuBar.add(tilingMenu);
+
+        // --- create and populate the Net menu
+        final JMenu netMenu = new JMenu("Net");
+        
+        netMenu.add(actionUpdateNet());
+        netMenu.add(actionGrowNet());
+        netMenu.add(actionClearNet());
+        
+        menuBar.add(netMenu);
+
+        // --- create and populate the View menu
+        final JMenu viewMenu = new JMenu("View");
+        
+        viewMenu.add(actionEncompass());
+        viewMenu.add(actionViewAlong());
+        viewMenu.addSeparator();
+        
+        viewMenu.add(actionXView());
+        viewMenu.add(actionYView());
+        viewMenu.add(actionZView());
+        viewMenu.add(action011View());
+        viewMenu.add(action101View());
+        viewMenu.add(action110View());
+        viewMenu.add(action111View());
+        viewMenu.addSeparator();
+        
+        viewMenu.add(actionRotateRight());
+        viewMenu.add(actionRotateLeft());
+        viewMenu.add(actionRotateUp());
+        viewMenu.add(actionRotateDown());
+        viewMenu.add(actionRotateClockwise());
+        viewMenu.add(actionRotateCounterClockwise());
+        viewMenu.addSeparator();
+        
+        viewMenu.add(actionShowControls());
+        
+        menuBar.add(viewMenu);
+        
+        // --- create and populate the help menu
+        final JMenu helpMenu = new JMenu("Help");
+        
+        helpMenu.add(actionAbout());
+        
+        menuBar.add(helpMenu);
+        
+        return menuBar;
     }
     
     private void setupFileChoosers() {
@@ -653,7 +634,7 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractJrAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					dimPanel.setDimension(viewerApp.getCurrentViewer()
+					dimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
 					final File file = outSunflowChooser.pickFile(
 							ui.getLastSunflowRenderPath(), "png");
@@ -667,7 +648,7 @@ public class Main extends EventSource {
                     	opts.setAaMax(2);
                     	opts.setGiEngine("ambocc");
                     	opts.setFilter("mitchell");
-                    	Sunflow.renderAndSave(viewerApp.getCurrentViewer(),
+                    	Sunflow.renderAndSave(viewerFrame.getViewer(),
 								opts, dimPanel.getDimension(), file);
                     } catch (Throwable ex) {
                     	log(ex.toString());
@@ -689,7 +670,7 @@ public class Main extends EventSource {
                     try {
                     	final RenderOptions opts = new RenderOptions();
                     	opts.setProgressiveRender(true);
-                    	final Viewer v = viewerApp.getCurrentViewer();
+                    	final Viewer v = viewerFrame.getViewer();
                     	Sunflow.render(v, v.getViewingComponentSize(), opts);
                     } catch (Throwable ex) {
                     	log(ex.toString());
@@ -1039,7 +1020,7 @@ public class Main extends EventSource {
     }
     
     private Color pickColor(final String title, final Color oldColor) {
-    	return JColorChooser.showDialog(viewerApp.getFrame(), title, oldColor);
+    	return JColorChooser.showDialog(viewerFrame, title, oldColor);
 	}
     
     private Action actionRecolorTileClass() {
@@ -1562,7 +1543,7 @@ public class Main extends EventSource {
     private void busy() {
     	Invoke.andWait(new Runnable() {
     		public void run() {
-    	    	viewerApp.getFrame().setCursor(busyCursor);
+    	    	viewerFrame.setCursor(busyCursor);
     	    	controlsFrame.setCursor(busyCursor);
     		}
     	});
@@ -1571,7 +1552,7 @@ public class Main extends EventSource {
     private void done() {
     	Invoke.andWait(new Runnable() {
     		public void run() {
-    	    	viewerApp.getFrame().setCursor(normalCursor);
+    	    	viewerFrame.setCursor(normalCursor);
     	    	controlsFrame.setCursor(normalCursor);
     		}
     	});
@@ -2220,7 +2201,7 @@ public class Main extends EventSource {
         startTimer(timer);
         
         updateAppearance(this.world.getAppearance());
-        this.viewerApp.getCurrentViewer().getSceneRoot().getAppearance()
+        this.viewerFrame.getViewer().getSceneRoot().getAppearance()
 				.setAttribute(CommonAttributes.TRANSPARENCY_ENABLED,
 						getFaceTransparency() > 0);
         
@@ -2361,18 +2342,19 @@ public class Main extends EventSource {
     private void encompass() {
     	Invoke.later(new Runnable() {
     		public void run() {
-    	    	encompass(viewerApp.getCurrentViewer(), scene);
+    	    	encompass(viewerFrame.getViewer());
     		}
     	});
     }
     
     double lastCenter[] = null;
     
-	public void encompass(final Viewer viewer, final JrScene scene) {
+	public void encompass(final Viewer viewer) {
 		// --- extract parameters from scene and viewer
-		final SceneGraphPath avatarPath = scene.getPath("avatarPath");
-		final SceneGraphPath scenePath = scene.getPath("emptyPickPath");
-		final SceneGraphPath cameraPath = scene.getPath("cameraPath");
+		final ToolSystem ts = ToolSystem.toolSystemForViewer(viewer);
+		final SceneGraphPath avatarPath = ts.getAvatarPath();
+		final SceneGraphPath scenePath = ts.getEmptyPickPath();
+		final SceneGraphPath cameraPath = viewer.getCameraPath();
 		final double aspectRatio = CameraUtility.getAspectRatio(viewer);
         final int signature = viewer.getSignature();
 		
@@ -2424,11 +2406,10 @@ public class Main extends EventSource {
 	}
 
 	public void setViewingTransformation(final Vector eye, final Vector up) {
-		final SceneGraphComponent root = this.scene.getPath("emptyPickPath")
-				.getLastComponent();
 		if (doc() == null) {
 			return;
 		}
+		final SceneGraphComponent root = viewerFrame.getViewer().getSceneRoot();
 		final CoordinateChange c = doc().getCellToWorld();
 		final Operator op = Operator.viewingRotation((Vector) eye.times(c),
 				(Vector) up.times(c));
@@ -2440,33 +2421,32 @@ public class Main extends EventSource {
 	}
 	
 	public void rotateScene(final double axis[], final double angle) {
-		final SceneGraphPath scenePath = scene.getPath("emptyPickPath");
-		final SceneGraphComponent sceneRoot = scenePath.getLastComponent();
+		final SceneGraphComponent root = viewerFrame.getViewer().getSceneRoot();
 
 		if (lastCenter == null) {
 			// --- compute the center of the scene in world coordinates
 			final Rectangle3D bounds = GeometryUtility
-					.calculateBoundingBox(sceneRoot);
+					.calculateBoundingBox(root);
 			if (bounds.isEmpty()) {
 				return;
 			} else {
-				lastCenter = new Matrix(sceneRoot.getTransformation())
+				lastCenter = new Matrix(root.getTransformation())
 						.getInverse().multiplyVector(bounds.getCenter());
 			}
 		}
 		
 		// --- rotate around the last computed scene center
-		final Matrix tOld = new Matrix(sceneRoot.getTransformation());
+		final Matrix tOld = new Matrix(root.getTransformation());
 		final Matrix tNew = MatrixBuilder.euclidean().rotate(angle, axis)
 				.times(tOld).getMatrix();
 		final double p[] = tOld.multiplyVector(lastCenter);
 		final double q[] = tNew.multiplyVector(lastCenter);
 		MatrixBuilder.euclidean().translateFromTo(q, p).times(tNew).assignTo(
-				sceneRoot);
+				root);
 	}
 	
     private void updateCamera() {
-    	final Camera cam = CameraUtility.getCamera(this.viewerApp.getCurrentViewer());
+    	final Camera cam = CameraUtility.getCamera(this.viewerFrame.getViewer());
     	boolean re_encompass = false;
     	if (getFieldOfView() != cam.getFieldOfView()) {
         	cam.setFieldOfView(getFieldOfView());
@@ -2476,7 +2456,7 @@ public class Main extends EventSource {
     		encompass();
     	}
         final Appearance a =
-        	this.viewerApp.getCurrentViewer().getSceneRoot().getAppearance();
+        	this.viewerFrame.getViewer().getSceneRoot().getAppearance();
         a.setAttribute(CommonAttributes.BACKGROUND_COLORS, Appearance.INHERITED);
         a.setAttribute(CommonAttributes.BACKGROUND_COLOR, getBackgroundColor());
         a.setAttribute(CommonAttributes.FOG_ENABLED, getUseFog());
@@ -2502,19 +2482,17 @@ public class Main extends EventSource {
 				world.addChild(tiling);
 				world.addChild(net);
 				world.addChild(unitCell);
-				viewerApp.getCurrentViewer().render();
+				viewerFrame.getViewer().render();
 			}
 		});
 	}
 
     private Transformation getViewingTransformation() {
-		return this.scene.getPath("emptyPickPath").getLastComponent()
-				.getTransformation();
+		return viewerFrame.getViewer().getSceneRoot().getTransformation();
     }
     
     private void setViewingTransformation(final Transformation trans) {
-    	this.scene.getPath("emptyPickPath").getLastComponent()
-				.setTransformation(trans);
+    	viewerFrame.getViewer().getSceneRoot().setTransformation(trans);
     }
     
     private JPopupMenu _selectionPopupForTiles = null;
@@ -2546,13 +2524,13 @@ public class Main extends EventSource {
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
 					if (ui.getUseLeopardWorkaround()) {
-						restoreViewer();
+						viewerFrame.startRendering();
 					}
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 					if (ui.getUseLeopardWorkaround()) {
-						forceSoftwareViewer();
+						viewerFrame.pauseRendering();
 					}
 				}
     		});
@@ -2576,13 +2554,13 @@ public class Main extends EventSource {
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
 					if (ui.getUseLeopardWorkaround()) {
-						restoreViewer();
+						viewerFrame.startRendering();
 					}
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 					if (ui.getUseLeopardWorkaround()) {
-						forceSoftwareViewer();
+						viewerFrame.pauseRendering();
 					}
 				}
     		});
@@ -2606,13 +2584,13 @@ public class Main extends EventSource {
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
 					if (ui.getUseLeopardWorkaround()) {
-						restoreViewer();
+						viewerFrame.startRendering();
 					}
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 					if (ui.getUseLeopardWorkaround()) {
-						forceSoftwareViewer();
+						viewerFrame.pauseRendering();
 					}
 				}
     		});
@@ -2676,7 +2654,8 @@ public class Main extends EventSource {
 							actionRemoveNode().actionPerformed(null);
 						}
 					} else  {
-						final java.awt.Component comp = viewerApp.getContent();
+						final java.awt.Component comp = viewerFrame
+								.getContentPane();
 						final java.awt.Point pos = comp.getMousePosition();
 						if (selectedItem.isTile()) {
 							Invoke.andWait(new Runnable() {
@@ -2709,69 +2688,9 @@ public class Main extends EventSource {
         }
     }
     
-    private void checkOpenGL() {
-		final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
-		final Viewer viewers[] = vSwitch.getViewers();
-		int softViewer = -1;
-		int joglViewer = -1;
-		for (int i = 0; i < viewers.length; ++i) {
-			if (viewers[i] instanceof SoftViewer) {
-				softViewer = i;
-			} else if (viewers[i] instanceof de.jreality.jogl.Viewer) {
-				joglViewer = i;
-			}
-		}
-		if (softViewer >= 0 && joglViewer >= 0) {
-			try {
-				vSwitch.selectViewer(joglViewer);
-				vSwitch.render();
-			} catch (GLException ex) {
-				vSwitch.selectViewer(softViewer);
-				vSwitch.render();
-			}
-		}
-    }
-    
-    private void forceSoftwareViewer() {
-		final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
-		final Viewer viewers[] = vSwitch.getViewers();
-		final Viewer current = vSwitch.getCurrentViewer();
-		for (int i = 0; i < viewers.length; ++i) {
-			if (viewers[i] == current) {
-				this.previousViewer = i;
-				break;
-			}
-		}
-		for (int i = 0; i < viewers.length; ++i) {
-			if (viewers[i] instanceof SoftViewer) {
-				vSwitch.selectViewer(i);
-				vSwitch.render();
-				break;
-			}
-		}
-	}
-    
-    @SuppressWarnings("unused")
-	private void restoreViewer() {
-    	if (this.previousViewer >= 0) {
-			final ViewerSwitch vSwitch = viewerApp.getViewerSwitch();
-			vSwitch.selectViewer(this.previousViewer);
-			vSwitch.render();
-			this.previousViewer = -1;
-    	}
-    }
-    
     private void updateViewerSize() {
-    	final java.awt.Component viewer = viewerApp.getViewingComponent();
-    	// -- make sure to trigger a property change event
-    	viewer.setPreferredSize(null);
-    	// -- now set to the desired size
-    	viewer.setPreferredSize(
-    			new Dimension(ui.getViewerWidth(), ui.getViewerHeight()));
-    	// -- update the parent frame
-    	viewerApp.getFrame().pack();
-    	// -- not completely sure what this does
-    	viewer.requestFocusInWindow();
+    	viewerFrame.setSize(new Dimension(ui.getViewerWidth(), ui
+				.getViewerHeight()));
     }
     
     private BButton makeButton(final String label, final Object target,
@@ -3233,7 +3152,7 @@ public class Main extends EventSource {
     		// frame an acceptable parent for a Buoy dialog. We need a parented
     		// dialog here to make sure the viewer's menu bar does not disappear
     		// on MacOS.
-    		final JFrame vF = viewerApp.getFrame();
+    		final JFrame vF = viewerFrame;
     		final LayoutManager vL = vF.getContentPane().getLayout();
     		final int vCO = vF.getDefaultCloseOperation();
     	    class WrappedFrame extends BFrame {
@@ -3287,10 +3206,9 @@ public class Main extends EventSource {
 			content.setDividerLocation(375);
 		}
     	if (!this.controlsFrame.isVisible()) {
-    		final JFrame vF = viewerApp.getFrame();
     		final JDialog jf = this.controlsFrame.getComponent();
-    		jf.setSize(600, vF.getHeight());
-    		jf.setLocation(vF.getWidth(), 0);
+    		jf.setSize(600, viewerFrame.getHeight());
+    		jf.setLocation(viewerFrame.getWidth(), 0);
     	}
     	this.controlsFrame.setVisible(true);
 		this.controlsFrame.repaint();
