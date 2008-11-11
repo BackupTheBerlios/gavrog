@@ -1,3 +1,7 @@
+3dt 0.5.0:
+
+2008-11-11: Made 3dt independent of jReality's ViewerApp class.
+
 3dt 0.4.0:
 
 - The software viewer is used automatically if OpenGL is not available.
