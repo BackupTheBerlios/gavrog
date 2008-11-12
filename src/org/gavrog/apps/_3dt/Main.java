@@ -2448,15 +2448,11 @@ public class Main extends EventSource {
 				}
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					if (ui.getUseLeopardWorkaround()) {
-						viewerFrame.startRendering();
-					}
+					viewerFrame.startRendering();
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					if (ui.getUseLeopardWorkaround()) {
-						viewerFrame.pauseRendering();
-					}
+					viewerFrame.pauseRendering();
 				}
     		});
     	}
@@ -2478,15 +2474,11 @@ public class Main extends EventSource {
 				}
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					if (ui.getUseLeopardWorkaround()) {
-						viewerFrame.startRendering();
-					}
+					viewerFrame.startRendering();
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					if (ui.getUseLeopardWorkaround()) {
-						viewerFrame.pauseRendering();
-					}
+					viewerFrame.pauseRendering();
 				}
     		});
     	}
@@ -2508,15 +2500,11 @@ public class Main extends EventSource {
 				}
 
 				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-					if (ui.getUseLeopardWorkaround()) {
-						viewerFrame.startRendering();
-					}
+					viewerFrame.startRendering();
 				}
 
 				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					if (ui.getUseLeopardWorkaround()) {
-						viewerFrame.pauseRendering();
-					}
+					viewerFrame.pauseRendering();
 				}
     		});
     	}
@@ -2863,9 +2851,6 @@ public class Main extends EventSource {
             options.add(separator());
         	options.add(new OptionInputBox("Viewer Width", ui, "viewerWidth"));
 			options.add(new OptionInputBox("Viewer Height", ui, "viewerHeight"));
-            options.add(separator());
-            options.add(new OptionCheckBox("MacOS Context Menu Workaround",
-					ui, "useLeopardWorkaround"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;

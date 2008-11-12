@@ -33,7 +33,6 @@ public class InterfaceOptions extends EventSource {
     private int viewerWidth = 800;
     private int viewerHeight = 800;
     private double rotationStep = 5.0;
-    private boolean useLeopardWorkaround = false;
 
     private String _3dtHome = System.getProperty("3dt.home");
     private String userHome = System.getProperty("user.home");
@@ -86,14 +85,6 @@ public class InterfaceOptions extends EventSource {
 		_setField("rotationStep", Math.max(value, 0.1));
 	}
 	
-	public boolean getUseLeopardWorkaround() {
-		return this.useLeopardWorkaround;
-	}
-
-	public void setUseLeopardWorkaround(final boolean value) {
-		_setField("useLeopardWorkaround", value);
-	}
-
 	public File getLastInputPath() {
 		return lastInputPath;
 	}
