@@ -24,9 +24,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
 
+import javax.media.opengl.GLException;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+
+import org.gavrog.box.gui.Invoke;
 
 import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.Primitives;
@@ -42,6 +45,7 @@ import de.jreality.scene.SceneGraphPath;
 import de.jreality.scene.Transformation;
 import de.jreality.scene.Viewer;
 import de.jreality.shader.CommonAttributes;
+import de.jreality.softviewer.SoftViewer;
 import de.jreality.tools.ClickWheelCameraZoomTool;
 import de.jreality.tools.DraggingTool;
 import de.jreality.tools.RotateTool;
@@ -54,10 +58,13 @@ import de.jreality.util.Rectangle3D;
  * @version $Id:$
  */
 public class ViewerFrame extends JFrame {
+	final SceneGraphComponent rootNode;
+	final SceneGraphComponent cameraNode;
+	final SceneGraphComponent geometryNode;
 	final SceneGraphComponent contentNode;
 	final SceneGraphComponent lightNode;
-	final Thread renderThread;
 	
+	final Viewer softwareViewer;
 	Viewer viewer;
 	boolean renderingEnabled = false;
     double lastCenter[] = null;
@@ -94,8 +101,6 @@ public class ViewerFrame extends JFrame {
 		frame.startRendering();
 
 		frame.setViewerSize(new Dimension(800, 600));
-		System.err.println(frame.getViewerSize());
-		System.err.println(frame.getViewer().getViewingComponentSize());
 	}
 
 	private static double degrees(final double d) {
@@ -103,33 +108,28 @@ public class ViewerFrame extends JFrame {
 	}
 	
 	public ViewerFrame(final SceneGraphComponent content) {
-		SceneGraphComponent rootNode = new SceneGraphComponent();
-		SceneGraphComponent cameraNode = new SceneGraphComponent();
-		SceneGraphComponent geometryNode = new SceneGraphComponent();
-		
-		contentNode = content;
+		rootNode = new SceneGraphComponent();
+		cameraNode = new SceneGraphComponent();
+		geometryNode = new SceneGraphComponent();
 		lightNode = new SceneGraphComponent();
+		contentNode = content;
 
 		rootNode.addChild(geometryNode);
 		rootNode.addChild(cameraNode);
 		rootNode.addChild(lightNode);
+		geometryNode.addChild(contentNode);
+
+		contentNode.addTool(new RotateTool());
+		contentNode.addTool(new DraggingTool());
+		contentNode.addTool(new ClickWheelCameraZoomTool());
 
 		Camera camera = new Camera();
 		cameraNode.setCamera(camera);
-
-		geometryNode.addChild(content);
-		
-		content.addTool(new RotateTool());
-		content.addTool(new DraggingTool());
-		content.addTool(new ClickWheelCameraZoomTool());
-
 		MatrixBuilder.euclidean().translate(0, 0, 3).assignTo(cameraNode);
 
-		Appearance rootApp = new Appearance();
-		rootApp.setAttribute(CommonAttributes.BACKGROUND_COLOR, new Color(0f,
-				.1f, .1f));
-		rootApp.setAttribute(CommonAttributes.DIFFUSE_COLOR, new Color(1f, 0f,
-				0f));
+		final Appearance rootApp = new Appearance();
+		rootApp.setAttribute(CommonAttributes.BACKGROUND_COLOR, Color.DARK_GRAY);
+		rootApp.setAttribute(CommonAttributes.DIFFUSE_COLOR, Color.RED);
 		rootNode.setAppearance(rootApp);
 
 		SceneGraphPath camPath = new SceneGraphPath();
@@ -137,32 +137,55 @@ public class ViewerFrame extends JFrame {
 		camPath.push(cameraNode);
 		camPath.push(camera);
 
-		final Viewer viewer = new de.jreality.jogl.Viewer();
-		viewer.setSceneRoot(rootNode);
-		viewer.setCameraPath(camPath);
-		ToolSystem toolSystem = ToolSystem.toolSystemForViewer(viewer);
-		toolSystem.initializeSceneTools();
+		softwareViewer = new SoftViewer();
+		softwareViewer.setSceneRoot(rootNode);
+		softwareViewer.setCameraPath(camPath);
+		ToolSystem.toolSystemForViewer(softwareViewer).initializeSceneTools();
+		
+		try {
+			viewer = new de.jreality.jogl.Viewer();
+			viewer.setSceneRoot(rootNode);
+			viewer.setCameraPath(camPath);
+			ToolSystem.toolSystemForViewer(viewer).initializeSceneTools();
+		} catch (Exception ex) {
+			System.err.println("OpenGL viewer could not be initialized.");
+			viewer = softwareViewer;
+		}
 		
 		setViewer(viewer);
 		setViewerSize(new Dimension(640, 400));
 		pack();
 		
-		renderThread = new Thread(new Runnable() {
+		if (viewer instanceof de.jreality.jogl.Viewer) {
+			Invoke.andWait(new Runnable() {
+				public void run() {
+					try {
+						((de.jreality.jogl.Viewer) viewer).run();
+						System.err.println("OpenGL okay!");
+					} catch (GLException ex) {
+						System.err.println("OpenGL viewer could not render.");
+						setViewer(softwareViewer);
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+				}
+			});
+		}
+
+		new Thread(new Runnable() {
 			public void run() {
 				while (true) {
 					if (renderingEnabled) {
-						viewer.renderAsync();
+						getViewer().renderAsync();
 					}
 					try {
-						Thread.sleep(20);
+						Thread.sleep(40);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
 			}
-		});
-		
-		renderThread.start();
+		}).start();
 	}
 	
 	public Component getViewingComponent() {
@@ -270,13 +293,19 @@ public class ViewerFrame extends JFrame {
 	}
 
 	public void setViewer(final Viewer viewer) {
+		final Dimension d = getViewerSize();
 		getContentPane().removeAll();
 		getContentPane().add((Component) viewer.getViewingComponent());
 		this.viewer = viewer;
+		setViewerSize(d);
 	}
 	
 	public Dimension getViewerSize() {
-		return viewer.getViewingComponentSize();
+		if (viewer == null) {
+			return new Dimension(0, 0);
+		} else {
+			return viewer.getViewingComponentSize();
+		}
 	}
 
 	public void setViewerSize(final Dimension newSize) {

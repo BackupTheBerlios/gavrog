@@ -135,6 +135,7 @@ import de.jreality.scene.tool.AbstractTool;
 import de.jreality.scene.tool.InputSlot;
 import de.jreality.scene.tool.ToolContext;
 import de.jreality.shader.CommonAttributes;
+import de.jreality.softviewer.SoftViewer;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
 import de.jreality.ui.viewerapp.ViewerSwitch;
@@ -348,6 +349,11 @@ public class Main extends EventSource {
         
         // --- show the controls window
         Invoke.andWait(new Runnable() { public void run() { showControls(); }});
+        if (viewerFrame.getViewer() instanceof SoftViewer) {
+			log("Hardware accelerated rendering is not available.");
+			log("If your graphics card supports OpenGL, you should check "
+					+ "your Gavrog installation and your graphics drivers.");
+		}
         
         // --- open a file if specified on the command line
         if (infilename != null) {
