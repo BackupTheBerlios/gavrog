@@ -136,12 +136,6 @@ public class SpaceGroupCatalogue {
             }
             final int i = line.indexOf(' ');
             if (i > 0) {
-                if (currentName != null) {
-                    final Map map = table.nameToOps;
-                    final String key = currentName;
-                    map.put(key, Collections.unmodifiableList((List) map.get(key)));
-                }
-
                 final String fields[] = line.trim().split("\\s+");
                 if (fields[0].equalsIgnoreCase("alias")) {
                     aliases.put(fields[1], fields[2]);
@@ -198,11 +192,15 @@ public class SpaceGroupCatalogue {
                 throw new DataFormatException("error in space group table file");
             }
         }
-    }
+		final Map map = table.nameToOps;
+		for (Object key: map.keySet()) {
+			map.put(key, Collections.unmodifiableList((List) map.get(key)));
+		}
+	}
 
     /**
-     * The name of the file to read space group settings from.
-     */
+	 * The name of the file to read space group settings from.
+	 */
     final private static Package pkg = SpaceGroupCatalogue.class.getPackage();
     final private static String packagePath = pkg.getName().replaceAll("\\.", "/");
     final private static String tablePath = packagePath + "/sgtable.data";
