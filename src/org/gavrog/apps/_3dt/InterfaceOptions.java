@@ -41,6 +41,7 @@ public class InterfaceOptions extends EventSource {
 	private File lastTilingOutputPath = new File(userHome);
 	private File lastSceneOutputPath = new File(userHome);
 	private File lastSunflowRenderPath = new File(userHome);
+	private File lastScreenshotPath = new File(userHome);
     
 	/**
 	 * Generic setter method. Uses introspection to find the field to set and
@@ -123,5 +124,13 @@ public class InterfaceOptions extends EventSource {
 
 	public void setLastSunflowRenderPath(final File value) {
 		_setField("lastSunflowRenderPath", value);
+	}
+
+	public File getLastScreenshotPath() {
+		return this.lastScreenshotPath;
+	}
+
+	public void setLastScreenshotPath(final File value) {
+		_setField("lastScreenshotPath", value);
 	}
 }

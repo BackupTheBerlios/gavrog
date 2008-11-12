@@ -20,9 +20,13 @@ package org.gavrog.apps._3dt;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
 
 import javax.media.opengl.GLException;
 import javax.swing.JFrame;
@@ -51,6 +55,7 @@ import de.jreality.tools.DraggingTool;
 import de.jreality.tools.RotateTool;
 import de.jreality.toolsystem.ToolSystem;
 import de.jreality.util.CameraUtility;
+import de.jreality.util.ImageUtility;
 import de.jreality.util.Rectangle3D;
 
 /**
@@ -64,7 +69,7 @@ public class ViewerFrame extends JFrame {
 	final SceneGraphComponent contentNode;
 	final SceneGraphComponent lightNode;
 	
-	final Viewer softwareViewer;
+	final SoftViewer softwareViewer;
 	Viewer viewer;
 	boolean renderingEnabled = false;
     double lastCenter[] = null;
@@ -286,6 +291,23 @@ public class ViewerFrame extends JFrame {
 		final double q[] = tNew.multiplyVector(lastCenter);
 		MatrixBuilder.euclidean().translateFromTo(q, p).times(tNew).assignTo(
 				root);
+	}
+	
+	public void screenshot(final Dimension size, final int antialias,
+			final File file) {
+		final int width = (int) size.width;
+		final int height = (int) size.height;
+		final BufferedImage img = softwareViewer.renderOffscreen(width
+				* antialias, height * antialias);
+		final BufferedImage scaledImg = new BufferedImage(width, height,
+				BufferedImage.TYPE_INT_RGB);
+		final Graphics2D g = (Graphics2D) scaledImg.getGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		scaledImg.getGraphics().drawImage(
+				img.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH),
+				0, 0, null);
+		ImageUtility.writeBufferedImage(file, scaledImg);
 	}
 	
 	public Viewer getViewer() {

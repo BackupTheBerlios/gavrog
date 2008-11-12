@@ -164,6 +164,8 @@ public class Main extends EventSource {
 		new FileChooser(FileChooser.SAVE_FILE);
 	final private FileChooser outSunflowChooser =
 		new FileChooser(FileChooser.SAVE_FILE);
+	final private FileChooser outScreenshotChooser =
+		new FileChooser(FileChooser.SAVE_FILE);
 	final private DimensionPanel dimPanel = new DimensionPanel();
 	
     // --- tile options
@@ -376,17 +378,12 @@ public class Main extends EventSource {
         fileMenu.add(actionSaveScene());
         fileMenu.addSeparator();
         
-        //TODO write a new screen shot action
-//        fileMenu.add(new ExportImage("Screen Shot...", viewerFrame
-//				.getViewerSwitch(), null) {
-//        	public void actionPerformed(ActionEvent e) {
-//        		viewerFrame.pauseRendering();
-//        		super.actionPerformed(e);
-//        		viewerFrame.startRendering();
-//        	}
-//        });
+        fileMenu.add(actionScreenshot());
         fileMenu.add(actionSunflowRender());
         fileMenu.add(actionSunflowPreview());
+        fileMenu.addSeparator();
+        
+        fileMenu.add(actionQuit());
         
         menuBar.add(fileMenu);
 
@@ -493,6 +490,13 @@ public class Main extends EventSource {
 		dimPanel.setBorder(title);
 		outSunflowChooser.setAccessory(dimPanel);
 		outSunflowChooser.setAppendEnabled(false);
+
+		outScreenshotChooser.setTitle("Save image");
+		outScreenshotChooser.addChoosableFileFilter(new ExtensionFilter(
+				new String[] { "bmp", "jpg", "jpeg", "png", "wbmp", "tiff",
+						"tif", "gif" }, "Images files"));
+		outScreenshotChooser.setAccessory(dimPanel);
+		outScreenshotChooser.setAppendEnabled(false);
     }
     
     private String getInput(final String message, final String title,
@@ -645,6 +649,40 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
     }
     
+    private Action actionScreenshot() {
+		final String name = "Screen Shot...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					dimPanel.setDimension(viewerFrame.getViewer()
+							.getViewingComponentSize());
+					final File file = outScreenshotChooser.pickFile(
+							ui.getLastScreenshotPath(), "png");
+					if (file == null) return;
+					ui.setLastScreenshotPath(file);
+					saveOptions();
+					new Thread(new Runnable() {
+						public void run() {
+		                    try {
+		                    	busy();
+		                    	viewerFrame.screenshot(dimPanel.getDimension(),
+		                    			4, file);
+		                    } catch (Throwable ex) {
+		                    	log(ex.toString());
+		                    	return;
+		                    } finally {
+		                    	done();
+		                    }
+		                    log("Wrote image to file " + file.getName() + ".");
+						}
+					}).start();
+				}
+			}, "Export image file",
+				KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_MASK));
+		}
+		return ActionRegistry.instance().get(name);
+    }
+    
     private Action actionSunflowRender() {
 		final String name = "Raytraced Image...";
 		if (ActionRegistry.instance().get(name) == null) {
@@ -695,6 +733,19 @@ public class Main extends EventSource {
 				}
 			}, "Preview the Sunflow render",
 				KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
+		}
+		return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionQuit() {
+    	final String name = "Quit";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractJrAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					System.exit(0);
+				}
+			}, "Quit the program",
+			KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
 		}
 		return ActionRegistry.instance().get(name);
     }
