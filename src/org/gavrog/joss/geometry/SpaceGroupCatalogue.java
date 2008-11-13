@@ -198,9 +198,7 @@ public class SpaceGroupCatalogue {
     /**
 	 * The name of the file to read space group settings from.
 	 */
-    final private static Package pkg = SpaceGroupCatalogue.class.getPackage();
-    final private static String packagePath = pkg.getName().replaceAll("\\.", "/");
-    final private static String tablePath = packagePath + "/sgtable.data";
+    final private static String tablePath = "org/gavrog/joss/geometry/sgtable.data";
     
     /**
      * Retrieves an iterator of all known names for group settings for a given
@@ -216,7 +214,7 @@ public class SpaceGroupCatalogue {
      */
     public static Iterator allKnownSettings(final int dimension) {
         if (groupTables[3] == null) {
-            parseGroups(tablePath);
+            load();
         }
     
         return groupTables[dimension].namesInOrder.iterator();
@@ -249,7 +247,7 @@ public class SpaceGroupCatalogue {
 	 */
     private static Entry retrieve(int dim, final String name) {
         if (groupTables[3] == null) {
-            parseGroups(tablePath);
+            load();
         }
         final Table table = groupTables[dim];
     
@@ -339,13 +337,20 @@ public class SpaceGroupCatalogue {
     }
 
     /**
+     * Load the catalogue from the specification file.
+     */
+    public static void load() {
+    	parseGroups(tablePath);
+    }
+    
+    /**
      * Retrieves the lookup information stored.
      * 
      * @return an iterator over the values in the lookup table.
      */
     public static Iterator lookupInfo() {
         if (groupTables[3] == null) {
-            parseGroups(tablePath);
+            load();
         }
         return lookup.values().iterator();
     }
