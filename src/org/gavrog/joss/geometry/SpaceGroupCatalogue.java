@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2008 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,9 +53,11 @@ public class SpaceGroupCatalogue {
      */
     private static class Table {
         final public int dimension;
-        final public Map nameToOps = new HashMap();
-        final public Map nameToTransform = new HashMap();
-        final public List namesInOrder = new ArrayList();
+        final public Map<String, List<Operator>> nameToOps =
+        	new HashMap<String, List<Operator>>();
+        final public Map<String, CoordinateChange> nameToTransform =
+        	new HashMap<String, CoordinateChange>();
+        final public List<String> namesInOrder = new ArrayList<String>();
         
         public Table(final int dimension) {
             this.dimension = dimension;
@@ -64,7 +65,7 @@ public class SpaceGroupCatalogue {
     }
     
     private static Table groupTables[] = new Table[5];
-    private static Map aliases = new HashMap();
+    private static Map<String, String> aliases = new HashMap<String, String>();
     
     /**
      * Represents lookup information for groups, as used by {@link SpaceGroupFinder}.
@@ -84,7 +85,7 @@ public class SpaceGroupCatalogue {
         }
     }
     
-    private static Map lookup = new HashMap();
+    private static Map<String, Lookup> lookup = new HashMap<String, Lookup>();
     
     /**
      * Represents the result of a table lookup.
@@ -181,21 +182,17 @@ public class SpaceGroupCatalogue {
                         groupTables[d] = new Table(d);
                     }
                     table = groupTables[d];
-                    table.nameToOps.put(currentName, new LinkedList());
+                    table.nameToOps.put(currentName, new LinkedList<Operator>());
                     table.nameToTransform.put(currentName, new CoordinateChange(T));
                     table.namesInOrder.add(currentName);
                 }
             } else if (currentName != null) {
                 final Operator op = new Operator(line).modZ();
-                ((List) table.nameToOps.get(currentName)).add(op);
+                table.nameToOps.get(currentName).add(op);
             } else {
                 throw new DataFormatException("error in space group table file");
             }
         }
-		final Map map = table.nameToOps;
-		for (Object key: map.keySet()) {
-			map.put(key, Collections.unmodifiableList((List) map.get(key)));
-		}
 	}
 
     /**
@@ -218,7 +215,7 @@ public class SpaceGroupCatalogue {
      * @return an iterator over the names of space group settings.
      */
     public static Iterator allKnownSettings(final int dimension) {
-        if (groupTables[dimension] == null) {
+        if (groupTables[3] == null) {
             parseGroups(tablePath);
         }
     
@@ -251,7 +248,7 @@ public class SpaceGroupCatalogue {
 	 * @return the data for the given space group setting.
 	 */
     private static Entry retrieve(int dim, final String name) {
-        if (groupTables[dim] == null) {
+        if (groupTables[3] == null) {
             parseGroups(tablePath);
         }
         final Table table = groupTables[dim];
