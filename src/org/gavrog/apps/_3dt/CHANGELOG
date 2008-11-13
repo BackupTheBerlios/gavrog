@@ -1,5 +1,6 @@
 3dt 0.5.0:
 
+2008-11-13: Added a third light and a dialog for setting light properties.
 2008-11-12: The MacOS context menu workaround is now obsolete and was removed.
 2008-11-11: Made 3dt independent of jReality's ViewerApp class.
 

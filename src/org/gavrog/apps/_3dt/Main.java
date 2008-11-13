@@ -223,6 +223,20 @@ public class Main extends EventSource {
     private boolean fogToBackground = true;
     private double fieldOfView = 25.0;
     
+    // --- light options
+    private Color light1Color = Color.WHITE;
+    private double light1Intensity = 0.75;
+    private double light1AngleX = 30;
+    private double light1AngleY = -30;
+    private Color light2Color = Color.WHITE;
+    private double light2Intensity = 0.75;
+    private double light2AngleX = 0;
+    private double light2AngleY = 0;
+    private Color light3Color = Color.BLUE;
+    private double light3Intensity = 0.6;
+    private double light3AngleX = 0;
+    private double light3AngleY = 120;
+    
     // --- the currently active interface options
     private InterfaceOptions ui = new InterfaceOptions();
     
@@ -306,17 +320,8 @@ public class Main extends EventSource {
 		world.addChild(net);
 		world.addChild(unitCell);
 		
-        // --- add some lights
-		final Light l1 = new DirectionalLight();
-		l1.setIntensity(0.75);
-		final Transformation t1 = new Transformation();
-		MatrixBuilder.euclidean().rotateX(degrees(-30)).rotateY(degrees(-30))
-				.assignTo(t1);
-		viewerFrame.setLight("Light1", l1, t1);
-		final Light l2 = new DirectionalLight();
-		l2.setIntensity(0.75);
-		final Transformation t2 = new Transformation();
-		viewerFrame.setLight("Light2", l2, t2);
+		// --- add the lights
+		updateLights();
 		
         // --- create the menu bar
         viewerFrame.setJMenuBar(createMenus());
@@ -2455,6 +2460,32 @@ public class Main extends EventSource {
         }
     }
     
+    private void updateLights() {
+		final Light l1 = new DirectionalLight();
+		l1.setIntensity(getLight1Intensity());
+		l1.setColor(getLight1Color());
+		final Transformation t1 = new Transformation();
+		MatrixBuilder.euclidean().rotateX(deg(-getLight1AngleX())).rotateY(
+				deg(getLight1AngleY())).assignTo(t1);
+		viewerFrame.setLight("Light1", l1, t1);
+		
+		final Light l2 = new DirectionalLight();
+		l2.setIntensity(getLight2Intensity());
+		l2.setColor(getLight2Color());
+		final Transformation t2 = new Transformation();
+		MatrixBuilder.euclidean().rotateX(deg(-getLight2AngleX())).rotateY(
+				deg(getLight2AngleY())).assignTo(t2);
+		viewerFrame.setLight("Light2", l2, t2);
+		
+		final Light l3 = new DirectionalLight();
+		l3.setIntensity(getLight3Intensity());
+		l3.setColor(getLight3Color());
+		final Transformation t3 = new Transformation();
+		MatrixBuilder.euclidean().rotateX(deg(-getLight3AngleX())).rotateY(
+				deg(getLight3AngleY())).assignTo(t3);
+		viewerFrame.setLight("Light3", l3, t3);
+    }
+    
     private void suspendRendering() {
     	viewerFrame.pauseRendering();
     }
@@ -2748,12 +2779,18 @@ public class Main extends EventSource {
     
     private Widget optionsDialog(final Widget options, final Widget buttons) {
         final BorderContainer dialog = new BorderContainer();
-        dialog.setBackground(textColor);
+        dialog.setBackground(null);
         dialog.add(options, BorderContainer.NORTH, new LayoutInfo(
                 LayoutInfo.NORTH, LayoutInfo.HORIZONTAL, defaultInsets, null));
         dialog.add(buttons, BorderContainer.SOUTH, new LayoutInfo(
                 LayoutInfo.SOUTH, LayoutInfo.NONE, defaultInsets, null));
-        return dialog;
+		final BScrollPane scroll = new BScrollPane(dialog,
+				BScrollPane.SCROLLBAR_AS_NEEDED,
+				BScrollPane.SCROLLBAR_AS_NEEDED);
+		scroll.setForceHeight(false);
+		scroll.setForceWidth(true);
+		scroll.setBackground(textColor);
+        return scroll;
     }
     
     private OptionSliderBox slider(final String label, final String option,
@@ -3035,7 +3072,64 @@ public class Main extends EventSource {
         final Object apply = new Object() {
             @SuppressWarnings("unused")
             public void call() {
-                updateCamera();
+            	new Thread(new Runnable() {
+					public void run() {
+		                reembed();
+		                saveOptions();
+					}}).start();
+            }
+        };
+        return optionsDialog(options, makeButton("Embed", apply, "call"));
+    }
+
+    private Widget optionsLights() {
+        final ColumnContainer options = emptyOptionsContainer();
+        try {
+        	OptionSliderBox slider;
+        	
+        	options.add(new OptionColorBox("Color", this, "light1Color"));
+        	slider = new OptionSliderBox("Intensity", this, "light1Intensity",
+					0, 100, 20, 5, false);
+        	slider.setFactor(0.01);
+        	slider.setShowLabels(false);
+        	options.add(slider);
+			options.add(new OptionSliderBox("Elevation", this, "light1AngleX",
+					-90, 90, 30, 5, true));
+			options.add(new OptionSliderBox("Heading", this, "light1AngleY",
+					-180, 180, 60, 10, true));
+        	options.add(separator());
+        	
+        	options.add(new OptionColorBox("Color", this, "light2Color"));
+        	slider = new OptionSliderBox("Intensity", this, "light2Intensity",
+					0, 100, 20, 5, false);
+        	slider.setFactor(0.01);
+        	slider.setShowLabels(false);
+        	options.add(slider);
+			options.add(new OptionSliderBox("Elevation", this, "light2AngleX",
+					-90, 90, 30, 5, true));
+			options.add(new OptionSliderBox("Heading", this, "light2AngleY",
+					-180, 180, 60, 10, true));
+        	options.add(separator());
+        	
+        	options.add(new OptionColorBox("Color", this, "light3Color"));
+        	slider = new OptionSliderBox("Intensity", this, "light3Intensity",
+					0, 100, 20, 5, false);
+        	slider.setFactor(0.01);
+        	slider.setShowLabels(false);
+        	options.add(slider);
+			options.add(new OptionSliderBox("Elevation", this, "light3AngleX",
+					-90, 90, 30, 5, true));
+			options.add(new OptionSliderBox("Heading", this, "light3AngleY",
+					-180, 180, 60, 10, true));
+        } catch (final Exception ex) {
+            log(ex.toString());
+            return null;
+        }
+        
+        final Object apply = new Object() {
+            @SuppressWarnings("unused")
+            public void call() {
+                updateLights();
                 saveOptions();
             }
         };
@@ -3044,7 +3138,7 @@ public class Main extends EventSource {
 
     private Widget allOptions() {
 		final BTabbedPane options = new BTabbedPane();
-		options.setBackground(null);
+		options.setBackground(textColor);
 		options.add(optionsTiles(), "Tiles");
 		options.add(optionsScene(), "Fill Space");
 		options.add(optionsDisplay(), "Display");
@@ -3052,6 +3146,7 @@ public class Main extends EventSource {
 		options.add(optionsMaterial(), "Material");
 		options.add(optionsEmbedding(), "Embedding");
         options.add(optionsCamera(), "Camera");
+        options.add(optionsLights(), "Lights");
         options.add(optionsGUI(), "GUI");
 		return options;
     }
@@ -3135,19 +3230,16 @@ public class Main extends EventSource {
     	    final WrappedFrame viewerFrame = new WrappedFrame();
     	    
 			final BSplitPane top = new BSplitPane();
+			top.setBackground(null);
 			top.setOrientation(BSplitPane.HORIZONTAL);
-			final BScrollPane scrollA = new BScrollPane(allOptions(),
+
+			top.add(allOptions(), 0);
+
+			final BScrollPane scroll = new BScrollPane(tilingInfo(),
 					BScrollPane.SCROLLBAR_AS_NEEDED,
 					BScrollPane.SCROLLBAR_AS_NEEDED);
-			scrollA.setBackground(textColor);
-			scrollA.setForceWidth(true);
-			scrollA.setForceHeight(true);
-			final BScrollPane scrollB = new BScrollPane(tilingInfo(),
-					BScrollPane.SCROLLBAR_AS_NEEDED,
-					BScrollPane.SCROLLBAR_AS_NEEDED);
-			scrollB.setBackground(textColor);
-			top.add(scrollA, 0);
-			top.add(scrollB, 1);
+			scroll.setBackground(textColor);
+			top.add(scroll, 1);
 			
 			final TextAreaOutputStream out = new TextAreaOutputStream();
 			final PrintStream sysout = new PrintStream(out);
@@ -3155,6 +3247,7 @@ public class Main extends EventSource {
 			System.setOut(sysout);
 
 			final BSplitPane content = new BSplitPane();
+			content.setBackground(null);
 			content.setOrientation(BSplitPane.VERTICAL);
 			content.add(top, 0);
 			content.add(out.getWidget(), 1);
@@ -3207,7 +3300,7 @@ public class Main extends EventSource {
 		this.aboutFrame.setVisible(true);
 	}
     
-	public static double degrees(final double d) {
+	private static double deg(final double d) {
 		return d / 180.0 * Math.PI;
 	}
 	
@@ -3594,6 +3687,102 @@ public class Main extends EventSource {
 
 	public void setUseFog(final boolean value) {
 		_setField("useFog", value);
+	}
+
+	public Color getLight1Color() {
+		return light1Color;
+	}
+	
+	public void setLight1Color(final Color value) {
+		_setField("light1Color", value);
+	}
+
+	public double getLight1Intensity() {
+		return light1Intensity;
+	}
+	
+	public void setLight1Intensity(final double value) {
+		_setField("light1Intensity", value);
+	}
+
+	public double getLight1AngleX() {
+		return light1AngleX;
+	}
+	
+	public void setLight1AngleX(final double value) {
+		_setField("light1AngleX", value);
+	}
+
+	public double getLight1AngleY() {
+		return light1AngleY;
+	}
+	
+	public void setLight1AngleY(final double value) {
+		_setField("light1AngleY", value);
+	}
+
+	public Color getLight2Color() {
+		return light2Color;
+	}
+	
+	public void setLight2Color(final Color value) {
+		_setField("light2Color", value);
+	}
+
+	public double getLight2Intensity() {
+		return light2Intensity;
+	}
+	
+	public void setLight2Intensity(final double value) {
+		_setField("light2Intensity", value);
+	}
+
+	public double getLight2AngleX() {
+		return light2AngleX;
+	}
+	
+	public void setLight2AngleX(final double value) {
+		_setField("light2AngleX", value);
+	}
+
+	public double getLight2AngleY() {
+		return light2AngleY;
+	}
+	
+	public void setLight2AngleY(final double value) {
+		_setField("light2AngleY", value);
+	}
+
+	public Color getLight3Color() {
+		return light3Color;
+	}
+	
+	public void setLight3Color(final Color value) {
+		_setField("light3Color", value);
+	}
+
+	public double getLight3Intensity() {
+		return light3Intensity;
+	}
+	
+	public void setLight3Intensity(final double value) {
+		_setField("light3Intensity", value);
+	}
+
+	public double getLight3AngleX() {
+		return light3AngleX;
+	}
+	
+	public void setLight3AngleX(final double value) {
+		_setField("light3AngleX", value);
+	}
+
+	public double getLight3AngleY() {
+		return light3AngleY;
+	}
+	
+	public void setLight3AngleY(final double value) {
+		_setField("light3AngleY", value);
 	}
 
 	public boolean getShowUnitCell() {
