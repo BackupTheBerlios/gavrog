@@ -30,12 +30,15 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.lang.reflect.Field;
@@ -87,6 +90,7 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.graphics.Surface;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.Output;
 import org.gavrog.joss.tilings.Tiling;
 import org.gavrog.joss.tilings.Tiling.Facet;
@@ -146,6 +150,14 @@ import de.jreality.util.SceneGraphUtility;
 import de.jtem.beans.DimensionPanel;
 
 public class Main extends EventSource {
+	// --- pre-load some information from files
+	private static Archive systreArchive = new Archive("1.0");
+	static {
+		readArchive(systreArchive, "org/gavrog/apps/systre/rcsr.arc");
+		readArchive(systreArchive, "org/gavrog/apps/systre/zeolites.arc");
+		SpaceGroupCatalogue.load();
+	}
+	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
 	final private static Color buttonColor = new Color(224, 224, 240);
@@ -291,9 +303,6 @@ public class Main extends EventSource {
     	if (args.length > 0) {
     		infilename = args[0];
     	}
-    	
-    	// --- preload the space group catalogue
-    	SpaceGroupCatalogue.load();
     	
         // --- retrieved stored user options
 		loadOptions();
@@ -1700,6 +1709,7 @@ public class Main extends EventSource {
 				setTInfo("selfdual", ds.equals(ds.dual()));
 				setTInfo("signature", "pending...");
 				setTInfo("group", "pending...");
+				setTInfo("net", "pending...");
 			}
 		});
 
@@ -1721,13 +1731,16 @@ public class Main extends EventSource {
 		final Thread worker = new Thread(new Runnable() {
 			public void run() {
 				final String sig = oldDoc.getSignature();
-				if (doc() == oldDoc) {
-					setTInfo("signature", sig);
-				}
+				if (doc() != oldDoc) return;
+				setTInfo("signature", sig);
 				final String group = oldDoc.getGroupName();
-				if (doc() == oldDoc) {
-					setTInfo("group", group);
-				}
+				if (doc() != oldDoc) return;
+				setTInfo("group", group);
+				final String net = systreArchive.getByKey(
+						oldDoc.getNet().minimalImage().getSystreKey())
+						.getName();
+				if (doc() != oldDoc) return;
+				setTInfo("net", net);
 			}
 		});
 		worker.setPriority(Thread.MIN_PRIORITY);
@@ -3166,7 +3179,8 @@ public class Main extends EventSource {
 				{ "dim", "Dimension:" },
 				{ "size", "Complexity:" }, { "transitivity", "Transitivity:" },
 				{ "selfdual", "Self-dual:" }, { "signature", "Signature:" },
-				{ "group", "Symmetry:" }, { "minimal", "Max. Symmetric:" }
+				{ "group", "Symmetry:" }, { "minimal", "Max. Symmetric:" },
+				{ "net", "Net Identifyer:" }
 		};
 
 		final ColumnContainer captions = new ColumnContainer();
@@ -3306,6 +3320,13 @@ public class Main extends EventSource {
     
 	private static double deg(final double d) {
 		return d / 180.0 * Math.PI;
+	}
+	
+	private static void readArchive(final Archive arc, final String path) {
+	    final InputStream stream = ClassLoader.getSystemResourceAsStream(path);
+	    final BufferedReader reader =
+	    	new BufferedReader(new InputStreamReader(stream));
+	    arc.addAll(reader);
 	}
 	
     public static void main(final String[] args) {

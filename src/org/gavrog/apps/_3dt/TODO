@@ -12,7 +12,6 @@ Planned/requested features:
 - Undo/Redo.
 - Implement a balance/naturalize function.
 - Recoloring and changing size of individual and kinds of vertices.
-- Integration with Systre ('identify net' function/action).
 
 - Add some kind of safeguard against memory overflows.
 - Allow separate colors and visibility for individual faces.
