@@ -312,11 +312,11 @@ public class Main extends EventSource {
 		final Transformation t1 = new Transformation();
 		MatrixBuilder.euclidean().rotateX(degrees(-30)).rotateY(degrees(-30))
 				.assignTo(t1);
-		viewerFrame.addLight(l1, t1);
+		viewerFrame.setLight("Light1", l1, t1);
 		final Light l2 = new DirectionalLight();
 		l2.setIntensity(0.75);
 		final Transformation t2 = new Transformation();
-		viewerFrame.addLight(l2, t2);
+		viewerFrame.setLight("Light2", l2, t2);
 		
         // --- create the menu bar
         viewerFrame.setJMenuBar(createMenus());

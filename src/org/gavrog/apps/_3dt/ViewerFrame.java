@@ -27,6 +27,8 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.media.opengl.GLException;
 import javax.swing.JFrame;
@@ -63,11 +65,14 @@ import de.jreality.util.Rectangle3D;
  * @version $Id:$
  */
 public class ViewerFrame extends JFrame {
-	final SceneGraphComponent rootNode;
-	final SceneGraphComponent cameraNode;
-	final SceneGraphComponent geometryNode;
+	final SceneGraphComponent rootNode = new SceneGraphComponent();
+	final SceneGraphComponent cameraNode = new SceneGraphComponent();
+	final SceneGraphComponent geometryNode = new SceneGraphComponent();
+	final SceneGraphComponent lightNode = new SceneGraphComponent();
 	final SceneGraphComponent contentNode;
-	final SceneGraphComponent lightNode;
+	
+	final Map<String, SceneGraphComponent> lights =
+		new HashMap<String, SceneGraphComponent>();
 	
 	final SoftViewer softwareViewer;
 	Viewer viewer;
@@ -93,13 +98,13 @@ public class ViewerFrame extends JFrame {
 		final Transformation t1 = new Transformation();
 		MatrixBuilder.euclidean().rotateX(degrees(-30)).rotateY(degrees(-30))
 				.assignTo(t1);
-		frame.addLight(l1, t1);
+		frame.setLight("Main Light", l1, t1);
 		final Light l2 = new DirectionalLight();
 		l2.setIntensity(0.2);
 		final Transformation t2 = new Transformation();
 		MatrixBuilder.euclidean().rotateX(degrees(10)).rotateY(degrees(20))
 				.assignTo(t2);
-		frame.addLight(l2, t2);
+		frame.setLight("Fill Light", l2, t2);
 		
 		frame.validate();
 		frame.setVisible(true);
@@ -113,10 +118,6 @@ public class ViewerFrame extends JFrame {
 	}
 	
 	public ViewerFrame(final SceneGraphComponent content) {
-		rootNode = new SceneGraphComponent();
-		cameraNode = new SceneGraphComponent();
-		geometryNode = new SceneGraphComponent();
-		lightNode = new SceneGraphComponent();
 		contentNode = content;
 
 		rootNode.addChild(geometryNode);
@@ -197,11 +198,24 @@ public class ViewerFrame extends JFrame {
 		return (Component) viewer.getViewingComponent();
 	}
 	
-	public void addLight(final Light light, final Transformation t) {
-		final SceneGraphComponent node = new SceneGraphComponent();
+	public void setLight(final String name, final Light light,
+			final Transformation t) {
+		if (!lights.containsKey(name)) {
+			final SceneGraphComponent node = new SceneGraphComponent();
+			lights.put(name, node);
+			lightNode.addChild(node);
+		}
+		final SceneGraphComponent node = lights.get(name);
 		node.setLight(light);
 		node.setTransformation(t);
-		lightNode.addChild(node);
+	}
+	
+	public void removeLight(final String name) {
+		final SceneGraphComponent node = lights.get(name);
+		if (node != null) {
+			lightNode.removeChild(node);
+		}
+		lights.remove(name);
 	}
 	
 	public void startRendering() {
