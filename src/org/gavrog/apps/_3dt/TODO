@@ -2,32 +2,30 @@
 
 Open bugs:
 
-- Popups don't work with OpenGL on Mac Leopard (workaround exists.)
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
-- Numbers don't match original file when derived files are constructed.
 
 =====================================================
 
 Planned/requested features:
 
-- Add some kind of safeguard against memory overflows.
+- Add ways to manipulate the lighting.
+- Undo/Redo.
 - Implement a balance/naturalize function.
+- Recoloring and changing size of individual and kinds of vertices.
+- Integration with Systre ('identify net' function/action).
+
+- Add some kind of safeguard against memory overflows.
 - Allow separate colors and visibility for individual faces.
 - Option to keep the unit cell and coordinates used in the input.
-- Add ways to manipulate the lighting.
 - Determine sequence of operations to turn given tiling into a self-dual one.
 - Function to revert to default settings.
-- Integration with Systre ('identify net' function /action).
-- Recoloring and changing size of individual and kinds of vertices.
 
 - More display list generators.
 - Options to change defaults for group setting on input (as in Systre.)
 - Draw tiles and dual tiles in one image.
 - Better Macintosh support (desktop shortcuts and such.)
-
 - Draw polyhedra.
-- Undo/Redo.
 - Relax face shapes to approximate minimal surfaces.
 - Add transparency.
 
