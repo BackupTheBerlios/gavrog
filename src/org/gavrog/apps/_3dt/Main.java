@@ -82,6 +82,7 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
+import org.gavrog.joss.geometry.SpaceGroupCatalogue;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.graphics.Surface;
 import org.gavrog.joss.pgraphs.basic.IEdge;
@@ -290,6 +291,9 @@ public class Main extends EventSource {
     	if (args.length > 0) {
     		infilename = args[0];
     	}
+    	
+    	// --- preload the space group catalogue
+    	SpaceGroupCatalogue.load();
     	
         // --- retrieved stored user options
 		loadOptions();
