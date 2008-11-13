@@ -120,7 +120,6 @@ import de.jreality.geometry.IndexedFaceSetFactory;
 import de.jreality.geometry.IndexedLineSetFactory;
 import de.jreality.geometry.SphereUtility;
 import de.jreality.geometry.TubeUtility;
-import de.jreality.jogl.JOGLRenderer;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
 import de.jreality.math.Pn;
@@ -143,7 +142,6 @@ import de.jreality.shader.CommonAttributes;
 import de.jreality.softviewer.SoftViewer;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
-import de.jreality.ui.viewerapp.ViewerSwitch;
 import de.jreality.ui.viewerapp.actions.AbstractJrAction;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.SceneGraphUtility;
@@ -2628,12 +2626,11 @@ public class Main extends EventSource {
             final PickResult pr = tc.getCurrentPick();
 
             if (pr == null) {
-                final ViewerSwitch sw = (ViewerSwitch) tc.getViewer();
-                final Viewer v = sw.getCurrentViewer();
+                final Viewer v = viewerFrame.getViewer();
                 if (v instanceof de.jreality.jogl.Viewer) {
-                	final JOGLRenderer renderer = ((de.jreality.jogl.Viewer) v)
-							.getRenderer();
-					log("polygon count is " + renderer.getPolygonCount());
+                	final int n = ((de.jreality.jogl.Viewer) v).getRenderer()
+                					.getPolygonCount();
+					log("polygon count is "	+ n);
 				}
             } else {
                 final SceneGraphPath selection = pr.getPickPath();
@@ -3091,12 +3088,12 @@ public class Main extends EventSource {
             public void call() {
             	new Thread(new Runnable() {
 					public void run() {
-		                reembed();
+		                updateCamera();
 		                saveOptions();
 					}}).start();
             }
         };
-        return optionsDialog(options, makeButton("Embed", apply, "call"));
+        return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
 
     private Widget optionsLights() {
