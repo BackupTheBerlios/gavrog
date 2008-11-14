@@ -77,7 +77,7 @@ public class OptionSliderBox extends BorderContainer {
 		}
 		
 		public Dimension getPreferredSize() {
-			final int height = showTicks ? 14 : 12;
+			final int height = showTicks ? 13 : 11;
 			return new Dimension(180, height);
 		}
 		
@@ -117,7 +117,7 @@ public class OptionSliderBox extends BorderContainer {
 			// -- fill guide left of marker
 			final int x = valueToX(value);
 
-			g.setColor(new Color(1.0f, 0.5f, 0.0f));
+			g.setColor(new Color(0.9f, 0.45f, 0.15f));
 			g.drawLine(4, 3, x, 3);
 			g.setColor(new Color(1.0f, 0.6f, 0.2f));
 			g.drawLine(4, 4, x, 4);
@@ -131,13 +131,14 @@ public class OptionSliderBox extends BorderContainer {
 					5
 					);
 			g.setColor(new Color(0.9f, 0.9f, 0.9f));
-			g.fill(sh);
+			g.drawLine(x + 1, 0, x + 1,  9);
+			g.drawLine(x + 2, 0, x + 2, 10);
 			g.setColor(new Color(0.8f, 0.8f, 1.0f));
 			g.drawLine(x + 3, 0, x + 3, 11);
-			g.setColor(new Color(0.5f, 0.5f, 1.0f));
-			g.drawLine(x + 5, 0, x + 5,  9);
 			g.setColor(new Color(0.6f, 0.6f, 1.0f));
 			g.drawLine(x + 4, 0, x + 4, 10);
+			g.setColor(new Color(0.5f, 0.5f, 1.0f));
+			g.drawLine(x + 5, 0, x + 5,  9);
 			g.setColor(Color.BLACK);
 			g.draw(sh);
 		}
