@@ -114,8 +114,17 @@ public class OptionSliderBox extends BorderContainer {
 				}
 			}
 			
-			// -- draw marker
+			// -- fill guide left of marker
 			final int x = valueToX(value);
+
+			g.setColor(new Color(1.0f, 0.5f, 0.0f));
+			g.drawLine(4, 3, x, 3);
+			g.setColor(new Color(1.0f, 0.6f, 0.2f));
+			g.drawLine(4, 4, x, 4);
+			g.setColor(new Color(1.0f, 0.75f, 0.5f));
+			g.drawLine(4, 5, x, 5);
+			
+			// -- draw marker
 			final Shape sh = new Polygon(
 					new int[] { x, x + 6, x + 6, x + 3, x },
 					new int[] { 0,     0,     8,    11, 8 },
