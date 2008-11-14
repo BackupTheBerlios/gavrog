@@ -18,6 +18,7 @@
 package org.gavrog.box.gui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,12 +29,13 @@ import java.lang.reflect.Method;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 
-import buoy.event.CommandEvent;
 import buoy.event.EventProcessor;
 import buoy.event.EventSource;
-import buoy.widget.BButton;
+import buoy.event.MousePressedEvent;
 import buoy.widget.BLabel;
+import buoy.widget.BOutline;
 import buoy.widget.BorderContainer;
+import buoy.widget.CustomWidget;
 import buoy.widget.LayoutInfo;
 
 public class OptionColorBox extends BorderContainer {
@@ -63,8 +65,10 @@ public class OptionColorBox extends BorderContainer {
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
 				new Insets(2, 10, 2, 10), null));
 
-		final BButton color = new BButton();
-		this.add(color, BorderContainer.WEST);
+		final CustomWidget color = new CustomWidget();
+		color.setPreferredSize(new Dimension(30, 15));
+		this.add(BOutline.createLineBorder(color, Color.GRAY, 1),
+				BorderContainer.WEST);
 		this.add(new BLabel(label), BorderContainer.EAST);
 
 		final PropertyDescriptor prop = Config.namedProperty(target, option);
@@ -76,7 +80,7 @@ public class OptionColorBox extends BorderContainer {
 		final Method setter = prop.getWriteMethod();
 
 		color.setBackground((Color) getter.invoke(target));
-		color.addEventLink(CommandEvent.class, new EventProcessor() {
+		color.addEventLink(MousePressedEvent.class, new EventProcessor() {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
