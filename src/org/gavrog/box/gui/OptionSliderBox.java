@@ -56,6 +56,11 @@ public class OptionSliderBox extends BorderContainer {
 		final private double min;
 		final private double max;
 		private Point clickPos;
+		private boolean showTicks;
+		private boolean showLabels;
+		private double majorTickSpacing;
+		private double minorTickSpacing;
+		private boolean snapToTicks;
 
 		public Slider(final double value, final double min, final double max) {
 			this.min = min;
@@ -81,27 +86,40 @@ public class OptionSliderBox extends BorderContainer {
 			if (w < 10 || h < 12) {
 				return;
 			}
-			final int y = h / 2;
-			final int x = valueToX(value);
 			
 			final Graphics2D g = ev.getGraphics();
+			
 			// -- clear canvas
 			g.setColor(getBackground());
 			g.fillRect(0, 0, w, h);
 			
 			// -- draw guide
 			g.setColor(Color.WHITE);
-			g.fillRect(2, y - 1, w - 6, 4);
+			g.fillRect(2, 2, w - 6, 3);
 			g.setColor(Color.GRAY);
-			g.drawRect(2, y - 1, w - 6, 4);
+			g.drawRect(2, 2, w - 6, 3);
+			
+			// -- draw ticks
+			if (showTicks) {
+				g.setColor(Color.GRAY);
+				for (double t = min; t <= max; t += minorTickSpacing) {
+					final int x = valueToX(t) + 2;
+					g.drawLine(x, 6, x, 8);
+				}
+				for (double t = min; t <= max; t += majorTickSpacing) {
+					final int x = valueToX(t) + 2;
+					g.drawLine(x, 6, x, 10);
+				}
+			}
 			
 			// -- draw marker
+			final int x = valueToX(value);
 			final Shape sh = new Polygon(
-					new int[] { x    , x + 4, x + 4, x + 2, x     },
-					new int[] { y - 4, y - 4, y + 4, y + 6, y + 4 },
+					new int[] { x, x + 4, x + 4, x + 2, x },
+					new int[] { 0, 0    , 6    , 8    , 6 },
 					5
 					);
-			g.setColor(Color.WHITE);
+			g.setColor(Color.LIGHT_GRAY);
 			g.fill(sh);
 			g.setColor(Color.BLACK);
 			g.draw(sh);
@@ -109,7 +127,7 @@ public class OptionSliderBox extends BorderContainer {
 
 		private int valueToX(final double val) {
 			final int w = getBounds().width - 6;
-			return (int) Math.round(w * (value - min) / (max - min));
+			return (int) Math.round(w * (val - min) / (max - min));
 		}
 		
 		private double xToValue(final int x) {
@@ -117,35 +135,31 @@ public class OptionSliderBox extends BorderContainer {
 			return min + (double) x / w * (max - min);
 		}
 		
-		private Graphics2D getGraphics() {
-			return (Graphics2D) getComponent().getGraphics();
-		}
-		
-		public void setShowTicks(boolean b) {
-			// TODO Auto-generated method stub
+		public void setShowTicks(final boolean b) {
+			this.showTicks = b;
 		}
 
-		public void setShowLabels(boolean b) {
-			// TODO Auto-generated method stub
+		public void setShowLabels(final boolean b) {
+			this.showLabels = b;
 		}
 
-		public void setMajorTickSpacing(int major) {
-			// TODO Auto-generated method stub
+		public void setMajorTickSpacing(final double major) {
+			this.majorTickSpacing = major;
 		}
 
-		public void setMinorTickSpacing(int minor) {
-			// TODO Auto-generated method stub
+		public void setMinorTickSpacing(final double minor) {
+			this.minorTickSpacing = minor;
 		}
 
-		public void setSnapToTicks(boolean snap) {
-			// TODO Auto-generated method stub
+		public void setSnapToTicks(final boolean snap) {
+			this.snapToTicks = snap;
 		}
 
 		@SuppressWarnings("unused")
 		private void mousePressed(MousePressedEvent ev) {
 			clickPos = ev.getPoint();
 			final int x = valueToX(value);
-			if (clickPos.x < x && clickPos.x > x + 4) {
+			if (clickPos.x < x || clickPos.x > x + 4) {
 				clickPos = new Point(x, clickPos.y);
 				mouseDragged(ev);
 			}
@@ -171,7 +185,8 @@ public class OptionSliderBox extends BorderContainer {
 			value = newValue;
 			if (value < min) value = min;
 			if (value > max) value = max;
-			dispatchEvent(new RepaintEvent(this, getGraphics()));
+			dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
+					.getGraphics()));
 		}
 	}
 	
@@ -182,7 +197,7 @@ public class OptionSliderBox extends BorderContainer {
 		this.setBackground(null);
 
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST,
-				LayoutInfo.HORIZONTAL, new Insets(2, 5, 2, 5), null));
+				LayoutInfo.HORIZONTAL, new Insets(2, 8, 2, 8), null));
 
 		slider = new Slider(min, min, max);
 		slider.setBackground(null);
