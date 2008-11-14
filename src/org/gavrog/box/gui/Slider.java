@@ -106,13 +106,19 @@ public class Slider extends CustomWidget {
 		
 		// -- draw labels
 		if (showLabels) {
-			final Font f = new Font("Verdana", Font.PLAIN, 9);
+			final Font f = new Font("Verdana", Font.BOLD, 9);
 			g.setFont(f);
-			g.setColor(Color.GRAY);
+			g.setColor(Color.DARK_GRAY);
 			for (double t = min; t <= max; t += majorTickSpacing) {
 				final int x = valueToX(t) + 3;
 				//TODO make this nicer
-				g.drawString(String.valueOf(t), x, 23);
+				final String s;
+				if (t == (int) t) {
+					s = String.valueOf((int) t);
+				} else {
+					s = String.valueOf(t);
+				}
+				g.drawString(s, x, 23);
 			}
 		}
 		
