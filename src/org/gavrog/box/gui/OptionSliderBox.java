@@ -77,18 +77,18 @@ public class OptionSliderBox extends BorderContainer {
 		}
 		
 		public Dimension getPreferredSize() {
-			return new Dimension(180, 15);
+			final int height = showTicks ? 14 : 12;
+			return new Dimension(180, height);
 		}
 		
 		public void paint(final RepaintEvent ev) {
 			final Rectangle dim = getBounds();
 			final int w = dim.width;
 			final int h = dim.height;
-			if (w < 10 || h < 12) {
-				return;
-			}
 			
 			final Graphics2D g = ev.getGraphics();
+			if (g == null) return;
+			
 			g.setStroke(new BasicStroke(1));
 			
 			// -- clear canvas
