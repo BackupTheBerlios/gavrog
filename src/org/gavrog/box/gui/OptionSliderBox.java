@@ -76,7 +76,7 @@ public class OptionSliderBox extends BorderContainer {
 		}
 		
 		public Dimension getPreferredSize() {
-			return new Dimension(120, 15);
+			return new Dimension(180, 15);
 		}
 		
 		public void paint(final RepaintEvent ev) {
@@ -95,28 +95,28 @@ public class OptionSliderBox extends BorderContainer {
 			
 			// -- draw guide
 			g.setColor(Color.WHITE);
-			g.fillRect(2, 2, w - 6, 3);
+			g.fillRect(3, 2, w - 7, 5);
 			g.setColor(Color.GRAY);
-			g.drawRect(2, 2, w - 6, 3);
+			g.drawRect(3, 2, w - 7, 5);
 			
 			// -- draw ticks
 			if (showTicks) {
 				g.setColor(Color.GRAY);
 				for (double t = min; t <= max; t += minorTickSpacing) {
-					final int x = valueToX(t) + 2;
-					g.drawLine(x, 6, x, 8);
+					final int x = valueToX(t) + 3;
+					g.drawLine(x, 8, x, 11);
 				}
 				for (double t = min; t <= max; t += majorTickSpacing) {
-					final int x = valueToX(t) + 2;
-					g.drawLine(x, 6, x, 10);
+					final int x = valueToX(t) + 3;
+					g.drawLine(x, 8, x, 13);
 				}
 			}
 			
 			// -- draw marker
 			final int x = valueToX(value);
 			final Shape sh = new Polygon(
-					new int[] { x, x + 4, x + 4, x + 2, x },
-					new int[] { 0, 0    , 6    , 8    , 6 },
+					new int[] { x, x + 6, x + 6, x + 3, x },
+					new int[] { 0,     0,     8,    11, 8 },
 					5
 					);
 			g.setColor(Color.LIGHT_GRAY);
@@ -126,12 +126,12 @@ public class OptionSliderBox extends BorderContainer {
 		}
 
 		private int valueToX(final double val) {
-			final int w = getBounds().width - 6;
+			final int w = getBounds().width - 7;
 			return (int) Math.round(w * (val - min) / (max - min));
 		}
 		
 		private double xToValue(final int x) {
-			final int w = getBounds().width - 6;
+			final int w = getBounds().width - 7;
 			return min + (double) x / w * (max - min);
 		}
 		
