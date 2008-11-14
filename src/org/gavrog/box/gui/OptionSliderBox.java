@@ -17,6 +17,7 @@
 
 package org.gavrog.box.gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -88,6 +89,7 @@ public class OptionSliderBox extends BorderContainer {
 			}
 			
 			final Graphics2D g = ev.getGraphics();
+			g.setStroke(new BasicStroke(1));
 			
 			// -- clear canvas
 			g.setColor(getBackground());
@@ -119,8 +121,14 @@ public class OptionSliderBox extends BorderContainer {
 					new int[] { 0,     0,     8,    11, 8 },
 					5
 					);
-			g.setColor(Color.LIGHT_GRAY);
+			g.setColor(new Color(0.9f, 0.9f, 0.9f));
 			g.fill(sh);
+			g.setColor(new Color(0.8f, 0.8f, 1.0f));
+			g.drawLine(x + 3, 0, x + 3, 11);
+			g.setColor(new Color(0.5f, 0.5f, 1.0f));
+			g.drawLine(x + 5, 0, x + 5,  9);
+			g.setColor(new Color(0.6f, 0.6f, 1.0f));
+			g.drawLine(x + 4, 0, x + 4, 10);
 			g.setColor(Color.BLACK);
 			g.draw(sh);
 		}
