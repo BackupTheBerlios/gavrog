@@ -20,6 +20,7 @@ package org.gavrog.box.gui;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
@@ -59,7 +60,14 @@ public class Slider extends CustomWidget {
 	}
 	
 	public Dimension getPreferredSize() {
-		final int height = showTicks ? 13 : 11;
+		//TODO calculate this more accurately when labels are shown
+		int height = 11;
+		if (showTicks) {
+			height += 2;
+		}
+		if (showLabels) {
+			height += 12;
+		}
 		return new Dimension(180, height);
 	}
 	
@@ -93,6 +101,18 @@ public class Slider extends CustomWidget {
 			for (double t = min; t <= max; t += majorTickSpacing) {
 				final int x = valueToX(t) + 3;
 				g.drawLine(x, 8, x, 13);
+			}
+		}
+		
+		// -- draw labels
+		if (showLabels) {
+			final Font f = new Font("Verdana", Font.PLAIN, 9);
+			g.setFont(f);
+			g.setColor(Color.GRAY);
+			for (double t = min; t <= max; t += majorTickSpacing) {
+				final int x = valueToX(t) + 3;
+				//TODO make this nicer
+				g.drawString(String.valueOf(t), x, 23);
 			}
 		}
 		
