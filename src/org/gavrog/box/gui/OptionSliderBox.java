@@ -185,6 +185,10 @@ public class OptionSliderBox extends BorderContainer {
 			value = newValue;
 			if (value < min) value = min;
 			if (value > max) value = max;
+			if (snapToTicks) {
+				value = Math.round((value - min) / minorTickSpacing)
+						* minorTickSpacing + min;
+			}
 			dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
 					.getGraphics()));
 		}
