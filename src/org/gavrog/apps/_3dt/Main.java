@@ -2502,11 +2502,19 @@ public class Main extends EventSource {
     }
     
     private void suspendRendering() {
-    	viewerFrame.pauseRendering();
+    	Invoke.andWait(new Runnable() {
+			public void run() {
+				viewerFrame.pauseRendering();
+			}
+		});
     }
     
     private void resumeRendering() {
-    	viewerFrame.startRendering();
+    	Invoke.andWait(new Runnable() {
+			public void run() {
+				viewerFrame.startRendering();
+			}
+		});
 	}
 
     private Transformation getViewingTransformation() {
@@ -2845,9 +2853,9 @@ public class Main extends EventSource {
 				new Thread(new Runnable() {
 					public void run() {
 						makeTiles();
+						suspendRendering();
 						updateDisplayProperties();
 						updateMaterials();
-						suspendRendering();
 						refreshScene();
 						resumeRendering();
 						saveOptions();
