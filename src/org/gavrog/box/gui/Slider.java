@@ -59,7 +59,7 @@ public class Slider extends CustomWidget {
 	
 	public Dimension getPreferredSize() {
 		final int width = showValue ? 210 : 180;
-		final int height = showTicks ? 13 : 11;
+		final int height = showTicks ? 14 : 11;
 		return new Dimension(width, height);
 	}
 	
@@ -88,7 +88,7 @@ public class Slider extends CustomWidget {
 			}
 			for (double t = min; t <= max; t += majorTickSpacing) {
 				final int x = valueToX(t) + 3;
-				g.drawLine(x, 8, x, 13);
+				g.drawLine(x, 8, x, 14);
 			}
 		}
 		
