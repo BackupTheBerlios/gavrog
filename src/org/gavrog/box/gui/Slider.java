@@ -96,14 +96,14 @@ public class Slider extends CustomWidget {
 		if (showValue) {
 			final Font f = new Font("Verdana", Font.PLAIN, 10);
 			g.setFont(f);
-			g.setColor(Color.DARK_GRAY);
+			g.setColor(new Color(0.0f, 0.4f, 0.6f));
 			final String s;
 			if (value == (int) value) {
 				s = String.format("%d", (int) value);
 			} else {
 				s = String.format("%.2f", value);
 			}
-			g.drawString(s, sliderWidth() + 10, 10);
+			g.drawString(s, sliderWidth() + 8, 10);
 		}
 		
 		// -- fill guide left of marker
@@ -125,11 +125,11 @@ public class Slider extends CustomWidget {
 		g.setColor(new Color(0.9f, 0.9f, 0.9f));
 		g.drawLine(x + 1, 0, x + 1,  9);
 		g.drawLine(x + 2, 0, x + 2, 10);
-		g.setColor(new Color(0.8f, 0.8f, 1.0f));
+		g.setColor(new Color(0.8f, 0.88f, 0.92f));
 		g.drawLine(x + 3, 0, x + 3, 11);
-		g.setColor(new Color(0.6f, 0.6f, 1.0f));
+		g.setColor(new Color(0.6f, 0.76f, 0.84f));
 		g.drawLine(x + 4, 0, x + 4, 10);
-		g.setColor(new Color(0.5f, 0.5f, 1.0f));
+		g.setColor(new Color(0.5f, 0.7f, 0.8f));
 		g.drawLine(x + 5, 0, x + 5,  9);
 		g.setColor(Color.BLACK);
 		g.draw(sh);
