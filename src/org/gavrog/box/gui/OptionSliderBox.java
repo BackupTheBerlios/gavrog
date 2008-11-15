@@ -39,8 +39,9 @@ public class OptionSliderBox extends BorderContainer {
 	private Method getter;
 	
 	public OptionSliderBox(final String label, final Object target,
-			final String option, final int min, final int max, final int major,
-			final int minor, final boolean snap) throws Exception {
+			final String option, final double min, final double max,
+			final double major, final double minor, final double snap)
+			throws Exception {
 		super();
 		this.setBackground(null);
 
@@ -50,10 +51,10 @@ public class OptionSliderBox extends BorderContainer {
 		slider = new Slider(min, min, max);
 		slider.setBackground(null);
 		slider.setShowTicks(true);
-		slider.setShowLabels(true);
+		slider.setShowValue(true);
 		slider.setMajorTickSpacing(major);
 		slider.setMinorTickSpacing(minor);
-		slider.setSnapToTicks(snap);
+		slider.setSnapInterval(snap);
 		this.add(slider, BorderContainer.WEST);
 		this.add(new BLabel(label), BorderContainer.EAST, new LayoutInfo(
 				LayoutInfo.WEST, LayoutInfo.NONE, new Insets(2, 10, 2, 10),
@@ -121,7 +122,7 @@ public class OptionSliderBox extends BorderContainer {
 		} else {
 			val = ((Integer) newValue) / factor;
 		}
-		slider.setValue((int) Math.round(val));
+		slider.setValue(val);
 	}
 	
 	private boolean obtainLock() {
@@ -137,16 +138,16 @@ public class OptionSliderBox extends BorderContainer {
 		this.eventsLocked = false;
 	}
 
-	public void setShowLabels(boolean show) {
-		this.slider.setShowLabels(show);
+	public void setShowValue(boolean show) {
+		this.slider.setShowValue(show);
 	}
 
 	public void setShowTicks(boolean show) {
 		this.slider.setShowTicks(show);
 	}
 
-	public void setSnapToTicks(boolean snap) {
-		this.slider.setSnapToTicks(snap);
+	public void setSnapInterval(final double snap) {
+		this.slider.setSnapInterval(snap);
 	}
 
 	public void setFactor(double factor) {

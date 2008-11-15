@@ -24,7 +24,6 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.Rectangle;
 import java.awt.Shape;
 
 import buoy.event.MouseDraggedEvent;
@@ -41,16 +40,15 @@ public class Slider extends CustomWidget {
 	final private double max;
 	private Point clickPos;
 	private boolean showTicks;
-	private boolean showLabels;
+	private boolean showValue;
 	private double majorTickSpacing;
 	private double minorTickSpacing;
-	private boolean snapToTicks;
+	private double snapInterval;
 
 	public Slider(final double value, final double min, final double max) {
 		this.min = min;
 		this.max = Math.max(min, max);
 		
-		setPreferredSize(new Dimension(120, 15));
 	    addEventLink(MousePressedEvent.class, this, "mousePressed");
 	    addEventLink(MouseReleasedEvent.class, this, "mouseReleased");
 	    addEventLink(MouseDraggedEvent.class, this, "mouseDragged");
@@ -60,22 +58,12 @@ public class Slider extends CustomWidget {
 	}
 	
 	public Dimension getPreferredSize() {
-		//TODO calculate this more accurately when labels are shown
-		int height = 11;
-		if (showTicks) {
-			height += 2;
-		}
-		if (showLabels) {
-			height += 12;
-		}
-		return new Dimension(180, height);
+		final int width = showValue ? 210 : 180;
+		final int height = showTicks ? 13 : 11;
+		return new Dimension(width, height);
 	}
 	
 	public void paint(final RepaintEvent ev) {
-		final Rectangle dim = getBounds();
-		final int w = dim.width;
-		final int h = dim.height;
-		
 		final Graphics2D g = ev.getGraphics();
 		if (g == null) return;
 		
@@ -83,13 +71,13 @@ public class Slider extends CustomWidget {
 		
 		// -- clear canvas
 		g.setColor(getBackground());
-		g.fillRect(0, 0, w, h);
+		g.fillRect(0, 0, getBounds().width, getBounds().height);
 		
 		// -- draw guide
 		g.setColor(Color.WHITE);
-		g.fillRect(3, 2, w - 7, 5);
+		g.fillRect(3, 2, sliderWidth(), 5);
 		g.setColor(Color.GRAY);
-		g.drawRect(3, 2, w - 7, 5);
+		g.drawRect(3, 2, sliderWidth(), 5);
 		
 		// -- draw ticks
 		if (showTicks) {
@@ -104,22 +92,18 @@ public class Slider extends CustomWidget {
 			}
 		}
 		
-		// -- draw labels
-		if (showLabels) {
-			final Font f = new Font("Verdana", Font.BOLD, 9);
+		// -- show the current value
+		if (showValue) {
+			final Font f = new Font("Verdana", Font.PLAIN, 10);
 			g.setFont(f);
 			g.setColor(Color.DARK_GRAY);
-			for (double t = min; t <= max; t += majorTickSpacing) {
-				final int x = valueToX(t) + 3;
-				//TODO make this nicer
-				final String s;
-				if (t == (int) t) {
-					s = String.valueOf((int) t);
-				} else {
-					s = String.valueOf(t);
-				}
-				g.drawString(s, x, 23);
+			final String s;
+			if (value == (int) value) {
+				s = String.format("%d", (int) value);
+			} else {
+				s = String.format("%.2f", value);
 			}
+			g.drawString(s, sliderWidth() + 10, 10);
 		}
 		
 		// -- fill guide left of marker
@@ -151,22 +135,24 @@ public class Slider extends CustomWidget {
 		g.draw(sh);
 	}
 
+	private int sliderWidth() {
+		return getBounds().width - 7 - (showValue ? 30 : 0);
+	}
+	
 	private int valueToX(final double val) {
-		final int w = getBounds().width - 7;
-		return (int) Math.round(w * (val - min) / (max - min));
+		return (int) Math.round(sliderWidth() * (val - min) / (max - min));
 	}
 	
 	private double xToValue(final int x) {
-		final int w = getBounds().width - 7;
-		return min + (double) x / w * (max - min);
+		return min + (double) x / sliderWidth() * (max - min);
 	}
 	
 	public void setShowTicks(final boolean b) {
 		this.showTicks = b;
 	}
 
-	public void setShowLabels(final boolean b) {
-		this.showLabels = b;
+	public void setShowValue(final boolean b) {
+		this.showValue = b;
 	}
 
 	public void setMajorTickSpacing(final double major) {
@@ -177,8 +163,8 @@ public class Slider extends CustomWidget {
 		this.minorTickSpacing = minor;
 	}
 
-	public void setSnapToTicks(final boolean snap) {
-		this.snapToTicks = snap;
+	public void setSnapInterval(final double snap) {
+		this.snapInterval = snap;
 	}
 
 	@SuppressWarnings("unused")
@@ -211,9 +197,9 @@ public class Slider extends CustomWidget {
 		value = newValue;
 		if (value < min) value = min;
 		if (value > max) value = max;
-		if (snapToTicks) {
-			value = Math.round((value - min) / minorTickSpacing)
-					* minorTickSpacing + min;
+		if (snapInterval > 0) {
+			value = Math.round((value - min) / snapInterval) * snapInterval
+					+ min;
 		}
 		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
 				.getGraphics()));

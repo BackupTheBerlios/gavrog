@@ -2808,13 +2808,12 @@ public class Main extends EventSource {
     }
     
     private OptionSliderBox slider(final String label, final String option,
-			final int min, final int max, final int major, final int minor,
-			final boolean snap, final boolean ticks, final boolean labels)
+			final double min, final double max, final double major,
+			final double minor, final double snap, final boolean ticks)
 			throws Exception {
 		final OptionSliderBox slider = new OptionSliderBox(label, this, option,
 				min, max, major, minor, snap);
 		slider.setShowTicks(ticks);
-		slider.setShowLabels(labels);
 		return slider;
 	}
     
@@ -2822,18 +2821,16 @@ public class Main extends EventSource {
         final ColumnContainer options = emptyOptionsContainer();
         try {
         	options.add(slider("Surface Detail", "subdivisionLevel", 0, 4, 1,
-					1, true, true, false));
+					1, 1, true));
         	options.add(label("(reduce in case of memory problems)",
 					BorderContainer.EAST));
 			options.add(separator());
 			options.add(new OptionInputBox("Edge Width", this, "edgeWidth"));
 			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 4, 1,
-					1, true, true, false));
+					1, 1, true));
 			options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
-			final OptionSliderBox slider = slider("Color Blending",
-					"edgeOpacity", 0, 100, 20, 5, false, true, false);
-			slider.setFactor(0.01);
-			options.add(slider);
+			options.add(slider("Color Blending",
+					"edgeOpacity", 0, 1, 0.2, 0.05, 0.01, true));
             options.add(separator());
             options.add(new OptionCheckBox("Smooth Shading", this,
 					"smoothFaces"));
@@ -2865,9 +2862,8 @@ public class Main extends EventSource {
     		final boolean ticks)
 			throws Exception {
 		final OptionSliderBox slider = new OptionSliderBox(label, this, option,
-				-2, 2, 1, 1, true);
+				-2, 2, 1, 1, 1);
 		slider.setShowTicks(ticks);
-		slider.setShowLabels(ticks);
 		return slider;
 	}
 
@@ -2915,9 +2911,7 @@ public class Main extends EventSource {
         final ColumnContainer options = emptyOptionsContainer();
         try {
         	final OptionSliderBox slider = new OptionSliderBox("Tile Size in %",
-					this, "tileSize", 0, 100, 20, 5, false);
-        	slider.setFactor(0.01);
-        	//slider.setShowLabels(false);
+					this, "tileSize", 0, 1, 0.2, 0.05, 0.01);
         	options.add(slider);
             options.add(new OptionCheckBox("Draw Faces", this, "drawFaces"));
             options.add(new OptionCheckBox("Draw Edges", this, "drawEdges"));
@@ -2949,7 +2943,7 @@ public class Main extends EventSource {
         final ColumnContainer options = emptyOptionsContainer();
         try {
         	options.add(new OptionSliderBox("Rotation Step", ui, "rotationStep",
-        			0, 45, 5, 1, true));
+        			0, 45, 5, 1, 1));
             options.add(separator());
         	options.add(new OptionInputBox("Viewer Width", ui, "viewerWidth"));
 			options.add(new OptionInputBox("Viewer Height", ui, "viewerHeight"));
@@ -3069,7 +3063,7 @@ public class Main extends EventSource {
         final ColumnContainer options = emptyOptionsContainer();
         try {
 			options.add(new OptionSliderBox("Field Of View", this,
-			"fieldOfView", 0, 120, 20, 5, false));
+					"fieldOfView", 0, 120, 20, 5, 1));
 			options.add(new OptionColorBox("Background Color", this,
 					"backgroundColor"));
             options.add(separator());
@@ -3099,42 +3093,31 @@ public class Main extends EventSource {
     private Widget optionsLights() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-        	OptionSliderBox slider;
-        	
         	options.add(new OptionColorBox("Color", this, "light1Color"));
-        	slider = new OptionSliderBox("Intensity", this, "light1Intensity",
-					0, 100, 20, 5, false);
-        	slider.setFactor(0.01);
-        	slider.setShowLabels(false);
-        	options.add(slider);
+        	options.add(new OptionSliderBox("Intensity", this, "light1Intensity",
+					0, 1, 0.2, 0.05, 0.01));
 			options.add(new OptionSliderBox("Elevation", this, "light1AngleX",
-					-90, 90, 30, 5, true));
+					-90, 90, 30, 10, 1));
 			options.add(new OptionSliderBox("Heading", this, "light1AngleY",
-					-180, 180, 60, 10, true));
+					-180, 180, 60, 20, 1));
         	options.add(separator());
         	
         	options.add(new OptionColorBox("Color", this, "light2Color"));
-        	slider = new OptionSliderBox("Intensity", this, "light2Intensity",
-					0, 100, 20, 5, false);
-        	slider.setFactor(0.01);
-        	slider.setShowLabels(false);
-        	options.add(slider);
+        	options.add(new OptionSliderBox("Intensity", this, "light2Intensity",
+					0, 1, 0.2, 0.05, 0.01));
 			options.add(new OptionSliderBox("Elevation", this, "light2AngleX",
-					-90, 90, 30, 5, true));
+					-90, 90, 30, 10, 1));
 			options.add(new OptionSliderBox("Heading", this, "light2AngleY",
-					-180, 180, 60, 10, true));
+					-180, 180, 60, 20, 1));
         	options.add(separator());
         	
         	options.add(new OptionColorBox("Color", this, "light3Color"));
-        	slider = new OptionSliderBox("Intensity", this, "light3Intensity",
-					0, 100, 20, 5, false);
-        	slider.setFactor(0.01);
-        	slider.setShowLabels(false);
-        	options.add(slider);
+        	options.add(new OptionSliderBox("Intensity", this, "light3Intensity",
+					0, 1, 0.2, 0.05, 0.01));
 			options.add(new OptionSliderBox("Elevation", this, "light3AngleX",
-					-90, 90, 30, 5, true));
+					-90, 90, 30, 10, 1));
 			options.add(new OptionSliderBox("Heading", this, "light3AngleY",
-					-180, 180, 60, 10, true));
+					-180, 180, 60, 20, 1));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
