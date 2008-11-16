@@ -53,7 +53,7 @@ public class RangeSlider extends SliderBase {
 	}
 	
 	public Dimension getPreferredSize() {
-		final int width = showValue ? 210 : 150;
+		final int width = showValue ? 240 : 180;
 		final int height = showTicks ? 14 : 11;
 		return new Dimension(width, height);
 	}

@@ -29,11 +29,11 @@ import buoy.widget.CustomWidget;
 public abstract class SliderBase extends CustomWidget {
 	protected double min;
 	protected double max;
-	protected boolean showTicks;
-	protected boolean showValue;
-	protected double majorTickSpacing;
-	protected double minorTickSpacing;
-	protected double snapInterval;
+	protected boolean showTicks = true;
+	protected boolean showValue = true;
+	protected double majorTickSpacing = 0.0;
+	protected double minorTickSpacing = 0.0;
+	protected double snapInterval = 0.0;
 	
 	protected abstract int sliderWidth();
 

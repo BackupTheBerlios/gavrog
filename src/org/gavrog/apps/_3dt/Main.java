@@ -75,6 +75,7 @@ import org.gavrog.box.gui.Invoke;
 import org.gavrog.box.gui.OptionCheckBox;
 import org.gavrog.box.gui.OptionColorBox;
 import org.gavrog.box.gui.OptionInputBox;
+import org.gavrog.box.gui.OptionRangeSliderBox;
 import org.gavrog.box.gui.OptionSliderBox;
 import org.gavrog.box.gui.TextAreaOutputStream;
 import org.gavrog.box.simple.Stopwatch;
@@ -2865,25 +2866,15 @@ public class Main extends EventSource {
         return optionsDialog(options, makeButton("Apply", apply, "call"));
     }
     
-    private Widget sceneSlider(final String label, final String option,
-    		final boolean ticks)
-			throws Exception {
-		final OptionSliderBox slider = slider(label, option, -2, 2, 1, 1, 1);
-		slider.setShowTicks(ticks);
-		return slider;
-	}
-
     private Widget optionsScene() {
     	final ColumnContainer options = emptyOptionsContainer();
     	try {
-    		options.add(sceneSlider("", "minX", false));
-    		options.add(sceneSlider("x Range", "maxX", true));
-            options.add(separator());
-    		options.add(sceneSlider("", "minY", false));
-    		options.add(sceneSlider("y Range", "maxY", true));
-            options.add(separator());
-    		options.add(sceneSlider("", "minZ", false));
-    		options.add(sceneSlider("z Range", "maxZ", true));
+    		options.add(new OptionRangeSliderBox("x Range", this, "minX",
+					"maxX", -2, 2, 1, 1, 1));
+    		options.add(new OptionRangeSliderBox("y Range", this, "minY",
+					"maxY", -2, 2, 1, 1, 1));
+    		options.add(new OptionRangeSliderBox("z Range", this, "minZ",
+					"maxZ", -2, 2, 1, 1, 1));
             options.add(separator());
     		options.add(new OptionCheckBox("Clear Existing", this,
 					"clearOnFill"));
