@@ -34,9 +34,6 @@ public class OptionSliderBox extends BorderContainer {
 	private boolean eventsLocked = false;
 	private final Slider slider;
 	private boolean isDouble;
-	private double factor = 1.0;
-	private Object target;
-	private Method getter;
 	
 	public OptionSliderBox(final String label, final Object target,
 			final String option, final double min, final double max,
@@ -60,11 +57,10 @@ public class OptionSliderBox extends BorderContainer {
 				LayoutInfo.WEST, LayoutInfo.NONE, new Insets(2, 10, 2, 10),
 				null));
 		
-		this.target = target;
 		final Class<?> klazz = (target instanceof Class ? (Class) target
 				: target.getClass());
 		final String optionCap = Strings.capitalized(option);
-		getter = klazz.getMethod("get" + optionCap);
+		final Method getter = klazz.getMethod("get" + optionCap);
 		final Method setter;
 		
 		Method t;
@@ -87,9 +83,9 @@ public class OptionSliderBox extends BorderContainer {
 					try {
 						final Object arg;
 						if (isDouble) {
-							arg = (double) slider.getValue() * factor;
+							arg = slider.getValue();
 						} else {
-							arg = (int) Math.round(slider.getValue() * factor);
+							arg = (int) Math.round(slider.getValue());
 						}
 						setter.invoke(target, arg);
 					} catch (final Exception ex) {
@@ -118,9 +114,9 @@ public class OptionSliderBox extends BorderContainer {
 	private void updateValue(final Object newValue) {
 		final double val;
 		if (isDouble) {
-			val = ((Double) newValue) / factor;
+			val = (Double) newValue;
 		} else {
-			val = ((Integer) newValue) / factor;
+			val = (Integer) newValue;
 		}
 		slider.setValue(val);
 	}
@@ -148,14 +144,5 @@ public class OptionSliderBox extends BorderContainer {
 
 	public void setSnapInterval(final double snap) {
 		this.slider.setSnapInterval(snap);
-	}
-
-	public void setFactor(double factor) {
-		this.factor = factor;
-		try {
-			updateValue(getter.invoke(target));
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
 	}
 }
