@@ -2807,7 +2807,7 @@ public class Main extends EventSource {
         dialog.add(buttons, BorderContainer.SOUTH, new LayoutInfo(
                 LayoutInfo.SOUTH, LayoutInfo.NONE, defaultInsets, null));
 		final BScrollPane scroll = new BScrollPane(dialog,
-				BScrollPane.SCROLLBAR_AS_NEEDED,
+				BScrollPane.SCROLLBAR_NEVER,
 				BScrollPane.SCROLLBAR_AS_NEEDED);
 		scroll.setForceHeight(false);
 		scroll.setForceWidth(true);
@@ -2924,7 +2924,7 @@ public class Main extends EventSource {
 					"showUnitCell"));
             options.add(new OptionColorBox("Unit Cell Color", this,
                     "unitCellColor"));
-			options.add(slider("Unit Cell Edge Width", "unitCellEdgeWidth", 0,
+			options.add(slider("Edge Width", "unitCellEdgeWidth", 0,
 					0.25, 0.05, 0.01, 0.01));
         } catch (final Exception ex) {
             log(ex.toString());
