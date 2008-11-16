@@ -52,13 +52,17 @@ public abstract class SliderBase extends CustomWidget {
 	protected void drawTicks(final Graphics2D g) {
 		if (showTicks) {
 			g.setColor(Color.GRAY);
-			for (double t = min; t <= max; t += minorTickSpacing) {
-				final int x = valueToX(t) + 3;
-				g.drawLine(x, 8, x, 11);
+			if (minorTickSpacing > 0) {
+				for (double t = min; t <= max; t += minorTickSpacing) {
+					final int x = valueToX(t) + 3;
+					g.drawLine(x, 8, x, 11);
+				}
 			}
-			for (double t = min; t <= max; t += majorTickSpacing) {
-				final int x = valueToX(t) + 3;
-				g.drawLine(x, 8, x, 14);
+			if (majorTickSpacing > 0) {
+				for (double t = min; t <= max; t += majorTickSpacing) {
+					final int x = valueToX(t) + 3;
+					g.drawLine(x, 8, x, 14);
+				}
 			}
 		}
 	}

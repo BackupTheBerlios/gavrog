@@ -114,12 +114,12 @@ public class Slider extends SliderBase {
 
 	public void setValue(final double newValue) {
 		value = newValue;
-		if (value < min) value = min;
-		if (value > max) value = max;
 		if (snapInterval > 0) {
 			value = Math.round((value - min) / snapInterval) * snapInterval
 					+ min;
 		}
+		if (value < min) value = min;
+		if (value > max) value = max;
 		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
 				.getGraphics()));
 	}

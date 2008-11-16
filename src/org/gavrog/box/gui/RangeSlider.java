@@ -35,7 +35,8 @@ public class RangeSlider extends SliderBase {
 	private double lo;
 	private double hi;
 	private Point clickPos;
-	private boolean movingHi;
+	private boolean draggingLo;
+	private boolean draggingHi;
 
 	public RangeSlider(final double lo, final double hi, final double min,
 			final double max) {
@@ -80,31 +81,54 @@ public class RangeSlider extends SliderBase {
 		g.setColor(new Color(0.0f, 0.4f, 0.6f));
 		final String s;
 		if (lo == (int) lo && hi == (int) hi) {
-			s = String.format("%d..%d", (int) lo, (int) hi);
+			s = String.format("%d|%d", (int) lo, (int) hi);
 		} else {
-			s = String.format("%.2f..%.2f", lo, hi);
+			s = String.format("%.2f|%.2f", lo, hi);
 		}
 		g.drawString(s, sliderWidth() + 8, 10);
 	}
 
 	protected int sliderWidth() {
-		return getBounds().width - 7 - (showValue ? 30 : 0);
+		return getBounds().width - 7 - (showValue ? 60 : 0);
 	}
 	
 	@SuppressWarnings("unused")
 	protected void mousePressed(MousePressedEvent ev) {
 		clickPos = ev.getPoint();
-		final int x = valueToX(value);
-		if (clickPos.x < x || clickPos.x > x + 4) {
-			clickPos = new Point(x, clickPos.y);
-			mouseDragged(ev);
+		draggingLo = draggingHi = false;
+		decide(clickPos);
+		if (draggingHi) {
+			clickPos.x = valueToX(hi);
+		} else if (draggingLo) {
+			clickPos.x = valueToX(lo);
+		} else {
+			return;
 		}
+		mouseDragged(ev);
 	}
 
 	protected void mouseDragged(WidgetMouseEvent ev) {
-		setValue(xToValue(ev.getPoint().x));
+		decide(ev.getPoint());
+		if (draggingHi) {
+			setHighValue(xToValue(ev.getPoint().x));
+		} else if (draggingLo) {
+			setLowValue(xToValue(ev.getPoint().x));
+		}
 	}
 
+	protected void decide(final Point pos) {
+		if (draggingLo || draggingHi) {
+			return;
+		}
+		final int xlo = valueToX(lo);
+		final int xhi = valueToX(hi);
+		if (pos.x < xlo || xhi > xlo && 3 * pos.x < 2 * xlo + xhi) {
+			draggingLo = true;
+		} else if (pos.x > xhi + 5 || xhi > xlo && 3 * pos.x > xlo + 2 * xhi) {
+			draggingHi = true;
+		}
+	}
+	
 	@SuppressWarnings("unused")
 	protected void mouseReleased(MouseReleasedEvent ev) {
 		final Point pos = ev.getPoint();
@@ -112,7 +136,7 @@ public class RangeSlider extends SliderBase {
 			dispatchEvent(new ValueChangedEvent(this));
 		}
 	}
-	  
+
 	public double getLowValue() {
 		return lo;
 	}
@@ -122,13 +146,23 @@ public class RangeSlider extends SliderBase {
 	}
 
 	public void setLowValue(final double newValue) {
-		value = newValue;
-		if (value < min) value = min;
-		if (value > max) value = max;
+		lo = newValue;
 		if (snapInterval > 0) {
-			value = Math.round((value - min) / snapInterval) * snapInterval
-					+ min;
+			lo = Math.round((lo - min) / snapInterval) * snapInterval + min;
 		}
+		if (lo < min) lo = min;
+		if (lo > hi) lo = hi;
+		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
+				.getGraphics()));
+	}
+
+	public void setHighValue(final double newValue) {
+		hi = newValue;
+		if (snapInterval > 0) {
+			hi = Math.round((hi - min) / snapInterval) * snapInterval + min;
+		}
+		if (hi < lo) hi = lo;
+		if (hi > max) hi = max;
 		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
 				.getGraphics()));
 	}
