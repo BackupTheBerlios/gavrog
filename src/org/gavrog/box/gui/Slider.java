@@ -65,7 +65,19 @@ public class Slider extends SliderBase {
 		if (showValue) {
 			showValue(g);
 		}
-		fillGuide(g, 0, value);
+		double base;
+		if (max < 0) {
+			base = max;
+		} else if (min < 0){
+			base = 0;
+		} else {
+			base = min;
+		}
+		if (value < base) {
+			fillGuide(g, value, base);
+		} else {
+			fillGuide(g, base, value);
+		}
 		drawMarker(g, value);
 	}
 
