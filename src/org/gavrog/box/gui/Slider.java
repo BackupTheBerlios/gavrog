@@ -24,7 +24,6 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.Shape;
 
 import buoy.event.MouseDraggedEvent;
 import buoy.event.MousePressedEvent;
@@ -69,17 +68,29 @@ public class Slider extends CustomWidget {
 		
 		g.setStroke(new BasicStroke(1));
 		
-		// -- clear canvas
+		clearCanvas(g);
+		drawGuide(g);
+		drawTicks(g);
+		if (showValue) {
+			showValue(g);
+		}
+		fillGuide(g, 0, value);
+		drawMarker(g, value);
+	}
+
+	protected void clearCanvas(final Graphics2D g) {
 		g.setColor(getBackground());
 		g.fillRect(0, 0, getBounds().width, getBounds().height);
-		
-		// -- draw guide
+	}
+
+	protected void drawGuide(final Graphics2D g) {
 		g.setColor(Color.WHITE);
 		g.fillRect(3, 2, sliderWidth(), 5);
 		g.setColor(Color.GRAY);
 		g.drawRect(3, 2, sliderWidth(), 5);
-		
-		// -- draw ticks
+	}
+
+	protected void drawTicks(final Graphics2D g) {
 		if (showTicks) {
 			g.setColor(Color.GRAY);
 			for (double t = min; t <= max; t += minorTickSpacing) {
@@ -91,37 +102,35 @@ public class Slider extends CustomWidget {
 				g.drawLine(x, 8, x, 14);
 			}
 		}
-		
-		// -- show the current value
-		if (showValue) {
-			final Font f = new Font("Verdana", Font.PLAIN, 10);
-			g.setFont(f);
-			g.setColor(new Color(0.0f, 0.4f, 0.6f));
-			final String s;
-			if (value == (int) value) {
-				s = String.format("%d", (int) value);
-			} else {
-				s = String.format("%.2f", value);
-			}
-			g.drawString(s, sliderWidth() + 8, 10);
+	}
+
+	protected void showValue(final Graphics2D g) {
+		final Font f = new Font("Verdana", Font.PLAIN, 10);
+		g.setFont(f);
+		g.setColor(new Color(0.0f, 0.4f, 0.6f));
+		final String s;
+		if (value == (int) value) {
+			s = String.format("%d", (int) value);
+		} else {
+			s = String.format("%.2f", value);
 		}
-		
-		// -- fill guide left of marker
-		final int x = valueToX(value);
+		g.drawString(s, sliderWidth() + 8, 10);
+	}
+
+	protected void fillGuide(final Graphics2D g, double lo, double hi) {
+		final int xlo = valueToX(lo) + 4;
+		final int xhi = valueToX(hi) + 2;
 
 		g.setColor(new Color(0.9f, 0.45f, 0.15f));
-		g.drawLine(4, 3, x, 3);
+		g.drawLine(xlo, 3, xhi, 3);
 		g.setColor(new Color(1.0f, 0.6f, 0.2f));
-		g.drawLine(4, 4, x, 4);
+		g.drawLine(xlo, 4, xhi, 4);
 		g.setColor(new Color(1.0f, 0.75f, 0.5f));
-		g.drawLine(4, 5, x, 5);
-		
-		// -- draw marker
-		final Shape sh = new Polygon(
-				new int[] { x, x + 6, x + 6, x + 3, x },
-				new int[] { 0,     0,     8,    11, 8 },
-				5
-				);
+		g.drawLine(xlo, 5, xhi, 5);
+	}
+
+	protected void drawMarker(final Graphics2D g, final double pos) {
+		final int x = valueToX(pos);
 		g.setColor(new Color(0.9f, 0.9f, 0.9f));
 		g.drawLine(x + 1, 0, x + 1,  9);
 		g.drawLine(x + 2, 0, x + 2, 10);
@@ -132,18 +141,20 @@ public class Slider extends CustomWidget {
 		g.setColor(new Color(0.5f, 0.7f, 0.8f));
 		g.drawLine(x + 5, 0, x + 5,  9);
 		g.setColor(Color.BLACK);
-		g.draw(sh);
+		g.draw(new Polygon(
+				new int[] { x, x + 6, x + 6, x + 3, x },
+				new int[] { 0,     0,     8,    11, 8 }, 5));
 	}
 
-	private int sliderWidth() {
+	protected int sliderWidth() {
 		return getBounds().width - 7 - (showValue ? 30 : 0);
 	}
 	
-	private int valueToX(final double val) {
+	protected int valueToX(final double val) {
 		return (int) Math.round(sliderWidth() * (val - min) / (max - min));
 	}
 	
-	private double xToValue(final int x) {
+	protected double xToValue(final int x) {
 		return min + (double) x / sliderWidth() * (max - min);
 	}
 	
@@ -168,7 +179,7 @@ public class Slider extends CustomWidget {
 	}
 
 	@SuppressWarnings("unused")
-	private void mousePressed(MousePressedEvent ev) {
+	protected void mousePressed(MousePressedEvent ev) {
 		clickPos = ev.getPoint();
 		final int x = valueToX(value);
 		if (clickPos.x < x || clickPos.x > x + 4) {
@@ -177,12 +188,12 @@ public class Slider extends CustomWidget {
 		}
 	}
 
-	private void mouseDragged(WidgetMouseEvent ev) {
+	protected void mouseDragged(WidgetMouseEvent ev) {
 		setValue(xToValue(ev.getPoint().x));
 	}
 
 	@SuppressWarnings("unused")
-	private void mouseReleased(MouseReleasedEvent ev) {
+	protected void mouseReleased(MouseReleasedEvent ev) {
 		final Point pos = ev.getPoint();
 		if (pos.x != clickPos.x) {
 			dispatchEvent(new ValueChangedEvent(this));
