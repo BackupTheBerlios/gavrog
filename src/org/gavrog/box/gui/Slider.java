@@ -23,7 +23,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Polygon;
 
 import buoy.event.MouseDraggedEvent;
 import buoy.event.MousePressedEvent;
@@ -31,18 +30,10 @@ import buoy.event.MouseReleasedEvent;
 import buoy.event.RepaintEvent;
 import buoy.event.ValueChangedEvent;
 import buoy.event.WidgetMouseEvent;
-import buoy.widget.CustomWidget;
 
-public class Slider extends CustomWidget {
+public class Slider extends SliderBase {
 	private double value;
-	final private double min;
-	final private double max;
 	private Point clickPos;
-	private boolean showTicks;
-	private boolean showValue;
-	private double majorTickSpacing;
-	private double minorTickSpacing;
-	private double snapInterval;
 
 	public Slider(final double value, final double min, final double max) {
 		this.min = min;
@@ -78,32 +69,6 @@ public class Slider extends CustomWidget {
 		drawMarker(g, value);
 	}
 
-	protected void clearCanvas(final Graphics2D g) {
-		g.setColor(getBackground());
-		g.fillRect(0, 0, getBounds().width, getBounds().height);
-	}
-
-	protected void drawGuide(final Graphics2D g) {
-		g.setColor(Color.WHITE);
-		g.fillRect(3, 2, sliderWidth(), 5);
-		g.setColor(Color.GRAY);
-		g.drawRect(3, 2, sliderWidth(), 5);
-	}
-
-	protected void drawTicks(final Graphics2D g) {
-		if (showTicks) {
-			g.setColor(Color.GRAY);
-			for (double t = min; t <= max; t += minorTickSpacing) {
-				final int x = valueToX(t) + 3;
-				g.drawLine(x, 8, x, 11);
-			}
-			for (double t = min; t <= max; t += majorTickSpacing) {
-				final int x = valueToX(t) + 3;
-				g.drawLine(x, 8, x, 14);
-			}
-		}
-	}
-
 	protected void showValue(final Graphics2D g) {
 		final Font f = new Font("Verdana", Font.PLAIN, 10);
 		g.setFont(f);
@@ -117,67 +82,10 @@ public class Slider extends CustomWidget {
 		g.drawString(s, sliderWidth() + 8, 10);
 	}
 
-	protected void fillGuide(final Graphics2D g, double lo, double hi) {
-		final int xlo = valueToX(lo) + 4;
-		final int xhi = valueToX(hi) + 2;
-
-		g.setColor(new Color(0.9f, 0.45f, 0.15f));
-		g.drawLine(xlo, 3, xhi, 3);
-		g.setColor(new Color(1.0f, 0.6f, 0.2f));
-		g.drawLine(xlo, 4, xhi, 4);
-		g.setColor(new Color(1.0f, 0.75f, 0.5f));
-		g.drawLine(xlo, 5, xhi, 5);
-	}
-
-	protected void drawMarker(final Graphics2D g, final double pos) {
-		final int x = valueToX(pos);
-		g.setColor(new Color(0.9f, 0.9f, 0.9f));
-		g.drawLine(x + 1, 0, x + 1,  9);
-		g.drawLine(x + 2, 0, x + 2, 10);
-		g.setColor(new Color(0.8f, 0.88f, 0.92f));
-		g.drawLine(x + 3, 0, x + 3, 11);
-		g.setColor(new Color(0.6f, 0.76f, 0.84f));
-		g.drawLine(x + 4, 0, x + 4, 10);
-		g.setColor(new Color(0.5f, 0.7f, 0.8f));
-		g.drawLine(x + 5, 0, x + 5,  9);
-		g.setColor(Color.BLACK);
-		g.draw(new Polygon(
-				new int[] { x, x + 6, x + 6, x + 3, x },
-				new int[] { 0,     0,     8,    11, 8 }, 5));
-	}
-
 	protected int sliderWidth() {
 		return getBounds().width - 7 - (showValue ? 30 : 0);
 	}
 	
-	protected int valueToX(final double val) {
-		return (int) Math.round(sliderWidth() * (val - min) / (max - min));
-	}
-	
-	protected double xToValue(final int x) {
-		return min + (double) x / sliderWidth() * (max - min);
-	}
-	
-	public void setShowTicks(final boolean b) {
-		this.showTicks = b;
-	}
-
-	public void setShowValue(final boolean b) {
-		this.showValue = b;
-	}
-
-	public void setMajorTickSpacing(final double major) {
-		this.majorTickSpacing = major;
-	}
-
-	public void setMinorTickSpacing(final double minor) {
-		this.minorTickSpacing = minor;
-	}
-
-	public void setSnapInterval(final double snap) {
-		this.snapInterval = snap;
-	}
-
 	@SuppressWarnings("unused")
 	protected void mousePressed(MousePressedEvent ev) {
 		clickPos = ev.getPoint();
