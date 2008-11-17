@@ -2875,21 +2875,22 @@ public class Main extends EventSource {
     private Widget optionsTiles() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
+            options.add(new OptionCheckBox("Smooth Shading", this,
+			"smoothFaces"));
         	options.add(slider("Surface Detail", "subdivisionLevel", 0, 4, 1,
 					1, 1));
         	options.add(label("(reduce in case of memory problems)",
 					BorderContainer.EAST));
 			options.add(separator());
-			options.add(slider("Edge Width", "edgeWidth", 0, 0.25, 0.05, 0.01,
+			options.add(label("Edges", BorderContainer.WEST));
+			options.add(slider("Width", "edgeWidth", 0, 0.25, 0.05, 0.01,
 					0.01));
-			options.add(slider("Edge Creasing", "edgeRoundingLevel", 0, 4, 1,
+			options.add(slider("Creasing", "edgeRoundingLevel", 0, 4, 1,
 					1, 1));
-			options.add(new OptionColorBox("Edge Color", this, "edgeColor"));
-			options.add(slider("Color Blending",
-					"edgeOpacity", 0, 1, 0.2, 0.05, 0.05));
-            options.add(separator());
-            options.add(new OptionCheckBox("Smooth Shading", this,
-					"smoothFaces"));
+			options.add(new OptionColorBox("Color", this, "edgeColor"));
+			options.add(slider("Blending", "edgeOpacity",
+					0, 1, 0.2, 0.05, 0.05));
+			options.add(separator());
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2917,6 +2918,8 @@ public class Main extends EventSource {
     private Widget optionsScene() {
     	final ColumnContainer options = emptyOptionsContainer();
     	try {
+    		options.add(new OptionCheckBox("Clear Existing", this,
+    				"clearOnFill"));
     		options.add(new OptionRangeSliderBox("x Range", this, "minX",
 					"maxX", -2, 2, 1, 1, 1));
     		options.add(new OptionRangeSliderBox("y Range", this, "minY",
@@ -2924,8 +2927,6 @@ public class Main extends EventSource {
     		options.add(new OptionRangeSliderBox("z Range", this, "minZ",
 					"maxZ", -2, 2, 1, 1, 1));
             options.add(separator());
-    		options.add(new OptionCheckBox("Clear Existing", this,
-					"clearOnFill"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2956,15 +2957,17 @@ public class Main extends EventSource {
         final ColumnContainer options = emptyOptionsContainer();
         try {
         	options.add(slider("Tile Size", "tileSize", 0, 1, 0.2, 0.05, 0.01));
-            options.add(new OptionCheckBox("Draw Faces", this, "drawFaces"));
-            options.add(new OptionCheckBox("Draw Edges", this, "drawEdges"));
             options.add(separator());
-            options.add(new OptionCheckBox("Show Unit Cell", this,
-					"showUnitCell"));
-            options.add(new OptionColorBox("Unit Cell Color", this,
-                    "unitCellColor"));
+            options.add(label("Unit Cell", BorderContainer.WEST));
+            options.add(new OptionColorBox("Color", this, "unitCellColor"));
 			options.add(slider("Edge Width", "unitCellEdgeWidth", 0,
 					0.25, 0.05, 0.01, 0.01));
+            options.add(separator());
+            options.add(label("Show", BorderContainer.WEST));
+            options.add(new OptionCheckBox("Faces", this, "drawFaces"));
+            options.add(new OptionCheckBox("Edges", this, "drawEdges"));
+            options.add(new OptionCheckBox("Unit Cell", this, "showUnitCell"));
+            options.add(separator());
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -2988,8 +2991,10 @@ public class Main extends EventSource {
         	options.add(new OptionSliderBox("Rotation Step", ui, "rotationStep",
         			0, 30, 5, 1, 1));
             options.add(separator());
-        	options.add(new OptionInputBox("Viewer Width", ui, "viewerWidth"));
-			options.add(new OptionInputBox("Viewer Height", ui, "viewerHeight"));
+            options.add(label("Viewer Size", BorderContainer.WEST));
+        	options.add(new OptionInputBox("Width", ui, "viewerWidth"));
+			options.add(new OptionInputBox("Height", ui, "viewerHeight"));
+            options.add(separator());
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -3010,11 +3015,16 @@ public class Main extends EventSource {
         try {
             options.add(new OptionCheckBox("Show Net", this, "showNet"));
             options.add(separator());
-            options.add(new OptionInputBox("Node Radius", this, "netNodeRadius"));
-            options.add(new OptionColorBox("Node Color", this, "netNodeColor"));
+            options.add(label("Nodes", BorderContainer.WEST));
+            options.add(new OptionColorBox("Color", this, "netNodeColor"));
+            options.add(slider("Radius", "netNodeRadius", 0, 1, 0.2,
+					0.05, 0.01));
             options.add(separator());
-            options.add(new OptionInputBox("Edge Radius", this, "netEdgeRadius"));
-            options.add(new OptionColorBox("Edge Color", this, "netEdgeColor"));
+            options.add(label("Edges", BorderContainer.WEST));
+            options.add(new OptionColorBox("Color", this, "netEdgeColor"));
+            options.add(slider("Radius", "netEdgeRadius", 0, 0.5, 0.1,
+					0.02, 0.01));
+            options.add(separator());
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -3035,20 +3045,22 @@ public class Main extends EventSource {
     private Widget optionsMaterial() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-			options.add(new OptionInputBox("Diffuse Coefficient", this,
-					"diffuseCoefficient"));
+        	options.add(label("Diffuse Reflection", BorderContainer.WEST));
+			options.add(slider("Strength", "diffuseCoefficient",
+					0, 1, 0.2, 0.05, 0.01));
             options.add(separator());
-			options.add(new OptionColorBox("Specular Color", this,
-					"specularColor"));
-			options.add(new OptionInputBox("Specular Coefficient", this,
-					"specularCoefficient"));
-			options.add(new OptionInputBox("Specular Exponent", this,
-					"specularExponent"));
+        	options.add(label("Specular Reflection", BorderContainer.WEST));
+			options.add(new OptionColorBox("Color", this, "specularColor"));
+			options.add(slider("Strength", "specularCoefficient",
+					0, 1, 0.2, 0.05, 0.01));
+			options.add(slider("Shininess", "specularExponent",
+					0, 100, 20, 5, 1));
             options.add(separator());
-			options.add(new OptionColorBox("Ambient Color", this,
-					"ambientColor"));
-			options.add(new OptionInputBox("Ambient Coefficient", this,
-					"ambientCoefficient"));
+        	options.add(label("Ambient Illumination", BorderContainer.WEST));
+			options.add(new OptionColorBox("Color", this, "ambientColor"));
+			options.add(slider("Strength", "ambientCoefficient",
+					0, 1, 0.2, 0.05, 0.01));
+            options.add(separator());
 //			options.add(separator());
 //        	final OptionSliderBox slider =
 //        		new OptionSliderBox("Transparency", this,
@@ -3077,13 +3089,13 @@ public class Main extends EventSource {
     private Widget optionsEmbedding() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
+			options.add(new OptionCheckBox("Skip Relaxation", this,
+			"useBarycentricPositions"));
             options.add(new OptionInputBox("Relaxation Step Limit", this,
 					"embedderStepLimit"));
 			options.add(new OptionInputBox("Edge Equalizing Priority", this,
 					"equalEdgePriority"));
             options.add(separator());
-			options.add(new OptionCheckBox("Skip Relaxation", this,
-					"useBarycentricPositions"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -3109,11 +3121,13 @@ public class Main extends EventSource {
 			options.add(new OptionColorBox("Background Color", this,
 					"backgroundColor"));
             options.add(separator());
-			options.add(new OptionCheckBox("Use Fog", this, "useFog"));
-			options.add(new OptionCheckBox("Ignore Fog Color", this,
+            options.add(label("Fog", BorderContainer.WEST));
+			options.add(new OptionCheckBox("Enable", this, "useFog"));
+			options.add(new OptionInputBox("Density", this, "fogDensity"));
+			options.add(new OptionCheckBox("To Background", this,
 					"fogToBackground"));
-			options.add(new OptionColorBox("Fog Color", this, "fogColor"));
-			options.add(new OptionInputBox("Fog Density", this, "fogDensity"));
+			options.add(new OptionColorBox("Color", this, "fogColor"));
+            options.add(separator());
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
