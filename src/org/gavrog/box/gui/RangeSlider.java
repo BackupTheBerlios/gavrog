@@ -152,8 +152,7 @@ public class RangeSlider extends SliderBase {
 		}
 		if (lo < min) lo = min;
 		if (lo > hi) lo = hi;
-		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
-				.getGraphics()));
+		repaint();
 	}
 
 	public void setHighValue(final double newValue) {
@@ -163,7 +162,6 @@ public class RangeSlider extends SliderBase {
 		}
 		if (hi < lo) hi = lo;
 		if (hi > max) hi = max;
-		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
-				.getGraphics()));
+		repaint();
 	}
 }

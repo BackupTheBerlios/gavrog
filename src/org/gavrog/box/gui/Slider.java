@@ -132,7 +132,6 @@ public class Slider extends SliderBase {
 		}
 		if (value < min) value = min;
 		if (value > max) value = max;
-		dispatchEvent(new RepaintEvent(this, (Graphics2D) getComponent()
-				.getGraphics()));
+		repaint();
 	}
 }
