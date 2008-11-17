@@ -33,7 +33,6 @@ import buoy.widget.LayoutInfo;
 public class OptionRangeSliderBox extends BorderContainer {
 	private boolean eventsLocked = false;
 	private final RangeSlider slider;
-	private boolean isDoubleLo, isDoubleHi;
 	
 	public OptionRangeSliderBox(final String label, final Object target,
 			final String optionLo, final String optionHi, final double min,
@@ -68,25 +67,18 @@ public class OptionRangeSliderBox extends BorderContainer {
 		final Method setterHi;
 		
 		Method t;
-		boolean d;
 		try {
 			t = klazz.getMethod("set" + optionLoCap, int.class);
-			d = false;
 		} catch (NoSuchMethodException ex) {
 			t = klazz.getMethod("set" + optionLoCap, double.class);
-			d = true;
 		}
 		setterLo = t;
-		isDoubleLo = d;
 		try {
 			t = klazz.getMethod("set" + optionHiCap, int.class);
-			d = false;
 		} catch (NoSuchMethodException ex) {
 			t = klazz.getMethod("set" + optionHiCap, double.class);
-			d = true;
 		}
 		setterHi = t;
-		isDoubleHi = d;
 
 		updateLoValue(getterLo.invoke(target));
 		updateHiValue(getterHi.invoke(target));
@@ -95,17 +87,14 @@ public class OptionRangeSliderBox extends BorderContainer {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
-						Object arg;
-						if (isDoubleLo) {
-							arg = slider.getLowValue();
-						} else {
-							arg = (int) Math.round(slider.getLowValue());
+						Object arg = slider.getLowValue();
+						if (setterLo.getParameterTypes()[0].equals(int.class)) {
+							arg = (int) Math.round((Double) arg);
 						}
 						setterLo.invoke(target, arg);
-						if (isDoubleHi) {
-							arg = slider.getHighValue();
-						} else {
-							arg = (int) Math.round(slider.getHighValue());
+						arg = slider.getHighValue();
+						if (setterHi.getParameterTypes()[0].equals(int.class)) {
+							arg = (int) Math.round((Double) arg);
 						}
 						setterHi.invoke(target, arg);
 					} catch (final Exception ex) {
@@ -134,12 +123,7 @@ public class OptionRangeSliderBox extends BorderContainer {
 	}
 	
 	private void updateLoValue(final Object newValue) {
-		final double val;
-		if (isDoubleLo) {
-			val = (Double) newValue;
-		} else {
-			val = (Integer) newValue;
-		}
+		final double val = ((Number) newValue).doubleValue();
 		if (val > slider.getHighValue()) {
 			slider.setHighValue(val);
 		}
@@ -147,12 +131,7 @@ public class OptionRangeSliderBox extends BorderContainer {
 	}
 	
 	private void updateHiValue(final Object newValue) {
-		final double val;
-		if (isDoubleHi) {
-			val = (Double) newValue;
-		} else {
-			val = (Integer) newValue;
-		}
+		final double val = ((Number) newValue).doubleValue();
 		if (val < slider.getLowValue()) {
 			slider.setLowValue(val);
 		}
