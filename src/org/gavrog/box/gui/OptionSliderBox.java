@@ -33,7 +33,6 @@ import buoy.widget.LayoutInfo;
 public class OptionSliderBox extends BorderContainer {
 	private boolean eventsLocked = false;
 	private final Slider slider;
-	private boolean isDouble;
 	
 	public OptionSliderBox(final String label, final Object target,
 			final String option, final double min, final double max,
@@ -64,16 +63,12 @@ public class OptionSliderBox extends BorderContainer {
 		final Method setter;
 		
 		Method t;
-		boolean d = false;
 		try {
 			t = klazz.getMethod("set" + optionCap, int.class);
-			d = false;
 		} catch (NoSuchMethodException ex) {
 			t = klazz.getMethod("set" + optionCap, double.class);
-			d = true;
 		}
 		setter = t;
-		isDouble = d;
 
 		updateValue(getter.invoke(target));
 
@@ -81,11 +76,9 @@ public class OptionSliderBox extends BorderContainer {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
-						final Object arg;
-						if (isDouble) {
-							arg = slider.getValue();
-						} else {
-							arg = (int) Math.round(slider.getValue());
+						Object arg = slider.getValue();
+						if (setter.getParameterTypes()[0].equals(int.class)) {
+							arg = (int) Math.round((Double) arg);
 						}
 						setter.invoke(target, arg);
 					} catch (final Exception ex) {
@@ -112,13 +105,7 @@ public class OptionSliderBox extends BorderContainer {
 	}
 	
 	private void updateValue(final Object newValue) {
-		final double val;
-		if (isDouble) {
-			val = (Double) newValue;
-		} else {
-			val = (Integer) newValue;
-		}
-		slider.setValue(val);
+		slider.setValue(((Number) newValue).doubleValue());
 	}
 	
 	private boolean obtainLock() {
