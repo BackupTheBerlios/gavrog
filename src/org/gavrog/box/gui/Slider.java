@@ -22,7 +22,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Point;
 
 import buoy.event.MouseDraggedEvent;
 import buoy.event.MousePressedEvent;
@@ -33,7 +32,7 @@ import buoy.event.WidgetMouseEvent;
 
 public class Slider extends SliderBase {
 	private double value;
-	private Point clickPos;
+	private double oldValue;
 
 	public Slider(final double value, final double min, final double max) {
 		this.min = min;
@@ -100,12 +99,8 @@ public class Slider extends SliderBase {
 	
 	@SuppressWarnings("unused")
 	protected void mousePressed(MousePressedEvent ev) {
-		clickPos = ev.getPoint();
-		final int x = valueToX(value);
-		if (clickPos.x < x || clickPos.x > x + 4) {
-			clickPos = new Point(x, clickPos.y);
-			mouseDragged(ev);
-		}
+		oldValue = value;
+		mouseDragged(ev);
 	}
 
 	protected void mouseDragged(WidgetMouseEvent ev) {
@@ -114,12 +109,11 @@ public class Slider extends SliderBase {
 
 	@SuppressWarnings("unused")
 	protected void mouseReleased(MouseReleasedEvent ev) {
-		final Point pos = ev.getPoint();
-		if (pos.x != clickPos.x) {
+		if (value != oldValue) {
 			dispatchEvent(new ValueChangedEvent(this));
 		}
 	}
-	  
+	
 	public double getValue() {
 		return value;
 	}
