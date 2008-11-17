@@ -45,6 +45,8 @@ public abstract class SliderBase extends CustomWidget {
 	protected void drawGuide(final Graphics2D g) {
 		g.setColor(Color.WHITE);
 		g.fillRect(3, 2, sliderWidth(), 5);
+		g.setColor(new Color(0.8f, 0.88f, 0.92f));
+		g.drawLine(4, 3, sliderWidth() + 2, 3);
 		g.setColor(Color.GRAY);
 		g.drawRect(3, 2, sliderWidth(), 5);
 	}
@@ -71,12 +73,14 @@ public abstract class SliderBase extends CustomWidget {
 		final int xlo = valueToX(lo) + 4;
 		final int xhi = valueToX(hi) + 2;
 	
-		g.setColor(new Color(0.9f, 0.45f, 0.15f));
-		g.drawLine(xlo, 3, xhi, 3);
 		g.setColor(new Color(1.0f, 0.6f, 0.2f));
-		g.drawLine(xlo, 4, xhi, 4);
+		g.drawLine(xlo, 6, xhi, 6);
 		g.setColor(new Color(1.0f, 0.75f, 0.5f));
 		g.drawLine(xlo, 5, xhi, 5);
+		g.setColor(new Color(1.0f, 0.9f, 0.8f));
+		g.drawLine(xlo, 4, xhi, 4);
+		g.setColor(Color.WHITE);
+		g.drawLine(xlo, 3, xhi, 3);
 	}
 
 	protected void drawMarker(final Graphics2D g, final double pos) {
