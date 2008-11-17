@@ -49,8 +49,8 @@ public class RangeSlider extends SliderBase {
 	    addEventLink(MouseDraggedEvent.class, this, "mouseDragged");
 	    addEventLink(RepaintEvent.class, this, "paint");
 	    
-	    setLowValue(lo);
-	    setHighValue(hi);
+	    setLow(lo);
+	    setHigh(hi);
 	}
 	
 	public Dimension getPreferredSize() {
@@ -105,9 +105,9 @@ public class RangeSlider extends SliderBase {
 		final int x = ev.getPoint().x;
 		decide(x);
 		if (draggingHi) {
-			setHighValue(xToValue(x));
+			setHigh(xToValue(x));
 		} else if (draggingLo) {
-			setLowValue(xToValue(x));
+			setLow(xToValue(x));
 		}
 	}
 
@@ -132,15 +132,15 @@ public class RangeSlider extends SliderBase {
 		}
 	}
 
-	public double getLowValue() {
+	public double getLow() {
 		return lo;
 	}
 
-	public double getHighValue() {
+	public double getHigh() {
 		return hi;
 	}
 
-	public void setLowValue(final double newValue) {
+	public void setLow(final double newValue) {
 		lo = newValue;
 		if (snapInterval > 0) {
 			lo = Math.round((lo - min) / snapInterval) * snapInterval + min;
@@ -150,7 +150,7 @@ public class RangeSlider extends SliderBase {
 		repaint();
 	}
 
-	public void setHighValue(final double newValue) {
+	public void setHigh(final double newValue) {
 		hi = newValue;
 		if (snapInterval > 0) {
 			hi = Math.round((hi - min) / snapInterval) * snapInterval + min;

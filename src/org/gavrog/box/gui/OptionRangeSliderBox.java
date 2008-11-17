@@ -87,12 +87,12 @@ public class OptionRangeSliderBox extends BorderContainer {
 			public void handleEvent(final Object event) {
 				if (obtainLock()) {
 					try {
-						Object arg = slider.getLowValue();
+						Object arg = slider.getLow();
 						if (setterLo.getParameterTypes()[0].equals(int.class)) {
 							arg = (int) Math.round((Double) arg);
 						}
 						setterLo.invoke(target, arg);
-						arg = slider.getHighValue();
+						arg = slider.getHigh();
 						if (setterHi.getParameterTypes()[0].equals(int.class)) {
 							arg = (int) Math.round((Double) arg);
 						}
@@ -124,18 +124,18 @@ public class OptionRangeSliderBox extends BorderContainer {
 	
 	private void updateLoValue(final Object newValue) {
 		final double val = ((Number) newValue).doubleValue();
-		if (val > slider.getHighValue()) {
-			slider.setHighValue(val);
+		if (val > slider.getHigh()) {
+			slider.setHigh(val);
 		}
-		slider.setLowValue(val);
+		slider.setLow(val);
 	}
 	
 	private void updateHiValue(final Object newValue) {
 		final double val = ((Number) newValue).doubleValue();
-		if (val < slider.getLowValue()) {
-			slider.setLowValue(val);
+		if (val < slider.getLow()) {
+			slider.setLow(val);
 		}
-		slider.setHighValue(val);
+		slider.setHigh(val);
 	}
 	
 	private boolean obtainLock() {
