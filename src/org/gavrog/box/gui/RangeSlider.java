@@ -34,7 +34,8 @@ import buoy.event.WidgetMouseEvent;
 public class RangeSlider extends SliderBase {
 	private double lo;
 	private double hi;
-	private Point clickPos;
+	private double oldLo;
+	private double oldHi;
 	private boolean draggingLo;
 	private boolean draggingHi;
 
@@ -94,37 +95,31 @@ public class RangeSlider extends SliderBase {
 	
 	@SuppressWarnings("unused")
 	protected void mousePressed(MousePressedEvent ev) {
-		clickPos = ev.getPoint();
 		draggingLo = draggingHi = false;
-		decide(clickPos);
-		if (draggingHi) {
-			clickPos.x = valueToX(hi);
-		} else if (draggingLo) {
-			clickPos.x = valueToX(lo);
-		} else {
-			return;
-		}
+		oldLo = lo;
+		oldHi = hi;
 		mouseDragged(ev);
 	}
 
 	protected void mouseDragged(WidgetMouseEvent ev) {
-		decide(ev.getPoint());
+		final int x = ev.getPoint().x;
+		decide(x);
 		if (draggingHi) {
-			setHighValue(xToValue(ev.getPoint().x));
+			setHighValue(xToValue(x));
 		} else if (draggingLo) {
-			setLowValue(xToValue(ev.getPoint().x));
+			setLowValue(xToValue(x));
 		}
 	}
 
-	protected void decide(final Point pos) {
+	protected void decide(final int x) {
 		if (draggingLo || draggingHi) {
 			return;
 		}
 		final int xlo = valueToX(lo);
 		final int xhi = valueToX(hi);
-		if (pos.x < xlo || xhi > xlo && 3 * pos.x < 2 * xlo + xhi) {
+		if (x < xlo || xhi > xlo && 3 * x < 2 * xlo + xhi) {
 			draggingLo = true;
-		} else if (pos.x > xhi + 5 || xhi > xlo && 3 * pos.x > xlo + 2 * xhi) {
+		} else if (x > xhi + 5 || xhi > xlo && 3 * x > xlo + 2 * xhi) {
 			draggingHi = true;
 		}
 	}
@@ -132,7 +127,7 @@ public class RangeSlider extends SliderBase {
 	@SuppressWarnings("unused")
 	protected void mouseReleased(MouseReleasedEvent ev) {
 		final Point pos = ev.getPoint();
-		if (pos.x != clickPos.x) {
+		if (lo != oldLo || hi != oldHi) {
 			dispatchEvent(new ValueChangedEvent(this));
 		}
 	}
