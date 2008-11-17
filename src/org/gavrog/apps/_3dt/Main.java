@@ -439,6 +439,7 @@ public class Main extends EventSource {
         
         viewMenu.add(actionEncompass());
         viewMenu.add(actionViewAlong());
+        viewMenu.add(actionSetUpVector());
         viewMenu.addSeparator();
         
         viewMenu.add(actionXView());
@@ -1352,8 +1353,7 @@ public class Main extends EventSource {
 						final double x = Double.parseDouble(fields[0]);
 						final double y = Double.parseDouble(fields[1]);
 						final double z = Double.parseDouble(fields[2]);
-						final Vector eye = new Vector(new double[] { x,
-								y, z });
+						final Vector eye = new Vector(new double[] { x, y, z });
 						final Vector up;
 						if (x == 0 && y == 0) {
 							up = new Vector(0, 1, 0);
@@ -1370,6 +1370,35 @@ public class Main extends EventSource {
 				}
     		}, "View the scene along an arbitrary dirextion",
     		KeyStroke.getKeyStroke(KeyEvent.VK_V, 0));
+    	}
+    	return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionSetUpVector() {
+    	final String name = "Upward vector...";
+    	if (ActionRegistry.instance().get(name) == null) {
+    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    			public void actionPerformed(ActionEvent e) {
+    				final String input = getInput(
+									"Vector to point upward (x y z):",
+									"3dt Upward Vector", "0 1 0");
+					final String fields[] = input.trim().split("\\s+");
+					try {
+						final double x = Double.parseDouble(fields[0]);
+						final double y = Double.parseDouble(fields[1]);
+						final double z = Double.parseDouble(fields[2]);
+						final Vector up = new Vector(new double[] { x, y, z });
+						final Vector eye = getEyeVector();
+						setViewingTransformation(eye, up);
+					} catch (final Exception ex) {
+						messageBox("Can't set '" + input.trim()
+										+ "' as upward.", "3dt Upward Vector",
+										BStandardDialog.INFORMATION);
+					}
+					encompass();
+				}
+    		}, "Select a vector to point upward on the screen",
+    		KeyStroke.getKeyStroke(KeyEvent.VK_U, 0));
     	}
     	return ActionRegistry.instance().get(name);
     }
@@ -2436,6 +2465,25 @@ public class Main extends EventSource {
     	    	viewerFrame.encompass();
     		}
     	});
+    }
+    
+    public Vector getEyeVector() {
+		if (doc() == null) {
+			return null;
+		}
+		final SceneGraphComponent root = world;
+		final Matrix m =
+			new Matrix(root.getTransformation()).getInverse().getTranspose();
+		final double b[] = m.getArray();
+		final double a[][] = new double[][] {
+				{ b[ 0], b[ 1], b[ 2], b[ 3] },
+				{ b[ 4], b[ 5], b[ 6], b[ 7] },
+				{ b[ 8], b[ 9], b[10], b[11] },
+				{ b[12], b[13], b[14], b[15] }
+		};
+		final Operator t = new Operator(a);
+		final CoordinateChange c = doc().getCellToWorld();
+		return (Vector) new Vector(0, 0, 1).times(t).times(c.inverse());
     }
     
 	public void setViewingTransformation(final Vector eye, final Vector up) {
