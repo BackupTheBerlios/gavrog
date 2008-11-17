@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JColorChooser;
@@ -143,7 +144,6 @@ import de.jreality.shader.CommonAttributes;
 import de.jreality.softviewer.SoftViewer;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
-import de.jreality.ui.viewerapp.actions.AbstractJrAction;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.SceneGraphUtility;
 import de.jtem.beans.DimensionPanel;
@@ -536,7 +536,7 @@ public class Main extends EventSource {
     private Action actionAbout() {
     	final String name = "About 3dt";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					showAbout();
 				}
@@ -548,7 +548,7 @@ public class Main extends EventSource {
     private Action actionShowControls() {
 		final String name = "Show Controls";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					showControls();
 				}
@@ -560,7 +560,7 @@ public class Main extends EventSource {
     private Action actionOpen() {
 		final String name = "Open...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final File file = inFileChooser.pickFile(
 							ui.getLastInputPath(), null);
@@ -578,7 +578,7 @@ public class Main extends EventSource {
     private Action actionSaveTiling() {
 		final String name = "Save Tiling...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final File file =outTilingChooser.pickFile(
 							ui.getLastTilingOutputPath(), "ds");
@@ -616,7 +616,7 @@ public class Main extends EventSource {
     private Action actionSaveNet() {
 		final String name = "Save Net...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final File file = outNetChooser.pickFile(
 							ui.getLastNetOutputPath(), "pgr");
@@ -643,7 +643,7 @@ public class Main extends EventSource {
     private Action actionSaveScene() {
 		final String name = "Save Scene...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final File file = outSceneChooser.pickFile(
 							ui.getLastSceneOutputPath(), "gsl");
@@ -670,7 +670,7 @@ public class Main extends EventSource {
     private Action actionScreenshot() {
 		final String name = "Screen Shot...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					dimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
@@ -704,7 +704,7 @@ public class Main extends EventSource {
     private Action actionSunflowRender() {
 		final String name = "Raytraced Image...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					dimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
@@ -737,7 +737,7 @@ public class Main extends EventSource {
     private Action actionSunflowPreview() {
 		final String name = "Preview Raytraced...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     try {
                     	final RenderOptions opts = new RenderOptions();
@@ -758,7 +758,7 @@ public class Main extends EventSource {
     private Action actionQuit() {
     	final String name = "Quit";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					System.exit(0);
 				}
@@ -771,7 +771,7 @@ public class Main extends EventSource {
     private Action actionFirst() {
 		final String name = "First";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(1);
 				}
@@ -784,7 +784,7 @@ public class Main extends EventSource {
     private Action actionNext() {
 		final String name = "Next";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(tilingCounter + 1);
 				}
@@ -797,7 +797,7 @@ public class Main extends EventSource {
     private Action actionPrevious() {
 		final String name = "Previous";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(tilingCounter - 1);
 				}
@@ -810,7 +810,7 @@ public class Main extends EventSource {
     private Action actionLast() {
 		final String name = "Last";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doTiling(documents.size());
 				}
@@ -823,7 +823,7 @@ public class Main extends EventSource {
     private Action actionJump() {
 		final String name = "Jump To...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final String input = getInput("Jump to tiling #:",
 									"3dt Jump To",
@@ -845,7 +845,7 @@ public class Main extends EventSource {
     private Action actionSearch() {
 		final String name = "Search...";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final String input = getInput(
 							"Find tiling by name pattern or number:",
@@ -887,7 +887,7 @@ public class Main extends EventSource {
     private Action actionDualize() {
 		final String name = "Dualize";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final DSymbol ds = doc().getSymbol();
 					if (ds.equals(ds.dual())) {
@@ -914,7 +914,7 @@ public class Main extends EventSource {
     private Action actionSymmetrize() {
 		final String name = "Max. Symmetry";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final DSymbol ds = doc().getSymbol();
 					if (ds.isMinimal()) {
@@ -942,7 +942,7 @@ public class Main extends EventSource {
     private Action actionRecolor() {
 		final String name = "Recolor";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     doc().randomlyRecolorTiles();
                     suspendRendering();
@@ -958,7 +958,7 @@ public class Main extends EventSource {
     private Action actionUpdateNet() {
 		final String name = "Update Net";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final List<DisplayList.Item> tiles =
 						new ArrayList<DisplayList.Item>();
@@ -982,7 +982,7 @@ public class Main extends EventSource {
     private Action actionGrowNet() {
 		final String name = "Grow Net";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					final List<DisplayList.Item> nodes =
 						new LinkedList<DisplayList.Item>();
@@ -1017,7 +1017,7 @@ public class Main extends EventSource {
     private Action actionClearNet() {
 		final String name = "Clear Net";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
                     suspendRendering();
                     doc().removeAllEdges();
@@ -1032,7 +1032,7 @@ public class Main extends EventSource {
     private Action actionAddTile() {
 		final String name = "Add Tile";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null && selectedFace >= 0) {
 						doc().addNeighbor(selectedItem, selectedFace);
@@ -1047,7 +1047,7 @@ public class Main extends EventSource {
     private Action actionRemoveTile() {
 		final String name = "Remove Tile";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().remove(selectedItem);
@@ -1062,7 +1062,7 @@ public class Main extends EventSource {
     private Action actionRemoveTileClass() {
 		final String name = "Remove Tile Class";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().removeKind(selectedItem);
@@ -1077,7 +1077,7 @@ public class Main extends EventSource {
     private Action actionAddFacetOutline() {
     	final String name = "Add Facet Outline to Net";
     	if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null && selectedFace >= 0) {
 						makeFacetOutline(selectedItem.getTile().facet(
@@ -1092,7 +1092,7 @@ public class Main extends EventSource {
     private Action actionAddTileOutline() {
     	final String name = "Add Tile Outline to Net";
     	if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						makeTileOutline(selectedItem.getTile(),
@@ -1111,7 +1111,7 @@ public class Main extends EventSource {
     private Action actionRecolorTileClass() {
     	final String name = "Recolor Tile Class";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null) {
 						return;
@@ -1136,7 +1136,7 @@ public class Main extends EventSource {
     private Action actionRecolorTile() {
     	final String name = "Recolor Tile";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null) {
 						return;
@@ -1163,7 +1163,7 @@ public class Main extends EventSource {
     private Action actionUncolorTile() {
     	final String name = "Uncolor Tile";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 	                    suspendRendering();
@@ -1180,7 +1180,7 @@ public class Main extends EventSource {
     private Action actionRecolorFacetClass() {
     	final String name = "Recolor Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null || selectedFace < 0) {
 						return;
@@ -1214,7 +1214,7 @@ public class Main extends EventSource {
     private Action actionUncolorFacetClass() {
     	final String name = "Uncolor Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null || selectedFace < 0) {
 						return;
@@ -1232,7 +1232,7 @@ public class Main extends EventSource {
     private Action actionHideFacetClass() {
     	final String name = "Hide Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null || selectedFace < 0) {
 						return;
@@ -1250,7 +1250,7 @@ public class Main extends EventSource {
     private Action actionShowAllInTile() {
     	final String name = "Show All Facets in Tile";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						showAllInTile(selectedItem.getTile());
@@ -1267,7 +1267,7 @@ public class Main extends EventSource {
     private Action actionAddEndNodes() {
 		final String name = "Add End Nodes";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().addIncident(selectedItem);
@@ -1282,7 +1282,7 @@ public class Main extends EventSource {
     private Action actionRemoveEdge() {
 		final String name = "Remove Edge";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().remove(selectedItem);
@@ -1297,7 +1297,7 @@ public class Main extends EventSource {
     private Action actionConnectNode() {
 		final String name = "Connect Node";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						if (doc().connectToExisting(selectedItem) == 0) {
@@ -1316,7 +1316,7 @@ public class Main extends EventSource {
     private Action actionRemoveNode() {
 		final String name = "Remove Node";
 		if (ActionRegistry.instance().get(name) == null) {
-			ActionRegistry.instance().put(new AbstractJrAction(name) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().remove(selectedItem);
@@ -1331,7 +1331,7 @@ public class Main extends EventSource {
     private Action actionEncompass() {
     	final String name = "Fit To Scene";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
                     encompass();
                 }
@@ -1344,7 +1344,7 @@ public class Main extends EventSource {
     private Action actionViewAlong() {
     	final String name = "View along...";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				final String input = getInput("View along (x y z):",
     						"3dt Viewing Direction", "");
@@ -1377,7 +1377,7 @@ public class Main extends EventSource {
     private Action actionSetUpVector() {
     	final String name = "Upward vector...";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				final String input = getInput(
 									"Vector to point upward (x y z):",
@@ -1406,7 +1406,7 @@ public class Main extends EventSource {
 	private Action actionXView() {
     	final String name = "View along X";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 0, 0), new Vector(0, 0, 1));
 					encompass();
@@ -1420,7 +1420,7 @@ public class Main extends EventSource {
 	private Action actionYView() {
     	final String name = "View along Y";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(0, 1, 0), new Vector(0, 0, 1));
 					encompass();
@@ -1434,7 +1434,7 @@ public class Main extends EventSource {
 	private Action actionZView() {
     	final String name = "View along Z";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(0, 0, 1), new Vector(0, 1, 0));
 					encompass();
@@ -1448,7 +1448,7 @@ public class Main extends EventSource {
 	private Action action011View() {
     	final String name = "View along 011";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(0, 1, 1), new Vector(0, 0, 1));
 					encompass();
@@ -1462,7 +1462,7 @@ public class Main extends EventSource {
 	private Action action101View() {
     	final String name = "View along 101";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 0, 1), new Vector(0, 0, 1));
 					encompass();
@@ -1476,7 +1476,7 @@ public class Main extends EventSource {
 	private Action action110View() {
     	final String name = "View along 110";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 1, 0), new Vector(0, 0, 1));
 					encompass();
@@ -1490,7 +1490,7 @@ public class Main extends EventSource {
 	private Action action111View() {
     	final String name = "View along 111";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 1, 1), new Vector(0, 0, 1));
 					encompass();
@@ -1504,7 +1504,7 @@ public class Main extends EventSource {
 	private Action actionRotateRight() {
     	final String name = "Rotate Right";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 1, 0 },
 									ui.getRotationStep() * Math.PI / 180.0);
@@ -1518,7 +1518,7 @@ public class Main extends EventSource {
 	private Action actionRotateLeft() {
     	final String name = "Rotate Left";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 1, 0 },
     						-ui.getRotationStep() * Math.PI / 180.0);
@@ -1532,7 +1532,7 @@ public class Main extends EventSource {
 	private Action actionRotateUp() {
     	final String name = "Rotate Up";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 1, 0, 0 },
     						-ui.getRotationStep() * Math.PI / 180.0);
@@ -1546,7 +1546,7 @@ public class Main extends EventSource {
 	private Action actionRotateDown() {
     	final String name = "Rotate Down";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 1, 0, 0 },
     						ui.getRotationStep() * Math.PI / 180.0);
@@ -1560,7 +1560,7 @@ public class Main extends EventSource {
 	private Action actionRotateClockwise() {
     	final String name = "Rotate Clockwise";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 0, 1 },
     						-ui.getRotationStep() * Math.PI / 180.0);
@@ -1575,7 +1575,7 @@ public class Main extends EventSource {
 	private Action actionRotateCounterClockwise() {
     	final String name = "Rotate Counter-Clockwise";
     	if (ActionRegistry.instance().get(name) == null) {
-    		ActionRegistry.instance().put(new AbstractJrAction(name) {
+    		ActionRegistry.instance().put(new AbstractAction(name) {
     			public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 0, 1 },
     						ui.getRotationStep() * Math.PI / 180.0);

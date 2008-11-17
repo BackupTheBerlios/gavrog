@@ -20,10 +20,9 @@ package org.gavrog.apps._3dt;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.KeyStroke;
+import javax.swing.AbstractAction;
 import javax.swing.Action;
-
-import de.jreality.ui.viewerapp.actions.AbstractJrAction;
+import javax.swing.KeyStroke;
 
 /**
  * @author Olaf Delgado
@@ -32,8 +31,8 @@ import de.jreality.ui.viewerapp.actions.AbstractJrAction;
 public class ActionRegistry {
 	private static ActionRegistry _instance = null;
 	
-	private Map<String, AbstractJrAction> actions =
-		new HashMap<String, AbstractJrAction>();
+	private Map<String, AbstractAction> actions =
+		new HashMap<String, AbstractAction>();
 	
 	private ActionRegistry() {}
 	
@@ -44,14 +43,14 @@ public class ActionRegistry {
 		return _instance;
 	}
 	
-	public AbstractJrAction get(final String name) {
+	public AbstractAction get(final String name) {
 		return actions.get(name);
 	}
 	
-	public void put(final AbstractJrAction action,
+	public void put(final AbstractAction action,
 			final String desc, final KeyStroke key) {
-		action.setShortDescription(desc);
-		action.setAcceleratorKey(key);
+		action.putValue(AbstractAction.SHORT_DESCRIPTION, desc);
+		action.putValue(AbstractAction.ACCELERATOR_KEY, key);
 		actions.put(String.valueOf(action.getValue(Action.NAME)), action);
 	}
 }
