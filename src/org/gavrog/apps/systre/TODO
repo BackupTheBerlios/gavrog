@@ -1,17 +1,16 @@
 =====================================================
 
-In progress:
+Open bugs:
 
 (none)
 
 =====================================================
 
-Open bugs:
-
-(none)
-
 Planned/requested features:
 
+- Check for edge intersections and similar problems.
+- Compute vertex symbols.
+- If graph has collisions, try to refine anyway.
 - Make choice of output formats more self-explanatory.
 
 - Print parametric positions for nodes and edge centers.
@@ -19,10 +18,7 @@ Planned/requested features:
 - Introduce keyboard shortcuts.
 - Link to online databases.
 - Support more output options (e.g. CrystalMaker).
-- Check for edge intersections and similar problems.
-- If graph has collisions, try to refine anyway.
 - Plot the quotient graph.
-- Compute vertex symbols.
 - Report induced symmetries from "given" (or report none at all) for components.
 
 =====================================================
