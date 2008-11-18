@@ -2882,7 +2882,7 @@ public class Main extends EventSource {
         	options.add(label("(reduce in case of memory problems)",
 					BorderContainer.EAST));
 			options.add(separator());
-			options.add(label("Edges", BorderContainer.WEST));
+			options.add(label("Edges:", BorderContainer.WEST));
 			options.add(slider("Width", "edgeWidth", 0, 0.25, 0.05, 0.01,
 					0.01));
 			options.add(slider("Creasing", "edgeRoundingLevel", 0, 4, 1,
@@ -2958,12 +2958,12 @@ public class Main extends EventSource {
         try {
         	options.add(slider("Tile Size", "tileSize", 0, 1, 0.2, 0.05, 0.01));
             options.add(separator());
-            options.add(label("Unit Cell", BorderContainer.WEST));
+            options.add(label("Unit Cell:", BorderContainer.WEST));
             options.add(new OptionColorBox("Color", this, "unitCellColor"));
 			options.add(slider("Edge Width", "unitCellEdgeWidth", 0,
 					0.25, 0.05, 0.01, 0.01));
             options.add(separator());
-            options.add(label("Show", BorderContainer.WEST));
+            options.add(label("Show:", BorderContainer.WEST));
             options.add(new OptionCheckBox("Faces", this, "drawFaces"));
             options.add(new OptionCheckBox("Edges", this, "drawEdges"));
             options.add(new OptionCheckBox("Unit Cell", this, "showUnitCell"));
@@ -2991,7 +2991,7 @@ public class Main extends EventSource {
         	options.add(new OptionSliderBox("Rotation Step", ui, "rotationStep",
         			0, 30, 5, 1, 1));
             options.add(separator());
-            options.add(label("Viewer Size", BorderContainer.WEST));
+            options.add(label("Viewer Size:", BorderContainer.WEST));
         	options.add(new OptionInputBox("Width", ui, "viewerWidth"));
 			options.add(new OptionInputBox("Height", ui, "viewerHeight"));
             options.add(separator());
@@ -3015,12 +3015,12 @@ public class Main extends EventSource {
         try {
             options.add(new OptionCheckBox("Show Net", this, "showNet"));
             options.add(separator());
-            options.add(label("Nodes", BorderContainer.WEST));
+            options.add(label("Nodes:", BorderContainer.WEST));
             options.add(new OptionColorBox("Color", this, "netNodeColor"));
             options.add(slider("Radius", "netNodeRadius", 0, 1, 0.2,
 					0.05, 0.01));
             options.add(separator());
-            options.add(label("Edges", BorderContainer.WEST));
+            options.add(label("Edges:", BorderContainer.WEST));
             options.add(new OptionColorBox("Color", this, "netEdgeColor"));
             options.add(slider("Radius", "netEdgeRadius", 0, 0.5, 0.1,
 					0.02, 0.01));
@@ -3045,18 +3045,18 @@ public class Main extends EventSource {
     private Widget optionsMaterial() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-        	options.add(label("Diffuse Reflection", BorderContainer.WEST));
+        	options.add(label("Diffuse Reflection:", BorderContainer.WEST));
 			options.add(slider("Strength", "diffuseCoefficient",
 					0, 1, 0.2, 0.05, 0.01));
             options.add(separator());
-        	options.add(label("Specular Reflection", BorderContainer.WEST));
+        	options.add(label("Specular Reflection:", BorderContainer.WEST));
 			options.add(new OptionColorBox("Color", this, "specularColor"));
 			options.add(slider("Strength", "specularCoefficient",
 					0, 1, 0.2, 0.05, 0.01));
 			options.add(slider("Shininess", "specularExponent",
 					0, 100, 20, 5, 1));
             options.add(separator());
-        	options.add(label("Ambient Illumination", BorderContainer.WEST));
+        	options.add(label("Ambient Illumination:", BorderContainer.WEST));
 			options.add(new OptionColorBox("Color", this, "ambientColor"));
 			options.add(slider("Strength", "ambientCoefficient",
 					0, 1, 0.2, 0.05, 0.01));
@@ -3121,7 +3121,7 @@ public class Main extends EventSource {
 			options.add(new OptionColorBox("Background Color", this,
 					"backgroundColor"));
             options.add(separator());
-            options.add(label("Fog", BorderContainer.WEST));
+            options.add(label("Fog:", BorderContainer.WEST));
 			options.add(new OptionCheckBox("Enable", this, "useFog"));
 			options.add(new OptionInputBox("Density", this, "fogDensity"));
 			options.add(new OptionCheckBox("To Background", this,
