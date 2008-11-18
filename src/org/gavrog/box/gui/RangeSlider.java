@@ -82,9 +82,9 @@ public class RangeSlider extends SliderBase {
 		g.setColor(new Color(0.0f, 0.4f, 0.6f));
 		final String s;
 		if (lo == (int) lo && hi == (int) hi) {
-			s = String.format("%d|%d", (int) lo, (int) hi);
+			s = String.format("%d:%d", (int) lo, (int) hi);
 		} else {
-			s = String.format("%.2f|%.2f", lo, hi);
+			s = String.format("%.2f:%.2f", lo, hi);
 		}
 		g.drawString(s, sliderWidth() + 8, 10);
 	}
