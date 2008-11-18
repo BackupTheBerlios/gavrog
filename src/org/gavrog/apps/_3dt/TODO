@@ -10,6 +10,7 @@ Open bugs:
 Planned/requested features:
 
 - Undo/Redo.
+- Extend to support nets in all reasonable ways.
 - Allow separate colors and visibility for individual faces.
 - Recoloring and changing size of individual and kinds of vertices.
 - Option to keep the unit cell and coordinates used in the input.
