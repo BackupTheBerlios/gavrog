@@ -53,7 +53,7 @@ public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
-    final private static boolean LOGGING = true;
+    final private static boolean LOGGING = false;
 
     // --- the input symbol
     final DelaneySymbol original;
@@ -75,8 +75,10 @@ public class CombineTiles extends IteratorAdapter {
     private int size;
     private Map<Object, Pair> signatures;
 
-    // --- generation tree location at which to resume an old computation
+    // --- point within the search tree at which to resume an old computation
 	private int resume[] = new int[] {};
+	
+	// --- the current progress towards the resume point
 	private int resume_level = 0;
 	private int resume_stack_level = 0;
 	private boolean resume_point_reached = false;
@@ -236,9 +238,10 @@ public class CombineTiles extends IteratorAdapter {
             if (LOGGING) {
                 System.out.println("#  found potential move " + move);
             }
-            final boolean incr_level = (stack.size() == resume_stack_level &&
-            		(resume.length <= resume_level ||
-            				move.choiceNr == resume[resume_level]));
+            final boolean incr_level =
+            	(stack.size() == resume_stack_level
+            		&& (resume.length <= resume_level
+        				|| move.choiceNr == resume[resume_level]));
             final boolean success = performMove(move);
             if (incr_level) {
             	resume_stack_level = stack.size();
@@ -267,17 +270,17 @@ public class CombineTiles extends IteratorAdapter {
                 				return new DSymbol(this.current);
                 			}
                 		}
-                    } else if (resume_point_reached ||
+                	} else if (resume_point_reached ||
                     		stack.size() == resume_stack_level) {
                     	this.stack.addLast(new Move(D, 0, -1, -1, true, 0));
                     } else if (LOGGING) {
                     	System.out.println("#  higher branches are skipped");
                     }
-                 } else if (LOGGING) {
-                        System.out.println("#  result of move is not canonical");
-                 }
+                } else if (LOGGING) {
+                	System.out.println("#  result of move is not canonical");
+                }
             } else if (LOGGING) {
-                    System.out.println("#  move was rejected");
+            	System.out.println("#  move was rejected");
             }
         }
     }
@@ -749,10 +752,31 @@ public class CombineTiles extends IteratorAdapter {
 	}
 
     public static void main(String[] args) {
-        int i = 0;
-        final DSymbol ds = new DSymbol(args[i]);
-        final Stopwatch timer = new Stopwatch();
+        DSymbol ds;
+        boolean verbose = false;
+        int i;
+        int r[] = new int[] {};
         
+		i = 0;
+		while (i < args.length && args[i].startsWith("-")) {
+			if (args[i].equals("-v")) {
+				verbose = !verbose;
+			} else if (args[i].equals("-r")) {
+				final String tmp[] = args[++i].split("-");
+				r = new int[tmp.length];
+				for (int k = 0; k < tmp.length; ++k) {
+					r[k] = Integer.parseInt(tmp[k]);
+				}
+			}
+			++i;
+		}
+		if (i < args.length) {
+			 ds = new DSymbol(args[i]);
+		} else {
+			throw new RuntimeException("no input symbol given");
+		}
+		
+        final Stopwatch timer = new Stopwatch();
         final CombineTiles iter = new CombineTiles(ds) {
         	protected void handleCheckpoint(final boolean isOld) {
         		timer.reset();
@@ -760,7 +784,7 @@ public class CombineTiles extends IteratorAdapter {
 						isOld ? "Old " : "", getCheckpoint());
         	}
         };
-        iter.setResumePoint(new int[] { 2, 1 });
+        iter.setResumePoint(r);
 
         int count = 0;
         try {
