@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@ import java.util.NoSuchElementException;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
+import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.IndexList;
-import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
 
@@ -59,18 +59,18 @@ public class CombineTiles extends IteratorAdapter {
 
     // --- precomputed or extracted data used by the algorithm
     final private int dim;
-    final private List componentTypes;
-    final private Map invarToIndex = new HashMap();
-    final private List indexToRepMap = new ArrayList();
+    final private List<List<DSymbol>> componentTypes;
+    final private Map<List, Integer> invarToIndex = new HashMap<List, Integer>();
+    final private List<Map> indexToRepMap = new ArrayList<Map>();
 
     // --- the current state
     private final DynamicDSymbol current;
-    private final LinkedList stack;
-    private final List unused;
+    private final LinkedList<Move> stack;
+    private final List<Integer> unused;
 
     // --- auxiliary information applying to the current state
     private int size;
-    private Map signatures;
+    private Map<Object, Pair> signatures;
 
     /**
      * The instances of this class represent individual moves of setting
@@ -92,7 +92,8 @@ public class CombineTiles extends IteratorAdapter {
             this.isChoice = isChoice;
         }
 
-        public String toString() {
+        @Override
+		public String toString() {
             return "Move(" + element + ", " + neighbor + ", " + newType + ", "
                     + newForm + ", " + isChoice + ")";
         }
@@ -133,11 +134,12 @@ public class CombineTiles extends IteratorAdapter {
 
         // --- compute auxiliary information
         final DSymbol canonical = (DSymbol) ds.canonical();
-        final Map multiplicities = componentMultiplicities(canonical);
-        final List types = new ArrayList(multiplicities.keySet());
+        final Map<DelaneySymbol, Integer> multiplicities =
+        	componentMultiplicities(canonical);
+        final List types = new ArrayList<DelaneySymbol>(multiplicities.keySet());
         Collections.sort(types);
-        final List forms = new ArrayList();
-        final List free = new ArrayList();
+        final List<List<DSymbol>> forms = new ArrayList<List<DSymbol>>();
+        final List<Integer> free = new ArrayList<Integer>();
         for (int i = 0; i < types.size(); ++i) {
             final DelaneySymbol type = (DelaneySymbol) types.get(i);
             forms.add(Collections.unmodifiableList(subCanonicalForms(type)));
@@ -152,24 +154,22 @@ public class CombineTiles extends IteratorAdapter {
 
         // --- initialize the state
         this.size = 0;
-        this.signatures = new HashMap();
-        this.stack = new LinkedList();
-        this.unused = new ArrayList(free);
+        this.signatures = new HashMap<Object, Pair>();
+        this.stack = new LinkedList<Move>();
+        this.unused = new ArrayList<Integer>(free);
         this.current = new DynamicDSymbol(this.dim);
 
         // --- add the component with the smallest invariant to the current
         // symbol
-        final DSymbol start = (DSymbol) ((List) this.componentTypes.get(0))
-                .get(0);
+        final DSymbol start = this.componentTypes.get(0).get(0);
         this.current.append((DSymbol) start.canonical()); // --- MUST be made
         // canonical!
-        this.unused.set(0, new Integer(((Integer) this.unused.get(0))
-                .intValue() - 1));
+        this.unused.set(0, this.unused.get(0) - 1);
         this.size = this.current.size();
         this.signatures = elementSignatures(this.current, this.dim - 2);
 
         // --- push a dummy move on the stack as a fallback
-        stack.addLast(new Move(new Integer(1), new Integer(0), 0, 0, true));
+        stack.addLast(new Move(1, 0, 0, 0, true));
     }
 
     /**
@@ -190,7 +190,8 @@ public class CombineTiles extends IteratorAdapter {
      * 
      * @return the next symbol, if any.
      */
-    protected Object findNext() throws NoSuchElementException {
+    @Override
+	protected Object findNext() throws NoSuchElementException {
         if (LOGGING) {
             System.out.println("findNext(): stack size = " + this.stack.size());
         }
@@ -230,8 +231,7 @@ public class CombineTiles extends IteratorAdapter {
                             }
                         }
                     } else {
-                        this.stack.addLast(new Move(D, new Integer(0), -1, -1,
-                                true));
+                        this.stack.addLast(new Move(D, 0, -1, -1, true));
                     }
                 } else {
                     if (LOGGING) {
@@ -261,7 +261,7 @@ public class CombineTiles extends IteratorAdapter {
             if (stack.size() == 0) {
                 return null;
             }
-            last = (Move) this.stack.removeLast();
+            last = this.stack.removeLast();
 
             if (LOGGING) {
                 System.out.println("Undoing " + last);
@@ -269,16 +269,14 @@ public class CombineTiles extends IteratorAdapter {
             if (this.current.hasElement(last.neighbor)) {
                 this.current.undefineOp(this.dim, last.element);
             }
-            if (last.newType >= 0 && ((Integer) last.neighbor).intValue() > 0) {
+            if (last.newType >= 0 && (Integer) last.neighbor > 0) {
                 final Iterator disposable = this.current.orbit(idcs,
                         last.neighbor);
                 while (disposable.hasNext()) {
                     this.current.removeElement(disposable.next());
                 }
                 this.current.renumber();
-                this.unused.set(last.newType,
-                        new Integer(((Integer) this.unused.get(last.newType))
-                                .intValue() + 1));
+                this.unused.set(last.newType, this.unused.get(last.newType) + 1);
                 this.size = this.current.size();
                 this.signatures = elementSignatures(this.current, this.dim - 2);
             }
@@ -298,10 +296,10 @@ public class CombineTiles extends IteratorAdapter {
         final Object sigD = this.signatures.get(D);
 
         // --- look for a neighbor in the curently connected portion
-        for (int E = ((Integer) choice.neighbor).intValue() + 1; E <= size; ++E) {
-            if (!this.current.definesOp(this.dim, new Integer(E))
-                    && sigD.equals(this.signatures.get(new Integer(E)))) {
-                return new Move(choice.element, new Integer(E), -1, -1, true);
+        for (int E = (Integer) choice.neighbor + 1; E <= size; ++E) {
+            if (!this.current.definesOp(this.dim, E)
+                    && sigD.equals(this.signatures.get(E))) {
+                return new Move(choice.element, E, -1, -1, true);
             }
         }
 
@@ -309,14 +307,14 @@ public class CombineTiles extends IteratorAdapter {
         int type = Math.max(0, choice.newType);
         int form = Math.max(0, choice.newForm + 1);
         while (type < this.componentTypes.size()) {
-            if (((Integer) this.unused.get(type)).intValue() > 0) {
-                final List forms = (List) this.componentTypes.get(type);
+            if (this.unused.get(type) > 0) {
+                final List forms = this.componentTypes.get(type);
                 while (form < forms.size()) {
                     final DSymbol candidate = (DSymbol) forms.get(form);
                     final Map sigs = elementSignatures(candidate, this.dim - 2);
-                    if (sigD.equals(sigs.get(new Integer(1)))) {
-                        return new Move(choice.element, new Integer(
-                                this.size + 1), type, form, true);
+                    if (sigD.equals(sigs.get(1))) {
+                        return new Move(choice.element, this.size + 1, type,
+								form, true);
                     }
                     ++form;
                 }
@@ -343,12 +341,12 @@ public class CombineTiles extends IteratorAdapter {
         final DynamicDSymbol ds = this.current;
 
         // --- we maintain a queue of deductions, starting with the initial move
-        final LinkedList queue = new LinkedList();
+        final LinkedList<Move> queue = new LinkedList<Move>();
         queue.addLast(initial);
 
         while (queue.size() > 0) {
             // --- get some info on the next move in the queue
-            Move move = (Move) queue.removeFirst();
+            Move move = queue.removeFirst();
             final int type = move.newType;
             final int form = move.newForm;
             final Object D = move.element;
@@ -379,8 +377,7 @@ public class CombineTiles extends IteratorAdapter {
                 final DSymbol component = (DSymbol) ((List) this.componentTypes
                         .get(type)).get(form);
                 this.current.append(component);
-                this.unused.set(type, new Integer(((Integer) this.unused
-                        .get(type)).intValue() - 1));
+                this.unused.set(type, this.unused.get(type) - 1);
                 this.size = this.current.size();
                 this.signatures = elementSignatures(this.current, this.dim - 2);
             }
@@ -391,7 +388,7 @@ public class CombineTiles extends IteratorAdapter {
 
             // --- handle deductions or contradictions specified by a derived
             // class
-            final List extraDeductions = getExtraDeductions(ds, move);
+            final List<Move> extraDeductions = getExtraDeductions(ds, move);
             if (extraDeductions == null) {
                 return false;
             } else {
@@ -438,8 +435,7 @@ public class CombineTiles extends IteratorAdapter {
      */
     private boolean isCanonical() {
         final DSymbol flat = new DSymbol(this.current);
-        return flat.getMapToCanonical().get(new Integer(1)).equals(
-                new Integer(1));
+        return flat.getMapToCanonical().get(1).equals(1);
     }
 
     /**
@@ -450,14 +446,14 @@ public class CombineTiles extends IteratorAdapter {
      * @return the next unconnected element.
      */
     private Object nextFreeElement(final Object element) {
-        int D = ((Integer) element).intValue();
+        int D = (Integer) element;
         do {
             if (++D > this.size) {
                 return null;
             }
-        } while (this.current.definesOp(this.dim, new Integer(D)));
+        } while (this.current.definesOp(this.dim, D));
 
-        return new Integer(D);
+        return D;
     }
 
     /**
@@ -467,11 +463,12 @@ public class CombineTiles extends IteratorAdapter {
      * @param dim
      * @return a map assigning signatures to the symbol's elements.
      */
-    public Map elementSignatures(final DelaneySymbol ds, final int dim) {
-        final Map signatures = new HashMap();
-        final List idcs = new ArrayList();
+    public Map<Object, Pair> elementSignatures(final DelaneySymbol ds,
+			final int dim) {
+        final Map<Object, Pair> signatures = new HashMap<Object, Pair>();
+        final List<Integer> idcs = new ArrayList<Integer>();
         for (int i = 0; i <= dim; ++i) {
-            idcs.add(new Integer(i));
+            idcs.add(i);
         }
 
         for (final Iterator reps = ds.orbitReps(idcs); reps
@@ -481,12 +478,12 @@ public class CombineTiles extends IteratorAdapter {
             final List invariant = face.invariant();
             if (!this.invarToIndex.containsKey(invariant)) {
                 final int i = this.indexToRepMap.size();
-                this.invarToIndex.put(invariant, new Integer(i));
+                this.invarToIndex.put(invariant, i);
                 final DSymbol canon = (DSymbol) face.canonical();
                 this.indexToRepMap.add(mapToFirstRepresentatives(canon));
             }
-            final Integer i = (Integer) this.invarToIndex.get(invariant);
-            final Map toRep = (Map) this.indexToRepMap.get(i.intValue());
+            final Integer i = this.invarToIndex.get(invariant);
+            final Map toRep = this.indexToRepMap.get(i);
             final Map toCanon = face.getMapToCanonical();
             for (final Iterator iter = face.elements(); iter.hasNext();) {
                 final Object E = iter.next();
@@ -507,18 +504,19 @@ public class CombineTiles extends IteratorAdapter {
      * @param ds the input symbol.
      * @return a map assigning to each component type the number of occurences.
      */
-    public static Map componentMultiplicities(final DelaneySymbol ds) {
-        final Map type2number = new HashMap();
+    public static Map<DelaneySymbol, Integer> componentMultiplicities(
+			final DelaneySymbol ds) {
+        final Map<DelaneySymbol, Integer> type2number =
+        	new HashMap<DelaneySymbol, Integer>();
         final List idcs = new IndexList(ds);
         for (final Iterator reps = ds.orbitReps(idcs); reps
                 .hasNext();) {
             final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next())
                     .canonical();
             if (type2number.containsKey(sub)) {
-                type2number.put(sub, new Integer(((Integer) type2number
-                        .get(sub)).intValue() + 1));
+                type2number.put(sub, type2number .get(sub) + 1);
             } else {
-                type2number.put(sub, new Integer(1));
+                type2number.put(sub, 1);
             }
         }
         return type2number;
@@ -531,9 +529,9 @@ public class CombineTiles extends IteratorAdapter {
      * @param ds the symbol to use.
      * @return the list of first representatives.
      */
-    public static List firstRepresentatives(final DelaneySymbol ds) {
+    public static List<Object> firstRepresentatives(final DelaneySymbol ds) {
         final Map map = mapToFirstRepresentatives(ds);
-        final List res = new ArrayList();
+        final List<Object> res = new ArrayList<Object>();
         for (final Iterator elms = ds.elements(); elms.hasNext();) {
             final Object D = elms.next();
             if (D.equals(map.get(D))) {
@@ -551,12 +549,13 @@ public class CombineTiles extends IteratorAdapter {
      * @param ds the symbol to use.
      * @return the map from elements to first representatives.
      */
-    public static Map mapToFirstRepresentatives(final DelaneySymbol ds) {
+    public static Map<Object, Object> mapToFirstRepresentatives(
+			final DelaneySymbol ds) {
         if (!ds.isConnected()) {
             throw new UnsupportedOperationException("symbol must be connected");
         }
 
-        final Map res = new HashMap();
+        final Map<Object, Object> res = new HashMap<Object, Object>();
         final Iterator elms = ds.elements();
         if (elms.hasNext()) {
             final Object first = elms.next();
@@ -601,7 +600,7 @@ public class CombineTiles extends IteratorAdapter {
      * @param ds the input symbol.
      * @return the list of subcanonical forms.
      */
-    public static List subCanonicalForms(final DelaneySymbol ds) {
+    public static List<DSymbol> subCanonicalForms(final DelaneySymbol ds) {
         if (!ds.isConnected()) {
             throw new UnsupportedOperationException("symbol must be connected");
         }
@@ -610,7 +609,7 @@ public class CombineTiles extends IteratorAdapter {
                     "symbol must have indices 0..dim");
         }
 
-        final List res = new LinkedList();
+        final List<DSymbol> res = new LinkedList<DSymbol>();
 
         final int size = ds.size();
         final int dim = ds.dim();
@@ -622,7 +621,8 @@ public class CombineTiles extends IteratorAdapter {
             final Traversal trav = new Traversal(ds, idcs, seed, true);
 
             // --- elements will be numbered in the order they appear
-            final HashMap old2new = new HashMap();
+            final HashMap<Object, Integer> old2new =
+            	new HashMap<Object, Integer>();
 
             // --- follow the traversal and assign the new numbers
             int nextE = 1;
@@ -632,10 +632,10 @@ public class CombineTiles extends IteratorAdapter {
                 final Object D = e.getElement();
 
                 // --- determine a running number E for the target element D
-                final Integer tmp = (Integer) old2new.get(D);
+                final Integer tmp = old2new.get(D);
                 if (tmp == null) {
                     // --- element D is encountered for the first time
-                    old2new.put(D, new Integer(nextE));
+                    old2new.put(D, nextE);
                     ++nextE;
                 }
             }
@@ -646,9 +646,9 @@ public class CombineTiles extends IteratorAdapter {
 
             for (final Iterator elms = ds.elements(); elms.hasNext();) {
                 final Object E = elms.next();
-                final int D = ((Integer) old2new.get(E)).intValue();
+                final int D = old2new.get(E);
                 for (int i = 0; i <= dim; ++i) {
-                    op[i][D] = ((Integer) old2new.get(ds.op(i, E))).intValue();
+                    op[i][D] = old2new.get(ds.op(i, E));
                     if (i < dim) {
                         v[i][D] = ds.v(i, i + 1, E);
                     }
@@ -671,9 +671,10 @@ public class CombineTiles extends IteratorAdapter {
      * @return the list of deductions (may be empty) or null in case of a
      *         contradiction.
      */
-    protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
-        return new ArrayList();
-    }
+    protected List<Move> getExtraDeductions(final DelaneySymbol ds,
+			final Move move) {
+		return new ArrayList<Move>();
+	}
 
     public static void main(String[] args) {
         int i = 0;

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ public class TestCombineTiles extends TestCase {
         final DSymbol ds = new DSymbol("4:2 4,3 2 4,2 4:4,4");
         final List forms = CombineTiles.subCanonicalForms(ds);
         assertEquals(2, forms.size());
-        final List strings = new LinkedList();
+        final List<String> strings = new LinkedList<String>();
         strings.add(forms.get(0).toString());
         strings.add(forms.get(1).toString());
         assertTrue(strings.contains("<1.1:4:2 4,3 2 4,2 4:4,4>"));
