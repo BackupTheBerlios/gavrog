@@ -235,7 +235,7 @@ public class FrankKasperExtended extends TileKTransitive {
 						return null;
 					} else if (r == 6) {
 						final Object A = cuts.get(0);
-						out.add(new Move(A, A, -1, -1, false));
+						out.add(new Move(A, A, -1, -1, false, 0));
 					}
 					break;
 				case 2:
@@ -244,7 +244,7 @@ public class FrankKasperExtended extends TileKTransitive {
 					} else if (r == 12) {
 						final Object A = cuts.get(0);
 						final Object B = cuts.get(1);
-						out.add(new Move(A, B, -1, -1, false));
+						out.add(new Move(A, B, -1, -1, false, 0));
 					}
 					break;
 				default:

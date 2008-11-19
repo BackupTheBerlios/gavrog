@@ -28,6 +28,7 @@ import java.util.NoSuchElementException;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.DSPair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -52,7 +53,7 @@ public class CombineTiles extends IteratorAdapter {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
-    final private static boolean LOGGING = false;
+    final private static boolean LOGGING = true;
 
     // --- the input symbol
     final DelaneySymbol original;
@@ -74,6 +75,12 @@ public class CombineTiles extends IteratorAdapter {
     private int size;
     private Map<Object, Pair> signatures;
 
+    // --- generation tree location at which to resume an old computation
+	private int resume[] = new int[] {};
+	private int resume_level = 0;
+	private int resume_stack_level = 0;
+	private boolean resume_point_reached = false;
+
     /**
      * The instances of this class represent individual moves of setting
      * d-neighbor values. These become the entries of the trial stack.
@@ -84,21 +91,23 @@ public class CombineTiles extends IteratorAdapter {
         final public int newType;
         final public int newForm;
         final public boolean isChoice;
+        final public int choiceNr;
 
         public Move(final Object element, final Object neighbor, int newType,
-                int newForm, final boolean isChoice) {
+                int newForm, final boolean isChoice, int choiceNr) {
             this.element = element;
             this.neighbor = neighbor;
             this.newType = newType;
             this.newForm = newForm;
             this.isChoice = isChoice;
+            this.choiceNr = choiceNr;
         }
 
         @Override
 		public String toString() {
-            return "Move(" + element + ", " + neighbor + ", " + newType + ", "
-                    + newForm + ", " + isChoice + ")";
-        }
+			return String.format("Move(%s, %s, %d, %d, %s, %d)", element,
+					neighbor, newType, newForm, isChoice, choiceNr);
+		}
     }
 
     /**
@@ -150,7 +159,7 @@ public class CombineTiles extends IteratorAdapter {
             forms.add(Collections.unmodifiableList(subCanonicalForms(type)));
             free.add(multiplicities.get(type));
             if (LOGGING) {
-                System.out.println(free.get(i) + " copies and "
+                System.out.println("# " + free.get(i) + " copies and "
                         + forms.get(i).size() + " forms for " + type
                         + " with invariant " + type.invariant() + "\n");
             }
@@ -175,7 +184,7 @@ public class CombineTiles extends IteratorAdapter {
         this.signatures = elementSignatures(this.current, this.dim - 2);
 
         // --- push a dummy move on the stack as a fallback
-        stack.addLast(new Move(1, 0, 0, 0, true));
+        stack.addLast(new Move(1, 0, 0, 0, true, 0));
     }
 
     /**
@@ -199,57 +208,112 @@ public class CombineTiles extends IteratorAdapter {
     @Override
 	protected Object findNext() throws NoSuchElementException {
         if (LOGGING) {
-            System.out.println("findNext(): stack size = " + this.stack.size());
+            System.out.println("#findNext(): stack size = " + this.stack.size());
         }
         while (true) {
             final Move choice = undoLastChoice();
             if (LOGGING) {
-                System.out.println("  last choice was " + choice);
-                System.out.println("  current symbol:\n"
-                        + this.current.tabularDisplay());
+                System.out.println("#  last choice was " + choice);
+                System.out.println(("#  current symbol:\n" + this.current
+						.tabularDisplay()).replaceAll("\\n", "\n#  "));
             }
             if (choice == null) {
                 throw new NoSuchElementException();
             }
+            if (!resume_point_reached && stack.size() < resume_stack_level) {
+            	resume_point_reached = true;
+            	if (LOGGING) {
+            		System.out.println("#  resume point reached");
+            	}
+            }
             final Move move = nextMove(choice);
             if (move == null) {
                 if (LOGGING) {
-                    System.out.println("  no potential move");
+                    System.out.println("#  no potential move");
                 }
                 continue;
             }
             if (LOGGING) {
-                System.out.println("  found potential move " + move);
+                System.out.println("#  found potential move " + move);
             }
-            if (performMove(move)) {
+            final boolean incr_level = (stack.size() == resume_stack_level &&
+            		(resume.length <= resume_level ||
+            				move.choiceNr == resume[resume_level]));
+            final boolean success = performMove(move);
+            if (incr_level) {
+            	resume_stack_level = stack.size();
+            	resume_level += 1;
+            	if (LOGGING) {
+            		System.out.format("#  resume level is %d at stack level %d\n",
+            				resume_level, resume_stack_level);
+            	}
+            }
+            if (success) {
                 if (LOGGING) {
-                    System.out.println("  new symbol after move:\n"
-                            + this.current.tabularDisplay());
-                }
+					System.out.println(("#  new symbol after move:\n" +
+							this.current.tabularDisplay()).
+							replaceAll("\\n","\n#  "));
+				}
                 if (isCanonical()) {
-                    final Object D = nextFreeElement(choice.element);
-                    if (D == null) {
-                        if (this.size == this.original.size()) {
-                            final DSymbol ds = new DSymbol(this.current);
-                            if (this.dim != 3
-                                    || Utils.mayBecomeLocallyEuclidean3D(ds)) {
-                                return new DSymbol(this.current);
-                            }
-                        }
-                    } else {
-                        this.stack.addLast(new Move(D, 0, -1, -1, true));
+                	final Object D = nextFreeElement(choice.element);
+                	if (D == null) {
+                		if (LOGGING) {
+                			System.out.println("#  no more moves found");
+                		}
+                		if (this.size == this.original.size()) {
+                			final DSymbol ds = new DSymbol(this.current);
+                			if (this.dim != 3
+                					|| Utils.mayBecomeLocallyEuclidean3D(ds)) {
+                				return new DSymbol(this.current);
+                			}
+                		}
+                    } else if (resume_point_reached ||
+                    		stack.size() == resume_stack_level) {
+                    	this.stack.addLast(new Move(D, 0, -1, -1, true, 0));
+                    } else if (LOGGING) {
+                    	System.out.println("#  higher branches are skipped");
                     }
-                } else {
-                    if (LOGGING) {
-                        System.out.println("  result of move is not canonical");
-                    }
-                }
-            } else {
-                if (LOGGING) {
-                    System.out.println("  move was rejected");
-                }
+                 } else if (LOGGING) {
+                        System.out.println("#  result of move is not canonical");
+                 }
+            } else if (LOGGING) {
+                    System.out.println("#  move was rejected");
             }
         }
+    }
+
+    /**
+     * Override this to record program checkpoints.
+     * @param oldCheckpoint true if we're before the resume point
+     */
+    protected void handleCheckpoint(boolean oldCheckpoint) {
+    }
+    
+    /**
+     * Retreives the current checkpoint value as a string.
+     * 
+     * @return the current checkpoint.
+     */
+    public String getCheckpoint() {
+    	final StringBuffer buf = new StringBuffer(20);
+    	for (Move move: stack) {
+    		if (move.isChoice) {
+    			if (buf.length() > 0) {
+    				buf.append('-');
+    			}
+    			buf.append(move.choiceNr);
+    		}
+    	}
+    	return buf.toString();
+    }
+    
+    /**
+     * Sets the point in the search tree at which the algorithm should resume.
+     * 
+     * @param resume specifies the checkpoint to resume execution at.
+     */
+    public void setResumePoint(final int resume[]) {
+    	this.resume = resume.clone();
     }
 
     /**
@@ -270,7 +334,7 @@ public class CombineTiles extends IteratorAdapter {
             last = this.stack.removeLast();
 
             if (LOGGING) {
-                System.out.println("Undoing " + last);
+                System.out.println("#Undoing " + last);
             }
             if (this.current.hasElement(last.neighbor)) {
                 this.current.undefineOp(this.dim, last.element);
@@ -305,7 +369,8 @@ public class CombineTiles extends IteratorAdapter {
         for (int E = (Integer) choice.neighbor + 1; E <= size; ++E) {
             if (!this.current.definesOp(this.dim, E)
                     && sigD.equals(this.signatures.get(E))) {
-                return new Move(choice.element, E, -1, -1, true);
+                return new Move(choice.element, E, -1, -1, true,
+						choice.choiceNr + 1);
             }
         }
 
@@ -320,7 +385,7 @@ public class CombineTiles extends IteratorAdapter {
                     final Map sigs = elementSignatures(candidate, this.dim - 2);
                     if (sigD.equals(sigs.get(1))) {
                         return new Move(choice.element, this.size + 1, type,
-								form, true);
+								form, true, choice.choiceNr + 1);
                     }
                     ++form;
                 }
@@ -365,13 +430,13 @@ public class CombineTiles extends IteratorAdapter {
                     continue;
                 } else {
                     if (LOGGING) {
-                        System.out.println("Found contradiction at " + D
+                        System.out.println("#Found contradiction at " + D
                                 + "<-->" + E);
                     }
                     if (move == initial) {
                         // --- the initial move was impossible
                         throw new IllegalArgumentException(
-                                "Internal error: received illegal move.");
+                                "#Internal error: received illegal move.");
                     }
                     return false;
                 }
@@ -402,7 +467,7 @@ public class CombineTiles extends IteratorAdapter {
                     for (final Iterator iter = extraDeductions.iterator(); iter
                             .hasNext();) {
                         final Move ded = (Move) iter.next();
-                        System.err.println("    found extra deduction " + ded);
+                        System.out.println("#    found extra deduction " + ded);
                     }
                 }
                 queue.addAll(extraDeductions);
@@ -412,7 +477,7 @@ public class CombineTiles extends IteratorAdapter {
             if (!this.signatures.get(D).equals(this.signatures.get(E))) {
                 if (LOGGING) {
                     System.out
-                            .println("Bad connection " + D + "<-->" + E + ".");
+                            .println("#Bad connection " + D + "<-->" + E + ".");
                 }
                 return false;
             }
@@ -422,13 +487,14 @@ public class CombineTiles extends IteratorAdapter {
                 final Object Di = ds.op(i, D);
                 final Object Ei = ds.op(i, E);
                 if (LOGGING) {
-                    System.out.println("Found deduction " + Di + "<-->" + Ei);
+                    System.out.println("#Found deduction " + Di + "<-->" + Ei);
                 }
-                queue.addLast(new Move(Di, Ei, -1, -1, false));
+                queue.addLast(new Move(Di, Ei, -1, -1, false, 0));
             }
         }
 
         // --- everything went smoothly
+        handleCheckpoint(!resume_point_reached);
         return true;
     }
 
@@ -685,7 +751,16 @@ public class CombineTiles extends IteratorAdapter {
     public static void main(String[] args) {
         int i = 0;
         final DSymbol ds = new DSymbol(args[i]);
-        final Iterator iter = new CombineTiles(ds);
+        final Stopwatch timer = new Stopwatch();
+        
+        final CombineTiles iter = new CombineTiles(ds) {
+        	protected void handleCheckpoint(final boolean isOld) {
+        		timer.reset();
+        		System.out.format("#@@@ %sCheckpoint %s\n",
+						isOld ? "Old " : "", getCheckpoint());
+        	}
+        };
+        iter.setResumePoint(new int[] { 2, 1 });
 
         int count = 0;
         try {
@@ -697,6 +772,6 @@ public class CombineTiles extends IteratorAdapter {
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
-        System.err.println("produced " + count + " symbols");
+        System.out.println("# produced " + count + " symbols");
     }
 }
