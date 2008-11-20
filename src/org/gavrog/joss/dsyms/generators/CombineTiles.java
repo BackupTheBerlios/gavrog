@@ -37,6 +37,7 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
+import org.gavrog.joss.dsyms.derived.Covers;
 
 /**
  * An iterator that takes a (d-1)-dimensional Delaney symbol encoding a
@@ -211,22 +212,20 @@ public class CombineTiles extends IteratorAdapter {
 	protected Object findNext() throws NoSuchElementException {
         if (LOGGING) {
             System.out.println("#findNext(): stack size = " + this.stack.size());
+            System.out.println(("#  current symbol:\n" + this.current
+					.tabularDisplay()).replaceAll("\\n", "\n#  "));
         }
         while (true) {
             final Move choice = undoLastChoice();
             if (LOGGING) {
-                System.out.println("#  last choice was " + choice);
-                System.out.println(("#  current symbol:\n" + this.current
-						.tabularDisplay()).replaceAll("\\n", "\n#  "));
+            	if (choice != null && (Integer) choice.neighbor > 0) {
+            		System.out.println("#  last choice was " + choice);
+                    System.out.println(("#  current symbol:\n" + this.current
+    						.tabularDisplay()).replaceAll("\\n", "\n#  "));
+            	}
             }
             if (choice == null) {
                 throw new NoSuchElementException();
-            }
-            if (!resume_point_reached && stack.size() < resume_stack_level) {
-            	resume_point_reached = true;
-            	if (LOGGING) {
-            		System.out.println("#  resume point reached");
-            	}
             }
             final Move move = nextMove(choice);
             if (move == null) {
@@ -238,11 +237,25 @@ public class CombineTiles extends IteratorAdapter {
             if (LOGGING) {
                 System.out.println("#  found potential move " + move);
             }
-            final boolean incr_level =
-            	(stack.size() == resume_stack_level
-            		&& (resume.length <= resume_level
-        				|| move.choiceNr == resume[resume_level]));
+            boolean incr_level = false;
+            if (!resume_point_reached && stack.size() == resume_stack_level) {
+            	if (resume.length <= resume_level) {
+            		resume_point_reached = true;
+                	if (LOGGING) {
+                		if (resume.length < resume_level) {
+                			System.out.format("#  past resume point at %s\n",
+                					getCheckpoint());
+                		} else {
+                			System.out.format("#  resume point reached at %s\n",
+                					getCheckpoint());
+                		}
+                	}
+            	} else if (move.choiceNr == resume[resume_level]) {
+            		incr_level = true;
+            	}
+            }
             final boolean success = performMove(move);
+            handleCheckpoint(!resume_point_reached);
             if (incr_level) {
             	resume_stack_level = stack.size();
             	resume_level += 1;
@@ -337,7 +350,9 @@ public class CombineTiles extends IteratorAdapter {
             last = this.stack.removeLast();
 
             if (LOGGING) {
-                System.out.println("#Undoing " + last);
+            	if ((Integer) last.neighbor > 0) {
+            		System.out.println("#  undoing " + last);
+            	}
             }
             if (this.current.hasElement(last.neighbor)) {
                 this.current.undefineOp(this.dim, last.element);
@@ -433,13 +448,13 @@ public class CombineTiles extends IteratorAdapter {
                     continue;
                 } else {
                     if (LOGGING) {
-                        System.out.println("#Found contradiction at " + D
+                        System.out.println("#    found contradiction at " + D
                                 + "<-->" + E);
                     }
                     if (move == initial) {
                         // --- the initial move was impossible
                         throw new IllegalArgumentException(
-                                "#Internal error: received illegal move.");
+                                "#    internal error: received illegal move.");
                     }
                     return false;
                 }
@@ -479,8 +494,8 @@ public class CombineTiles extends IteratorAdapter {
             // --- check for any problems with that move
             if (!this.signatures.get(D).equals(this.signatures.get(E))) {
                 if (LOGGING) {
-                    System.out
-                            .println("#Bad connection " + D + "<-->" + E + ".");
+                    System.out.println(
+                    		"#    bad connection " + D + "<-->" + E + ".");
                 }
                 return false;
             }
@@ -490,14 +505,14 @@ public class CombineTiles extends IteratorAdapter {
                 final Object Di = ds.op(i, D);
                 final Object Ei = ds.op(i, E);
                 if (LOGGING) {
-                    System.out.println("#Found deduction " + Di + "<-->" + Ei);
+                    System.out.println(
+                    		"#    found deduction " + Di + "<-->" + Ei);
                 }
                 queue.addLast(new Move(Di, Ei, -1, -1, false, 0));
             }
         }
 
         // --- everything went smoothly
-        handleCheckpoint(!resume_point_reached);
         return true;
     }
 
@@ -754,6 +769,7 @@ public class CombineTiles extends IteratorAdapter {
     public static void main(String[] args) {
         DSymbol ds;
         boolean verbose = false;
+        boolean useCover = false;
         int i;
         int r[] = new int[] {};
         
@@ -761,6 +777,8 @@ public class CombineTiles extends IteratorAdapter {
 		while (i < args.length && args[i].startsWith("-")) {
 			if (args[i].equals("-v")) {
 				verbose = !verbose;
+			} else if (args[i].equals("-t")) {
+				useCover = !useCover;
 			} else if (args[i].equals("-r")) {
 				final String tmp[] = args[++i].split("-");
 				r = new int[tmp.length];
@@ -774,6 +792,9 @@ public class CombineTiles extends IteratorAdapter {
 			 ds = new DSymbol(args[i]);
 		} else {
 			throw new RuntimeException("no input symbol given");
+		}
+		if (useCover) {
+			ds = Covers.finiteUniversalCover(ds);
 		}
 		
         final Stopwatch timer = new Stopwatch();
