@@ -330,8 +330,15 @@ public class CombineTiles extends IteratorAdapter {
      * 
      * @param resume specifies the checkpoint to resume execution at.
      */
-    public void setResumePoint(final int resume[]) {
-    	this.resume = resume.clone();
+    public void setResumePoint(final String spec) {
+    	if (spec == null || spec.length() == 0) {
+    		return;
+    	}
+    	final String fields[] = spec.trim().split("-");
+    	resume = new int[fields.length];
+    	for (int i = 0; i < fields.length; ++i) {
+    		resume[i] = Integer.valueOf(fields[i]);
+    	}
     }
 
     /**
@@ -773,7 +780,7 @@ public class CombineTiles extends IteratorAdapter {
         boolean verbose = false;
         boolean useCover = false;
         int i;
-        int r[] = new int[] {};
+        String resume = null;
         
 		i = 0;
 		while (i < args.length && args[i].startsWith("-")) {
@@ -782,11 +789,7 @@ public class CombineTiles extends IteratorAdapter {
 			} else if (args[i].equals("-c")) {
 				useCover = !useCover;
 			} else if (args[i].equals("-r")) {
-				final String tmp[] = args[++i].split("-");
-				r = new int[tmp.length];
-				for (int k = 0; k < tmp.length; ++k) {
-					r[k] = Integer.parseInt(tmp[k]);
-				}
+				resume = args[++i];
 			}
 			++i;
 		}
@@ -807,7 +810,7 @@ public class CombineTiles extends IteratorAdapter {
 						isOld ? "Old " : "", getCheckpoint());
         	}
         };
-        iter.setResumePoint(r);
+        iter.setResumePoint(resume);
 
         int count = 0;
         try {

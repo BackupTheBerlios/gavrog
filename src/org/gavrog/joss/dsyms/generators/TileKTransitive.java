@@ -72,10 +72,14 @@ public class TileKTransitive extends IteratorAdapter {
      * 
      * @param resume specifies the checkpoint to resume execution at.
      */
-    public void setResumePoint(final int resume[]) {
-        this.resume[0] = resume[0];
-        this.resume[1] = resume[1];
-        this.resume[2] = resume[2];
+    public void setResumePoint(final String spec) {
+    	if (spec == null || spec.length() == 0) {
+    		return;
+    	}
+    	final String fields[] = spec.trim().split("-");
+    	for (int i = 0; i < Math.min(fields.length, 3); ++i) {
+    		this.resume[i] = Integer.valueOf(fields[i]);
+    	}
     }
 
     private boolean tooEarly(final int level) {

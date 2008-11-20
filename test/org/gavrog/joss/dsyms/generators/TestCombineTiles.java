@@ -138,7 +138,7 @@ public class TestCombineTiles extends TestCase {
     public void testResume1() {
     	final DSymbol ds = new DSymbol("6 1:2 4 6,6 3 5:3");
         final CombineTiles iter = new CombineTiles(ds);
-        iter.setResumePoint(new int[] { 2, 3 });
+        iter.setResumePoint("2-3");
         assertEquals(new DSymbol("6:2 4 6,6 3 5,2 5 6:3,0"), iter
                 .next());
         assertEquals(new DSymbol("6:2 4 6,6 3 5,2 6 5:3,0 0"), iter.next());
@@ -148,7 +148,7 @@ public class TestCombineTiles extends TestCase {
     public void testResume2() {
     	final DSymbol ds = new DSymbol("6 1:2 4 6,6 3 5:3");
         final CombineTiles iter = new CombineTiles(ds);
-        iter.setResumePoint(new int[] { 3 });
+        iter.setResumePoint("3");
         assertFalse(iter.hasNext());
     }
     
