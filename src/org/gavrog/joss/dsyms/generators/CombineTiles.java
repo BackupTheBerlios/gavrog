@@ -216,6 +216,18 @@ public class CombineTiles extends IteratorAdapter {
 					.tabularDisplay()).replaceAll("\\n", "\n#  "));
         }
         while (true) {
+        	if (resume_level >= resume.length) {
+        		resume_point_reached = true;
+            	if (LOGGING) {
+            		if (resume_level > resume.length) {
+            			System.out.format("#  past resume point at %s\n",
+            					getCheckpoint());
+            		} else {
+            			System.out.format("#  resume point reached at %s\n",
+            					getCheckpoint());
+            		}
+            	}
+        	}
             final Move choice = undoLastChoice();
             if (LOGGING) {
             	if (choice != null && (Integer) choice.neighbor > 0) {
@@ -239,18 +251,8 @@ public class CombineTiles extends IteratorAdapter {
             }
             boolean incr_level = false;
             if (!resume_point_reached && stack.size() == resume_stack_level) {
-            	if (resume.length <= resume_level) {
-            		resume_point_reached = true;
-                	if (LOGGING) {
-                		if (resume.length < resume_level) {
-                			System.out.format("#  past resume point at %s\n",
-                					getCheckpoint());
-                		} else {
-                			System.out.format("#  resume point reached at %s\n",
-                					getCheckpoint());
-                		}
-                	}
-            	} else if (move.choiceNr == resume[resume_level]) {
+            	if (resume_level < resume.length
+            			&& move.choiceNr == resume[resume_level]) {
             		incr_level = true;
             	}
             }
@@ -777,7 +779,7 @@ public class CombineTiles extends IteratorAdapter {
 		while (i < args.length && args[i].startsWith("-")) {
 			if (args[i].equals("-v")) {
 				verbose = !verbose;
-			} else if (args[i].equals("-t")) {
+			} else if (args[i].equals("-c")) {
 				useCover = !useCover;
 			} else if (args[i].equals("-r")) {
 				final String tmp[] = args[++i].split("-");
