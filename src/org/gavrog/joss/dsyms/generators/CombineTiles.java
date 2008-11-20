@@ -216,14 +216,14 @@ public class CombineTiles extends IteratorAdapter {
 					.tabularDisplay()).replaceAll("\\n", "\n#  "));
         }
         while (true) {
-        	if (resume_level >= resume.length) {
+        	if (!resume_point_reached && resume_level >= resume.length) {
         		resume_point_reached = true;
             	if (LOGGING) {
             		if (resume_level > resume.length) {
-            			System.out.format("#  past resume point at %s\n",
+            			System.out.format("#  past resume point at <%s>\n",
             					getCheckpoint());
             		} else {
-            			System.out.format("#  resume point reached at %s\n",
+            			System.out.format("#  resume point reached at <%s>\n",
             					getCheckpoint());
             		}
             	}
@@ -239,6 +239,13 @@ public class CombineTiles extends IteratorAdapter {
             if (choice == null) {
                 throw new NoSuchElementException();
             }
+            if (!resume_point_reached && stack.size() < resume_stack_level) {
+            	resume_point_reached = true;
+            	if (LOGGING) {
+					System.out.format("#  past resume point at <%s>\n",
+							getCheckpoint());
+				}
+            }
             final Move move = nextMove(choice);
             if (move == null) {
                 if (LOGGING) {
@@ -251,9 +258,10 @@ public class CombineTiles extends IteratorAdapter {
             }
             boolean incr_level = false;
             if (!resume_point_reached && stack.size() == resume_stack_level) {
-            	if (resume_level < resume.length
-            			&& move.choiceNr == resume[resume_level]) {
-            		incr_level = true;
+            	if (resume_level < resume.length) {
+            		if (move.choiceNr == resume[resume_level]) {
+            			incr_level = true;
+            		}
             	}
             }
             final boolean success = performMove(move);
