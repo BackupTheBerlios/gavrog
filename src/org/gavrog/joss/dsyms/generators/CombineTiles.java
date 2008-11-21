@@ -52,8 +52,8 @@ import buoy.event.EventSource;
  * @author Olaf Delgado
  * @version $Id: CombineTiles.java,v 1.8 2007/04/26 20:21:58 odf Exp $
  */
-public class CombineTiles extends EventSource implements Iterator, Iterable,
-		CheckpointSource {
+public class CombineTiles extends EventSource implements Iterator<DSymbol>,
+		Iterable<DSymbol>, CheckpointSource {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
@@ -71,7 +71,7 @@ public class CombineTiles extends EventSource implements Iterator, Iterable,
     final private List<Map> indexToRepMap = new ArrayList<Map>();
 
     // --- cache for results generated in calls to hasNext()
-    private LinkedList cache = new LinkedList();
+    private LinkedList<DSymbol> cache = new LinkedList<DSymbol>();
     
     // --- the current state
     private final DynamicDSymbol current;
@@ -214,7 +214,7 @@ public class CombineTiles extends EventSource implements Iterator, Iterable,
      * 
      * @return the next symbol, if any.
      */
-	protected Object findNext() throws NoSuchElementException {
+	protected DSymbol findNext() throws NoSuchElementException {
         if (LOGGING) {
             System.out.println("#findNext(): stack size = " + this.stack.size());
             System.out.println(("#  current symbol:\n" + this.current
@@ -330,7 +330,7 @@ public class CombineTiles extends EventSource implements Iterator, Iterable,
     /* (non-Javadoc)
      * @see java.util.Iterator#next()
      */
-    public Object next() {
+    public DSymbol next() {
         if (cache.size() == 0) {
             return findNext();
         } else {
@@ -348,7 +348,7 @@ public class CombineTiles extends EventSource implements Iterator, Iterable,
     /* (non-Javadoc)
      * @see java.lang.Iterable#iterator()
      */
-    public Iterator iterator() {
+    public Iterator<DSymbol> iterator() {
         return this;
     }
     
@@ -862,8 +862,7 @@ public class CombineTiles extends EventSource implements Iterator, Iterable,
 
         int count = 0;
         try {
-            while (iter.hasNext()) {
-                final DSymbol out = (DSymbol) iter.next();
+        	for (DSymbol out: iter) {
                 System.out.println(out);
                 ++count;
             }
