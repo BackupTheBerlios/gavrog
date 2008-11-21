@@ -17,16 +17,18 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
+
+import buoy.event.EventSource;
 
 /**
  * Generates all minimal, locally euclidean, tile-k-transitive tilings by a
@@ -35,7 +37,8 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * @author Olaf Delgado
  * @version $Id: TileKTransitive.java,v 1.9 2008/04/02 11:09:59 odf Exp $
  */
-public class TileKTransitive extends IteratorAdapter {
+public class TileKTransitive extends EventSource implements
+		ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
     private final Iterator partLists;
@@ -49,6 +52,9 @@ public class TileKTransitive extends IteratorAdapter {
     private int checkpoint[] = new int[] { 0, 0, 0 };
     private int resume[] = new int[] { 0, 0, 0 };
 
+    // --- cache for results generated in calls to hasNext()
+    private LinkedList<DSymbol> cache = new LinkedList<DSymbol>();
+    
     /**
      * Constructs an instance.
      * 
@@ -96,7 +102,7 @@ public class TileKTransitive extends IteratorAdapter {
      * 
      * @see javaDSym.util.IteratorAdapter#findNext()
      */
-    protected Object findNext() throws NoSuchElementException {
+    protected DSymbol findNext() throws NoSuchElementException {
         while (true) {
             while (symbols == null || !symbols.hasNext()) {
                 while (extended == null || !extended.hasNext()) {
@@ -112,7 +118,7 @@ public class TileKTransitive extends IteratorAdapter {
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
-                        handleCheckpoint(tooEarly(1));
+                        dispatchEvent(new CheckpointEvent(this, tooEarly(1)));
                         if (tooEarly(1)) {
                         	continue;
                         }
@@ -129,7 +135,7 @@ public class TileKTransitive extends IteratorAdapter {
                 final DSymbol ds = (DSymbol) extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
-                handleCheckpoint(tooEarly(2));
+                dispatchEvent(new CheckpointEvent(this, tooEarly(2)));
                 if (tooEarly(2)) {
                 	continue;
                 }
@@ -141,7 +147,7 @@ public class TileKTransitive extends IteratorAdapter {
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++checkpoint[2];
-            handleCheckpoint(tooEarly(3));
+            dispatchEvent(new CheckpointEvent(this, tooEarly(3)));
             if (tooEarly(3)) {
             	continue;
             }
@@ -157,6 +163,45 @@ public class TileKTransitive extends IteratorAdapter {
         }
     }
 
+    /* (non-Javadoc)
+     * @see java.util.Iterator#hasNext()
+     */
+    public boolean hasNext() {
+        if (cache.size() == 0) {
+            try {
+                cache.addLast(findNext());
+            } catch (NoSuchElementException ex) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#next()
+     */
+    public DSymbol next() {
+        if (cache.size() == 0) {
+            return findNext();
+        } else {
+            return cache.removeFirst();
+        }
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#remove()
+     */
+    public void remove() {
+        throw new UnsupportedOperationException("not supported");
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator<DSymbol> iterator() {
+        return this;
+    }
+    
     /**
      * Retreives the current checkpoint value as a string.
      * 
@@ -165,13 +210,6 @@ public class TileKTransitive extends IteratorAdapter {
     public String getCheckpoint() {
     	return String.format("%d-%d-%d", checkpoint[0], checkpoint[1],
 				checkpoint[2]);
-    }
-    
-    /**
-     * Override this to record program checkpoints.
-     * @param oldCheckpoint true if we're before the resume point
-     */
-    protected void handleCheckpoint(boolean oldCheckpoint) {
     }
     
     /**

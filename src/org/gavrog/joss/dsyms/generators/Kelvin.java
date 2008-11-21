@@ -61,6 +61,8 @@ public class Kelvin {
 			this.interval = checkpointInterval * 1000;
 			this.output = output;
 			this.timer.start();
+			
+			this.addEventLink(CheckpointEvent.class, this);
 		}
 		
 		protected boolean partsListOkay(final List parts) {
@@ -78,9 +80,9 @@ public class Kelvin {
 			return count;
 		}
 		
-		protected void handleCheckpoint(final boolean isOld) {
+		protected void processEvent(final Object event) {
 			if (interval > 0 && this.timer.elapsed() > interval) {
-				writeCheckpoint(isOld);
+				writeCheckpoint(((CheckpointEvent) event).isOld());
 			}
 		}
 		
