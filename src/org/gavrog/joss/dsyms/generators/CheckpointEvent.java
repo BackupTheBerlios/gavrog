@@ -22,15 +22,15 @@ package org.gavrog.joss.dsyms.generators;
  * @version $Id:$
  */
 public class CheckpointEvent {
-	final private CheckpointSource source;
+	final private ResumableGenerator source;
 	final private boolean old;
 	
-	public CheckpointEvent(final CheckpointSource source, final boolean old) {
+	public CheckpointEvent(final ResumableGenerator source, final boolean old) {
 		this.source = source;
 		this.old = old;
 	}
 
-	public CheckpointSource getSource() {
+	public ResumableGenerator getSource() {
 		return source;
 	}
 

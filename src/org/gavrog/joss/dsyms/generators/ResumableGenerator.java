@@ -17,10 +17,13 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.util.Iterator;
+
 /**
  * @author Olaf Delgado
  * @version $Id:$
  */
-public interface CheckpointSource {
+public interface ResumableGenerator<T> extends Iterator<T>, Iterable<T>  {
 	public String getCheckpoint();
+	public void setResumePoint(final String spec);
 }

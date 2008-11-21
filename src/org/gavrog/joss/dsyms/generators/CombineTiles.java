@@ -52,8 +52,8 @@ import buoy.event.EventSource;
  * @author Olaf Delgado
  * @version $Id: CombineTiles.java,v 1.8 2007/04/26 20:21:58 odf Exp $
  */
-public class CombineTiles extends EventSource implements Iterator<DSymbol>,
-		Iterable<DSymbol>, CheckpointSource {
+public class CombineTiles extends EventSource implements
+		ResumableGenerator<DSymbol> {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
@@ -164,7 +164,7 @@ public class CombineTiles extends EventSource implements Iterator<DSymbol>,
         final List<List<DSymbol>> forms = new ArrayList<List<DSymbol>>();
         final List<Integer> free = new ArrayList<Integer>();
         for (int i = 0; i < types.size(); ++i) {
-            final DelaneySymbol type = (DelaneySymbol) types.get(i);
+            final DelaneySymbol type = types.get(i);
             forms.add(Collections.unmodifiableList(subCanonicalForms(type)));
             free.add(multiplicities.get(type));
             if (LOGGING) {
