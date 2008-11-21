@@ -39,7 +39,6 @@ import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 
 import buoy.event.EventProcessor;
-import buoy.event.EventSource;
 
 /**
  * An iterator that takes a (d-1)-dimensional Delaney symbol encoding a
@@ -52,8 +51,7 @@ import buoy.event.EventSource;
  * @author Olaf Delgado
  * @version $Id: CombineTiles.java,v 1.8 2007/04/26 20:21:58 odf Exp $
  */
-public class CombineTiles extends EventSource implements
-		ResumableGenerator<DSymbol> {
+public class CombineTiles extends ResumableGenerator<DSymbol> {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
@@ -70,9 +68,6 @@ public class CombineTiles extends EventSource implements
     final private Map<List, Integer> invarToIndex = new HashMap<List, Integer>();
     final private List<Map> indexToRepMap = new ArrayList<Map>();
 
-    // --- cache for results generated in calls to hasNext()
-    private LinkedList<DSymbol> cache = new LinkedList<DSymbol>();
-    
     // --- the current state
     private final DynamicDSymbol current;
     private final LinkedList<Move> stack;
@@ -313,45 +308,6 @@ public class CombineTiles extends EventSource implements
         }
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Iterator#hasNext()
-     */
-    public boolean hasNext() {
-        if (cache.size() == 0) {
-            try {
-                cache.addLast(findNext());
-            } catch (NoSuchElementException ex) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    /* (non-Javadoc)
-     * @see java.util.Iterator#next()
-     */
-    public DSymbol next() {
-        if (cache.size() == 0) {
-            return findNext();
-        } else {
-            return cache.removeFirst();
-        }
-    }
-    
-    /* (non-Javadoc)
-     * @see java.util.Iterator#remove()
-     */
-    public void remove() {
-        throw new UnsupportedOperationException("not supported");
-    }
-    
-    /* (non-Javadoc)
-     * @see java.lang.Iterable#iterator()
-     */
-    public Iterator<DSymbol> iterator() {
-        return this;
-    }
-    
     /**
      * Retreives the current checkpoint value as a string.
      * 
@@ -862,7 +818,7 @@ public class CombineTiles extends EventSource implements
 
         int count = 0;
         try {
-        	for (DSymbol out: iter) {
+        	for (final DSymbol out: iter) {
                 System.out.println(out);
                 ++count;
             }

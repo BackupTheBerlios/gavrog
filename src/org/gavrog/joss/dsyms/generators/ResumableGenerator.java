@@ -18,12 +18,64 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+
+import buoy.event.EventSource;
 
 /**
  * @author Olaf Delgado
  * @version $Id:$
  */
-public interface ResumableGenerator<T> extends Iterator<T>, Iterable<T>  {
-	public String getCheckpoint();
-	public void setResumePoint(final String spec);
+public abstract class ResumableGenerator<T> extends EventSource implements
+		Iterator<T>, Iterable<T> {
+
+	// -- the methods a concrete subtype to implement
+	public abstract String getCheckpoint();
+
+	public abstract void setResumePoint(final String spec);
+
+	protected abstract T findNext();
+	
+	// -- cache for results generated in calls to hasNext()
+    private LinkedList<T> cache = new LinkedList<T>();
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#hasNext()
+     */
+    public boolean hasNext() {
+        if (cache.size() == 0) {
+            try {
+                cache.addLast(findNext());
+            } catch (NoSuchElementException ex) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#next()
+     */
+    public T next() {
+        if (cache.size() == 0) {
+            return findNext();
+        } else {
+            return cache.removeFirst();
+        }
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#remove()
+     */
+    public void remove() {
+        throw new UnsupportedOperationException("not supported");
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator<T> iterator() {
+        return this;
+    }
 }

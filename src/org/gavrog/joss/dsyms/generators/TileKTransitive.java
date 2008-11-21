@@ -17,7 +17,6 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -28,8 +27,6 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
-import buoy.event.EventSource;
-
 /**
  * Generates all minimal, locally euclidean, tile-k-transitive tilings by a
  * given combinatorial tile.
@@ -37,8 +34,7 @@ import buoy.event.EventSource;
  * @author Olaf Delgado
  * @version $Id: TileKTransitive.java,v 1.9 2008/04/02 11:09:59 odf Exp $
  */
-public class TileKTransitive extends EventSource implements
-		ResumableGenerator<DSymbol> {
+public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
     private final Iterator partLists;
@@ -52,9 +48,6 @@ public class TileKTransitive extends EventSource implements
     private int checkpoint[] = new int[] { 0, 0, 0 };
     private int resume[] = new int[] { 0, 0, 0 };
 
-    // --- cache for results generated in calls to hasNext()
-    private LinkedList<DSymbol> cache = new LinkedList<DSymbol>();
-    
     /**
      * Constructs an instance.
      * 
@@ -128,6 +121,11 @@ public class TileKTransitive extends EventSource implements
                             System.err.println(setAsString(ds));
                         }
                         extended = extendTo3d(ds);
+                        if (extended instanceof ResumableGenerator) {
+							((ResumableGenerator) extended).addEventLink(
+									CheckpointEvent.class, this,
+									"dispatchEvent");
+						}
                     } else {
                         throw new NoSuchElementException("At end");
                     }
@@ -163,53 +161,20 @@ public class TileKTransitive extends EventSource implements
         }
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Iterator#hasNext()
-     */
-    public boolean hasNext() {
-        if (cache.size() == 0) {
-            try {
-                cache.addLast(findNext());
-            } catch (NoSuchElementException ex) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    /* (non-Javadoc)
-     * @see java.util.Iterator#next()
-     */
-    public DSymbol next() {
-        if (cache.size() == 0) {
-            return findNext();
-        } else {
-            return cache.removeFirst();
-        }
-    }
-    
-    /* (non-Javadoc)
-     * @see java.util.Iterator#remove()
-     */
-    public void remove() {
-        throw new UnsupportedOperationException("not supported");
-    }
-    
-    /* (non-Javadoc)
-     * @see java.lang.Iterable#iterator()
-     */
-    public Iterator<DSymbol> iterator() {
-        return this;
-    }
-    
     /**
      * Retreives the current checkpoint value as a string.
      * 
      * @return the current checkpoint.
      */
     public String getCheckpoint() {
-    	return String.format("%d-%d-%d", checkpoint[0], checkpoint[1],
-				checkpoint[2]);
+    	String c0 = String.valueOf(checkpoint[0]);
+    	String c1 = String.valueOf(checkpoint[1]);
+    	String c2 = String.valueOf(checkpoint[2]);
+    	if (extended != null && extended instanceof ResumableGenerator) {
+    		c1 = String.format("[%s]", ((ResumableGenerator) extended)
+					.getCheckpoint().replaceAll("-", "."));
+		}
+    	return String.format("%s-%s-%s", c0, c1, c2);
     }
     
     /**
@@ -286,8 +251,7 @@ public class TileKTransitive extends EventSource implements
         int countAmbiguous = 0;
 
         try {
-            while (iter.hasNext()) {
-                final DSymbol out = (DSymbol) iter.next();
+        	for (final DSymbol out: iter) {
                 if (check) {
                     final EuclidicityTester tester = new EuclidicityTester(out);
                     if (tester.isAmbiguous()) {
