@@ -47,6 +47,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private int countMinimal = 0;
     private int checkpoint[] = new int[] { 0, 0, 0 };
     private int resume[] = new int[] { 0, 0, 0 };
+    private String resume1 = null;
 
     /**
      * Constructs an instance.
@@ -76,15 +77,24 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     		return;
     	}
     	final String fields[] = spec.trim().split("-");
-    	for (int i = 0; i < Math.min(fields.length, 3); ++i) {
-    		this.resume[i] = Integer.valueOf(fields[i]);
+    	this.resume[0] = Integer.valueOf(fields[0]);
+    	if (fields[1].startsWith("[")) {
+    		this.resume1 = fields[1].substring(1, fields[1].length() - 1)
+					.replaceAll("\\.", "-");
+    	} else {
+        	this.resume[1] = Integer.valueOf(fields[2]);
+        	this.resume[2] = Integer.valueOf(fields[2]);
     	}
     }
 
-    private boolean tooEarly(final int level) {
-    	for (int i = 0; i < level; ++i) {
-    		if (checkpoint[i] != resume[i]) {
-    			return checkpoint[i] < resume[i];
+    private boolean tooEarly() {
+    	if (checkpoint[0] != resume[0]) {
+    		return checkpoint[0] < resume[0];
+    	} else if (resume1 == null) {
+    		if (checkpoint[1] != resume[1]) {
+    			return checkpoint[1] < resume[1];
+    		} else {
+    			return checkpoint[2] < resume[2];
     		}
     	}
     	return false;
@@ -111,8 +121,8 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
-                        dispatchEvent(new CheckpointEvent(this, tooEarly(1)));
-                        if (tooEarly(1)) {
+                        dispatchEvent(new CheckpointEvent(this, tooEarly()));
+                        if (tooEarly()) {
                         	continue;
                         }
                         final DSymbol ds = new DSymbol(tmp);
@@ -122,9 +132,13 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         }
                         extended = extendTo3d(ds);
                         if (extended instanceof ResumableGenerator) {
-							((ResumableGenerator) extended).addEventLink(
-									CheckpointEvent.class, this,
+                        	final ResumableGenerator gen =
+                        		(ResumableGenerator) extended;
+							gen.addEventLink(CheckpointEvent.class, this,
 									"dispatchEvent");
+							if (checkpoint[0] == resume[0] && resume1 != null) {
+								gen.setResumePoint(resume1);
+							}
 						}
                     } else {
                         throw new NoSuchElementException("At end");
@@ -133,8 +147,8 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                 final DSymbol ds = (DSymbol) extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
-                dispatchEvent(new CheckpointEvent(this, tooEarly(2)));
-                if (tooEarly(2)) {
+                dispatchEvent(new CheckpointEvent(this, tooEarly()));
+                if (tooEarly()) {
                 	continue;
                 }
                 ++this.count3dSets;
@@ -145,8 +159,8 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++checkpoint[2];
-            dispatchEvent(new CheckpointEvent(this, tooEarly(3)));
-            if (tooEarly(3)) {
+            dispatchEvent(new CheckpointEvent(this, tooEarly()));
+            if (tooEarly()) {
             	continue;
             }
             ++count3dSymbols;
@@ -167,15 +181,15 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @return the current checkpoint.
      */
     public String getCheckpoint() {
-    	String c0 = String.valueOf(checkpoint[0]);
-    	String c1 = String.valueOf(checkpoint[1]);
-    	String c2 = String.valueOf(checkpoint[2]);
     	if (extended != null && extended instanceof ResumableGenerator) {
-    		c1 = String.format("[%s]", ((ResumableGenerator) extended)
-					.getCheckpoint().replaceAll("-", "."));
+			return String.format("%d-[%s]", checkpoint[0],
+					((ResumableGenerator) extended).getCheckpoint().replaceAll(
+							"-", "."));
+		} else {
+			return String.format("%s-%s-%s", checkpoint[0], checkpoint[1],
+					checkpoint[2]);
 		}
-    	return String.format("%s-%s-%s", c0, c1, c2);
-    }
+	}
     
     /**
      * Override this to restrict the equivariant tile combinations used.

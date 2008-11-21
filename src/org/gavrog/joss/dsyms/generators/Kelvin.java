@@ -278,8 +278,8 @@ public class Kelvin {
 				iter.setResumePoint(resume);
 			}
 
-			while (iter.hasNext()) {
-				final DSymbol out = ((DSymbol) iter.next()).dual();
+			for (final DSymbol ds: iter) {
+				final DSymbol out = ds.dual();
 				if (allTileSizesBetween(out, 12, 16)) {
 					++countTileSizeOk;
 					if (check) {
