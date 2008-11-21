@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
 import org.gavrog.box.simple.Stopwatch;
@@ -39,6 +38,9 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Covers;
 
+import buoy.event.EventProcessor;
+import buoy.event.EventSource;
+
 /**
  * An iterator that takes a (d-1)-dimensional Delaney symbol encoding a
  * collection of tiles and combines them to a connected d-dimensional in every
@@ -50,7 +52,8 @@ import org.gavrog.joss.dsyms.derived.Covers;
  * @author Olaf Delgado
  * @version $Id: CombineTiles.java,v 1.8 2007/04/26 20:21:58 odf Exp $
  */
-public class CombineTiles extends IteratorAdapter {
+public class CombineTiles extends EventSource implements Iterator, Iterable,
+		CheckpointSource {
     // TODO test local euclidicity where possible
 
     // --- set to true to enable logging
@@ -67,6 +70,9 @@ public class CombineTiles extends IteratorAdapter {
     final private Map<List, Integer> invarToIndex = new HashMap<List, Integer>();
     final private List<Map> indexToRepMap = new ArrayList<Map>();
 
+    // --- cache for results generated in calls to hasNext()
+    private LinkedList cache = new LinkedList();
+    
     // --- the current state
     private final DynamicDSymbol current;
     private final LinkedList<Move> stack;
@@ -208,7 +214,6 @@ public class CombineTiles extends IteratorAdapter {
      * 
      * @return the next symbol, if any.
      */
-    @Override
 	protected Object findNext() throws NoSuchElementException {
         if (LOGGING) {
             System.out.println("#findNext(): stack size = " + this.stack.size());
@@ -265,7 +270,7 @@ public class CombineTiles extends IteratorAdapter {
             	}
             }
             final boolean success = performMove(move);
-            handleCheckpoint(!resume_point_reached);
+            dispatchEvent(new CheckpointEvent(this, !resume_point_reached));
             if (incr_level) {
             	resume_stack_level = stack.size();
             	resume_level += 1;
@@ -308,11 +313,43 @@ public class CombineTiles extends IteratorAdapter {
         }
     }
 
-    /**
-     * Override this to record program checkpoints.
-     * @param oldCheckpoint true if we're before the resume point
+    /* (non-Javadoc)
+     * @see java.util.Iterator#hasNext()
      */
-    protected void handleCheckpoint(boolean oldCheckpoint) {
+    public boolean hasNext() {
+        if (cache.size() == 0) {
+            try {
+                cache.addLast(findNext());
+            } catch (NoSuchElementException ex) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#next()
+     */
+    public Object next() {
+        if (cache.size() == 0) {
+            return findNext();
+        } else {
+            return cache.removeFirst();
+        }
+    }
+    
+    /* (non-Javadoc)
+     * @see java.util.Iterator#remove()
+     */
+    public void remove() {
+        throw new UnsupportedOperationException("not supported");
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator iterator() {
+        return this;
     }
     
     /**
@@ -811,13 +848,16 @@ public class CombineTiles extends IteratorAdapter {
 		}
 		
         final Stopwatch timer = new Stopwatch();
-        final CombineTiles iter = new CombineTiles(ds) {
-        	protected void handleCheckpoint(final boolean isOld) {
-        		timer.reset();
-        		System.out.format("#@@@ %sCheckpoint %s\n",
-						isOld ? "Old " : "", getCheckpoint());
-        	}
-        };
+        final CombineTiles iter = new CombineTiles(ds);
+        iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
+			@Override
+			public void handleEvent(final Object event) {
+				final CheckpointEvent ev = (CheckpointEvent) event;
+				timer.reset();
+				System.out.format("#@@@ %sCheckpoint %s\n", ev.isOld() ? "Old "
+						: "", ev.getSource().getCheckpoint());
+			}
+		});
         iter.setResumePoint(resume);
 
         int count = 0;
