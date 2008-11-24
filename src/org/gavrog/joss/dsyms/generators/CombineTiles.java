@@ -218,6 +218,9 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
         while (true) {
         	if (!resume_point_reached && resume_level >= resume.length) {
         		resume_point_reached = true;
+        		if (resume.length > 0) {
+        			postCheckpoint("resume point reached");
+        		}
             	if (LOGGING) {
             		if (resume_level > resume.length) {
             			System.out.format("#  past resume point at <%s>\n",
@@ -241,6 +244,9 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             }
             if (!resume_point_reached && stack.size() < resume_stack_level) {
             	resume_point_reached = true;
+        		if (resume.length > 0) {
+        			postCheckpoint("resume point reached");
+        		}
             	if (LOGGING) {
 					System.out.format("#  past resume point at <%s>\n",
 							getCheckpoint());
@@ -265,7 +271,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             	}
             }
             final boolean success = performMove(move);
-            dispatchEvent(new CheckpointEvent(this, !resume_point_reached));
+            postCheckpoint(null);
             if (incr_level) {
             	resume_stack_level = stack.size();
             	resume_level += 1;
@@ -307,6 +313,10 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             }
         }
     }
+
+	private void postCheckpoint(final String message) {
+		dispatchEvent(new CheckpointEvent(this, !resume_point_reached, message));
+	}
 
     /**
      * Retreives the current checkpoint value as a string.

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
-                        dispatchEvent(new CheckpointEvent(this, tooEarly()));
+                        postCheckpoint();
                         if (tooEarly()) {
                         	continue;
                         }
@@ -147,7 +147,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                 final DSymbol ds = (DSymbol) extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
-                dispatchEvent(new CheckpointEvent(this, tooEarly()));
+                postCheckpoint();
                 if (tooEarly()) {
                 	continue;
                 }
@@ -159,7 +159,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++checkpoint[2];
-            dispatchEvent(new CheckpointEvent(this, tooEarly()));
+            postCheckpoint();
             if (tooEarly()) {
             	continue;
             }
@@ -174,6 +174,10 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             }
         }
     }
+
+	private void postCheckpoint() {
+		dispatchEvent(new CheckpointEvent(this, tooEarly(), null));
+	}
 
     /**
      * Retreives the current checkpoint value as a string.

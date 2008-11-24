@@ -81,16 +81,20 @@ public class Kelvin {
 		}
 		
 		protected void processEvent(final Object event) {
-			if (interval > 0 && this.timer.elapsed() > interval) {
-				writeCheckpoint(((CheckpointEvent) event).isOld());
+			final CheckpointEvent ce = (CheckpointEvent) event;
+			if (ce.getMessage() != null || interval == 0
+					|| this.timer.elapsed() > interval) {
+				writeCheckpoint(ce.isOld(), ce.getMessage());
 			}
 		}
 		
-		public void writeCheckpoint(final boolean isOld) {
+		public void writeCheckpoint(final boolean isOld, final String msg) {
 			try {
 				this.timer.reset();
-				output.write(String.format("%s CHECKPOINT %s\n",
-						isOld ? "# passing" : "#@", getCheckpoint()));
+				final String p = isOld ? "# OLD" : "#@";
+				final String c = getCheckpoint();
+				final String s = msg != null ? String.format(" (%s)", msg) : "";
+				output.write(String.format("%s CHECKPOINT %s%s\n", p, c, s));
 				output.flush();
 			} catch (Throwable ex) {
 			}
@@ -289,7 +293,7 @@ public class Kelvin {
 						final boolean ambiguous = tester.isAmbiguous();
 						eTestTimer.stop();
 						if (!bad) {
-							iter.writeCheckpoint(false);
+							iter.writeCheckpoint(false, "new symbol found");
 							if (ambiguous) {
 								output.write("#@ name euclidicity dubious\n");
 								++countAmbiguous;

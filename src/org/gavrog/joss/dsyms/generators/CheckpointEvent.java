@@ -24,10 +24,13 @@ package org.gavrog.joss.dsyms.generators;
 public class CheckpointEvent {
 	final private ResumableGenerator source;
 	final private boolean old;
+	final private String message;
 	
-	public CheckpointEvent(final ResumableGenerator source, final boolean old) {
+	public CheckpointEvent(final ResumableGenerator source, final boolean old,
+			final String message) {
 		this.source = source;
 		this.old = old;
+		this.message = message;
 	}
 
 	public ResumableGenerator getSource() {
@@ -40,5 +43,9 @@ public class CheckpointEvent {
 	
 	public boolean isOld() {
 		return old;
+	}
+	
+	public String getMessage() {
+		return message;
 	}
 }
