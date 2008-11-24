@@ -28,6 +28,7 @@ public class Stopwatch {
     private long accumulated = 0;
     private long start = 0;
     private boolean isRunning;
+
     private static ThreadMXBean tb;
     static {
     	try {
@@ -52,25 +53,23 @@ public class Stopwatch {
     }
     
     public void start() {
-        if (!this.isRunning) {
-            this.start = time();
-            this.isRunning = true;
+        if (!isRunning) {
+        	start = time();
+            isRunning = true;
         }
     }
     
     public void stop() {
-		if (this.isRunning) {
-			this.accumulated += time() - this.start;
-			this.isRunning = false;
+		if (isRunning) {
+			accumulated += time() - start;
+			isRunning = false;
 		}
 	}
     
     public void reset() {
-    	final boolean wasRunning = this.isRunning;
-    	stop();
-    	this.accumulated = 0;
-    	if (wasRunning) {
-        	start();
+    	accumulated = 0;
+    	if (isRunning) {
+    		start = time();
     	}
     }
     
@@ -79,13 +78,8 @@ public class Stopwatch {
      * @return the elapsed time in milliseconds.
      */
     public long elapsed() {
-    	final boolean wasRunning = this.isRunning;
-    	stop();
-    	final long res = this.accumulated / (tb != null ? (int) 1e6 : 1);
-    	if (wasRunning) {
-    		start();
-    	}
-    	return res;
+    	return (accumulated + (isRunning ? time() - start : 0))
+				/ (tb != null ? (int) 1e6 : 0);
     }
     
     public String format() {
