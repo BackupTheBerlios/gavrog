@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.gavrog.joss.algorithms;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -50,11 +49,68 @@ public abstract class BranchAndCut extends IteratorAdapter {
 		}
 	}
 
+	public static class Type extends NamedConstant {
+		// --- no actual move, just indicates a choice to be made
+		final public static Type CHOICE = new Type("Choice");
+		
+		// --- a decision made upon a choice
+		final public static Type DECISION = new Type("Decision");
+		
+		// --- a consequence of previous decisions
+		final public static Type DEDUCTION = new Type("Deduction");
+		
+		private Type(final String name) {
+			super(name);
+		}
+	}
+	
+	public class Move {
+		// --- the type of move
+		final private Type type;
+		
+		/**
+		 * Creates a new instance.
+		 * 
+		 * @param type the type of this move
+		 */
+		public Move(final Type type) {
+			this.type = type;
+		}
+	
+		/**
+		 * @return true if this is no actual move but indicates a choice to be made.
+		 */
+		public boolean isChoice() {
+			return this.type == Type.CHOICE;
+		}
+		
+		/**
+		 * @return true if this move is a decision made upon a choice.
+		 */
+		public boolean isDecision() {
+			return this.type == Type.DECISION;
+		}
+		
+		/**
+		 * @return true if this move is a consequence of previous decisions.
+		 */
+		public boolean isDeduction() {
+			return this.type == Type.DEDUCTION;
+		}
+		
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		public String toString() {
+			return "<" + this.type + ">";
+		}
+	}
+
 	// --- flag set when generation is done
 	private boolean done = false;
 
 	// --- the generation history
-	final private LinkedList stack = new LinkedList();
+	final private LinkedList<Move> stack = new LinkedList<Move>();
 
 	/**
 	 * If logging is enabled, print a message to the standard error stream.
@@ -134,7 +190,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 
 	private boolean performMoveAndDeductions(final Move initial) {
 		// --- we maintain a queue of deductions, starting with the initial move
-		final LinkedList queue = new LinkedList();
+		final LinkedList<Move> queue = new LinkedList<Move>();
 		queue.addLast(initial);
 
 		while (queue.size() > 0) {
@@ -160,11 +216,9 @@ public abstract class BranchAndCut extends IteratorAdapter {
 			this.stack.addLast(move);
 
 			// --- finally, find and enqueue deductions
-			final List deductions = deductions(move);
+			final List<Move> deductions = deductions(move);
 			if (deductions != null) {
-				for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
-					queue.addLast(iter.next());
-				}
+				queue.addAll(deductions);
 			}
 		}
 
@@ -241,7 +295,7 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	 * @param move the last move performed.
 	 * @return the list of forced moves.
 	 */
-	abstract protected List deductions(final Move move);
+	abstract protected List<Move> deductions(final Move move);
 
 	/**
 	 * Implements a final test of the current state after a decision move and a

@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,11 +27,10 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.algorithms.BranchAndCut;
-import org.gavrog.joss.algorithms.Move;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
-import org.gavrog.joss.dsyms.basic.DSMorphism;
 
 /**
  * An iterator that takes a 2-dimensional Delaney symbol with some undefined
@@ -53,7 +52,7 @@ public class DefineBranching2d extends BranchAndCut {
 	private final int minVertDeg;
 	private final Rational minCurv;
 	private DynamicDSymbol current;
-	private List inputAutomorphisms;
+	private List<DSMorphism> inputAutomorphisms;
 
     /**
 	 * The instances of this class represent individual moves of setting branch
@@ -64,8 +63,8 @@ public class DefineBranching2d extends BranchAndCut {
 		final public int element;
 		final public int value;
 
-		public BMove(
-				final int index, final int element, final int value, final Move.Type type) {
+		public BMove(final int index, final int element, final int value,
+				final Type type) {
 			super(type);
 			this.index = index;
 			this.element = element;
@@ -80,7 +79,6 @@ public class DefineBranching2d extends BranchAndCut {
     
 	/**
 	 * Constructs a new instance.
-	 * @param minFaceDeg TODO
 	 */
 	public DefineBranching2d(final DelaneySymbol ds, int minFaceDeg,
             final int minVertDeg, final Rational minCurv) {
@@ -125,7 +123,7 @@ public class DefineBranching2d extends BranchAndCut {
 		if (i >= ds.dim()) {
 			return null;
 		} else {
-			return new BMove(i, D, 0, Move.Type.CHOICE);
+			return new BMove(i, D, 0, Type.CHOICE);
 		}
 	}
 
@@ -145,7 +143,7 @@ public class DefineBranching2d extends BranchAndCut {
 			return null;
 		}
 		
-		return new BMove(move.index, move.element, next, Move.Type.DECISION);
+		return new BMove(move.index, move.element, next, Type.DECISION);
 	}
 
 	/* (non-Javadoc)
@@ -188,7 +186,7 @@ public class DefineBranching2d extends BranchAndCut {
 	/* (non-Javadoc)
 	 * @see org.gavrog.joss.algorithms.BranchAndCut#deductions(org.gavrog.joss.algorithms.Move)
 	 */
-	protected List deductions(Move move) {
+	protected List<Move> deductions(Move move) {
 		return null;
 	}
 
@@ -203,8 +201,7 @@ public class DefineBranching2d extends BranchAndCut {
 		if (curv.isLessThan(this.minCurv)) {
 			return false;
 		}
-        for (final Iterator iter = this.inputAutomorphisms.iterator(); iter.hasNext();) {
-            final DSMorphism map = (DSMorphism) iter.next();
+		for (final DSMorphism map: this.inputAutomorphisms) {
             if (compareWithPermuted(this.current, map) > 0) {
                 return false;
             }
@@ -224,13 +221,14 @@ public class DefineBranching2d extends BranchAndCut {
      * @param map the automorphism.
      * @return an integer indicating if the result.
      */
-    private static int compareWithPermuted(final DelaneySymbol ds, final DSMorphism map) {
+    private static int compareWithPermuted(final DelaneySymbol ds,
+			final DSMorphism map) {
         for (final Iterator elms = ds.elements(); elms.hasNext();) {
             final Object D1 = elms.next();
             final Object D2 = map.getASource(D1);
             for (int i = 0; i < ds.dim(); ++i) {
-                final int v1 = ds.definesV(i, i + 1, D1) ? ds.v(i, i + 1, D1) : 0;
-                final int v2 = ds.definesV(i, i + 1, D2) ? ds.v(i, i + 1, D2) : 0;
+                int v1 = ds.definesV(i, i + 1, D1) ? ds.v(i, i + 1, D1) : 0;
+                int v2 = ds.definesV(i, i + 1, D2) ? ds.v(i, i + 1, D2) : 0;
                 if (v1 != v2) {
                     if (v1 == 0) {
                         return 1;
@@ -295,13 +293,15 @@ public class DefineBranching2d extends BranchAndCut {
             syms = Iterators.singleton(ds);
         } else if (filename != null) {
         	try {
-				syms = new InputIterator(new BufferedReader(new FileReader(filename)));
+				syms = new InputIterator(new BufferedReader(new FileReader(
+						filename)));
 			} catch (final FileNotFoundException ex) {
 				ex.printStackTrace(System.err);
 				return;
 			}
         } else {
-            syms = new InputIterator(new BufferedReader(new InputStreamReader(System.in)));
+            syms = new InputIterator(new BufferedReader(new InputStreamReader(
+					System.in)));
         }
         
         int inCount = 0;

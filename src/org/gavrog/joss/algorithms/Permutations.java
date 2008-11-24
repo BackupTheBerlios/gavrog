@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ public class Permutations extends BranchAndCut {
 		if (n > this.degree) {
 			return null;
 		} else {
-			return new PMove(n, 0, Move.Type.CHOICE);
+			return new PMove(n, 0, Type.CHOICE);
 		}
 	}
 
@@ -81,7 +81,7 @@ public class Permutations extends BranchAndCut {
 		if (to > this.degree) {
 			return null;
 		} else {
-			return new PMove(from, to, Move.Type.DECISION);
+			return new PMove(from, to, Type.DECISION);
 		}
 	}
 
@@ -111,7 +111,7 @@ public class Permutations extends BranchAndCut {
 		inv[to] = 0;
 	}
 
-	protected List deductions(final Move move) {
+	protected List<Move> deductions(final Move move) {
 		return null;
 	}
 
