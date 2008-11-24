@@ -19,7 +19,6 @@ package org.gavrog.box.simple;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -30,12 +29,13 @@ import java.util.Properties;
 public class PrintSystemProperties {
 	public static void main(String[] args) {
     	final Properties props = System.getProperties();
-    	final List pkeys = new ArrayList();
-    	pkeys.addAll(props.keySet());
+    	final List<String> pkeys = new ArrayList<String>();
+    	for (final Object key: props.keySet()) {
+    		pkeys.add(String.valueOf(key));
+    	}
     	Collections.sort(pkeys);
-    	for (final Iterator iter = pkeys.iterator(); iter.hasNext();) {
-    		final String key = (String) iter.next();
-    		System.out.println(key + "\t" + props.getProperty(key));
+    	for (final String key: pkeys) {
+    		System.out.format("%-32s    %s\n", key, props.getProperty(key));
     	}
 	}
 }
