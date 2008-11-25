@@ -155,7 +155,7 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
                         	final ResumableGenerator gen =
                         		(ResumableGenerator) extended;
 							gen.addEventLink(CheckpointEvent.class, this,
-									"dispatchEvent");
+								"repostCheckpoint");
 							if (checkpoint[0] == resume[0] && resume1 != null) {
 								gen.setResumePoint(resume1);
 							}
@@ -199,6 +199,12 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
 		dispatchEvent(new CheckpointEvent(this, tooEarly(), null));
 	}
 
+	@SuppressWarnings("unused")
+	private void repostCheckpoint(final Object ev) {
+		final CheckpointEvent ce = (CheckpointEvent) ev;
+		dispatchEvent(new CheckpointEvent(this, ce.isOld(), ce.getMessage()));
+	}
+	
     /**
      * Retreives the current checkpoint value as a string.
      * 
@@ -439,17 +445,11 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
 				@Override
 				public void handleEvent(final Object event) {
 					final CheckpointEvent ce = (CheckpointEvent) event;
-					if (ce.getMessage() != null || interval == 0
+					if (ce.getMessage() != null
 							|| chkptTimer.elapsed() > interval) {
 						chkptTimer.reset();
-						final String msg = ce.getMessage();
-						final String p = ce.isOld() ? "# OLD" : "#@";
-						final String c = iter.getCheckpoint();
-						final String s =
-							msg != null ? String.format(" (%s)", msg) : "";
 						try {
-							output.write(String.format("%s CHECKPOINT %s%s\n",
-									p, c, s));
+							output.write(ce + "\n");
 							output.flush();
 						} catch (Throwable ex) {
 						}
