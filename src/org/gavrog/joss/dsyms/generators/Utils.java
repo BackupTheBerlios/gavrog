@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public class Utils {
             return false;
         }
         
-        final List degrees = new ArrayList();
+        final List<Integer> degrees = new ArrayList<Integer>();
         int undefined = 0;
         for (int i = 0; i < 2; ++i) {
             for (int j = i+1; j <= 2; ++j) {
@@ -62,7 +62,7 @@ public class Utils {
                     if (ds.definesV(i, j, D)) {
                         final int v = ds.v(i, j, D);
                         if (v > 1) {
-                            degrees.add(new Integer(v));
+                            degrees.add(v);
                         }
                     } else {
                         ++undefined;
@@ -73,8 +73,8 @@ public class Utils {
         
         final int n = degrees.size();
         if (n == 2){
-            final int a = ((Integer) Collections.max(degrees)).intValue();
-            final int b = ((Integer) Collections.min(degrees)).intValue();
+            final int a = Collections.max(degrees);
+            final int b = Collections.min(degrees);
             if (a != b) {
                 if ((a > 5 && b > 2) || b > 3 || undefined == 0) {
                     return false;
