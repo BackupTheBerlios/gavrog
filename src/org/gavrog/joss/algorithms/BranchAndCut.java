@@ -278,6 +278,7 @@ public abstract class BranchAndCut<T> extends ResumableGenerator<T> {
 			final List<Move> deductions = deductions(move.getData());
 			if (deductions != null) {
 				for (final Move d: deductions) {
+					log("    adding deduction " + d);
 					queue.add(new BC_Move(d, Type.DEDUCTION, 0));
 				}
 			}
