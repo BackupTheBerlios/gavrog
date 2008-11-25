@@ -137,7 +137,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         	final ResumableGenerator gen =
                         		(ResumableGenerator) extended;
 							gen.addEventLink(CheckpointEvent.class, this,
-									"dispatchEvent");
+									"repostCheckpoint");
 							if (checkpoint[0] == resume[0] && resume1 != null) {
 								gen.setResumePoint(resume1);
 							}
@@ -181,6 +181,12 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
 		dispatchEvent(new CheckpointEvent(this, tooEarly(), null));
 	}
 
+	@SuppressWarnings("unused")
+	private void repostCheckpoint(final Object ev) {
+		final CheckpointEvent ce = (CheckpointEvent) ev;
+		dispatchEvent(new CheckpointEvent(this, ce.isOld(), ce.getMessage()));
+	}
+	
     /**
      * Retreives the current checkpoint value as a string.
      * 

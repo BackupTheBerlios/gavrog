@@ -200,18 +200,11 @@ public class FrankKasper extends TileKTransitive {
 	        iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
 				@Override
 				public void handleEvent(final Object event) {
-					final CheckpointEvent ce = (CheckpointEvent) event;
-					if (ce.getMessage() != null || interval == 0
+					if (((CheckpointEvent) event).getMessage() != null
 							|| chkptTimer.elapsed() > interval) {
 						chkptTimer.reset();
-						final String msg = ce.getMessage();
-						final String p = ce.isOld() ? "# OLD" : "#@";
-						final String c = iter.getCheckpoint();
-						final String s =
-							msg != null ? String.format(" (%s)", msg) : "";
 						try {
-							output.write(String.format("%s CHECKPOINT %s%s\n",
-									p, c, s));
+							output.write(event + "\n");
 							output.flush();
 						} catch (Throwable ex) {
 						}
