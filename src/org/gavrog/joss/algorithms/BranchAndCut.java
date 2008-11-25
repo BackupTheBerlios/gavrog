@@ -20,8 +20,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.simple.NamedConstant;
+import org.gavrog.joss.dsyms.generators.CheckpointEvent;
+import org.gavrog.joss.dsyms.generators.ResumableGenerator;
 
 /**
  * Abstract base class for generators, defining the basic branch-and-cut
@@ -30,7 +31,7 @@ import org.gavrog.box.simple.NamedConstant;
  * @author Olaf Delgado
  * @version $Id: BranchAndCut.java,v 1.7 2006/09/27 22:04:27 odf Exp $
  */
-public abstract class BranchAndCut extends IteratorAdapter {
+public abstract class BranchAndCut<T> extends ResumableGenerator<T> {
 	// --- set to true to enable logging
 	final private static boolean LOGGING = false;
 
@@ -64,45 +65,62 @@ public abstract class BranchAndCut extends IteratorAdapter {
 		}
 	}
 	
-	public class Move {
-		// --- the type of move
-		final private Type type;
+	public interface Move {}
+	
+	private class BC_Move {
+		final private Move data;      // -- description of the move
+		final private Type type;      // -- what type of move
+		final private int decisionNr; // -- decision count at the current choice
 		
 		/**
 		 * Creates a new instance.
 		 * 
 		 * @param type the type of this move
 		 */
-		public Move(final Type type) {
+		public BC_Move(final Move data, final Type type, final int decisionNr) {
+			this.data = data;
 			this.type = type;
+			this.decisionNr = decisionNr;
 		}
 	
 		/**
 		 * @return true if this is no actual move but indicates a choice to be made.
 		 */
 		public boolean isChoice() {
-			return this.type == Type.CHOICE;
+			return type == Type.CHOICE;
 		}
 		
 		/**
 		 * @return true if this move is a decision made upon a choice.
 		 */
 		public boolean isDecision() {
-			return this.type == Type.DECISION;
+			return type == Type.DECISION;
 		}
 		
 		/**
 		 * @return true if this move is a consequence of previous decisions.
 		 */
 		public boolean isDeduction() {
-			return this.type == Type.DEDUCTION;
+			return type == Type.DEDUCTION;
+		}
+		
+		/**
+		 * @return the index of the current decision upon the current choice
+		 */
+		public int getDecisionNumber() {
+			return decisionNr;
+		}
+		
+		public Move getData() {
+			return data;
 		}
 		
 		/* (non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
 		public String toString() {
-			return "<" + this.type + ">";
+			return String.format("<%s, %s, %s>", getData(), type,
+					getDecisionNumber());
 		}
 	}
 
@@ -110,8 +128,16 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	private boolean done = false;
 
 	// --- the generation history
-	final private LinkedList<Move> stack = new LinkedList<Move>();
+	final private LinkedList<BC_Move> stack = new LinkedList<BC_Move>();
 
+    // --- point within the search tree at which to resume an old computation
+	private int resume[] = new int[] {};
+	
+	// --- the current progress towards the resume point
+	private int resume_level = 0;
+	private int resume_stack_level = 0;
+	private boolean resume_point_reached = false;
+	
 	/**
 	 * If logging is enabled, print a message to the standard error stream.
 	 * 
@@ -119,7 +145,8 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	 */
 	protected void log(final String text) {
 		if (LOGGING) {
-			System.err.println(text);
+			System.out.println("# " + text);
+			System.out.flush();
 		}
 	}
 
@@ -128,77 +155,110 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	 * 
 	 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 	 */
-	protected Object findNext() throws NoSuchElementException {
-		if (done) {
+	protected T findNext() throws NoSuchElementException {
+		if (this.done) {
 			throw new NoSuchElementException();
 		}
 
-		log("\nentering findNext(): stack size = " + this.stack.size());
+		log("");
+		log("entering findNext(): stack size = " + this.stack.size());
 
 		if (stack.size() == 0) {
 			final Move choice = nextChoice(null);
+			if (choice == null) {
+				log("leaving findNext(): no initial choice");
+				this.done = true;
+				throw new NoSuchElementException();
+			}
 			log("  adding initial choice " + choice);
-			this.stack.addLast(choice);
+			this.stack.addLast(new BC_Move(choice, Type.CHOICE, 0));
 		}
 
 		while (true) {
-			final Move decision = undoLastDecision();
+        	if (!resume_point_reached && resume_level >= resume.length) {
+				resume_point_reached = true;
+				if (resume.length > 0) {
+					postCheckpoint("resume point reached");
+				}
+				if (resume_level > resume.length) {
+					log("  past resume point at [" + getCheckpoint() + "]");
+				} else {
+					log("  resume point reached at [" + getCheckpoint() + "]");
+				}
+			}
+			final BC_Move decision = undoLastDecision();
 			if (decision == null) {
 				log("leaving findNext(): no more decisions to undo");
 				this.done = true;
 				throw new NoSuchElementException();
-			} else {
-				log("  last decision was " + decision);
+			}
+			log("  last decision was " + decision);
+            if (!resume_point_reached && stack.size() < resume_stack_level) {
+				resume_point_reached = true;
+				if (resume.length > 0) {
+					postCheckpoint("resume point reached");
+				}
+				log("  past resume point at [" + getCheckpoint() + "]");
 			}
 
-			final Move move = nextDecision(decision);
+			final Move move = nextDecision(decision.getData());
 			if (move == null) {
 				log("  no potential move");
 				continue;
-			} else {
-				log("  found potential move " + move);
 			}
-
-			if (performMoveAndDeductions(move)) {
+			final BC_Move next = new BC_Move(move, Type.DECISION,
+					decision.getDecisionNumber() + 1);
+			log("  found potential move " + next);
+			
+			final int old_stack_size = stack.size();
+			final boolean success = performMoveAndDeductions(next);
+			postCheckpoint(null);
+            if (!resume_point_reached
+            		&& old_stack_size == resume_stack_level
+					&& resume_level < resume.length
+					&& next.getDecisionNumber() == resume[resume_level]) {
+				resume_stack_level = stack.size();
+				resume_level += 1;
+				log("  resume level raised to " + resume_level
+						+ " at stack level " + resume_stack_level);
+			}
+			
+			if (success) {
 				if (isValid()) {
-					final boolean complete = isComplete();
-					final Object result;
-					if (complete) {
-						result = makeResult();
-						log("leaving findNext() with result " + result);
-					} else {
-						result = null;
-						log("  result is incomplete");
-					}
+					final T result = isComplete() ? makeResult() : null;
 					final Move choice = nextChoice(move);
 					if (choice != null) {
-						log("  adding choice " + choice);
-						this.stack.addLast(choice);
+						if (resume_point_reached
+								|| stack.size() == resume_stack_level) {
+							log("  adding choice " + choice);
+							this.stack.addLast(new BC_Move(choice, Type.CHOICE,
+									0));
+						}
 					}
-					if (complete) {
+					if (result != null) {
+						log("leaving findNext() with result " + result);
 						return result;
 					}
 				} else {
 					log("  result or move is not valid");
 				}
 			} else {
-				stack.addLast(move);
 				log("  move was rejected");
 			}
 		}
 	}
 
-	private boolean performMoveAndDeductions(final Move initial) {
+	private boolean performMoveAndDeductions(final BC_Move initial) {
 		// --- we maintain a queue of deductions, starting with the initial move
-		final LinkedList<Move> queue = new LinkedList<Move>();
+		final LinkedList<BC_Move> queue = new LinkedList<BC_Move>();
 		queue.addLast(initial);
 
 		while (queue.size() > 0) {
 			// --- get the next move from the queue
-			final Move move = (Move) queue.removeFirst();
+			final BC_Move move = (BC_Move) queue.removeFirst();
 
 			// --- see if the move can be performed
-			final Status status = checkMove(move);
+			final Status status = checkMove(move.getData());
 
 			// --- a void move has no consequences
 			if (status == Status.VOID) {
@@ -208,32 +268,35 @@ public abstract class BranchAndCut extends IteratorAdapter {
 			// --- if the move was illegal, return immediately
 			if (status == Status.ILLEGAL) {
 				log("    move " + move + " is impossible; backtracking");
+				this.stack.addLast(move); // -- record move so it can be undone
 				return false;
 			}
 
 			// --- perform and record the move
-			performMove(move);
+			performMove(move.getData());
 			this.stack.addLast(move);
 
 			// --- finally, find and enqueue deductions
-			final List<Move> deductions = deductions(move);
+			final List<Move> deductions = deductions(move.getData());
 			if (deductions != null) {
-				queue.addAll(deductions);
+				for (final Move d: deductions) {
+					queue.add(new BC_Move(d, Type.DEDUCTION, 0));
+				}
 			}
 		}
 
 		return true;
 	}
 
-	private Move undoLastDecision() {
+	private BC_Move undoLastDecision() {
 		while (stack.size() > 0) {
-			final Move last = (Move) this.stack.removeLast();
+			final BC_Move last = this.stack.removeLast();
 			if (last == null) {
 				continue;
 			}
 
 			log("  undoing " + last);
-			undoMove(last);
+			undoMove(last.getData());
 
 			if (!last.isDeduction()) {
 				return last;
@@ -241,6 +304,44 @@ public abstract class BranchAndCut extends IteratorAdapter {
 		}
 		return null;
 	}
+
+	private void postCheckpoint(final String message) {
+		dispatchEvent(new CheckpointEvent(this, !resume_point_reached, message));
+	}
+
+	/**
+	 * Retreives the current checkpoint value as a string.
+	 * 
+	 * @return the current checkpoint.
+	 */
+    public String getCheckpoint() {
+    	final StringBuffer buf = new StringBuffer(20);
+    	for (BC_Move move: stack) {
+    		if (move.isDecision()) {
+    			if (buf.length() > 0) {
+    				buf.append('-');
+    			}
+    			buf.append(move.decisionNr);
+    		}
+    	}
+    	return buf.toString();
+    }
+    
+    /**
+     * Sets the point in the search tree at which the algorithm should resume.
+     * 
+     * @param resume specifies the checkpoint to resume execution at.
+     */
+    public void setResumePoint(final String spec) {
+    	if (spec == null || spec.length() == 0) {
+    		return;
+    	}
+    	final String fields[] = spec.trim().split("-");
+    	resume = new int[fields.length];
+    	for (int i = 0; i < fields.length; ++i) {
+    		resume[i] = Integer.valueOf(fields[i]);
+    	}
+    }
 
 	// --- The following methods have to implemented by every derived class:
 
@@ -322,5 +423,5 @@ public abstract class BranchAndCut extends IteratorAdapter {
 	 * 
 	 * @return the result of the current state.
 	 */
-	abstract protected Object makeResult();
+	abstract protected T makeResult();
 }

@@ -48,4 +48,12 @@ public class CheckpointEvent {
 	public String getMessage() {
 		return message;
 	}
+	
+	public String toString() {
+		final String msg = getMessage();
+		final String p = isOld() ? "# OLD" : "#@";
+		final String c = getCheckpoint();
+		final String s = msg != null ? String.format(" (%s)", msg) : "";
+		return String.format("%s CHECKPOINT %s%s", p, c, s);
+	}
 }

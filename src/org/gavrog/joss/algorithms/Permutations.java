@@ -16,8 +16,11 @@
 
 package org.gavrog.joss.algorithms;
 
-import java.util.Iterator;
 import java.util.List;
+
+import org.gavrog.joss.dsyms.generators.CheckpointEvent;
+
+import buoy.event.EventProcessor;
 
 
 /**
@@ -28,23 +31,22 @@ import java.util.List;
  * @author Olaf Delgado
  * @version $Id: Permutations.java,v 1.5 2006/09/26 22:45:19 odf Exp $
  */
-public class Permutations extends BranchAndCut {
+public class Permutations extends BranchAndCut<String> {
 	final int degree;
 	final int map[];
 	final int inv[];
 
-	private class PMove extends Move {
+	private class PMove implements Move {
 		public int from;
 		public int to;
 		
-		public PMove(final int from, final int to, final Type type) {
-			super(type);
+		public PMove(final int from, final int to) {
 			this.from = from;
 			this.to = to;
 		}
 		
 		public String toString() {
-			return super.toString().replaceFirst(">", "(" + from + "->" + to + ")>");
+			return String.format("(%d => %d)", from, to);
 		}
 	}
 	
@@ -68,7 +70,7 @@ public class Permutations extends BranchAndCut {
 		if (n > this.degree) {
 			return null;
 		} else {
-			return new PMove(n, 0, Type.CHOICE);
+			return new PMove(n, 0);
 		}
 	}
 
@@ -81,7 +83,7 @@ public class Permutations extends BranchAndCut {
 		if (to > this.degree) {
 			return null;
 		} else {
-			return new PMove(from, to, Type.DECISION);
+			return new PMove(from, to);
 		}
 	}
 
@@ -129,7 +131,7 @@ public class Permutations extends BranchAndCut {
 		return true;
 	}
 	
-	protected Object makeResult() {
+	protected String makeResult() {
 		final StringBuffer tmp = new StringBuffer(10);
 		for (int i = 1; i <= this.degree; ++i) {
 			tmp.append(this.map[i]);
@@ -144,12 +146,23 @@ public class Permutations extends BranchAndCut {
 		} else {
 			n = Integer.parseInt(args[0]);
 		}
-		final Iterator gen = new Permutations(n);
+		final Permutations gen = new Permutations(n);
+		if (args.length > 1) {
+			gen.setResumePoint(args[1]);
+		}
+		gen.addEventLink(CheckpointEvent.class, new EventProcessor() {
+			@Override
+			public void handleEvent(Object event) {
+				System.out.println(event);
+				System.out.flush();
+			}
+		});
 		int count = 0;
-		while (gen.hasNext()) {
-			System.out.println(gen.next());
+		for (final String p: gen) {
+			System.out.println(p);
+			System.out.flush();
 			++count;
 		}
-		System.err.println("Generated " + count + " permutations.");
+		System.out.println("# Generated " + count + " permutations.");
 	}
 }
