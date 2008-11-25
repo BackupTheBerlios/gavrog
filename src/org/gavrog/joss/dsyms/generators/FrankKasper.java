@@ -180,7 +180,7 @@ public class FrankKasper extends TileKTransitive {
 			final Stopwatch eTestTimer = new Stopwatch();
 			timer.start();
 			
-			output.write("# Program Kelvin with k = " + k + ".\n");
+			output.write("# Program FrankKasper with k = " + k + ".\n");
 			output.write("# Options:\n");
 			output.write("#     verbose mode:                    ");
 			output.write((verbose ? "on" : "off") + "\n");
