@@ -18,7 +18,6 @@ package org.gavrog.joss.algorithms;
 
 import java.util.List;
 
-import org.gavrog.joss.dsyms.generators.CheckpointEvent;
 
 import buoy.event.EventProcessor;
 

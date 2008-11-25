@@ -15,7 +15,7 @@
 */
 
 
-package org.gavrog.joss.dsyms.generators;
+package org.gavrog.joss.algorithms;
 
 import java.util.Iterator;
 import java.util.LinkedList;

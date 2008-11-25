@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.simple.NamedConstant;
-import org.gavrog.joss.dsyms.generators.CheckpointEvent;
-import org.gavrog.joss.dsyms.generators.ResumableGenerator;
 
 /**
  * Abstract base class for generators, defining the basic branch-and-cut

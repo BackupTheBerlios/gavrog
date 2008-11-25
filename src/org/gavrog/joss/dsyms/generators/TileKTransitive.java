@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.joss.algorithms.CheckpointEvent;
+import org.gavrog.joss.algorithms.ResumableGenerator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;

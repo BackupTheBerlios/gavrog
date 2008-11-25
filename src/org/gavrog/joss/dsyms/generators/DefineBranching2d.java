@@ -27,6 +27,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.algorithms.BranchAndCut;
+import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.gavrog.box.simple.Stopwatch;
+import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
