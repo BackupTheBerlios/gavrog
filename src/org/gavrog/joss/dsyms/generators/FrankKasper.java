@@ -138,6 +138,12 @@ public class FrankKasper extends TileKTransitive {
 		System.exit(1);
 	}
 	
+	public static String memory() {
+		return String.format("Total: %4dMB  Free: %4dMB",
+				(Runtime.getRuntime().totalMemory() + (2 << 19)) >> 20,
+				(Runtime.getRuntime().freeMemory() + (2 << 19)) >> 20);
+	}
+	
 	public static void main(final String[] args) {
 		try {
 			boolean verbose = false;
@@ -205,6 +211,14 @@ public class FrankKasper extends TileKTransitive {
 						chkptTimer.reset();
 						try {
 							output.write(event + "\n");
+							output.flush();
+							output.write(String.format(
+									"# Memory before garbage collect: %s\n",
+									memory()));
+							System.gc();
+							output.write(String.format(
+									"# Memory after garbage collect:  %s\n",
+									memory()));
 							output.flush();
 						} catch (Throwable ex) {
 						}
