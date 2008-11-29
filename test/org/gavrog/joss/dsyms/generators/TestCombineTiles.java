@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ public class TestCombineTiles extends TestCase {
         final DSymbol ds = new DSymbol("4:2 4,3 2 4,2 4:4,4");
         final List forms = CombineTiles.subCanonicalForms(ds);
         assertEquals(2, forms.size());
-        final List strings = new LinkedList();
+        final List<String> strings = new LinkedList<String>();
         strings.add(forms.get(0).toString());
         strings.add(forms.get(1).toString());
         assertTrue(strings.contains("<1.1:4:2 4,3 2 4,2 4:4,4>"));
@@ -132,6 +132,33 @@ public class TestCombineTiles extends TestCase {
         final Iterator iter = new CombineTiles(ds);
         assertEquals(new DSymbol("4 3:1 2 3 4,2 3 4,1 3 4,1 2 4:4 3 3,3 3,0 0"), iter.next());
         assertEquals(new DSymbol("4 3:1 2 3 4,2 3 4,1 3 4,2 4:4 3 3,3 3,0"), iter.next());
+        assertFalse(iter.hasNext());
+    }
+    
+    public void testResume1() {
+    	final DSymbol ds = new DSymbol("6 1:2 4 6,6 3 5:3");
+        final CombineTiles iter = new CombineTiles(ds);
+        iter.setResumePoint("2-3");
+        assertEquals(new DSymbol("6:2 4 6,6 3 5,2 5 6:3,0"), iter
+                .next());
+        assertEquals(new DSymbol("6:2 4 6,6 3 5,2 6 5:3,0 0"), iter.next());
+        assertFalse(iter.hasNext());
+    }
+    
+    public void testResume2() {
+    	final DSymbol ds = new DSymbol("6 1:2 4 6,6 3 5:3");
+        final CombineTiles iter = new CombineTiles(ds);
+        iter.setResumePoint("2-5");
+        assertEquals(new DSymbol("6:2 4 6,6 3 5,2 5 6:3,0"), iter
+                .next());
+        assertEquals(new DSymbol("6:2 4 6,6 3 5,2 6 5:3,0 0"), iter.next());
+        assertFalse(iter.hasNext());
+    }
+    
+    public void testResume3() {
+    	final DSymbol ds = new DSymbol("6 1:2 4 6,6 3 5:3");
+        final CombineTiles iter = new CombineTiles(ds);
+        iter.setResumePoint("3");
         assertFalse(iter.hasNext());
     }
     

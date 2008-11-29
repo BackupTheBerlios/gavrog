@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.gavrog.box.simple.Stopwatch;
+import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
@@ -34,64 +35,68 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * @author Olaf Delgado
  * @version $Id: Kelvin.java,v 1.6 2008/04/12 09:40:45 odf Exp $
  */
-public class Kelvin {
+public class Kelvin extends FrankKasperExtended {
 	final static private List iTiles = new IndexList(0, 1, 2);
 	final static private List iFaces2d = new IndexList(0, 1);
 	
-	public static class Generator extends FrankKasperExtended {
-		final Writer output;
-		final boolean countOnly;
-		final int start;
-		final int stop;
-		int count = 0;
-		final Stopwatch timer = new Stopwatch();
-		final int interval;
+	final Writer output;
+	final boolean countOnly;
+	final int start;
+	final int stop;
+	int count = 0;
+	final Stopwatch timer = new Stopwatch();
+	final int interval;
+	
+	public Kelvin(final int k,
+			         final boolean verbose,
+			         final boolean testParts,
+			         final boolean countOnly,
+			         final int start, final int stop,
+			         final int checkpointInterval,
+			         final Writer output) {
+		super(k, verbose, testParts);
+		this.countOnly = countOnly;
+		this.start = start;
+		this.stop = stop;
+		this.interval = checkpointInterval * 1000;
+		this.output = output;
+		this.timer.start();
 		
-		public Generator(final int k,
-				         final boolean verbose,
-				         final boolean testParts,
-				         final boolean countOnly,
-				         final int start, final int stop,
-				         final int checkpointInterval,
-				         final Writer output) {
-			super(k, verbose, testParts);
-			this.countOnly = countOnly;
-			this.start = start;
-			this.stop = stop;
-			this.interval = checkpointInterval * 1000;
-			this.output = output;
-			this.timer.start();
+		this.addEventLink(CheckpointEvent.class, this);
+	}
+	
+	protected boolean partsListOkay(final List parts) {
+		final boolean ok = super.partsListOkay(parts);
+		if (ok) {
+			++count;
 		}
-		
-		protected boolean partsListOkay(final List parts) {
-			final boolean ok = super.partsListOkay(parts);
-			if (ok) {
-				++count;
-			}
-			if (countOnly) {
-				return false;
-			}
-			return ok && (start <= count) && (stop <= 0 || stop > count);
+		if (countOnly) {
+			return false;
 		}
-		
-		public int getCount() {
-			return count;
+		return ok && (start <= count) && (stop <= 0 || stop > count);
+	}
+	
+	public int getCount() {
+		return count;
+	}
+	
+	protected void processEvent(final Object event) {
+		final CheckpointEvent ce = (CheckpointEvent) event;
+		if (ce.getMessage() != null || interval == 0
+				|| this.timer.elapsed() > interval) {
+			writeCheckpoint(ce.isOld(), ce.getMessage());
 		}
-		
-		protected void handleCheckpoint(final boolean isOld) {
-			if (interval > 0 && this.timer.elapsed() > interval) {
-				writeCheckpoint(isOld);
-			}
-		}
-		
-		public void writeCheckpoint(final boolean isOld) {
-			try {
-				this.timer.reset();
-				output.write(String.format("%s CHECKPOINT %s\n",
-						isOld ? "# passing" : "#@", getCheckpoint()));
-				output.flush();
-			} catch (Throwable ex) {
-			}
+	}
+	
+	public void writeCheckpoint(final boolean isOld, final String msg) {
+		try {
+			this.timer.reset();
+			final String p = isOld ? "# OLD" : "#@";
+			final String c = getCheckpoint();
+			final String s = msg != null ? String.format(" (%s)", msg) : "";
+			output.write(String.format("%s CHECKPOINT %s%s\n", p, c, s));
+			output.flush();
+		} catch (Throwable ex) {
 		}
 	}
 	
@@ -169,7 +174,7 @@ public class Kelvin {
 			int section = 0;
 			int nrOfSections = 0;
 			int checkpointInterval = 3600;
-			int resume[] = null;
+			String resume = null;
 			
 			int i = 0;
 			while (i < args.length && args[i].startsWith("-")) {
@@ -196,11 +201,7 @@ public class Kelvin {
 				} else if (args[i].equals("-i")) {
 					checkpointInterval = Integer.parseInt(args[++i]);
 				} else if (args[i].equals("-r")) {
-					final String tmp[] = args[++i].split("-");
-					resume = new int[] { 0, 0, 0 };
-					resume[0] = Integer.parseInt(tmp[0]);
-					resume[1] = Integer.parseInt(tmp[1]);
-					resume[2] = Integer.parseInt(tmp[2]);
+					resume = args[++i];
 				} else if (args[i].equals("-x")) {
 					final String tmp[] = args[++i].split("-");
 					start = Integer.parseInt(tmp[0]);
@@ -249,8 +250,8 @@ public class Kelvin {
 			output.flush();
 			
 			if (nrOfSections > 0) {
-				final Generator tmp = new Generator(k, verbose, testParts,
-						true, 0, 0, 0, null);
+				final Kelvin tmp = new Kelvin(k, verbose, testParts, true, 0,
+						0, 0, null);
 				while (tmp.hasNext()) {
 					tmp.next();
 				}
@@ -269,20 +270,19 @@ public class Kelvin {
 				output.write("# Running cases " + start + " to " + stop + ".\n");
 			}
 			if (resume != null) {
-				output.write(String.format("# Resuming at %d %d %d.\n",
-						resume[0], resume[1], resume[2]));
+				output.write(String.format("# Resuming at %s.\n", resume));
 			}
 			output.write("\n");
 			output.flush();
 			
-			final Generator iter = new Generator(k, verbose, testParts,
-					false, start, stop, checkpointInterval, output);
+			final Kelvin iter = new Kelvin(k, verbose, testParts, false, start,
+					stop, checkpointInterval, output);
 			if (resume != null) {
 				iter.setResumePoint(resume);
 			}
 
-			while (iter.hasNext()) {
-				final DSymbol out = ((DSymbol) iter.next()).dual();
+			for (final DSymbol ds: iter) {
+				final DSymbol out = ds.dual();
 				if (allTileSizesBetween(out, 12, 16)) {
 					++countTileSizeOk;
 					if (check) {
@@ -292,7 +292,7 @@ public class Kelvin {
 						final boolean ambiguous = tester.isAmbiguous();
 						eTestTimer.stop();
 						if (!bad) {
-							iter.writeCheckpoint(false);
+							iter.writeCheckpoint(false, "new symbol found");
 							if (ambiguous) {
 								output.write("#@ name euclidicity dubious\n");
 								++countAmbiguous;

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2008 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,8 +20,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.joss.algorithms.CheckpointEvent;
+import org.gavrog.joss.algorithms.ResumableGenerator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -35,7 +36,7 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * @author Olaf Delgado
  * @version $Id: TileKTransitive.java,v 1.9 2008/04/02 11:09:59 odf Exp $
  */
-public class TileKTransitive extends IteratorAdapter {
+public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
     private final Iterator partLists;
@@ -48,6 +49,7 @@ public class TileKTransitive extends IteratorAdapter {
     private int countMinimal = 0;
     private int checkpoint[] = new int[] { 0, 0, 0 };
     private int resume[] = new int[] { 0, 0, 0 };
+    private String resume1 = null;
 
     /**
      * Constructs an instance.
@@ -72,16 +74,29 @@ public class TileKTransitive extends IteratorAdapter {
      * 
      * @param resume specifies the checkpoint to resume execution at.
      */
-    public void setResumePoint(final int resume[]) {
-        this.resume[0] = resume[0];
-        this.resume[1] = resume[1];
-        this.resume[2] = resume[2];
+    public void setResumePoint(final String spec) {
+    	if (spec == null || spec.length() == 0) {
+    		return;
+    	}
+    	final String fields[] = spec.trim().split("-");
+    	this.resume[0] = Integer.valueOf(fields[0]);
+    	if (fields[1].startsWith("[")) {
+    		this.resume1 = fields[1].substring(1, fields[1].length() - 1)
+					.replaceAll("\\.", "-");
+    	} else {
+        	this.resume[1] = Integer.valueOf(fields[2]);
+        	this.resume[2] = Integer.valueOf(fields[2]);
+    	}
     }
 
-    private boolean tooEarly(final int level) {
-    	for (int i = 0; i < level; ++i) {
-    		if (checkpoint[i] != resume[i]) {
-    			return checkpoint[i] < resume[i];
+    private boolean tooEarly() {
+    	if (checkpoint[0] != resume[0]) {
+    		return checkpoint[0] < resume[0];
+    	} else if (resume1 == null) {
+    		if (checkpoint[1] != resume[1]) {
+    			return checkpoint[1] < resume[1];
+    		} else {
+    			return checkpoint[2] < resume[2];
     		}
     	}
     	return false;
@@ -92,7 +107,7 @@ public class TileKTransitive extends IteratorAdapter {
      * 
      * @see javaDSym.util.IteratorAdapter#findNext()
      */
-    protected Object findNext() throws NoSuchElementException {
+    protected DSymbol findNext() throws NoSuchElementException {
         while (true) {
             while (symbols == null || !symbols.hasNext()) {
                 while (extended == null || !extended.hasNext()) {
@@ -108,8 +123,8 @@ public class TileKTransitive extends IteratorAdapter {
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
-                        handleCheckpoint(tooEarly(1));
-                        if (tooEarly(1)) {
+                        postCheckpoint();
+                        if (tooEarly()) {
                         	continue;
                         }
                         final DSymbol ds = new DSymbol(tmp);
@@ -118,6 +133,15 @@ public class TileKTransitive extends IteratorAdapter {
                             System.err.println(setAsString(ds));
                         }
                         extended = extendTo3d(ds);
+                        if (extended instanceof ResumableGenerator) {
+                        	final ResumableGenerator gen =
+                        		(ResumableGenerator) extended;
+							gen.addEventLink(CheckpointEvent.class, this,
+									"repostCheckpoint");
+							if (checkpoint[0] == resume[0] && resume1 != null) {
+								gen.setResumePoint(resume1);
+							}
+						}
                     } else {
                         throw new NoSuchElementException("At end");
                     }
@@ -125,8 +149,8 @@ public class TileKTransitive extends IteratorAdapter {
                 final DSymbol ds = (DSymbol) extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
-                handleCheckpoint(tooEarly(2));
-                if (tooEarly(2)) {
+                postCheckpoint();
+                if (tooEarly()) {
                 	continue;
                 }
                 ++this.count3dSets;
@@ -137,8 +161,8 @@ public class TileKTransitive extends IteratorAdapter {
             }
             final DSymbol ds = (DSymbol) symbols.next();
             ++checkpoint[2];
-            handleCheckpoint(tooEarly(3));
-            if (tooEarly(3)) {
+            postCheckpoint();
+            if (tooEarly()) {
             	continue;
             }
             ++count3dSymbols;
@@ -153,22 +177,31 @@ public class TileKTransitive extends IteratorAdapter {
         }
     }
 
+	private void postCheckpoint() {
+		dispatchEvent(new CheckpointEvent(this, tooEarly(), null));
+	}
+
+	@SuppressWarnings("unused")
+	private void repostCheckpoint(final Object ev) {
+		final CheckpointEvent ce = (CheckpointEvent) ev;
+		dispatchEvent(new CheckpointEvent(this, ce.isOld(), ce.getMessage()));
+	}
+	
     /**
      * Retreives the current checkpoint value as a string.
      * 
      * @return the current checkpoint.
      */
     public String getCheckpoint() {
-    	return String.format("%d-%d-%d", checkpoint[0], checkpoint[1],
-				checkpoint[2]);
-    }
-    
-    /**
-     * Override this to record program checkpoints.
-     * @param oldCheckpoint true if we're before the resume point
-     */
-    protected void handleCheckpoint(boolean oldCheckpoint) {
-    }
+    	if (extended != null && extended instanceof ResumableGenerator) {
+			return String.format("%d-[%s]", checkpoint[0],
+					((ResumableGenerator) extended).getCheckpoint().replaceAll(
+							"-", "."));
+		} else {
+			return String.format("%s-%s-%s", checkpoint[0], checkpoint[1],
+					checkpoint[2]);
+		}
+	}
     
     /**
      * Override this to restrict the equivariant tile combinations used.
@@ -244,8 +277,7 @@ public class TileKTransitive extends IteratorAdapter {
         int countAmbiguous = 0;
 
         try {
-            while (iter.hasNext()) {
-                final DSymbol out = (DSymbol) iter.next();
+        	for (final DSymbol out: iter) {
                 if (check) {
                     final EuclidicityTester tester = new EuclidicityTester(out);
                     if (tester.isAmbiguous()) {
