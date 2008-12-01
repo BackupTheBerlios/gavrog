@@ -66,7 +66,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
@@ -178,7 +177,8 @@ public class Main extends EventSource {
 		new FileChooser(FileChooser.SAVE_FILE);
 	final private FileChooser outScreenshotChooser =
 		new FileChooser(FileChooser.SAVE_FILE);
-	final private DimensionPanel dimPanel = new DimensionPanel();
+	final private DimensionPanel screenshotDimPanel = new DimensionPanel();
+	final private DimensionPanel sunflowDimPanel = new DimensionPanel();
 	
     // --- tile options
 	private int subdivisionLevel = 2;
@@ -502,18 +502,20 @@ public class Main extends EventSource {
 		outSunflowChooser.setTitle("Save image");
 		outSunflowChooser.addChoosableFileFilter(new ExtensionFilter(
 				new String[] { "png", "tga", "hdr" }, "Images files"));
-		dimPanel.setDimension(new Dimension(800, 600));
-		TitledBorder title = BorderFactory.createTitledBorder(BorderFactory
-				.createEtchedBorder(), "Dimension");
-		dimPanel.setBorder(title);
-		outSunflowChooser.setAccessory(dimPanel);
+		sunflowDimPanel.setDimension(new Dimension(800, 600));
+		sunflowDimPanel.setBorder(BorderFactory.createTitledBorder(
+				BorderFactory.createEtchedBorder(), "Dimension"));
+		outSunflowChooser.setAccessory(sunflowDimPanel);
 		outSunflowChooser.setAppendEnabled(false);
 
 		outScreenshotChooser.setTitle("Save image");
 		outScreenshotChooser.addChoosableFileFilter(new ExtensionFilter(
 				new String[] { "bmp", "jpg", "jpeg", "png", "wbmp", "tiff",
 						"tif", "gif" }, "Images files"));
-		outScreenshotChooser.setAccessory(dimPanel);
+		screenshotDimPanel.setDimension(new Dimension(800, 600));
+		screenshotDimPanel.setBorder(BorderFactory.createTitledBorder(
+				BorderFactory.createEtchedBorder(), "Dimension"));
+		outScreenshotChooser.setAccessory(screenshotDimPanel);
 		outScreenshotChooser.setAppendEnabled(false);
     }
     
@@ -672,7 +674,7 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					dimPanel.setDimension(viewerFrame.getViewer()
+					screenshotDimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
 					final File file = outScreenshotChooser.pickFile(
 							ui.getLastScreenshotPath(), "png");
@@ -683,8 +685,9 @@ public class Main extends EventSource {
 						public void run() {
 		                    try {
 		                    	busy();
-		                    	viewerFrame.screenshot(dimPanel.getDimension(),
-		                    			4, file);
+		                    	viewerFrame.screenshot(
+		                    			screenshotDimPanel.getDimension(), 4,
+		                    			file);
 		                    } catch (Throwable ex) {
 		                    	log(ex.toString());
 		                    	return;
@@ -706,7 +709,7 @@ public class Main extends EventSource {
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
 				public void actionPerformed(ActionEvent e) {
-					dimPanel.setDimension(viewerFrame.getViewer()
+					sunflowDimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
 					final File file = outSunflowChooser.pickFile(
 							ui.getLastSunflowRenderPath(), "png");
@@ -721,7 +724,7 @@ public class Main extends EventSource {
                     	opts.setGiEngine("ambocc");
                     	opts.setFilter("mitchell");
                     	Sunflow.renderAndSave(viewerFrame.getViewer(),
-								opts, dimPanel.getDimension(), file);
+								opts, sunflowDimPanel.getDimension(), file);
                     } catch (Throwable ex) {
                     	log(ex.toString());
                     	return;
