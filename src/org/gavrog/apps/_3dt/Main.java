@@ -143,6 +143,7 @@ import de.jreality.shader.CommonAttributes;
 import de.jreality.softviewer.SoftViewer;
 import de.jreality.sunflow.RenderOptions;
 import de.jreality.sunflow.Sunflow;
+import de.jreality.ui.viewerapp.actions.file.ExportU3D;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.SceneGraphUtility;
 import de.jtem.beans.DimensionPanel;
@@ -398,6 +399,10 @@ public class Main extends EventSource {
         fileMenu.add(actionScreenshot());
         fileMenu.add(actionSunflowRender());
         fileMenu.add(actionSunflowPreview());
+        fileMenu.addSeparator();
+
+        fileMenu.add(new ExportU3D("Export U3D", viewerFrame.getViewer(),
+        		null));
         fileMenu.addSeparator();
         
         fileMenu.add(actionQuit());
