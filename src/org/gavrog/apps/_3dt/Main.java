@@ -401,8 +401,8 @@ public class Main extends EventSource {
         fileMenu.add(actionSunflowPreview());
         fileMenu.addSeparator();
 
-        fileMenu.add(new ExportU3D("Export U3D", viewerFrame.getViewer(),
-        		null));
+        fileMenu.add(new ExportU3D("Export U3D...", viewerFrame.getViewer(),
+				null));
         fileMenu.addSeparator();
         
         fileMenu.add(actionQuit());
