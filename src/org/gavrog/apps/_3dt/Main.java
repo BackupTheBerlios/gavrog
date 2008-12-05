@@ -2355,11 +2355,26 @@ public class Main extends EventSource {
 						setColor(a, c);
 						child.setAppearance(a);
 					}
-				} else if (name.startsWith("outline")) {
+				} else if (name.startsWith("outline:")) {
+					final int j = Integer.parseInt(name.substring(8));
+					final Tiling.Facet f = b.facet(j);
+					final Color c = doc().getFacetClassColor(f);
 					final Appearance a = new Appearance();
-					final double f = getEdgeOpacity();
-					if (f > 0) {
-						setColor(a, blendColors(tileColor, getEdgeColor(), f));
+					final double factor = getEdgeOpacity();
+					if (c == null) {
+						if (factor > 0) {
+							setColor(a, blendColors(tileColor, getEdgeColor(),
+									factor));
+						} else {
+							setColor(a, tileColor);
+						}
+					} else {
+						if (factor > 0) {
+							setColor(a, blendColors(c, getEdgeColor(),
+									factor));
+						} else {
+							setColor(a, c);
+						}
 					}
 					a.setAttribute(CommonAttributes.TRANSPARENCY, 0.0);
 					child.setAppearance(a);
@@ -2385,8 +2400,11 @@ public class Main extends EventSource {
 				if (node instanceof SceneGraphComponent) {
 					final SceneGraphComponent child = (SceneGraphComponent) node;
 					final String name = child.getName();
-					if (name.startsWith("outline")) {
-						child.setVisible(getDrawEdges());
+					if (name.startsWith("outline:")) {
+						final int j = Integer.parseInt(name.substring(8));
+						final Tiling.Facet f = b.facet(j);
+						child.setVisible(getDrawEdges()
+								&& !doc().isHiddenFacetClass(f));
 					} else if (name.startsWith("face:")) {
 						final int j = Integer.parseInt(name.substring(5));
 						final Tiling.Facet f = b.facet(j);
