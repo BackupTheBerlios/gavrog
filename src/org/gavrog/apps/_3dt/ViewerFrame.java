@@ -142,17 +142,22 @@ public class ViewerFrame extends JFrame {
 		camPath.push(rootNode);
 		camPath.push(cameraNode);
 		camPath.push(camera);
+		
+		SceneGraphPath emptyPickPath = new SceneGraphPath();
+		emptyPickPath.push(rootNode);
+		emptyPickPath.push(geometryNode);
+		emptyPickPath.push(contentNode);
 
 		softwareViewer = new SoftViewer();
 		softwareViewer.setSceneRoot(rootNode);
 		softwareViewer.setCameraPath(camPath);
-		ToolSystem.toolSystemForViewer(softwareViewer).initializeSceneTools();
+		setupToolSystem(softwareViewer, emptyPickPath);
 		
 		try {
 			viewer = new de.jreality.jogl.Viewer();
 			viewer.setSceneRoot(rootNode);
 			viewer.setCameraPath(camPath);
-			ToolSystem.toolSystemForViewer(viewer).initializeSceneTools();
+			setupToolSystem(viewer, emptyPickPath);
 		} catch (Exception ex) {
 			System.err.println("OpenGL viewer could not be initialized.");
 			viewer = softwareViewer;
@@ -192,6 +197,13 @@ public class ViewerFrame extends JFrame {
 				}
 			}
 		}).start();
+	}
+	
+	private void setupToolSystem(final Viewer viewer,
+			final SceneGraphPath emptyPickPath) {
+		final ToolSystem ts = ToolSystem.toolSystemForViewer(viewer);
+		ts.initializeSceneTools();
+		ts.setEmptyPickPath(emptyPickPath);
 	}
 	
 	public Component getViewingComponent() {
