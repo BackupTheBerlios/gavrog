@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -493,7 +493,7 @@ public class UndirectedGraph implements IGraph {
     public INode newNode() {
         final Long id = new Long(nextNodeId++);
         this.idToType.put(id, Node.class);
-        this.nodeIdToIncidentEdgesIds.put(id, new HashSet());
+        this.nodeIdToIncidentEdgesIds.put(id, new LinkedHashSet());
         this.nodeIdToDegree.put(id, new Integer(0));
         return new Node(id);
     }
