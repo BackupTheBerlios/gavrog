@@ -1798,8 +1798,7 @@ public class Main extends EventSource {
     	final int nFaces = b.size();
     	final int fStart[] = new int[nFaces];
     	final Surface fSurf[] = new Surface[nFaces];
-    	final String fTag[] = new String[nFaces + 1];
-    	fTag[b.size()] = "outline";
+    	final String fTag[] = new String[2 * nFaces];
     	final int outlineFixing = getSubdivisionLevel() - getEdgeRoundingLevel();
 		int nextStart = 0;
 		
@@ -1849,6 +1848,7 @@ public class Main extends EventSource {
 			
             fSurf[i] = Surface.fromOutline(p, 1000);
 			fTag[i] = "face:" + face.getIndex();
+			fTag[nFaces + i] = "outline:" + face.getIndex();
 			fSurf[i].tagAll(fTag[i]);
 			nextStart += fSurf[i].vertices.length;
 		}
@@ -1950,8 +1950,8 @@ public class Main extends EventSource {
 							ch2inner.get(E0), ch2inner.get(E) });
 					faces.add(new int[] { ch2edge.get(E), ch2inner.get(E),
 							ch2edge.get(E1), ch2vertex.get(E) });
-					tagsList.add(fTag[b.size()]);
-					tagsList.add(fTag[b.size()]);
+					tagsList.add(fTag[nFaces + k]);
+					tagsList.add(fTag[nFaces + k]);
 				} else {
 					faces.add(new int[] { ch2edge.get(E), ch2edge.get(E0),
 							ch2inner.get(E0), ch2inner.get(E) });
@@ -1959,9 +1959,9 @@ public class Main extends EventSource {
 							ch2vertex.get(E) });
 					faces.add(new int[] { ch2inner.get(E), ch2edge.get(E1),
 							ch2vertex.get(E) });
-					tagsList.add(fTag[b.size()]);
-					tagsList.add(fTag[b.size()]);
-					tagsList.add(fTag[b.size()]);
+					tagsList.add(fTag[nFaces + k]);
+					tagsList.add(fTag[nFaces + k]);
+					tagsList.add(fTag[nFaces + k]);
 				}
 			}
 		}
@@ -1994,7 +1994,7 @@ public class Main extends EventSource {
         		+ b.getIndex());
         
 		// --- split the subdivided surface back into its parts and add them
-		for (int i = 0; i <= b.size(); ++i) {
+		for (int i = 0; i < fTag.length; ++i) {
 			final String tag = fTag[i];
 			final Surface surfPart = surf.extract(tag);
 //			if (tag.startsWith("face:")) {
