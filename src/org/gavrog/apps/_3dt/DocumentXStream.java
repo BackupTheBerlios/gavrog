@@ -119,6 +119,13 @@ public class DocumentXStream extends XStream {
 						writer.startNode("tile");
 						writer.addAttribute("templateNr",
 								String.valueOf(item.getTile().getIndex()));
+					} else if (item.isFacet()) {
+						final Tiling.Facet f = item.getFacet();
+						writer.startNode("facet");
+						writer.addAttribute("templateNr",
+								String.valueOf(f.getTileIndex()));
+						writer.addAttribute("index",
+								String.valueOf(f.getIndex()));
 					} else if (item.isNode()) {
 						writer.startNode("node");
 						writer.addAttribute("id",
@@ -150,7 +157,7 @@ public class DocumentXStream extends XStream {
 					if (c != null) {
 						writer.startNode("facet");
 						writer.addAttribute("templateNr",
-								String.valueOf(f.getTile()));
+								String.valueOf(f.getTileIndex()));
 						writer.addAttribute("index",
 								String.valueOf(f.getIndex()));
 						writer.startNode("color");
@@ -162,7 +169,7 @@ public class DocumentXStream extends XStream {
 				for (final Tiling.Facet f: doc.getHiddenFacetClasses()) {
 					writer.startNode("facet");
 					writer.addAttribute("templateNr",
-							String.valueOf(f.getTile()));
+							String.valueOf(f.getTileIndex()));
 					writer.addAttribute("index", String.valueOf(f.getIndex()));
 					writer.addAttribute("hidden", "true");
 					writer.endNode();
@@ -274,16 +281,25 @@ public class DocumentXStream extends XStream {
 						if ("true".equalsIgnoreCase(hidden)) {
 							fhidden.add(new Pair(tile, index));
 						}
+						Vector shift = null;
 						Color color = null;
 						while (reader.hasMoreChildren()) {
 							reader.moveDown();
-							if ("color".equals(reader.getNodeName())) {
+							if ("shift".equals(reader.getNodeName())) {
+								shift = (Vector) context.convertAnother(null,
+										Vector.class);
+							} else if ("color".equals(reader.getNodeName())) {
 								color = (Color) context.convertAnother(null,
 										Color.class);
 							}
 							reader.moveUp();
 						}
-						fcolors.put(new Pair(tile, index), color);
+						if (shift == null) {
+							fcolors.put(new Pair(tile, index), color);
+						} else {
+							dlist.add(new Object[] { "facet", shift, color,
+									tile, index });
+						}
 					}
 					reader.moveUp();
 				}
@@ -308,8 +324,11 @@ public class DocumentXStream extends XStream {
 						Item item = null;
 						if (kind.equals("tile")) {
 							final int id = (Integer) val[3];
-							final Tiling.Tile t = doc.getTile(id);
-							item = doc.add(t, s);
+							item = doc.add(doc.getTile(id), s);
+						} else if (kind.equals("facet")) {
+							final int tId = (Integer) val[3];
+							final int fId = (Integer) val[4];
+							item = doc.add(doc.getTile(tId).facet(fId), s);
 						} else if (kind.equals("node")) {
 							INode v = (INode) doc.getNet().getElement(val[3]);
 							item = doc.add(v, s);

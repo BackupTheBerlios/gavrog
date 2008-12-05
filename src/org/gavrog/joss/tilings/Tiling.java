@@ -665,6 +665,7 @@ public class Tiling {
      * Represents a facet (co-dimension 1 constituent) of this tiling.
      */
     public class Facet {
+    	final private int tilingId = Tiling.this.hashCode();
         final private List<Object> chambers;
         final private int tile;
         final private int index;
@@ -714,8 +715,22 @@ public class Tiling {
             return this.index;
         }
 
-        public int getTile() {
+        public int getTileIndex() {
             return this.tile;
+        }
+        
+        public Tile getTile() {
+        	return getTiles().get(this.tile);
+        }
+        
+        public int hashCode() {
+        	return (this.tilingId * 37 + this.tile) * 37 + this.index;
+        }
+        
+        public boolean equals(final Object arg) {
+        	final Facet other = (Facet) arg;
+        	return other.tilingId == this.tilingId
+        		&& other.tile == this.tile && other.index == this.index;
         }
     }
     
@@ -794,7 +809,7 @@ public class Tiling {
         }
         
         public Tile neighbor(final int i) {
-            return (Tile) getTiles().get(this.neighbors[i]);
+            return getTiles().get(this.neighbors[i]);
         }
         
         public Vector neighborShift(final int i) {
@@ -814,9 +829,10 @@ public class Tiling {
     /**
      * @return the list of tiles for this tiling.
      */
-    public List getTiles() {
+    @SuppressWarnings("unchecked")
+	public List<Tile> getTiles() {
         try {
-            return (List) this.cache.get(TILES);
+            return (List<Tile>) this.cache.get(TILES);
         } catch (Cache.NotFoundException ex) {
         }
         
@@ -855,6 +871,6 @@ public class Tiling {
         }
         
         // --- cache and return
-        return (List) this.cache.put(TILES, tiles);
+        return (List<Tile>) this.cache.put(TILES, tiles);
     }
 }

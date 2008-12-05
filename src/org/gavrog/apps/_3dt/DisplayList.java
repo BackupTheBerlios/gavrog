@@ -30,6 +30,7 @@ import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling.Tile;
+import org.gavrog.joss.tilings.Tiling.Facet;
 
 import buoy.event.EventSource;
 
@@ -82,6 +83,35 @@ public class DisplayList extends EventSource implements
 		
 		public String toString() {
 			return "T" + getTile().getIndex();
+		}
+	}
+	
+	private class TFacet extends Template {
+		final private Facet facet;
+		
+		private TFacet(final Facet facet) {
+			this.facet = facet;
+		}
+
+		public Facet getFacet() {
+			return this.facet;
+		}
+
+		public int hashCode() {
+			return getFacet().hashCode();
+		}
+		
+		public boolean equals(final Object arg) {
+			if (arg instanceof TFacet) {
+				return getFacet().equals(((TFacet) arg).getFacet());
+			} else {
+				return false;
+			}
+		}
+		
+		public String toString() {
+			return String.format("T%d-F%d", getFacet().getTileIndex(),
+					getFacet().getIndex());
 		}
 	}
 	
@@ -155,6 +185,11 @@ public class DisplayList extends EventSource implements
 			this.shift = shift;
 		}
 
+		private Item(final Facet facet, final Vector shift) {
+			this.template = new TFacet(facet);
+			this.shift = shift;
+		}
+
 		private Item(final INode node, final Vector shift) {
 			this.template = new TNode(node);
 			this.shift = shift;
@@ -169,6 +204,10 @@ public class DisplayList extends EventSource implements
 			return this.template instanceof TTile;
 		}
 		
+		public boolean isFacet() {
+			return this.template instanceof TFacet;
+		}
+		
 		public boolean isNode() {
 			return this.template instanceof TNode;
 		}
@@ -180,6 +219,15 @@ public class DisplayList extends EventSource implements
 		public Tile getTile() {
 			if (isTile()) {
 				return ((TTile) this.template).getTile();
+			} else {
+				throw new RuntimeException("illegal template class " +
+						this.template.getClass().getName());
+			}
+		}
+
+		public Facet getFacet() {
+			if (isFacet()) {
+				return ((TFacet) this.template).getFacet();
 			} else {
 				throw new RuntimeException("illegal template class " +
 						this.template.getClass().getName());
@@ -348,6 +396,10 @@ public class DisplayList extends EventSource implements
 		return add(new Item(tile, shift));
 	}
 
+	public Item add(final Facet facet, final Vector shift) {
+		return add(new Item(facet, shift));
+	}
+
 	public Item add(final IEdge edge, final Vector shift) {
 		dispatchEvent(BEGIN);
 		final Item item = add(new Item(edge, shift));
@@ -460,98 +512,76 @@ public class DisplayList extends EventSource implements
 		return count;
 	}
 	
-	public boolean removeKind(final Item item) {
-		final int kind = item.getTile().getKind();
-		final List<Item> toRemove = new LinkedList<Item>();
-		for (Item i: this) {
-			if (i.isTile() && i.getTile().getKind() == kind) {
-				toRemove.add(i);
-			}
-		}
-		if (toRemove.isEmpty()) {
+	public boolean remove(final List<Item> list) {
+		if (list.isEmpty()) {
 			return false;
 		} else {
 			dispatchEvent(BEGIN);
-			for (Item i: toRemove) {
+			for (Item i: list) {
 				remove(i);
 			}
 			dispatchEvent(END);
 			return true;
 		}
+	}
+	
+	public boolean removeKind(final Item item) {
+		final int kind = item.getTile().getKind();
+		final List<Item> list = new LinkedList<Item>();
+		for (Item i: this) {
+			if (i.isTile() && i.getTile().getKind() == kind) {
+				list.add(i);
+			}
+		}
+		return remove(list);
 	}
 	
 	public boolean removeAll() {
-		final List<Item> toRemove = new LinkedList<Item>();
+		final List<Item> list = new LinkedList<Item>();
 		for (Item i: this) {
-			toRemove.add(i);
+			list.add(i);
 		}
-		if (toRemove.isEmpty()) {
-			return false;
-		} else {
-			dispatchEvent(BEGIN);
-			for (Item i: toRemove) {
-				remove(i);
-			}
-			dispatchEvent(END);
-			return true;
-		}
+		return remove(list);
 	}
 	
 	public boolean removeAllTiles() {
-		final List<Item> toRemove = new LinkedList<Item>();
+		final List<Item> list = new LinkedList<Item>();
 		for (Item i: this) {
 			if (i.isTile()) {
-				toRemove.add(i);
+				list.add(i);
 			}
 		}
-		if (toRemove.isEmpty()) {
-			return false;
-		} else {
-			dispatchEvent(BEGIN);
-			for (Item i: toRemove) {
-				remove(i);
+		return remove(list);
+	}
+	
+	public boolean removeAllFacets() {
+		final List<Item> list = new LinkedList<Item>();
+		for (Item i: this) {
+			if (i.isFacet()) {
+				list.add(i);
 			}
-			dispatchEvent(END);
-			return true;
 		}
+		return remove(list);
 	}
 	
 	public boolean removeAllEdges() {
-		final List<Item> toRemove = new LinkedList<Item>();
+		final List<Item> list = new LinkedList<Item>();
 		for (Item i: this) {
 			if (i.isEdge()) {
-				toRemove.add(i);
+				list.add(i);
 			}
 		}
-		if (toRemove.isEmpty()) {
-			return false;
-		} else {
-			dispatchEvent(BEGIN);
-			for (Item i: toRemove) {
-				remove(i);
-			}
-			dispatchEvent(END);
-			return true;
-		}
+		return remove(list);
 	}
 	
 	public boolean removeAllNodes() {
-		final List<Item> toRemove = new LinkedList<Item>();
+		final List<Item> list = new LinkedList<Item>();
 		for (Item i: this) {
 			if (i.isNode()) {
-				toRemove.add(i);
+				list.add(i);
 			}
 		}
-		if (toRemove.isEmpty()) {
-			return false;
-		} else {
-			dispatchEvent(BEGIN);
-			for (Item i: toRemove) {
-				remove(i);
-			}
-			dispatchEvent(END);
-			return true;
-		}
+		return remove(list);
 	}
 	
 	// --- list enquiries

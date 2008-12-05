@@ -2040,6 +2040,10 @@ public class Main extends EventSource {
         this.item2node.put(item, sgc);
     }
     
+    private void addFacet(final DisplayList.Item item) {
+    	//TODO implement this
+    }
+    
     private void addEdge(final DisplayList.Item item) {
     	if (item == null) {
     		return;
@@ -2118,6 +2122,8 @@ public class Main extends EventSource {
 		} else if (e.getEventType() == DisplayList.ADD) {
 			if (item.isTile()) {
 				addTile(item);
+			} else if (item.isFacet()) {
+				addFacet(item);
 			} else if (item.isEdge()) {
 				addEdge(item);
 			} else if (item.isNode()) {
@@ -2127,7 +2133,7 @@ public class Main extends EventSource {
 			final SceneGraphNode node = item2node.get(item);
 			item2node.remove(item);
 			node2item.remove(node);
-			if (item.isTile()) {
+			if (item.isTile() || item.isFacet()) {
 				SceneGraphUtility.removeChildNode(tiling, node);
 			} else if (item.isEdge() || item.isNode()) {
 				SceneGraphUtility.removeChildNode(net, node);
