@@ -1,5 +1,6 @@
 3dt 0.5.0:
 
+2008-12-05: Hiding and recoloring facet classes now extends to facet outlines.
 2008-12-02: Re-established the U3D export item in the file menu.
 2008-11-17: The user can now specify a vector to point upward on the screen.
 2008-11-13: Tilings carrying nets in RCSR or the zeolite atlas are identified.
