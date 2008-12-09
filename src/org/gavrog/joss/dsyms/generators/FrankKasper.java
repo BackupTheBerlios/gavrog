@@ -212,14 +212,14 @@ public class FrankKasper extends TileKTransitive {
 						try {
 							output.write(event + "\n");
 							output.flush();
-							output.write(String.format(
-									"# Memory before garbage collect: %s\n",
-									memory()));
-							System.gc();
-							output.write(String.format(
-									"# Memory after garbage collect:  %s\n",
-									memory()));
-							output.flush();
+//							output.write(String.format(
+//									"# Memory before garbage collect: %s\n",
+//									memory()));
+//							System.gc();
+//							output.write(String.format(
+//									"# Memory after garbage collect:  %s\n",
+//									memory()));
+//							output.flush();
 						} catch (Throwable ex) {
 						}
 					}
