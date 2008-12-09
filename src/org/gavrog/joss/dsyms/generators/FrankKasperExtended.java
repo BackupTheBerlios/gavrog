@@ -31,6 +31,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * Generates all tile-k-transitive tetrahedra tilings with edge degrees 4, 5 and
@@ -72,6 +73,7 @@ public class FrankKasperExtended extends TileKTransitive {
 	}
 
 	final private boolean testParts;
+	private boolean testVertexFigures = false;
 
 	public FrankKasperExtended(
 			final int k, final boolean verbose, final boolean testParts) {
@@ -205,7 +207,23 @@ public class FrankKasperExtended extends TileKTransitive {
 		};
 	}
 
+    public boolean isComplete(final DelaneySymbol ds) {
+        for (final Iterator elms = ds.elements(); elms.hasNext();) {
+        	if (!ds.definesOp(3, elms.next())) {
+        		return false;
+        	}
+        }
+        return true;
+    }
+    
+    // override this to introduce extra tests
+    protected boolean vertexFigureOkay(final DSymbol ds) {
+    	return Utils.mayBecomeLocallyEuclidean3D(ds);
+    }
+    
 	protected Iterator extendTo3d(final DSymbol ds) {
+		final List idcs = new IndexList(1, 2, 3);
+		
 		return new CombineTiles(ds) {
 			protected List<Move> getExtraDeductions(final DelaneySymbol ds,
 					final Move move) {
@@ -228,6 +246,12 @@ public class FrankKasperExtended extends TileKTransitive {
 				case 0:
 					if (r > 6) {
 						return null;
+					} else if (testVertexFigures) {
+						final Subsymbol sub = new Subsymbol(ds, idcs, D);
+						if (isComplete(sub)
+								&& !vertexFigureOkay(new DSymbol(sub))) {
+							return null;
+						}
 					}
 					break;
 				case 1:
@@ -254,5 +278,13 @@ public class FrankKasperExtended extends TileKTransitive {
 				return out;
 			}
 		};
+	}
+
+	public boolean getTestVertexFigures() {
+		return this.testVertexFigures;
+	}
+
+	public void setTestVertexFigures(final boolean extraTests) {
+		this.testVertexFigures = extraTests;
 	}
 }

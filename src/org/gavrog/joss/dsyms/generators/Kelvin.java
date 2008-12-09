@@ -20,12 +20,18 @@ package org.gavrog.joss.dsyms.generators;
 import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
@@ -45,6 +51,8 @@ public class Kelvin extends FrankKasperExtended {
 	final int stop;
 	int count = 0;
 	final Stopwatch timer = new Stopwatch();
+	final Stopwatch vfTimer = new Stopwatch();
+	final Set<DSymbol> goodVertexFigures = new HashSet<DSymbol>();
 	final int interval;
 	
 	public Kelvin(final int k,
@@ -74,6 +82,85 @@ public class Kelvin extends FrankKasperExtended {
 			return false;
 		}
 		return ok && (start <= count) && (stop <= 0 || stop > count);
+	}
+	
+	protected boolean vertexFigureOkay(final DSymbol ds) {
+		vfTimer.start();
+		boolean good = false;
+		if (goodVertexFigures.contains(ds)) {
+			good = true;
+		} else {
+			final DynamicDSymbol t = new DynamicDSymbol(ds.dual());
+			final IndexList idx = new IndexList(0, 1);
+			final List<Object> choices = new LinkedList<Object>();
+			for (final Iterator reps = t.orbitReps(idx); reps.hasNext();) {
+				final Object D = reps.next();
+				final int r = t.r(0, 1, D);
+				if (r == 4 || r == 5) {
+					t.redefineV(0, 1, D, 1);
+				} else if (r == 3 || r == 6) {
+					t.redefineV(0, 1, D, 6 / r);
+				} else if (r == 1 || r == 2) {
+					choices.add(D);
+				} else {
+					throw new RuntimeException("Oops!");
+				}
+			}
+
+			final Iterator iter = new IteratorAdapter() {
+				final int n = choices.size();
+				int a[] = null;
+
+				protected Object findNext() throws NoSuchElementException {
+					while (true) {
+						if (a == null) {
+							a = new int[n + 1]; // better not risk null result
+							for (int i = 0; i < n; ++i) {
+								choose(i, 4);
+							}
+						} else {
+							int i = n - 1;
+							while (i >= 0 && a[i] == 6) {
+								--i;
+							}
+							if (i < 0) {
+								throw new NoSuchElementException("at end");
+							}
+							choose(i, 6);
+							while (i < n - 1) {
+								choose(++i, 4);
+							}
+						}
+						return new DSymbol(t);
+					}
+				}
+
+				private void choose(final int i, final int m) {
+					final Object D = choices.get(i);
+					final int r = t.r(0, 1, D);
+					t.redefineV(0, 1, D, m / r);
+					a[i] = m;
+				}
+			};
+
+			good = false;
+			while (iter.hasNext()) {
+				final DSymbol x = (DSymbol) iter.next();
+				if (x.isSpherical2D()) {
+					final DSymbol cover = Covers.finiteUniversalCover(x);
+					final int n = cover.numberOfOrbits(iFaces2d);
+					if (n >= 12 && n <= 16) {
+						good = true;
+						break;
+					}
+				}
+			}
+			if (good) {
+				goodVertexFigures.add(ds);
+			}
+		}
+		vfTimer.stop();
+		return good;
 	}
 	
 	public int getCount() {
@@ -168,6 +255,7 @@ public class Kelvin extends FrankKasperExtended {
 		try {
 			boolean verbose = false;
 			boolean testParts = true;
+			boolean testVertexFigures = false;
 			boolean check = true;
 			int start = 0;
 			int stop = 0;
@@ -206,6 +294,8 @@ public class Kelvin extends FrankKasperExtended {
 					final String tmp[] = args[++i].split("-");
 					start = Integer.parseInt(tmp[0]);
 					stop = Integer.parseInt(tmp[1]) + 1;
+				} else if (args[i].equals("-z")) {
+					testVertexFigures = !testVertexFigures;
 				} else {
 					usage();
 				}
@@ -280,6 +370,7 @@ public class Kelvin extends FrankKasperExtended {
 			if (resume != null) {
 				iter.setResumePoint(resume);
 			}
+			iter.setTestVertexFigures(testVertexFigures);
 
 			for (final DSymbol ds: iter) {
 				final DSymbol out = ds.dual();
@@ -312,6 +403,10 @@ public class Kelvin extends FrankKasperExtended {
 			output.write("\n");
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
+			if (testVertexFigures) {
+				output.write("# Time for testing vertex figures was "
+						+ iter.vfTimer.format() + ".\n");
+			}
 			if (check) {
 				output.write("# Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
