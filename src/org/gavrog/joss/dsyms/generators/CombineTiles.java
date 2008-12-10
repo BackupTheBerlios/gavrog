@@ -497,22 +497,6 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             // --- record the move we have performed
             this.stack.addLast(move);
 
-            // --- handle deductions or contradictions specified by a derived
-            // class
-            final List<Move> extraDeductions = getExtraDeductions(ds, move);
-            if (extraDeductions == null) {
-                return false;
-            } else {
-                if (LOGGING) {
-                    for (final Iterator iter = extraDeductions.iterator(); iter
-                            .hasNext();) {
-                        final Move ded = (Move) iter.next();
-                        System.out.println("#    found extra deduction " + ded);
-                    }
-                }
-                queue.addAll(extraDeductions);
-            }
-
             // --- check for any problems with that move
             if (!this.signatures.get(D).equals(this.signatures.get(E))) {
                 if (LOGGING) {
@@ -522,7 +506,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
                 return false;
             }
 
-            // --- finally, find default deductions
+            // --- add default deductions
             for (int i = 0; i <= d - 2; ++i) {
                 final Object Di = ds.op(i, D);
                 final Object Ei = ds.op(i, E);
@@ -532,6 +516,19 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
                 }
                 queue.addLast(new Move(Di, Ei, -1, -1, false, 0));
             }
+
+            // --- handle application specific deductions and contradictions
+			final List<Move> extraDeductions = getExtraDeductions(ds, move);
+			if (extraDeductions == null) {
+				return false;
+			} else {
+				for (final Move ded : extraDeductions) {
+					if (LOGGING) {
+						System.out.println("#    extra deduction " + ded);
+					}
+					queue.addLast(ded);
+				}
+			}
         }
 
         // --- everything went smoothly
