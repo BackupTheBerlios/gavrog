@@ -213,6 +213,12 @@ public class FrankKasperExtended extends TileKTransitive {
         		return false;
         	}
         }
+        for (final Iterator elms = ds.elements(); elms.hasNext();) {
+        	final Object D = elms.next();
+        	if (!ds.op(1, ds.op(3, D)).equals(ds.op(3, ds.op(1, D)))) {
+        		return false;
+        	}
+        }
         return true;
     }
     
