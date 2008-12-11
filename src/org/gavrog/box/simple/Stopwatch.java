@@ -52,6 +52,19 @@ public class Stopwatch {
     	}
     }
     
+    public String mode() {
+    	if (tb != null) {
+    		final long t = tb.getCurrentThreadUserTime();
+    		if (t < 0) {
+    			return "System.nanoTime()";
+    		} else {
+    			return "ThreadMXBean::getCurrentThreadUserTime()";
+    		}
+    	} else {
+    		return "System.currentTimeMillis()";
+    	}
+    }
+    
     public void start() {
         if (!isRunning) {
         	start = time();
