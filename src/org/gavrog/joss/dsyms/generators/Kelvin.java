@@ -29,6 +29,9 @@ import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.simple.Stopwatch;
+import org.gavrog.jane.numbers.Fraction;
+import org.gavrog.jane.numbers.Rational;
+import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -99,10 +102,15 @@ public class Kelvin extends FrankKasperExtended {
 				} else if (r == 3 || r == 6) {
 					t.redefineV(0, 1, D, 6 / r);
 				} else if (r == 1 || r == 2) {
+					t.redefineV(0, 1, D, 4 / r);
 					choices.add(D);
 				} else {
 					throw new RuntimeException("Oops!");
 				}
+			}
+			// this tests whether the resulting tile has more than 28 vertices
+			if (t.curvature2D().isLessThan(new Fraction(t.size(), 42))) {
+				return false;
 			}
 
 			final Iterator iter = new IteratorAdapter() {
