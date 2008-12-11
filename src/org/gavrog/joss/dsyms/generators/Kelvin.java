@@ -30,8 +30,6 @@ import java.util.Set;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.jane.numbers.Fraction;
-import org.gavrog.jane.numbers.Rational;
-import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -55,6 +53,7 @@ public class Kelvin extends FrankKasperExtended {
 	int count = 0;
 	final Stopwatch timer = new Stopwatch();
 	final Set<DSymbol> goodVertexFigures = new HashSet<DSymbol>();
+	final Set<DSymbol> badVertexFigures = new HashSet<DSymbol>();
 	final int interval;
 	
 	public Kelvin(final int k,
@@ -86,10 +85,31 @@ public class Kelvin extends FrankKasperExtended {
 		return ok && (start <= count) && (stop <= 0 || stop > count);
 	}
 	
+	//TODO keep this test or the more complicated one below?
 	protected boolean vertexFigureOkay(final DSymbol ds) {
-		boolean good = false;
+		final DynamicDSymbol t = new DynamicDSymbol(ds.dual());
+		final IndexList idx = new IndexList(0, 1);
+		for (final Iterator reps = t.orbitReps(idx); reps.hasNext();) {
+			final Object D = reps.next();
+			final int r = t.r(0, 1, D);
+			if (r == 4 || r == 5) {
+				t.redefineV(0, 1, D, 1);
+			} else if (r == 3 || r == 6) {
+				t.redefineV(0, 1, D, 6 / r);
+			} else if (r == 1 || r == 2) {
+				t.redefineV(0, 1, D, 4 / r);
+			} else {
+				throw new RuntimeException("Oops!");
+			}
+		}
+		return t.curvature2D().isGreaterOrEqual(new Fraction(t.size(), 42));
+	}
+	
+	protected boolean vertexFigureOkayX(final DSymbol ds) {
 		if (goodVertexFigures.contains(ds)) {
-			good = true;
+			return true;
+		} else if (goodVertexFigures.contains(ds)) {
+			return false;
 		} else {
 			final DynamicDSymbol t = new DynamicDSymbol(ds.dual());
 			final IndexList idx = new IndexList(0, 1);
@@ -149,7 +169,7 @@ public class Kelvin extends FrankKasperExtended {
 				}
 			};
 
-			good = false;
+			boolean good = false;
 			while (iter.hasNext()) {
 				final DSymbol x = (DSymbol) iter.next();
 				if (x.isSpherical2D()) {
@@ -163,9 +183,11 @@ public class Kelvin extends FrankKasperExtended {
 			}
 			if (good) {
 				goodVertexFigures.add(ds);
+			} else {
+				badVertexFigures.add(ds);
 			}
+			return good;
 		}
-		return good;
 	}
 	
 	public int getCount() {
