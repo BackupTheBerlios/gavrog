@@ -51,7 +51,6 @@ public class Kelvin extends FrankKasperExtended {
 	final int stop;
 	int count = 0;
 	final Stopwatch timer = new Stopwatch();
-	final Stopwatch vfTimer = new Stopwatch();
 	final Set<DSymbol> goodVertexFigures = new HashSet<DSymbol>();
 	final int interval;
 	
@@ -85,7 +84,6 @@ public class Kelvin extends FrankKasperExtended {
 	}
 	
 	protected boolean vertexFigureOkay(final DSymbol ds) {
-		vfTimer.start();
 		boolean good = false;
 		if (goodVertexFigures.contains(ds)) {
 			good = true;
@@ -159,7 +157,6 @@ public class Kelvin extends FrankKasperExtended {
 				goodVertexFigures.add(ds);
 			}
 		}
-		vfTimer.stop();
 		return good;
 	}
 	
@@ -405,12 +402,13 @@ public class Kelvin extends FrankKasperExtended {
 					+ timer.format() + ".\n");
 			if (testVertexFigures) {
 				output.write("# Time for testing vertex figures was "
-						+ iter.vfTimer.format() + ".\n");
+						+ iter.timeForVertexFigureTests() + ".\n");
 			}
 			if (check) {
 				output.write("# Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
 			}
+			output.write("#   [timing method: " + eTestTimer.mode() + "]\n");
 			output.write("\n");
 			output.write("# " + iter.statistics() + "\n");
 			output.write("# Of the latter, " + countTileSizeOk

@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -74,6 +75,7 @@ public class FrankKasperExtended extends TileKTransitive {
 
 	final private boolean testParts;
 	private boolean testVertexFigures = false;
+	final private Stopwatch vfTimer = new Stopwatch();
 
 	public FrankKasperExtended(
 			final int k, final boolean verbose, final boolean testParts) {
@@ -253,9 +255,12 @@ public class FrankKasperExtended extends TileKTransitive {
 					if (r > 6) {
 						return null;
 					} else if (testVertexFigures) {
+						vfTimer.start();
 						final Subsymbol sub = new Subsymbol(ds, idcs, D);
-						if (isComplete(sub)
-								&& !vertexFigureOkay(new DSymbol(sub))) {
+						final boolean bad = isComplete(sub)
+								&& !vertexFigureOkay(new DSymbol(sub));
+						vfTimer.stop();
+						if (bad) {
 							return null;
 						}
 					}
@@ -292,5 +297,9 @@ public class FrankKasperExtended extends TileKTransitive {
 
 	public void setTestVertexFigures(final boolean extraTests) {
 		this.testVertexFigures = extraTests;
+	}
+	
+	public String timeForVertexFigureTests() {
+		return vfTimer.format();
 	}
 }
