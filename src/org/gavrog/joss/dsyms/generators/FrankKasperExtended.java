@@ -299,7 +299,7 @@ public class FrankKasperExtended extends TileKTransitive {
 		this.testVertexFigures = extraTests;
 	}
 	
-	public String timeForVertexFigureTests() {
+	public String getTimeForVertexFigureTests() {
 		return vfTimer.format();
 	}
 }
