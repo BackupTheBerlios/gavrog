@@ -46,15 +46,15 @@ public class Kelvin extends FrankKasperExtended {
 	final static private List iTiles = new IndexList(0, 1, 2);
 	final static private List iFaces2d = new IndexList(0, 1);
 	
-	final Writer output;
-	final boolean countOnly;
-	final int start;
-	final int stop;
-	int count = 0;
-	final Stopwatch timer = new Stopwatch();
-	final Set<DSymbol> goodVertexFigures = new HashSet<DSymbol>();
-	final Set<DSymbol> badVertexFigures = new HashSet<DSymbol>();
-	final int interval;
+	final private Writer output;
+	final private boolean countOnly;
+	final private int start;
+	final private int stop;
+	private int count = 0;
+	final private Stopwatch timer = new Stopwatch();
+	final private Set<DSymbol> goodVertexFigures = new HashSet<DSymbol>();
+	final private Set<DSymbol> badVertexFigures = new HashSet<DSymbol>();
+	final private int interval;
 	
 	public Kelvin(final int k,
 			         final boolean verbose,
@@ -85,27 +85,7 @@ public class Kelvin extends FrankKasperExtended {
 		return ok && (start <= count) && (stop <= 0 || stop > count);
 	}
 	
-	//TODO keep this test or the more complicated one below?
 	protected boolean vertexFigureOkay(final DSymbol ds) {
-		final DynamicDSymbol t = new DynamicDSymbol(ds.dual());
-		final IndexList idx = new IndexList(0, 1);
-		for (final Iterator reps = t.orbitReps(idx); reps.hasNext();) {
-			final Object D = reps.next();
-			final int r = t.r(0, 1, D);
-			if (r == 4 || r == 5) {
-				t.redefineV(0, 1, D, 1);
-			} else if (r == 3 || r == 6) {
-				t.redefineV(0, 1, D, 6 / r);
-			} else if (r == 1 || r == 2) {
-				t.redefineV(0, 1, D, 4 / r);
-			} else {
-				throw new RuntimeException("Oops!");
-			}
-		}
-		return t.curvature2D().isGreaterOrEqual(new Fraction(t.size(), 42));
-	}
-	
-	protected boolean vertexFigureOkayX(final DSymbol ds) {
 		if (goodVertexFigures.contains(ds)) {
 			return true;
 		} else if (goodVertexFigures.contains(ds)) {
@@ -188,6 +168,18 @@ public class Kelvin extends FrankKasperExtended {
 			}
 			return good;
 		}
+	}
+	
+	public String getVertexFigureCacheInfo() {
+		final StringBuffer buf = new StringBuffer(100);
+		buf.append("# Vertex figures cached: ");
+		buf.append(goodVertexFigures.size() + badVertexFigures.size());
+		buf.append("\n");
+		final Runtime rt = Runtime.getRuntime();
+		buf.append("# Total memory in use: ");
+		buf.append((rt.totalMemory() - rt.freeMemory() + (2 << 19)) >> 20);
+		buf.append("MB\n");
+		return buf.toString();
 	}
 	
 	public int getCount() {
@@ -432,13 +424,14 @@ public class Kelvin extends FrankKasperExtended {
 					+ timer.format() + ".\n");
 			if (testVertexFigures) {
 				output.write("# Time for testing vertex figures was "
-						+ iter.timeForVertexFigureTests() + ".\n");
+						+ iter.getTimeForVertexFigureTests() + ".\n");
 			}
 			if (check) {
 				output.write("# Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
 			}
 			output.write("#   [timing method: " + eTestTimer.mode() + "]\n");
+			output.write(iter.getVertexFigureCacheInfo());
 			output.write("\n");
 			output.write("# " + iter.statistics() + "\n");
 			output.write("# Of the latter, " + countTileSizeOk
