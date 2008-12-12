@@ -413,12 +413,14 @@ public class Kelvin extends FrankKasperExtended {
 			output.write("\n");
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
+			output.write("#   Total time for computing deductions was "
+					+ iter.getTimeForComputingDeductions() + ".\n");
 			if (testTiles) {
-				output.write("# Time for testing tiles was "
+				output.write("#     Time for testing tiles was "
 						+ iter.getTimeForVertexFigureTests() + ".\n");
 			}
 			if (testEuclidicity) {
-				output.write("# Time for euclidicity tests was "
+				output.write("#   Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
 			}
 			output.write("#   [timing method: " + eTestTimer.mode() + "]\n");

@@ -75,7 +75,8 @@ public class FrankKasperExtended extends TileKTransitive {
 
 	final private boolean testParts;
 	private boolean testVertexFigures = false;
-	final private Stopwatch vfTimer = new Stopwatch();
+	final private Stopwatch vertexFigureTestingTimer = new Stopwatch();
+	final private Stopwatch extraDeductionsTimer = new Stopwatch();
 
 	public FrankKasperExtended(
 			final int k, final boolean verbose, final boolean testParts) {
@@ -235,6 +236,7 @@ public class FrankKasperExtended extends TileKTransitive {
 		return new CombineTiles(ds) {
 			protected List<Move> getExtraDeductions(final DelaneySymbol ds,
 					final Move move) {
+				extraDeductionsTimer.start();
 				final List<Move> out = new ArrayList<Move>();
 				final Object D = move.element;
 				Object E = D;
@@ -255,11 +257,11 @@ public class FrankKasperExtended extends TileKTransitive {
 					if (r > 6) {
 						return null;
 					} else if (testVertexFigures) {
-						vfTimer.start();
+						vertexFigureTestingTimer.start();
 						final Subsymbol sub = new Subsymbol(ds, idcs, D);
 						final boolean bad = isComplete(sub)
 								&& !vertexFigureOkay(new DSymbol(sub));
-						vfTimer.stop();
+						vertexFigureTestingTimer.stop();
 						if (bad) {
 							return null;
 						}
@@ -285,6 +287,7 @@ public class FrankKasperExtended extends TileKTransitive {
 				default:
 					throw new RuntimeException("this should not happen");
 				}
+				extraDeductionsTimer.stop();
 
 				return out;
 			}
@@ -300,6 +303,10 @@ public class FrankKasperExtended extends TileKTransitive {
 	}
 	
 	public String getTimeForVertexFigureTests() {
-		return vfTimer.format();
+		return vertexFigureTestingTimer.format();
+	}
+	
+	public String getTimeForComputingDeductions() {
+		return extraDeductionsTimer.format();
 	}
 }
