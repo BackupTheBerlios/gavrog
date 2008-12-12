@@ -170,18 +170,6 @@ public class Kelvin extends FrankKasperExtended {
 		}
 	}
 	
-	public String getVertexFigureCacheInfo() {
-		final StringBuffer buf = new StringBuffer(100);
-		buf.append("# Vertex figures cached: ");
-		buf.append(goodVertexFigures.size() + badVertexFigures.size());
-		buf.append("\n");
-		final Runtime rt = Runtime.getRuntime();
-		buf.append("# Total memory in use: ");
-		buf.append((rt.totalMemory() - rt.freeMemory() + (2 << 19)) >> 20);
-		buf.append("MB\n");
-		return buf.toString();
-	}
-	
 	public int getCount() {
 		return count;
 	}
@@ -262,9 +250,10 @@ public class Kelvin extends FrankKasperExtended {
 			+ "Recognized options:\n"
 			+ "  -e        skip euclidicity test\n"
 			+ "  -i N      interval in seconds between writing checkpoints\n"
-			+ "  -p        skip pre-filtering by tile stabilizers\n"
+			+ "  -p        skip pre-filtering by vertex stabilizers\n"
 			+ "  -r A-B-C  resume generation at a checkpoint\n"
 			+ "  -s P/Q    generate the P-th of Q parts\n"
+			+ "  -t        skip on-the-fly testing of completed tiles\n"
 			+ "  -v        run in verbose mode\n"
 			);
 		System.exit(1);
@@ -274,8 +263,8 @@ public class Kelvin extends FrankKasperExtended {
 		try {
 			boolean verbose = false;
 			boolean testParts = true;
-			boolean testVertexFigures = false;
-			boolean check = true;
+			boolean testTiles = true;
+			boolean testEuclidicity = true;
 			int start = 0;
 			int stop = 0;
 			int section = 0;
@@ -287,10 +276,14 @@ public class Kelvin extends FrankKasperExtended {
 			while (i < args.length && args[i].startsWith("-")) {
 				if (args[i].equals("-v")) {
 					verbose = !verbose;
+				} else if (args[i].equals("-e")) {
+					testEuclidicity = !testEuclidicity;
+				} else if (args[i].equals("-i")) {
+					checkpointInterval = Integer.parseInt(args[++i]);
 				} else if (args[i].equals("-p")) {
 					testParts = !testParts;
-				} else if (args[i].equals("-e")) {
-					check = !check;
+				} else if (args[i].equals("-r")) {
+					resume = args[++i];
 				} else if (args[i].equals("-s")) {
 					final String tmp[] = args[++i].split("/");
 					section = Integer.parseInt(tmp[0]);
@@ -305,16 +298,12 @@ public class Kelvin extends FrankKasperExtended {
 						System.err.println(msg);
 						System.exit(1);
 					}
-				} else if (args[i].equals("-i")) {
-					checkpointInterval = Integer.parseInt(args[++i]);
-				} else if (args[i].equals("-r")) {
-					resume = args[++i];
+				} else if (args[i].equals("-t")) {
+					testTiles = !testTiles;
 				} else if (args[i].equals("-x")) {
 					final String tmp[] = args[++i].split("-");
 					start = Integer.parseInt(tmp[0]);
 					stop = Integer.parseInt(tmp[1]) + 1;
-				} else if (args[i].equals("-z")) {
-					testVertexFigures = !testVertexFigures;
 				} else {
 					usage();
 				}
@@ -346,10 +335,12 @@ public class Kelvin extends FrankKasperExtended {
 			output.write("# Options:\n");
 			output.write("#     verbose mode:                    ");
 			output.write((verbose ? "on" : "off") + "\n");
-			output.write("#     vertex symmetries pre-filtering: ");
+			output.write("#     pre-filter by vertex symmetries: ");
 			output.write((testParts ? "on" : "off") + "\n");
+			output.write("#     test completed tiles on the fly: ");
+			output.write((testTiles ? "on" : "off") + "\n");
 			output.write("#     euclidicity test:                ");
-			output.write((check ? "on" : "off") + "\n");
+			output.write((testEuclidicity ? "on" : "off") + "\n");
 			if (checkpointInterval > 0) {
 				output.write("#     checkpoint interval:             ");
 				output.write(checkpointInterval + "sec\n");
@@ -389,13 +380,13 @@ public class Kelvin extends FrankKasperExtended {
 			if (resume != null) {
 				iter.setResumePoint(resume);
 			}
-			iter.setTestVertexFigures(testVertexFigures);
+			iter.setTestVertexFigures(testTiles);
 
 			for (final DSymbol ds: iter) {
 				final DSymbol out = ds.dual();
 				if (allTileSizesBetween(out, 12, 16)) {
 					++countTileSizeOk;
-					if (check) {
+					if (testEuclidicity) {
 						eTestTimer.start();
 						EuclidicityTester tester = new EuclidicityTester(out);
 						final boolean bad = tester.isBad();
@@ -422,21 +413,20 @@ public class Kelvin extends FrankKasperExtended {
 			output.write("\n");
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
-			if (testVertexFigures) {
-				output.write("# Time for testing vertex figures was "
+			if (testTiles) {
+				output.write("# Time for testing tiles was "
 						+ iter.getTimeForVertexFigureTests() + ".\n");
 			}
-			if (check) {
+			if (testEuclidicity) {
 				output.write("# Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
 			}
 			output.write("#   [timing method: " + eTestTimer.mode() + "]\n");
-			output.write(iter.getVertexFigureCacheInfo());
 			output.write("\n");
 			output.write("# " + iter.statistics() + "\n");
 			output.write("# Of the latter, " + countTileSizeOk
 					+ " had between 12 and 16 faces in each tile.\n");
-			if (check) {
+			if (testEuclidicity) {
 				output.write("# Of those, " + countGood
 						+ " were found euclidean.\n");
 				if (countAmbiguous > 0) {
