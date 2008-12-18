@@ -86,6 +86,9 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
 	private int resume_level = 0;
 	private int resume_stack_level = 0;
 	private boolean resume_point_reached = false;
+	
+	// --- used for timing the generator
+	final private Stopwatch timer = new Stopwatch();
 
     /**
      * The instances of this class represent individual moves of setting
@@ -122,6 +125,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
      * @param ds the symbol to extend.
      */
     public CombineTiles(final DelaneySymbol ds) {
+    	timer.start();
+    	
         this.dim = ds.dim() + 1;
 
         // --- basic checks on the input symbol
@@ -191,8 +196,14 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
 
         // --- push a dummy move on the stack as a fallback
         stack.addLast(new Move(1, 0, 0, 0, true, 0));
+        
+        timer.stop();
     }
 
+    public long timeElapsed() {
+    	return timer.elapsed();
+    }
+    
     /**
      * Repeatedly finds the next legal choice in the enumeration tree and
      * executes it, together with all its implications, until all 3-neighbors
@@ -212,6 +223,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
      * @return the next symbol, if any.
      */
 	protected DSymbol findNext() throws NoSuchElementException {
+		timer.start();
+		
         if (LOGGING) {
             System.out.println("#findNext(): stack size = " + this.stack.size());
             System.out.println(("#  current symbol:\n" + this.current
@@ -242,6 +255,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             	}
             }
             if (choice == null) {
+            	timer.stop();
                 throw new NoSuchElementException();
             }
             if (!resume_point_reached && stack.size() < resume_stack_level) {
@@ -298,6 +312,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
                 			final DSymbol ds = new DSymbol(this.current);
                 			if (this.dim != 3
                 					|| Utils.mayBecomeLocallyEuclidean3D(ds)) {
+                				timer.stop();
                 				return new DSymbol(this.current);
                 			}
                 		}
