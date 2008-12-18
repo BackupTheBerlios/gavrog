@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.algorithms.ResumableGenerator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -50,6 +51,10 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private int checkpoint[] = new int[] { 0, 0, 0 };
     private int resume[] = new int[] { 0, 0, 0 };
     private String resume1 = null;
+    
+    private Stopwatch gen2dSymbolsTimer = new Stopwatch();
+    private Stopwatch gen3dSetsTimer = new Stopwatch();
+    private Stopwatch gen3dSymbolsTimer = new Stopwatch();
 
     /**
      * Constructs an instance.
@@ -62,8 +67,10 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             final boolean verbose) {
         this.verbose = verbose;
 
+        gen2dSymbolsTimer.start();
         final List covers = Iterators.asList(Covers.allCovers(tile.minimal()));
         this.partLists = Iterators.selections(covers.toArray(), k);
+        gen2dSymbolsTimer.stop();
 
         this.extended = null;
         this.symbols = null;
@@ -112,6 +119,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             while (symbols == null || !symbols.hasNext()) {
                 while (extended == null || !extended.hasNext()) {
                     if (partLists.hasNext()) {
+                    	gen2dSymbolsTimer.start();
                         final List tiles = (List) partLists.next();
                         if (!partsListOkay(tiles)) {
                         	continue;
@@ -125,14 +133,18 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         checkpoint[1] = checkpoint[2] = 0;
                         postCheckpoint();
                         if (tooEarly()) {
+                        	gen2dSymbolsTimer.stop();
                         	continue;
                         }
                         final DSymbol ds = new DSymbol(tmp);
+                        gen2dSymbolsTimer.stop();
                         ++this.count2dSymbols;
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
+                        gen3dSetsTimer.start();
                         extended = extendTo3d(ds);
+                        gen3dSetsTimer.stop();
                         if (extended instanceof ResumableGenerator) {
                         	final ResumableGenerator gen =
                         		(ResumableGenerator) extended;
@@ -146,7 +158,9 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         throw new NoSuchElementException("At end");
                     }
                 }
+                gen3dSetsTimer.start();
                 final DSymbol ds = (DSymbol) extended.next();
+                gen3dSetsTimer.stop();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
                 postCheckpoint();
@@ -157,9 +171,13 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                 if (this.verbose) {
                     System.err.println("    " + setAsString(ds));
                 }
+                gen3dSymbolsTimer.start();
                 symbols = defineBranching(ds);
+                gen3dSymbolsTimer.stop();
             }
+            gen3dSymbolsTimer.start();
             final DSymbol ds = (DSymbol) symbols.next();
+            gen3dSymbolsTimer.stop();
             ++checkpoint[2];
             postCheckpoint();
             if (tooEarly()) {
@@ -255,6 +273,18 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
         return tmp.substring(i + 1);
     }
 
+	public String getTimeForGenerating2dSymbols() {
+		return gen2dSymbolsTimer.format();
+	}
+	
+	public String getTimeForGenerating3dSets() {
+		return gen3dSetsTimer.format();
+	}
+	
+	public String getTimeForGenerating3dSymbols() {
+		return gen3dSymbolsTimer.format();
+	}
+	
     public static void main(final String[] args) {
         boolean verbose = false;
         boolean check = true;

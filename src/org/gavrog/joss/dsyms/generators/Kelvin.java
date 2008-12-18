@@ -413,19 +413,25 @@ public class Kelvin extends FrankKasperExtended {
 			output.write("\n");
 			output.write("# Total execution time in user mode was "
 					+ timer.format() + ".\n");
-			output.write("#   Total time for computing deductions was "
+			output.write("#   Time for generating 2d symbols was "
+					+ iter.getTimeForGenerating2dSymbols() + ".\n");
+			output.write("#   Time for generating 3d sets was "
+					+ iter.getTimeForGenerating3dSets() + ".\n");
+			output.write("#     Total time for computing deductions was "
 					+ iter.getTimeForComputingDeductions() + ".\n");
-			output.write("#     Time for finding cuts was "
+			output.write("#       Time for finding cuts was "
 					+ iter.getTimeForFindingCuts() + ".\n");
 			if (testTiles) {
-				output.write("#     Time for testing tiles was "
+				output.write("#       Time for testing tiles was "
 						+ iter.getTimeForVertexFigureTests() + ".\n");
 			}
+			output.write("#   Time for generating 3d symbols was "
+					+ iter.getTimeForGenerating3dSymbols() + ".\n");
 			if (testEuclidicity) {
 				output.write("#   Time for euclidicity tests was "
 						+ eTestTimer.format() + ".\n");
 			}
-			output.write("#   [timing method: " + eTestTimer.mode() + "]\n");
+			output.write("# [timing method: " + eTestTimer.mode() + "]\n");
 			output.write("\n");
 			output.write("# " + iter.statistics() + "\n");
 			output.write("# Of the latter, " + countTileSizeOk
