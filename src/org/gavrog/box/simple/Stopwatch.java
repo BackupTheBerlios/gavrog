@@ -28,41 +28,27 @@ public class Stopwatch {
     private long accumulated = 0;
     private long start = 0;
     private boolean isRunning;
-
-    private static ThreadMXBean tb;
-    static {
-    	try {
-    		tb = ManagementFactory.getThreadMXBean();
-    		tb.getCurrentThreadUserTime();
-    	} catch (Throwable ex) {
-    		tb = null;
-    	}
-    }
     
+    private static boolean useCpuTime = true;
+
     private static long time() {
-    	if (tb != null) {
-    		final long t = tb.getCurrentThreadUserTime();
-    		if (t < 0) {
-    			return System.nanoTime();
-    		} else {
-    			return t;
+    	if (useCpuTime) {
+    		final ThreadMXBean tb = ManagementFactory.getThreadMXBean();
+    		if (tb.isThreadCpuTimeSupported() && tb.isThreadCpuTimeEnabled()) {
+    			return tb.getCurrentThreadUserTime();
     		}
-    	} else {
-    		return System.currentTimeMillis();
-    	}
+		}
+		return System.nanoTime();
     }
     
     public String mode() {
-    	if (tb != null) {
-    		final long t = tb.getCurrentThreadUserTime();
-    		if (t < 0) {
-    			return "System.nanoTime()";
-    		} else {
-    			return "ThreadMXBean::getCurrentThreadUserTime()";
-    		}
-    	} else {
-    		return "System.currentTimeMillis()";
-    	}
+    	if (useCpuTime) {
+	    	final ThreadMXBean tb = ManagementFactory.getThreadMXBean();
+			if (tb.isThreadCpuTimeSupported() && tb.isThreadCpuTimeEnabled()) {
+				return "ThreadMXBean::getCurrentThreadUserTime()";
+			}
+		}
+		return "System.nanoTime()";
     }
     
     public void start() {
@@ -91,8 +77,7 @@ public class Stopwatch {
      * @return the elapsed time in milliseconds.
      */
     public long elapsed() {
-    	return (accumulated + (isRunning ? time() - start : 0))
-				/ (tb != null ? (int) 1e6 : 0);
+    	return (accumulated + (isRunning ? time() - start : 0)) / (long) 1e6;
     }
     
     public String format() {
