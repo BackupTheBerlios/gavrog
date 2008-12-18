@@ -77,6 +77,7 @@ public class FrankKasperExtended extends TileKTransitive {
 	private boolean testVertexFigures = false;
 	final private Stopwatch vertexFigureTestingTimer = new Stopwatch();
 	final private Stopwatch extraDeductionsTimer = new Stopwatch();
+	final private Stopwatch cutsFindingTimer = new Stopwatch();
 
 	public FrankKasperExtended(
 			final int k, final boolean verbose, final boolean testParts) {
@@ -237,10 +238,11 @@ public class FrankKasperExtended extends TileKTransitive {
 			protected List<Move> getExtraDeductions(final DelaneySymbol ds,
 					final Move move) {
 				extraDeductionsTimer.start();
-				final List<Move> out = new ArrayList<Move>();
+				List<Move> out = new ArrayList<Move>();
 				final Object D = move.element;
 				Object E = D;
 				int r = 0;
+				cutsFindingTimer.start();
 				List<Object> cuts = new ArrayList<Object>();
 				do {
 					E = ds.op(2, E);
@@ -251,11 +253,12 @@ public class FrankKasperExtended extends TileKTransitive {
 					}
 					++r;
 				} while (E != D);
+				cutsFindingTimer.stop();
 
 				switch (cuts.size()) {
 				case 0:
 					if (r > 6) {
-						return null;
+						out = null;
 					} else if (testVertexFigures) {
 						vertexFigureTestingTimer.start();
 						final Subsymbol sub = new Subsymbol(ds, idcs, D);
@@ -263,13 +266,13 @@ public class FrankKasperExtended extends TileKTransitive {
 								&& !vertexFigureOkay(new DSymbol(sub));
 						vertexFigureTestingTimer.stop();
 						if (bad) {
-							return null;
+							out = null;
 						}
 					}
 					break;
 				case 1:
 					if (r > 6) {
-						return null;
+						out = null;
 					} else if (r == 6) {
 						final Object A = cuts.get(0);
 						out.add(new Move(A, A, -1, -1, false, 0));
@@ -277,7 +280,7 @@ public class FrankKasperExtended extends TileKTransitive {
 					break;
 				case 2:
 					if (r > 12) {
-						return null;
+						out = null;
 					} else if (r == 12) {
 						final Object A = cuts.get(0);
 						final Object B = cuts.get(1);
@@ -308,5 +311,9 @@ public class FrankKasperExtended extends TileKTransitive {
 	
 	public String getTimeForComputingDeductions() {
 		return extraDeductionsTimer.format();
+	}
+	
+	public String getTimeForFindingCuts() {
+		return cutsFindingTimer.format();
 	}
 }
