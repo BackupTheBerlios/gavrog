@@ -41,7 +41,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
     private final Iterator partLists;
-    private Iterator extended;
+    private CombineTiles extended;
     private Iterator symbols;
 
     private int count2dSymbols = 0;
@@ -52,9 +52,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private int resume[] = new int[] { 0, 0, 0 };
     private String resume1 = null;
     
-    private Stopwatch gen2dSymbolsTimer = new Stopwatch();
-    private Stopwatch gen3dSetsTimer = new Stopwatch();
-    private Stopwatch gen3dSymbolsTimer = new Stopwatch();
+    private long timeFor3dSets = 0L;
 
     /**
      * Constructs an instance.
@@ -67,10 +65,8 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             final boolean verbose) {
         this.verbose = verbose;
 
-        gen2dSymbolsTimer.start();
         final List covers = Iterators.asList(Covers.allCovers(tile.minimal()));
         this.partLists = Iterators.selections(covers.toArray(), k);
-        gen2dSymbolsTimer.stop();
 
         this.extended = null;
         this.symbols = null;
@@ -119,7 +115,6 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             while (symbols == null || !symbols.hasNext()) {
                 while (extended == null || !extended.hasNext()) {
                     if (partLists.hasNext()) {
-                    	gen2dSymbolsTimer.start();
                         final List tiles = (List) partLists.next();
                         if (!partsListOkay(tiles)) {
                         	continue;
@@ -133,18 +128,18 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         checkpoint[1] = checkpoint[2] = 0;
                         postCheckpoint();
                         if (tooEarly()) {
-                        	gen2dSymbolsTimer.stop();
                         	continue;
                         }
                         final DSymbol ds = new DSymbol(tmp);
-                        gen2dSymbolsTimer.stop();
                         ++this.count2dSymbols;
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
-                        gen3dSetsTimer.start();
+                        if (extended != null) {
+                        	timeFor3dSets += extended.timeElapsed();
+                        	extended = null;
+                    	}
                         extended = extendTo3d(ds);
-                        gen3dSetsTimer.stop();
                         if (extended instanceof ResumableGenerator) {
                         	final ResumableGenerator gen =
                         		(ResumableGenerator) extended;
@@ -158,9 +153,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         throw new NoSuchElementException("At end");
                     }
                 }
-                gen3dSetsTimer.start();
                 final DSymbol ds = (DSymbol) extended.next();
-                gen3dSetsTimer.stop();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
                 postCheckpoint();
@@ -171,13 +164,9 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                 if (this.verbose) {
                     System.err.println("    " + setAsString(ds));
                 }
-                gen3dSymbolsTimer.start();
                 symbols = defineBranching(ds);
-                gen3dSymbolsTimer.stop();
             }
-            gen3dSymbolsTimer.start();
             final DSymbol ds = (DSymbol) symbols.next();
-            gen3dSymbolsTimer.stop();
             ++checkpoint[2];
             postCheckpoint();
             if (tooEarly()) {
@@ -250,7 +239,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param ds a Delaney symbol.
      * @return an iterator over all admissible extensions.
      */
-    protected Iterator extendTo3d(final DSymbol ds) {
+    protected CombineTiles extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds);
     }
 
@@ -273,16 +262,12 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
         return tmp.substring(i + 1);
     }
 
-	public String getTimeForGenerating2dSymbols() {
-		return gen2dSymbolsTimer.format();
-	}
-	
 	public String getTimeForGenerating3dSets() {
-		return gen3dSetsTimer.format();
-	}
-	
-	public String getTimeForGenerating3dSymbols() {
-		return gen3dSymbolsTimer.format();
+		long time = timeFor3dSets;
+		if (extended != null) {
+			time += extended.timeElapsed();
+		}
+		return time / 10 / 100.0 + " seconds";
 	}
 	
     public static void main(final String[] args) {
