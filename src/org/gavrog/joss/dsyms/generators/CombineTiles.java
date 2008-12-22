@@ -89,6 +89,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
 	
 	// --- used for timing the generator
 	final private Stopwatch timer = Stopwatch.global("CombineTiles.total");
+	final private Stopwatch signatureTimer =
+		Stopwatch.global("CombineTiles.signatures");
 
     /**
      * The instances of this class represent individual moves of setting
@@ -585,6 +587,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
      */
     public Map<Object, Pair> elementSignatures(final DelaneySymbol ds,
 			final int dim) {
+    	signatureTimer.start();
         final Map<Object, Pair> signatures = new HashMap<Object, Pair>();
         final List<Integer> idcs = new ArrayList<Integer>();
         for (int i = 0; i <= dim; ++i) {
@@ -611,6 +614,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
                 signatures.put(E, new Pair(i, rep));
             }
         }
+        signatureTimer.stop();
 
         return signatures;
     }

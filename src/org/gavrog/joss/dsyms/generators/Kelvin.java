@@ -415,6 +415,9 @@ public class Kelvin extends FrankKasperExtended {
 					+ timer.format() + ".\n");
 			output.write("#   Time for generating 3d sets was "
 					+ Stopwatch.global("CombineTiles.total").format() + ".\n");
+			output.write("#     Time for computing signatures was "
+					+ Stopwatch.global("CombineTiles.signatures").format()
+					+ ".\n");
 			output.write("#     Total time for computing deductions was "
 					+ iter.getTimeForComputingDeductions() + ".\n");
 			output.write("#       Time for finding cuts was "
