@@ -231,7 +231,7 @@ public class FrankKasperExtended extends TileKTransitive {
     	return Utils.mayBecomeLocallyEuclidean3D(ds);
     }
     
-	protected CombineTiles extendTo3d(final DSymbol ds) {
+	protected Iterator extendTo3d(final DSymbol ds) {
 		final List idcs = new IndexList(1, 2, 3);
 		
 		return new CombineTiles(ds) {

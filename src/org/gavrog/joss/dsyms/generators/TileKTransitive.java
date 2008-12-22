@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.gavrog.box.collections.Iterators;
-import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.algorithms.CheckpointEvent;
 import org.gavrog.joss.algorithms.ResumableGenerator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -41,7 +40,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
     private final Iterator partLists;
-    private CombineTiles extended;
+    private Iterator extended;
     private Iterator symbols;
 
     private int count2dSymbols = 0;
@@ -52,8 +51,6 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private int resume[] = new int[] { 0, 0, 0 };
     private String resume1 = null;
     
-    private long timeFor3dSets = 0L;
-
     /**
      * Constructs an instance.
      * 
@@ -135,10 +132,6 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
-                        if (extended != null) {
-                        	timeFor3dSets += extended.timeElapsed();
-                        	extended = null;
-                    	}
                         extended = extendTo3d(ds);
                         if (extended instanceof ResumableGenerator) {
                         	final ResumableGenerator gen =
@@ -239,7 +232,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param ds a Delaney symbol.
      * @return an iterator over all admissible extensions.
      */
-    protected CombineTiles extendTo3d(final DSymbol ds) {
+    protected Iterator extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds);
     }
 
@@ -262,14 +255,6 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
         return tmp.substring(i + 1);
     }
 
-	public String getTimeForGenerating3dSets() {
-		long time = timeFor3dSets;
-		if (extended != null) {
-			time += extended.timeElapsed();
-		}
-		return time / 10 / 100.0 + " seconds";
-	}
-	
     public static void main(final String[] args) {
         boolean verbose = false;
         boolean check = true;
