@@ -19,6 +19,8 @@ package org.gavrog.box.simple;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Olaf Delgado
@@ -30,7 +32,16 @@ public class Stopwatch {
     private boolean isRunning;
     
     private static boolean useCpuTime = true;
-
+    final private static Map<String, Stopwatch> named =
+    	new HashMap<String, Stopwatch>();
+    
+    public static Stopwatch global(final String name) {
+    	if (!named.containsKey(name)) {
+    		named.put(name, new Stopwatch());
+    	}
+    	return named.get(name);
+    }
+    
     private static long time() {
     	if (useCpuTime) {
     		final ThreadMXBean tb = ManagementFactory.getThreadMXBean();
@@ -81,6 +92,10 @@ public class Stopwatch {
     }
     
     public String format() {
-        return elapsed() / 10 / 100.0 + " seconds";
+        return format(elapsed());
+    }
+    
+    public static String format(final long milliseconds) {
+    	return milliseconds / 10 / 100.0 + " seconds";
     }
 }

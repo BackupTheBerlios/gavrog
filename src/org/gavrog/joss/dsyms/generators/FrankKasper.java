@@ -70,7 +70,7 @@ public class FrankKasper extends TileKTransitive {
         }
     }
     
-    protected CombineTiles extendTo3d(final DSymbol ds) {
+    protected Iterator extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds) {
             protected List<Move> getExtraDeductions(final DelaneySymbol ds,
 					final Move move) {

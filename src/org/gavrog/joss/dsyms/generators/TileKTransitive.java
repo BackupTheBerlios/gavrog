@@ -16,6 +16,11 @@
 
 package org.gavrog.joss.dsyms.generators;
 
+import java.io.FileWriter;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -30,9 +35,11 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
+import buoy.event.EventProcessor;
+
 /**
  * Generates all minimal, locally euclidean, tile-k-transitive tilings by a
- * given combinatorial tile.
+ * given combinatorial tile or list thereof.
  * 
  * @author Olaf Delgado
  * @version $Id: TileKTransitive.java,v 1.9 2008/04/02 11:09:59 odf Exp $
@@ -41,7 +48,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
     private final Iterator partLists;
-    private CombineTiles extended;
+    private Iterator extended;
     private Iterator symbols;
 
     private int count2dSymbols = 0;
@@ -52,20 +59,33 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private int resume[] = new int[] { 0, 0, 0 };
     private String resume1 = null;
     
-    private long timeFor3dSets = 0L;
-
     /**
      * Constructs an instance.
      * 
-     * @param tile the tile to use in the tilings.
+     * @param tile the single prototile to use in the tilings.
      * @param k the number of transitivity classes of tiles aimed for.
      * @param verbose if true, some logging information is produced.
      */
     public TileKTransitive(final DelaneySymbol tile, final int k,
             final boolean verbose) {
+    	this(Arrays.asList(new DelaneySymbol[] { tile }), k, verbose);
+    }
+
+    /**
+     * Constructs an instance.
+     * 
+     * @param tiles the list of prototiles to use in the tilings.
+     * @param k the number of transitivity classes of tiles aimed for.
+     * @param verbose if true, some logging information is produced.
+     */
+    public TileKTransitive(final List<DelaneySymbol> tiles, final int k,
+            final boolean verbose) {
         this.verbose = verbose;
 
-        final List covers = Iterators.asList(Covers.allCovers(tile.minimal()));
+        final List covers = new ArrayList();
+        for (final DelaneySymbol t: tiles) {
+        	covers.addAll(Iterators.asList(Covers.allCovers(t.minimal())));
+        }
         this.partLists = Iterators.selections(covers.toArray(), k);
 
         this.extended = null;
@@ -135,10 +155,6 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                         if (this.verbose) {
                             System.err.println(setAsString(ds));
                         }
-                        if (extended != null) {
-                        	timeFor3dSets += extended.timeElapsed();
-                        	extended = null;
-                    	}
                         extended = extendTo3d(ds);
                         if (extended instanceof ResumableGenerator) {
                         	final ResumableGenerator gen =
@@ -239,7 +255,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param ds a Delaney symbol.
      * @return an iterator over all admissible extensions.
      */
-    protected CombineTiles extendTo3d(final DSymbol ds) {
+    protected Iterator extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds);
     }
 
@@ -262,65 +278,171 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
         return tmp.substring(i + 1);
     }
 
-	public String getTimeForGenerating3dSets() {
-		long time = timeFor3dSets;
-		if (extended != null) {
-			time += extended.timeElapsed();
-		}
-		return time / 10 / 100.0 + " seconds";
+	public static void usage() {
+		System.err.print(
+			  "Usage: java [PATH] [OPTION]... k ds1 ds2...\n"
+			+ "\n"
+			+ "where"
+			+ "  PATH = org.gavrog.joss.dsyms.generators.TileKTransitive\n"
+			+ "  k:          tile-transitivity of generated tilings"
+			+ "  ds1 ds2...: D-symbols for topological tile types"
+			+ "\n"
+			+ "Recognized options:\n"
+			+ "  -o [FILE] specifies an output file\n"
+			+ "  -e        skip euclidicity test\n"
+			+ "  -i N      interval in seconds between writing checkpoints\n"
+			+ "  -r A-B-C  resume generation at a checkpoint\n"
+			+ "  -v        run in verbose mode\n"
+			);
+		System.exit(1);
 	}
 	
     public static void main(final String[] args) {
-        boolean verbose = false;
-        boolean check = true;
-        int i = 0;
-        while (i < args.length && args[i].startsWith("-")) {
-            if (args[i].equals("-v")) {
-                verbose = !verbose;
-            } else if (args[i].equals("-e")) {
-                check = !check;
-            } else {
-                System.err.println("Unknown option '" + args[i] + "'");
-            }
-            ++i;
-        }
+		try {
+			boolean verbose = false;
+			boolean check = true;
+			int checkpointInterval = 3600;
+			String outfile = null;
+			String resume = null;
 
-        final DSymbol ds = new DSymbol(args[i]);
-        final int k = Integer.parseInt(args[i + 1]);
-        final TileKTransitive iter = new TileKTransitive(ds, k, verbose);
-        int countGood = 0;
-        int countAmbiguous = 0;
+			int i = 0;
+			while (i < args.length && args[i].startsWith("-")) {
+				if (args[i].equals("-v")) {
+					verbose = !verbose;
+				} else if (args[i].equals("-o")) {
+					outfile = args[++i];
+				} else if (args[i].equals("-e")) {
+					check = !check;
+				} else if (args[i].equals("-i")) {
+					checkpointInterval = Integer.parseInt(args[++i]);
+				} else if (args[i].equals("-r")) {
+					resume = args[++i];
+				} else {
+					usage();
+				}
+				++i;
+			}
 
-        try {
-        	for (final DSymbol out: iter) {
-                if (check) {
-                    final EuclidicityTester tester = new EuclidicityTester(out);
-                    if (tester.isAmbiguous()) {
-                        System.out.println("??? " + out);
-                        ++countAmbiguous;
-                    } else if (tester.isGood()) {
-                        System.out.println(out);
-                        ++countGood;
-                    }
-                } else {
-                    System.out.println(out);
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.err);
-        }
+			if (args.length < i + 2) {
+				usage();
+			}
+			final int k = Integer.parseInt(args[i]);
+			++i;
+			
+			final List<DelaneySymbol> tiles = new ArrayList<DelaneySymbol>();
+			while (i < args.length) {
+				tiles.add(new DSymbol(args[i]));
+				++i;
+			}
 
-        System.err.println(iter.statistics());
-        if (check) {
-            System.err.println("Of the latter, " + countGood
-                    + " were found euclidean.");
-            if (countAmbiguous > 0) {
-                System.err.println("For " + countAmbiguous
-                        + " symbols, euclidicity could not yet be decided.");
-            }
-        }
-        System.err.println("Options: " + (check ? "" : "no")
-                + " euclidicity check, " + (verbose ? "verbose" : "quiet")
-                + ".");
-    }
+			final Writer output;
+			if (outfile != null) {
+				output = new FileWriter(outfile);
+			} else {
+				output = new OutputStreamWriter(System.out);
+			}
+
+			int countGood = 0;
+			int countAmbiguous = 0;
+
+			final Stopwatch timer = new Stopwatch();
+			final Stopwatch eTestTimer = new Stopwatch();
+			timer.start();
+
+			output.write("# Program TileKTransitive with k = " + k + ".\n");
+			output.write("# Tiles:\n");
+			for (final DelaneySymbol t: tiles) {
+				output.write("#     " + t + "\n");
+			}
+			output.write("# Output:\n");
+			if (outfile != null) {
+				output.write("#     " + outfile + "\n");
+			} else {
+				output.write("#     (stdout)\n");
+			}
+			output.write("# Options:\n");
+			output.write("#     euclidicity test:                ");
+			output.write((check ? "on" : "off") + "\n");
+			output.write("#     verbose mode:                    ");
+			output.write((verbose ? "on" : "off") + "\n");
+			output.write("#     checkpoint interval:             ");
+			output.write(checkpointInterval + "sec\n");
+			if (resume != null) {
+				output.write(String.format("# Resuming at %s.\n", resume));
+			}
+			output.write("\n");
+			output.flush();
+			
+			final TileKTransitive iter = new TileKTransitive(tiles, k, verbose);
+			final Stopwatch chkptTimer = new Stopwatch();
+			final int interval = 1000 * checkpointInterval;
+	        iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
+				@Override
+				public void handleEvent(final Object event) {
+					final CheckpointEvent ce = (CheckpointEvent) event;
+					if (ce.getMessage() != null
+							|| chkptTimer.elapsed() > interval) {
+						chkptTimer.reset();
+						try {
+							output.write(ce + "\n");
+							output.flush();
+						} catch (Throwable ex) {
+						}
+					}
+				}
+			});
+	        chkptTimer.start();
+			if (resume != null) {
+				iter.setResumePoint(resume);
+			}
+
+			for (final DSymbol out : iter) {
+				if (check) {
+					eTestTimer.start();
+					EuclidicityTester tester = new EuclidicityTester(out);
+					final boolean bad = tester.isBad();
+					final boolean ambiguous = tester.isAmbiguous();
+					eTestTimer.stop();
+					if (!bad) {
+						if (ambiguous) {
+							output.write("#@ name euclidicity dubious\n");
+							++countAmbiguous;
+						}
+						output.write(out + "\n");
+						++countGood;
+					}
+				} else {
+					output.write(out + "\n");
+				}
+				output.flush();
+			}
+			timer.stop();
+
+			output.write("\n");
+			output.write("# Total execution time in user mode was "
+					+ timer.format() + ".\n");
+			output.write("#   Time for generating 3d sets was "
+					+ Stopwatch.global("CombineTiles.total").format() + ".\n");
+			output.write("#     Time for computing signatures was "
+					+ Stopwatch.global("CombineTiles.signatures").format()
+					+ ".\n");
+			if (check) {
+				output.write("# Time for euclidicity tests was "
+						+ eTestTimer.format() + ".\n");
+			}
+			output.write("\n");
+			output.write("# " + iter.statistics() + "\n");
+			if (check) {
+				output.write("# Of those, " + countGood
+						+ " were found euclidean.\n");
+				if (countAmbiguous > 0) {
+					output.write("# For " + countAmbiguous
+							+ " symbols, euclidicity remains undetermined.\n");
+				}
+			}
+			output.flush();
+		} catch (Exception ex) {
+			ex.printStackTrace(System.err);
+		}
+	}
 }
