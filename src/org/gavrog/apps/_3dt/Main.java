@@ -2145,7 +2145,6 @@ public class Main extends EventSource {
 		}
 	}
 	
-    @SuppressWarnings("unchecked")
     private void construct() {
         final Stopwatch timer = new Stopwatch();
 
