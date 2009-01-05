@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2009 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -402,6 +402,8 @@ public class Main extends EventSource {
         fileMenu.addSeparator();
 
         fileMenu.add(new ExportU3D("Export U3D...", viewerFrame.getViewer(),
+				null));
+        fileMenu.add(new ExportOBJ("Export OBJ...", viewerFrame.getViewer(),
 				null));
         fileMenu.addSeparator();
         
@@ -1772,11 +1774,14 @@ public class Main extends EventSource {
 				final String group = oldDoc.getGroupName();
 				if (doc() != oldDoc) return;
 				setTInfo("group", group);
-				final String net = systreArchive.getByKey(
-						oldDoc.getNet().minimalImage().getSystreKey())
-						.getName();
+				final Archive.Entry net = systreArchive.getByKey(oldDoc
+						.getNet().minimalImage().getSystreKey());
 				if (doc() != oldDoc) return;
-				setTInfo("net", net);
+				if (net == null) {
+					setTInfo("net", "--unknown--");
+				} else {
+					setTInfo("net", net.getName());
+				}
 			}
 		});
 		worker.setPriority(Thread.MIN_PRIORITY);
