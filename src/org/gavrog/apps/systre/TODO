@@ -1,8 +1,8 @@
 =====================================================
 
-Open bugs:
+Open bugs/issues:
 
-(none)
+- Parser should issue warnings for missing or unrecognized statements.
 
 =====================================================
 
