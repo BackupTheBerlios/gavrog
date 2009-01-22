@@ -20,9 +20,11 @@ package org.gavrog.joss.graphics;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.simple.NamedConstant;
 
@@ -169,6 +171,16 @@ public class Surface {
     	}
     }
 
+    public Set<String> faceTags() {
+    	final Set<String> res = new HashSet<String>();
+    	
+    	for (int i = 0; i < faces.length; ++i) {
+    		final String tag = (String) getAttribute(FACE, i, TAG);
+    		if (tag != null) res.add(tag);
+    	}
+    	return res;
+    }
+    
     public static Surface concatenation(final Surface parts[]) {
     	final int n = parts.length;
         int newNF = 0;

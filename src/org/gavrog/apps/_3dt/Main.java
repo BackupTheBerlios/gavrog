@@ -1798,7 +1798,7 @@ public class Main extends EventSource {
 		encompass();
 	}
     
-    private SceneGraphComponent makeBody(final Tile b) {
+    private Surface makeMesh(final Tile b) {
     	// --- make subdivision surfaces for the individual faces
     	final int nFaces = b.size();
     	final int fStart[] = new int[nFaces];
@@ -1846,9 +1846,6 @@ public class Main extends EventSource {
 				Rn.subtract(tmp, vc, tmp);
 				f = length / Rn.euclideanNorm(tmp);
 				Rn.linearCombination(p[j], 1, corners[j], f, tmp);
-// final double tmp[] = Rn.subtract(null, corners[j], center);
-//				final double f = getEdgeWidth() / Rn.euclideanNorm(tmp);
-//				Rn.linearCombination(p[j], 1 - f, corners[j], f, center);
 			}
 			
             fSurf[i] = Surface.fromOutline(p, 1000);
@@ -1993,18 +1990,19 @@ public class Main extends EventSource {
 		}
 		// --- force normals to be generated
 		surf.computeNormals();
+		return surf;
+    }
 
+    private SceneGraphComponent makeBody(final Tile b) {
+    	final Surface surf = makeMesh(b);
+    	
         // --- make a node for the body
         final SceneGraphComponent sgc = new SceneGraphComponent("template:"
         		+ b.getIndex());
         
 		// --- split the subdivided surface back into its parts and add them
-		for (int i = 0; i < fTag.length; ++i) {
-			final String tag = fTag[i];
+		for (final String tag: surf.faceTags()) {
 			final Surface surfPart = surf.extract(tag);
-//			if (tag.startsWith("face:")) {
-//				surfPart.pull(getTileRelaxationSteps());
-//			}
 			
 			// --- make a geometry that jReality can use
 			final IndexedFaceSetFactory ifsf = new IndexedFaceSetFactory();
