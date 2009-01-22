@@ -2323,6 +2323,7 @@ public class Main extends EventSource {
 		if (doc() == null) return;
 		final BufferedWriter out = new BufferedWriter(target);
 		int offset = 1;
+		int i = 1;
 		for (final DisplayList.Item item: doc()) {
 			if (item.isTile()) {
 				final Tile t = item.getTile();
@@ -2337,9 +2338,10 @@ public class Main extends EventSource {
 	            final double m[] = MatrixBuilder.euclidean().translate(a)
 						.translate(center).scale(getTileSize()).translate(cneg)
 						.getArray();
-	            final String prefix = String.format("tile:%03d_kind:%03d_",
+	            final String prefix = String.format("prototile:%03d_",
 	            		t.getIndex(), t.getKind());
-				s.write(out, offset, prefix, m);
+	            out.write(String.format("o tile%03d\n", i++));
+				s.write(out, offset, prefix, m, true);
 				offset += s.vertices.length;
 				//TODO export colors
 			}

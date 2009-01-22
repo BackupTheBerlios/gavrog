@@ -751,18 +751,19 @@ public class Surface {
     
     public void write(final OutputStream target,
     		final int startIndex, final String prefix,
-    		final double transform[]) throws IOException {
-    	write(new OutputStreamWriter(target), startIndex, prefix, transform);
+    		final double transform[], final boolean invert) throws IOException {
+    	write(new OutputStreamWriter(target),
+    			startIndex, prefix, transform, invert);
     }
     
     public void write(final Writer target) throws IOException {
     	write(target, 1, "",
-    			new double[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 });
+    			new double[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 }, false);
     }
     
     public void write(final Writer target,
     		final int startIndex, final String prefix,
-    		final double transform[]) throws IOException {
+    		final double transform[], final boolean invert) throws IOException {
     	final double t[] = transform;
     	final BufferedWriter out = new BufferedWriter(target);
     	for (int i = 0; i < vertices.length; ++i) {
@@ -776,7 +777,11 @@ public class Surface {
     	final double normals[][] = getVertexNormals();
     	for (int i = 0; i < normals.length; ++i) {
     		final double n[] = normals[i];
-    		out.write(String.format("vn %f %f %f\n", n[0], n[1], n[2]));
+    		if (invert) {
+    			out.write(String.format("vn %f %f %f\n", -n[0], -n[1], -n[2]));
+    		} else {
+    			out.write(String.format("vn %f %f %f\n", n[0], n[1], n[2]));
+    		}
     	}
     	final Map<String, List<Integer>> mats =
     		new HashMap<String, List<Integer>>();
@@ -791,10 +796,17 @@ public class Surface {
     		for (final int i: mats.get(m)) {
     			final int f[] = faces[i];
     			out.write("f ");
-    			for (int j = 0; j < f.length; ++j) {
-    				final int k = f[j] + startIndex;
-    				out.write(String.format(" %d//%d", k, k));
-    			}
+    			if (invert) {
+					for (int j = f.length-1; j > -1; --j) {
+						final int k = f[j] + startIndex;
+						out.write(String.format(" %d//%d", k, k));
+					}
+				} else {
+					for (int j = 0; j < f.length; ++j) {
+						final int k = f[j] + startIndex;
+						out.write(String.format(" %d//%d", k, k));
+					}
+				}
     			out.write("\n");
     		}
     	}
@@ -820,7 +832,8 @@ public class Surface {
 			surf.write(System.out);
 			surf.write(System.out,
 					surf.vertices.length + 1, "second_",
-					new double[] { 1.1, 0, 0, 1, 0, 1.1, 0, 0, 0, 0, 1.1, 0 });
+					new double[] { 1.1, 0, 0, 1, 0, 1.1, 0, 0, 0, 0, 1.1, 0 },
+					false);
 		} catch (IOException ex) {
 			ex.printStackTrace(System.err);
 		}
