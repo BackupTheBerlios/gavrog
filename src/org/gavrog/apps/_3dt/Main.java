@@ -2343,7 +2343,7 @@ public class Main extends EventSource {
 	            out.write(String.format("o tile%03d\n", i++));
 				s.write(out, offset, prefix, m, true);
 				offset += s.vertices.length;
-				//TODO export colors
+				//TODO export materials
 			}
 			//TODO export net and unit cell
 		}
