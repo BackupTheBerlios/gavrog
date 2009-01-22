@@ -40,6 +40,7 @@ public class InterfaceOptions extends EventSource {
 	private File lastNetOutputPath = new File(userHome);
 	private File lastTilingOutputPath = new File(userHome);
 	private File lastSceneOutputPath = new File(userHome);
+	private File lastObjExportPath = new File(userHome);
 	private File lastSunflowRenderPath = new File(userHome);
 	private File lastScreenshotPath = new File(userHome);
     
@@ -108,6 +109,14 @@ public class InterfaceOptions extends EventSource {
 
 	public void setLastSceneOutputPath(final File value) {
 		_setField("lastSceneOutputPath", value);
+	}
+
+	public File getLastObjExportPath() {
+		return this.lastObjExportPath;
+	}
+
+	public void setLastObjExportPath(final File value) {
+		_setField("lastObjExportPath", value);
 	}
 
 	public File getLastTilingOutputPath() {

@@ -31,6 +31,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -173,6 +174,8 @@ public class Main extends EventSource {
 	final private FileChooser outTilingChooser =
 		new FileChooser(FileChooser.SAVE_FILE);
 	final private FileChooser outSceneChooser =
+		new FileChooser(FileChooser.SAVE_FILE);
+	final private FileChooser outOBJChooser =
 		new FileChooser(FileChooser.SAVE_FILE);
 	final private FileChooser outSunflowChooser =
 		new FileChooser(FileChooser.SAVE_FILE);
@@ -403,8 +406,7 @@ public class Main extends EventSource {
 
         fileMenu.add(new ExportU3D("Export U3D...", viewerFrame.getViewer(),
 				null));
-        fileMenu.add(new ExportOBJ("Export OBJ...", viewerFrame.getViewer(),
-				null));
+        fileMenu.add(actionExportOBJ());
         fileMenu.addSeparator();
         
         fileMenu.add(actionQuit());
@@ -506,6 +508,11 @@ public class Main extends EventSource {
 				"Gavrog Scene Files"));
 		outSceneChooser.setAppendEnabled(false);
 
+		outOBJChooser.setTitle("Export as OBJ");
+		outOBJChooser.addChoosableFileFilter(new ExtensionFilter("obj",
+				"Wavefront OBJ Files"));
+		outOBJChooser.setAppendEnabled(false);
+		
 		outSunflowChooser.setTitle("Save image");
 		outSunflowChooser.addChoosableFileFilter(new ExtensionFilter(
 				new String[] { "png", "tga", "hdr" }, "Images files"));
@@ -761,6 +768,30 @@ public class Main extends EventSource {
 				}
 			}, "Preview the Sunflow render",
 				KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
+		}
+		return ActionRegistry.instance().get(name);
+    }
+    
+    private Action actionExportOBJ() {
+    	final String name = "Export OBJ...";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
+				public void actionPerformed(ActionEvent e) {
+			    	if (doc() == null) return;
+					final File file = outOBJChooser.pickFile(
+							ui.getLastObjExportPath(), "obj");
+					if (file == null) return;
+					ui.setLastObjExportPath(file);
+					saveOptions();
+                    try {
+                    	exportSceneToOBJ(new FileWriter(file));
+                    } catch (IOException ex) {
+                    	log(ex.toString());
+                    	return;
+                    }
+                    log("Exported to " + file.getName() + ".");
+				}
+			}, "Export a Wavefront .obj file", null);
 		}
 		return ActionRegistry.instance().get(name);
     }
@@ -2268,9 +2299,7 @@ public class Main extends EventSource {
     }
     
     private void refreshScene() {
-    	if (doc() == null) {
-    		return;
-    	}
+    	if (doc() == null) return;
         SceneGraphUtility.removeChildren(this.tiling);
         SceneGraphUtility.removeChildren(this.net);
         for (final DisplayList.Item item: doc()) {
@@ -2288,6 +2317,26 @@ public class Main extends EventSource {
         this.net.setVisible(getShowNet());
     }
 
+    private void exportSceneToOBJ(final Writer target) throws IOException {
+		if (doc() == null) return;
+		final BufferedWriter out = new BufferedWriter(target);
+		int offset = 1;
+		for (final DisplayList.Item item: doc()) {
+			if (item.isTile()) {
+				final Surface s = makeMesh(item.getTile());
+				s.write(out, offset, item.getShift().asDoubleArray());
+				offset += s.vertices.length;
+				// if (doc().color(item) != null)
+				//   recolorTile(item, doc().color(item));
+			} else if (item.isEdge()) {
+				// addEdge(item);
+			} else if (item.isNode()) {
+				// addNode(item);
+			}
+		}
+		out.flush();
+	}
+    
     private void makeMaterials() {
     	if (doc() == null) {
     		return;
