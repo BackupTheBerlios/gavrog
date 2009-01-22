@@ -1880,8 +1880,10 @@ public class Main extends EventSource {
 			}
 			
             fSurf[i] = Surface.fromOutline(p, 1000);
-			fTag[i] = "face:" + face.getIndex();
-			fTag[nFaces + i] = "outline:" + face.getIndex();
+            fTag[i] = String.format("face:%03d", face.getIndex());
+			//fTag[i] = "face:" + face.getIndex();
+            fTag[nFaces + i] = String.format("outline:%03d", face.getIndex());
+			//fTag[nFaces + i] = "outline:" + face.getIndex();
 			fSurf[i].tagAll(fTag[i]);
 			nextStart += fSurf[i].vertices.length;
 		}
@@ -2335,7 +2337,9 @@ public class Main extends EventSource {
 	            final double m[] = MatrixBuilder.euclidean().translate(a)
 						.translate(center).scale(getTileSize()).translate(cneg)
 						.getArray();
-				s.write(out, offset, m);
+	            final String prefix = String.format("tile:%03d_kind:%03d_",
+	            		t.getIndex(), t.getKind());
+				s.write(out, offset, prefix, m);
 				offset += s.vertices.length;
 				//TODO export colors
 			}

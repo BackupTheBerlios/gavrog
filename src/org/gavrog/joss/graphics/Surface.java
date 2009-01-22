@@ -750,17 +750,18 @@ public class Surface {
     }
     
     public void write(final OutputStream target,
-    		final int startIndex,
+    		final int startIndex, final String prefix,
     		final double transform[]) throws IOException {
-    	write(new OutputStreamWriter(target), startIndex, transform);
+    	write(new OutputStreamWriter(target), startIndex, prefix, transform);
     }
     
     public void write(final Writer target) throws IOException {
-    	write(target, 1, new double[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 });
+    	write(target, 1, "",
+    			new double[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 });
     }
     
     public void write(final Writer target,
-    		final int startIndex,
+    		final int startIndex, final String prefix,
     		final double transform[]) throws IOException {
     	final double t[] = transform;
     	final BufferedWriter out = new BufferedWriter(target);
@@ -786,7 +787,7 @@ public class Surface {
     		mats.get(m).add(i);
     	}
     	for (final String m: mats.keySet()) {
-    		out.write(String.format("usemtl %s\n", m));
+    		out.write(String.format("usemtl %s%s\n", prefix, m));
     		for (final int i: mats.get(m)) {
     			final int f[] = faces[i];
     			out.write("f ");
@@ -818,7 +819,7 @@ public class Surface {
 		try {
 			surf.write(System.out);
 			surf.write(System.out,
-					surf.vertices.length + 1,
+					surf.vertices.length + 1, "second_",
 					new double[] { 1.1, 0, 0, 1, 0, 1.1, 0, 0, 0, 0, 1.1, 0 });
 		} catch (IOException ex) {
 			ex.printStackTrace(System.err);
