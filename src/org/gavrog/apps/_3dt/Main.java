@@ -98,6 +98,8 @@ import org.gavrog.joss.tilings.Tiling;
 import org.gavrog.joss.tilings.Tiling.Facet;
 import org.gavrog.joss.tilings.Tiling.Tile;
 
+import sun.misc.Regexp;
+
 import buoy.event.CommandEvent;
 import buoy.event.EventSource;
 import buoy.event.MouseClickedEvent;
@@ -784,7 +786,7 @@ public class Main extends EventSource {
 					ui.setLastObjExportPath(file);
 					saveOptions();
                     try {
-                    	exportSceneToOBJ(new FileWriter(file));
+                    	exportSceneToOBJ(file);
                     } catch (IOException ex) {
                     	log(ex.toString());
                     	return;
@@ -2319,11 +2321,16 @@ public class Main extends EventSource {
         this.net.setVisible(getShowNet());
     }
 
-    private void exportSceneToOBJ(final Writer target) throws IOException {
+    private void exportSceneToOBJ(final File file)
+    throws IOException {
 		if (doc() == null) return;
-		final BufferedWriter out = new BufferedWriter(target);
+		final File mtlFile =
+			new File(file.getPath().replaceFirst("\\.obj$", ".mtl"));
+		final BufferedWriter obj = new BufferedWriter(new FileWriter(file));
+		final BufferedWriter mtl = new BufferedWriter(new FileWriter(mtlFile));
 		int offset = 1;
 		int i = 1;
+		obj.write(String.format("mtllib %s\n", mtlFile.getName()));
 		for (final DisplayList.Item item: doc()) {
 			if (item.isTile()) {
 				final Tile t = item.getTile();
@@ -2338,16 +2345,16 @@ public class Main extends EventSource {
 	            final double m[] = MatrixBuilder.euclidean().translate(a)
 						.translate(center).scale(getTileSize()).translate(cneg)
 						.getArray();
-	            final String prefix = String.format("prototile:%03d_",
-	            		t.getIndex(), t.getKind());
-	            out.write(String.format("o tile%03d\n", i++));
-				s.write(out, offset, prefix, m, true);
+	            final String prefix = String.format("tile:%03d_", t.getIndex());
+	            obj.write(String.format("o tile%03d\n", i++));
+				s.write(obj, offset, prefix, m, true);
 				offset += s.vertices.length;
 				//TODO export materials
 			}
 			//TODO export net and unit cell
 		}
-		out.flush();
+		obj.flush(); obj.close();
+		mtl.flush(); mtl.close();
 	}
     
     private void makeMaterials() {
