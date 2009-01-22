@@ -17,6 +17,11 @@
 
 package org.gavrog.joss.graphics;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -741,6 +746,59 @@ public class Surface {
     	return new Surface(pos, idcs, fixed);
 	}
     
+    public void write(final OutputStream target) throws IOException {
+    	write(new OutputStreamWriter(target));
+    }
+    
+    public void write(final OutputStream target,
+    		final int startIndex,
+    		final double translation[]) throws IOException {
+    	write(new OutputStreamWriter(target), startIndex, translation);
+    }
+    
+    public void write(final Writer target) throws IOException {
+    	write(target, 1, new double[] { 0, 0, 0 });
+    }
+    
+    public void write(final Writer target,
+    		final int startIndex,
+    		final double translation[]) throws IOException {
+    	final double t[] = translation;
+    	final BufferedWriter out = new BufferedWriter(target);
+    	for (int i = 0; i < vertices.length; ++i) {
+    		final double v[] = vertices[i];
+    		out.write(String.format("v %f %f %f\n",
+    				v[0] + t[0], v[1] + t[1], v[2] + t[2]));
+    	}
+    	computeNormals();
+    	final double normals[][] = getVertexNormals();
+    	for (int i = 0; i < normals.length; ++i) {
+    		final double n[] = normals[i];
+    		out.write(String.format("vn %f %f %f\n", n[0], n[1], n[2]));
+    	}
+    	final Map<String, List<Integer>> mats =
+    		new HashMap<String, List<Integer>>();
+    	for (int i = 0; i < faces.length; ++i) {
+    		String m = (String) getAttribute(FACE, i, TAG);
+    		if (m == null) m = "default";
+    		if (mats.get(m) == null) mats.put(m, new ArrayList<Integer>());
+    		mats.get(m).add(i);
+    	}
+    	for (final String m: mats.keySet()) {
+    		out.write(String.format("usemtl %s\n", m));
+    		for (final int i: mats.get(m)) {
+    			final int f[] = faces[i];
+    			out.write("f ");
+    			for (int j = 0; j < f.length; ++j) {
+    				final int k = f[j] + startIndex;
+    				out.write(String.format(" %d//%d", k, k));
+    			}
+    			out.write("\n");
+    		}
+    	}
+    	out.flush();
+    }
+    
     public static void main(final String args[]) {
         final double v[][] = { { 0, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 },
                 { 0, 1, 1 }, { 1, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 1, 1 } };
@@ -756,14 +814,12 @@ public class Surface {
         }
         surf = surf.subdivision();
         surf.computeNormals();
-        final Surface front = surf.extract("front");
-        System.out.println("Front:");
-		System.out
-				.println("  vertices: " + Arrays.deepToString(front.vertices));
-		System.out.println("  vertex normals: "
-				+ Arrays.deepToString(front.getVertexNormals()));
-		System.out.println("  faces: " + Arrays.deepToString(front.faces));
-		System.out.println("  face normals: "
-				+ Arrays.deepToString(front.getFaceNormals()));
+		try {
+			surf.write(System.out);
+			surf.write(System.out,
+					surf.vertices.length + 1, new double[] { 1, 0, 0 });
+		} catch (IOException ex) {
+			ex.printStackTrace(System.err);
+		}
     }
 }
