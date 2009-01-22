@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -752,23 +751,25 @@ public class Surface {
     
     public void write(final OutputStream target,
     		final int startIndex,
-    		final double translation[]) throws IOException {
-    	write(new OutputStreamWriter(target), startIndex, translation);
+    		final double transform[]) throws IOException {
+    	write(new OutputStreamWriter(target), startIndex, transform);
     }
     
     public void write(final Writer target) throws IOException {
-    	write(target, 1, new double[] { 0, 0, 0 });
+    	write(target, 1, new double[] { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 });
     }
     
     public void write(final Writer target,
     		final int startIndex,
-    		final double translation[]) throws IOException {
-    	final double t[] = translation;
+    		final double transform[]) throws IOException {
+    	final double t[] = transform;
     	final BufferedWriter out = new BufferedWriter(target);
     	for (int i = 0; i < vertices.length; ++i) {
     		final double v[] = vertices[i];
     		out.write(String.format("v %f %f %f\n",
-    				v[0] + t[0], v[1] + t[1], v[2] + t[2]));
+    				v[0] * t[ 0] + v[1] * t[ 1] + v[2] * t[ 2] + t[ 3],
+    				v[0] * t[ 4] + v[1] * t[ 5] + v[2] * t[ 6] + t[ 7],
+    				v[0] * t[ 8] + v[1] * t[ 9] + v[2] * t[10] + t[11]));
     	}
     	computeNormals();
     	final double normals[][] = getVertexNormals();
@@ -817,7 +818,8 @@ public class Surface {
 		try {
 			surf.write(System.out);
 			surf.write(System.out,
-					surf.vertices.length + 1, new double[] { 1, 0, 0 });
+					surf.vertices.length + 1,
+					new double[] { 1.1, 0, 0, 1, 0, 1.1, 0, 0, 0, 0, 1.1, 0 });
 		} catch (IOException ex) {
 			ex.printStackTrace(System.err);
 		}

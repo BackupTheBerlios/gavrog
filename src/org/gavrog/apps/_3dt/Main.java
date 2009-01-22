@@ -2323,16 +2323,23 @@ public class Main extends EventSource {
 		int offset = 1;
 		for (final DisplayList.Item item: doc()) {
 			if (item.isTile()) {
-				final Surface s = makeMesh(item.getTile());
-				s.write(out, offset, item.getShift().asDoubleArray());
+				final Tile t = item.getTile();
+				final Surface s = makeMesh(t);
+	            final double[] center = doc().cornerPosition(3, t.getChamber());
+				final double[] cneg = new double[3];
+				for (int j = 0; j < 3; ++j) {
+					cneg[j] = -center[j];
+				}
+				final double a[] = ((Vector) item.getShift().times(
+						doc().getEmbedderToWorld())).asDoubleArray();
+	            final double m[] = MatrixBuilder.euclidean().translate(a)
+						.translate(center).scale(getTileSize()).translate(cneg)
+						.getArray();
+				s.write(out, offset, m);
 				offset += s.vertices.length;
-				// if (doc().color(item) != null)
-				//   recolorTile(item, doc().color(item));
-			} else if (item.isEdge()) {
-				// addEdge(item);
-			} else if (item.isNode()) {
-				// addNode(item);
+				//TODO export colors
 			}
+			//TODO export net and unit cell
 		}
 		out.flush();
 	}
