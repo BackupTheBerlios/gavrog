@@ -2331,9 +2331,23 @@ public class Main extends EventSource {
 		int offset = 1;
 		int i = 1;
 		obj.write(String.format("mtllib %s\n", mtlFile.getName()));
+		final double ns = getSpecularExponent();
+		final float rgb_a[] = blendColors(Color.BLACK, getAmbientColor(),
+				getAmbientCoefficient()).getRGBComponents(null);
+		final float rgb_s[] = blendColors(Color.BLACK, getSpecularColor(),
+				getSpecularCoefficient()).getRGBComponents(null);
 		for (final DisplayList.Item item: doc()) {
 			if (item.isTile()) {
 				final Tile t = item.getTile();
+				Color face_color = doc().color(item);
+				if (face_color == null)
+					face_color = doc().getDefaultTileColor(t);
+				final float rgb_face[] = blendColors(Color.BLACK, face_color,
+						getDiffuseCoefficient()).getRGBComponents(null);
+				final Color edge_color =
+					blendColors(face_color, getEdgeColor(), getEdgeOpacity());
+				final float rgb_edge[] = blendColors(Color.BLACK, edge_color,
+						getDiffuseCoefficient()).getRGBComponents(null);
 				final Surface s = makeMesh(t);
 	            final double[] center = doc().cornerPosition(3, t.getChamber());
 				final double[] cneg = new double[3];
@@ -2345,17 +2359,40 @@ public class Main extends EventSource {
 	            final double m[] = MatrixBuilder.euclidean().translate(a)
 						.translate(center).scale(getTileSize()).translate(cneg)
 						.getArray();
-	            final String prefix = String.format("tile:%03d_", t.getIndex());
-	            obj.write(String.format("o tile%03d\n", i++));
+	            final String prefix = String.format("tile:%03d_", i);
+	            obj.write(String.format("o tile%03d\n", i));
 				s.write(obj, offset, prefix, m, true);
 				offset += s.vertices.length;
-				//TODO export materials
+				
+				for (int j = 0; j < t.size(); ++j) {
+					//TODO take facet class colors into account
+					//TODO color edges
+					mtl.write(String.format("newmtl %sface:%03d\n", prefix, j));
+					exportMaterial(mtl, ns, rgb_face, rgb_a, rgb_s);
+					mtl.write(String.format("newmtl %soutline:%03d\n",
+							prefix, j));
+					exportMaterial(mtl, ns, rgb_edge, rgb_a, rgb_s);
+				}
+				++i;
 			}
 			//TODO export net and unit cell
 		}
 		obj.flush(); obj.close();
 		mtl.flush(); mtl.close();
 	}
+    
+    private void exportMaterial(final BufferedWriter mtl, final double ns,
+    		final float kd[], final float ka[], final float ks[])
+    throws IOException {
+		mtl.write(String.format("Ns %f\n", ns));
+		mtl.write("d 1.0\n");
+		mtl.write("illum 2\n");
+		mtl.write(String.format("Kd %f %f %f\n", kd[0], kd[1], kd[2]));
+		mtl.write(String.format("Ka %f %f %f\n", ka[0], ka[1], ka[2]));
+		mtl.write(String.format("Ks %f %f %f\n", ks[0], ks[1], ks[2]));
+		mtl.write("Ke 0.0 0.0 0.0\n");
+		mtl.write("\n");
+    }
     
     private void makeMaterials() {
     	if (doc() == null) {
