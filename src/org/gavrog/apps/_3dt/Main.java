@@ -2321,8 +2321,7 @@ public class Main extends EventSource {
         this.net.setVisible(getShowNet());
     }
 
-    private void exportSceneToOBJ(final File file)
-    throws IOException {
+    private void exportSceneToOBJ(final File file) throws IOException {
 		if (doc() == null) return;
 		final File mtlFile =
 			new File(file.getPath().replaceFirst("\\.obj$", ".mtl"));
@@ -2339,15 +2338,6 @@ public class Main extends EventSource {
 		for (final DisplayList.Item item: doc()) {
 			if (item.isTile()) {
 				final Tile t = item.getTile();
-				Color face_color = doc().color(item);
-				if (face_color == null)
-					face_color = doc().getDefaultTileColor(t);
-				final float rgb_face[] = blendColors(Color.BLACK, face_color,
-						getDiffuseCoefficient()).getRGBComponents(null);
-				final Color edge_color =
-					blendColors(face_color, getEdgeColor(), getEdgeOpacity());
-				final float rgb_edge[] = blendColors(Color.BLACK, edge_color,
-						getDiffuseCoefficient()).getRGBComponents(null);
 				final Surface s = makeMesh(t);
 	            final double[] center = doc().cornerPosition(3, t.getChamber());
 				final double[] cneg = new double[3];
@@ -2365,8 +2355,18 @@ public class Main extends EventSource {
 				offset += s.vertices.length;
 				
 				for (int j = 0; j < t.size(); ++j) {
-					//TODO take facet class colors into account
-					//TODO color edges
+					Color face_color = doc().getFacetClassColor(t.facet(j));
+					if (face_color == null) face_color = doc().color(item);
+					if (face_color == null)
+						face_color = doc().getDefaultTileColor(t);
+					final float rgb_face[] = blendColors(Color.BLACK,
+							face_color, getDiffuseCoefficient())
+							.getRGBComponents(null);
+					final Color edge_color = blendColors(face_color,
+							getEdgeColor(), getEdgeOpacity());
+					final float rgb_edge[] = blendColors(Color.BLACK,
+							edge_color, getDiffuseCoefficient())
+							.getRGBComponents(null);
 					mtl.write(String.format("newmtl %sface:%03d\n", prefix, j));
 					exportMaterial(mtl, ns, rgb_face, rgb_a, rgb_s);
 					mtl.write(String.format("newmtl %soutline:%03d\n",
