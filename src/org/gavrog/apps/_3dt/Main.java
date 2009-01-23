@@ -98,8 +98,6 @@ import org.gavrog.joss.tilings.Tiling;
 import org.gavrog.joss.tilings.Tiling.Facet;
 import org.gavrog.joss.tilings.Tiling.Tile;
 
-import sun.misc.Regexp;
-
 import buoy.event.CommandEvent;
 import buoy.event.EventSource;
 import buoy.event.MouseClickedEvent;

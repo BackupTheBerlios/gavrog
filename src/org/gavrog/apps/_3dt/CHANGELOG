@@ -1,6 +1,6 @@
 3dt 0.5.0:
 
-2009-01-22: Replaced jRealities OBJ export function with on of our own.
+2009-01-22: Replaced jRealities OBJ export function with one of our own.
 2009-01-05: Added an option for exporting OBJ files (no materials yet).
 2008-12-05: Hiding and recoloring facet classes now extends to facet outlines.
 2008-12-02: Re-established the U3D export item in the file menu.
