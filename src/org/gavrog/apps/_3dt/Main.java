@@ -2351,6 +2351,7 @@ public class Main extends EventSource {
 						.getArray();
 	            final String prefix = String.format("tile:%03d_", i);
 	            obj.write(String.format("o tile%03d\n", i));
+	            obj.write(String.format("g kind%03d\n", t.getKind()));
 				s.write(obj, offset, prefix, m, true);
 				offset += s.vertices.length;
 				
