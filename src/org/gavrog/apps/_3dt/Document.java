@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -378,6 +379,27 @@ public class Document extends DisplayList {
         final Point p0 = (Point) getPositions().get(new DSPair(i, D));
         final Point p = (Point) p0.times(getEmbedderToWorld());
         return p.getCoordinates().asDoubleArray()[0];
+    }
+    
+    public double volume() {
+    	double vol = 0.0;
+    	for (final Iterator it = getTiling().getCover().elements(); it
+				.hasNext();) {
+    		final Object D = it.next();
+    		final double p[][] = new double[4][];
+    		for (int i = 0; i < 4; ++i)  p[i] = cornerPosition(i, D);
+    		for (int i = 1; i < 4; ++i)
+    			for (int j = 0; j < 3; ++j)
+    				p[i][j] -= p[0][j];
+    		final double or = getTiling().coverOrientation(D);
+    		vol -= or * p[1][0] * p[2][1] * p[3][2];
+    		vol -= or * p[1][1] * p[2][2] * p[3][0];
+    		vol -= or * p[1][2] * p[2][0] * p[3][1];
+    		vol += or * p[1][2] * p[2][1] * p[3][0];
+    		vol += or * p[1][1] * p[2][0] * p[3][2];
+    		vol += or * p[1][0] * p[2][2] * p[3][1];
+		}
+    	return vol;
     }
     
     public Point nodePoint(final INode v) {
