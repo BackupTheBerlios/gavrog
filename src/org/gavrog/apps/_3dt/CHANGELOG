@@ -1,7 +1,6 @@
 3dt 0.5.0:
 
-2009-01-22: Replaced jRealities OBJ export function with one of our own.
-2009-01-05: Added an option for exporting OBJ files (no materials yet).
+2009-01-28: New export option for Wavefront/OBJ, including materials.
 2008-12-05: Hiding and recoloring facet classes now extends to facet outlines.
 2008-12-02: Re-established the U3D export item in the file menu.
 2008-11-17: The user can now specify a vector to point upward on the screen.

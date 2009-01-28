@@ -2350,7 +2350,7 @@ public class Main extends EventSource {
 	            final String prefix = String.format("tile:%03d_", i);
 	            obj.write(String.format("o tile%03d\n", i));
 	            obj.write(String.format("g kind%03d\n", t.getKind()));
-				s.write(obj, offset, prefix, m, true);
+				s.write(obj, offset, prefix, m, doc().volume() < 0);
 				offset += s.vertices.length;
 				
 				for (int j = 0; j < t.size(); ++j) {
