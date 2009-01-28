@@ -399,7 +399,7 @@ public class Document extends DisplayList {
     		vol += or * p[1][1] * p[2][0] * p[3][2];
     		vol += or * p[1][0] * p[2][2] * p[3][1];
 		}
-    	return vol;
+    	return vol / 6.0;
     }
     
     public Point nodePoint(final INode v) {
