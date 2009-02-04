@@ -24,13 +24,13 @@ import java.util.Iterator;
  * @author Olaf Delgado
  * @version $Id: IndexList.java,v 1.2 2007/04/19 23:07:42 odf Exp $
  */
-public class IndexList extends ArrayList {
+public class IndexList extends ArrayList<Integer> {
 
     public IndexList(final DelaneySymbol ds) {
         this(ds.indices());
     }
 
-    public IndexList(final Iterator iter) {
+    public IndexList(final Iterator<Integer> iter) {
         while (iter.hasNext()) {
             add(iter.next());
         }
