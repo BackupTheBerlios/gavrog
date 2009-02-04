@@ -7,3 +7,4 @@ syntax: regexp
 ^bin/
 ^doc/
 ^Deploy/install.jar$
+^.manager/
