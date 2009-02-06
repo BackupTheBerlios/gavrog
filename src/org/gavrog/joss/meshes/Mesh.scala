@@ -5,6 +5,7 @@ import java.io._
 import scala.collection.mutable._
 import scala.io.Source
 import Sums._
+import Vectors._
 
 object Mesh {
   class Chamber {
@@ -666,6 +667,17 @@ class Mesh(s : String) {
         if (i % 2 == 0) d.s0 = hole(i + 1) else d.s1 = hole((i + 1) % n)
       }
       _holes += f
+    }
+  }
+  
+  def computeNormals = {
+    clearNormals
+    val normal4face = new LazyMap((f: Cell) =>
+      f.vertexChambers.sum(c => c.vertex.pos x c.nextAtFace.vertex.pos).unit)
+    for (v <- vertices) {
+      val n = addNormal(v.cellChambers.sum(c =>
+        if (c.cell.isInstanceOf[Face]) normal4face(c.cell) else zero3).unit)
+      for (c <- v.cellChambers; d <- List(c, c.s1)) d.normal = n
     }
   }
   
