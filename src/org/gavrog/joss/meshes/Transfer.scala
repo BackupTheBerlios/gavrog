@@ -33,7 +33,7 @@ object Transfer {
           case '-' => {}
           case 'p' => options.positions = true
           case 't' => options.texverts  = true
-          case 'n' => options.normals   = true
+          //case 'n' => options.normals   = true
           case 'g' => options.groups    = true
           case 'm' => options.materials = true
           case 's' => options.smoothing = true
@@ -141,6 +141,7 @@ object Transfer {
         g.smoothingGroup = newSmoothing(f)
       }
     }
+    result.computeNormals
     result.mtllib ++ mesh.mtllib
     result.mtllib ++ donor.mtllib
     System.err.println("Made %d transfers out of %d components."
