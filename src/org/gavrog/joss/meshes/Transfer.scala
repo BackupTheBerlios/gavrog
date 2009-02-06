@@ -9,19 +9,18 @@ object Transfer {
     exit(1)
   }
   
-  class Options(p: Boolean, t: Boolean, n: Boolean,
+  class Options(p: Boolean, t: Boolean,
                 g: Boolean, m: Boolean, s: Boolean) {
-    def this() = this(false, false, false, false, false, false)
+    def this() = this(false, false, false, false, false)
     
     var positions = p
     var texverts  = t
-    var normals   = n
     var groups    = g
     var materials = m
     var smoothing = s
     
     def any =
-      positions || texverts || normals || groups || materials || smoothing
+      positions || texverts || groups || materials || smoothing
   }
   
   def main(args: Array[String]) : Unit = {
@@ -33,7 +32,6 @@ object Transfer {
           case '-' => {}
           case 'p' => options.positions = true
           case 't' => options.texverts  = true
-          //case 'n' => options.normals   = true
           case 'g' => options.groups    = true
           case 'm' => options.materials = true
           case 's' => options.smoothing = true
@@ -44,7 +42,7 @@ object Transfer {
       i += 1
     }
     if (!options.any) options =
-      new Options(false, true, false, true, true, true)
+      new Options(false, false, true, true, true)
     
     if (args.size < i + 2) bail("need two .obj files as arguments")
     val originals = Mesh.read(args(i))
@@ -91,8 +89,6 @@ object Transfer {
         result.addVertex(p._1.vertex(p._2)))
       val tMap = new LazyMap((p: Pair[Mesh, int]) =>
         result.addTextureVertex(p._1.textureVertex(p._2)))
-      val nMap = new LazyMap((p: Pair[Mesh, int]) =>
-        result.addNormal(p._1.normal(p._2)))
 
       if (image != null) {
         val inv = new HashMap[Mesh.Chamber, Mesh.Chamber]
@@ -110,11 +106,6 @@ object Transfer {
         val p = if (map == null || options.texverts) (donor, c.tVertexNr)
                 else (mesh, map(c).tVertexNr)
         if (p._2 == 0) 0 else tMap(p).nr
-      }
-      def newNormal(c: Chamber) = {
-        val p = if (map == null || options.normals) (donor, c.normalNr)
-                else (mesh, map(c).normalNr)
-        if (p._2 == 0) 0 else nMap(p).nr
       }
       def newGroup(f: Face) = {
         val g = if (map == null || options.groups) f.group
@@ -134,13 +125,14 @@ object Transfer {
         val cs = f.vertexChambers.toSeq
         val vs = cs.map(newVertex)
         val vt = cs.map(newTexVert)
-        val vn = cs.map(newNormal)
+        val vn = cs.map(c => 0)
         val g = result.addFace(vs, vt, vn)
         g.group          = newGroup(f)
         g.material       = newMaterial(f)
         g.smoothingGroup = newSmoothing(f)
       }
     }
+    result.fixHoles
     result.computeNormals
     result.mtllib ++ mesh.mtllib
     result.mtllib ++ donor.mtllib
