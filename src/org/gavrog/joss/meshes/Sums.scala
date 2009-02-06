@@ -35,32 +35,4 @@ object Sums {
   implicit def wrapIterator[T](iter : Iterator[T]) = new Summable[T] {
     def foreach(f : T => Unit) = iter.foreach(f)
   }
-  
-  case class Vec2(x: Double, y: Double) {
-    def +(that: Vec2) = Vec2(this.x + that.x, this.y + that.y)
-    def -(that: Vec2) = Vec2(this.x - that.x, this.y - that.y)
-    def *(f: Double) = Vec2(x * f, y * f)
-    def /(f: Double) = Vec2(x / f, y / f)
-  }
-  implicit object Vec2Monoid extends Monoid[Vec2] {
-    def add(x: Vec2, y: Vec2) = x + y
-    def unit = Vec2(0, 0)
-  }
-  
-  case class Vec3(x: Double, y: Double, z: Double) {
-    def +(that: Vec3) = Vec3(this.x + that.x, this.y + that.y, this.z + that.z)
-    def -(that: Vec3) = Vec3(this.x - that.x, this.y - that.y, this.z - that.z)
-    def *(f: Double) = Vec3(x * f, y * f, z * f)
-    def /(f: Double) = Vec3(x / f, y / f, z / f)
-  }
-  implicit object Vec3Monoid extends Monoid[Vec3] {
-    def add(x: Vec3, y: Vec3) = x + y
-    def unit = Vec3(0, 0, 0)
-  }
-  
-  case class Scalar(x: Double) {
-    def *(that: Vec3) = that * x
-  }
-  implicit def dbl2scalar(x: Double) = Scalar(x)
-  implicit def int2scalar(x: Int) = Scalar(x)
 }
