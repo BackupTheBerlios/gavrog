@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2009 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -59,64 +59,28 @@ import de.jreality.toolsystem.ToolSystem;
 import de.jreality.util.CameraUtility;
 import de.jreality.util.ImageUtility;
 import de.jreality.util.Rectangle3D;
+import de.jreality.util.RenderTrigger;
 
 /**
  * @author Olaf Delgado
  * @version $Id:$
  */
 public class ViewerFrame extends JFrame {
-	final SceneGraphComponent rootNode = new SceneGraphComponent();
-	final SceneGraphComponent cameraNode = new SceneGraphComponent();
-	final SceneGraphComponent geometryNode = new SceneGraphComponent();
-	final SceneGraphComponent lightNode = new SceneGraphComponent();
-	final SceneGraphComponent contentNode;
+	final private SceneGraphComponent rootNode = new SceneGraphComponent();
+	final private SceneGraphComponent cameraNode = new SceneGraphComponent();
+	final private SceneGraphComponent geometryNode = new SceneGraphComponent();
+	final private SceneGraphComponent lightNode = new SceneGraphComponent();
+	final private SceneGraphComponent contentNode;
 	
-	final Map<String, SceneGraphComponent> lights =
+	final private Map<String, SceneGraphComponent> lights =
 		new HashMap<String, SceneGraphComponent>();
 	
-	final SoftViewer softwareViewer;
-	Viewer viewer;
-	boolean renderingEnabled = false;
-    double lastCenter[] = null;
+	final private SoftViewer softwareViewer;
+	final private RenderTrigger renderTrigger = new RenderTrigger();
+	private Viewer viewer;
+    private double lastCenter[] = null;
     
 
-	public static void main(String args[]) {
-		final SceneGraphComponent content = new SceneGraphComponent();
-		final IndexedFaceSet ifs = Primitives.icosahedron();
-		content.setGeometry(ifs);
-		
-		final ViewerFrame frame = new ViewerFrame(content);
-		frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent arg0) {
-				System.exit(0);
-			}
-		});
-		frame.setJMenuBar(new JMenuBar());
-		frame.getJMenuBar().add(new JMenu("File"));
-		final Light l1 = new DirectionalLight();
-		l1.setIntensity(0.8);
-		final Transformation t1 = new Transformation();
-		MatrixBuilder.euclidean().rotateX(degrees(-30)).rotateY(degrees(-30))
-				.assignTo(t1);
-		frame.setLight("Main Light", l1, t1);
-		final Light l2 = new DirectionalLight();
-		l2.setIntensity(0.2);
-		final Transformation t2 = new Transformation();
-		MatrixBuilder.euclidean().rotateX(degrees(10)).rotateY(degrees(20))
-				.assignTo(t2);
-		frame.setLight("Fill Light", l2, t2);
-		
-		frame.validate();
-		frame.setVisible(true);
-		frame.startRendering();
-
-		frame.setViewerSize(new Dimension(800, 600));
-	}
-
-	private static double degrees(final double d) {
-		return d / 180.0 * Math.PI;
-	}
-	
 	public ViewerFrame(final SceneGraphComponent content) {
 		contentNode = content;
 
@@ -183,20 +147,7 @@ public class ViewerFrame extends JFrame {
 			});
 		}
 
-		new Thread(new Runnable() {
-			public void run() {
-				while (true) {
-					if (renderingEnabled) {
-						getViewer().renderAsync();
-					}
-					try {
-						Thread.sleep(40);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}).start();
+		renderTrigger.addSceneGraphComponent(rootNode);
 	}
 	
 	private void setupToolSystem(final Viewer viewer,
@@ -231,11 +182,11 @@ public class ViewerFrame extends JFrame {
 	}
 	
 	public void startRendering() {
-		renderingEnabled = true;
+		renderTrigger.finishCollect();
 	}
 	
 	public void pauseRendering() {
-		renderingEnabled = false;
+		renderTrigger.startCollect();
 	}
 	
 	public void encompass() {
@@ -344,6 +295,8 @@ public class ViewerFrame extends JFrame {
 		final Dimension d = getViewerSize();
 		getContentPane().removeAll();
 		getContentPane().add((Component) viewer.getViewingComponent());
+		renderTrigger.removeViewer(this.viewer);
+		renderTrigger.addViewer(viewer);
 		this.viewer = viewer;
 		setViewerSize(d);
 	}
@@ -359,5 +312,43 @@ public class ViewerFrame extends JFrame {
 	public void setViewerSize(final Dimension newSize) {
 		((Component) viewer.getViewingComponent()).setPreferredSize(newSize);
 		pack();
+	}
+	
+	
+	public static void main(String args[]) {
+		final SceneGraphComponent content = new SceneGraphComponent();
+		final IndexedFaceSet ifs = Primitives.icosahedron();
+		content.setGeometry(ifs);
+		
+		final ViewerFrame frame = new ViewerFrame(content);
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent arg0) {
+				System.exit(0);
+			}
+		});
+		frame.setJMenuBar(new JMenuBar());
+		frame.getJMenuBar().add(new JMenu("File"));
+		final Light l1 = new DirectionalLight();
+		l1.setIntensity(0.8);
+		final Transformation t1 = new Transformation();
+		MatrixBuilder.euclidean().rotateX(degrees(-30)).rotateY(degrees(-30))
+				.assignTo(t1);
+		frame.setLight("Main Light", l1, t1);
+		final Light l2 = new DirectionalLight();
+		l2.setIntensity(0.2);
+		final Transformation t2 = new Transformation();
+		MatrixBuilder.euclidean().rotateX(degrees(10)).rotateY(degrees(20))
+				.assignTo(t2);
+		frame.setLight("Fill Light", l2, t2);
+		
+		frame.validate();
+		frame.setVisible(true);
+		frame.startRendering();
+
+		frame.setViewerSize(new Dimension(800, 600));
+	}
+
+	private static double degrees(final double d) {
+		return d / 180.0 * Math.PI;
 	}
 }
