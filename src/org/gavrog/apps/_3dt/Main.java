@@ -2350,6 +2350,8 @@ public class Main extends EventSource {
         		if (doc().color(item) != null) {
         			recolorTile(item, doc().color(item));
         		}
+        	} else if (item.isFacet()) {
+        		addFacet(item);
         	} else if (item.isEdge()) {
         		addEdge(item);
         	} else if (item.isNode()) {
