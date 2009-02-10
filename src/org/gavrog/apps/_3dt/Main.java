@@ -2112,7 +2112,9 @@ public class Main extends EventSource {
         		sgc.addChild(c);
         	}
         }
-        sgc.setAppearance(this.materials[kind]);
+        final Appearance a = new Appearance();
+        setColor(a, doc().getEfffectiveColor(item));
+        sgc.setAppearance(a);
         this.tiling.addChild(sgc);
         this.node2item.put(sgc, item);
         this.item2node.put(item, sgc);

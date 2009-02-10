@@ -501,6 +501,16 @@ public class Document extends DisplayList {
     	return result;
     }
     
+    public Color getEfffectiveColor(final Item item) {
+		Color c = color(item);
+		if (c == null && item.isFacet()) {
+			c = getFacetClassColor(item.getFacet());
+			if (c == null) c = getDefaultTileColor(item.getFacet().getTile());
+		}
+		if (c == null && item.isTile()) c = getDefaultTileColor(item.getTile());
+		return c;
+    }
+    
     public Color getTileClassColor(final int i) {
     	return getPalette()[i];
     }
