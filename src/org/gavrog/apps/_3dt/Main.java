@@ -1085,6 +1085,20 @@ public class Main extends EventSource {
         return ActionRegistry.instance().get(name);
     }
     
+    private Action actionAddFacet() {
+		final String name = "Add Facet";
+		if (ActionRegistry.instance().get(name) == null) {
+			ActionRegistry.instance().put(new AbstractAction(name) {
+				public void actionPerformed(ActionEvent e) {
+					if (selectedItem != null && selectedFace >= 0) {
+						doc().addNeighborFacet(selectedItem, selectedFace);
+					}
+				}
+    		}, "Add a tile at the selected face.", null);
+    	}
+        return ActionRegistry.instance().get(name);
+    }
+    
     private Action actionRemoveTile() {
 		final String name = "Remove Tile";
 		if (ActionRegistry.instance().get(name) == null) {
@@ -2077,7 +2091,31 @@ public class Main extends EventSource {
     }
     
     private void addFacet(final DisplayList.Item item) {
-    	//TODO implement this
+    	if (item == null) {
+    		return;
+    	}
+    	final Tiling.Facet facet = item.getFacet();
+    	final int kind = facet.getTile().getIndex();
+        final SceneGraphComponent template = this.templates[kind];
+        final SceneGraphComponent sgc = new SceneGraphComponent("facet");
+        MatrixBuilder.euclidean().translate(
+                ((Vector) item.getShift().times(doc().getEmbedderToWorld()))
+                        .getCoordinates().asDoubleArray()[0]).assignTo(sgc);
+        final String pattern[] = new String[] {
+        		String.format("face:%03d", facet.getIndex()),
+        		String.format("outline:%03d", facet.getIndex())
+        };
+        for (final SceneGraphComponent c: template.getChildComponents()) {
+        	final String name = c.getName();
+        	if (name != null &&
+        			(name.equals(pattern[0]) || name.equals(pattern[1]))) {
+        		sgc.addChild(c);
+        	}
+        }
+        sgc.setAppearance(this.materials[kind]);
+        this.tiling.addChild(sgc);
+        this.node2item.put(sgc, item);
+        this.item2node.put(item, sgc);
     }
     
     private void addEdge(final DisplayList.Item item) {
@@ -2508,32 +2546,30 @@ public class Main extends EventSource {
         for (final Tile b : doc().getTiles()) {
 			final int i = b.getIndex();
 			final SceneGraphComponent sgc = this.templates[b.getIndex()];
-			for (Iterator iter = sgc.getChildNodes().iterator(); iter.hasNext();) {
-				final Object node = iter.next();
-				if (node instanceof SceneGraphComponent) {
-					final SceneGraphComponent child = (SceneGraphComponent) node;
-					final String name = child.getName();
-					if (name.startsWith("outline:")) {
-						final int j = Integer.parseInt(name.substring(8));
-						final Tiling.Facet f = b.facet(j);
-						child.setVisible(getDrawEdges()
-								&& !doc().isHiddenFacetClass(f));
-					} else if (name.startsWith("face:")) {
-						final int j = Integer.parseInt(name.substring(5));
-						final Tiling.Facet f = b.facet(j);
-						child.setVisible(getDrawFaces()
-								&& !doc().isHiddenFacetClass(f));
-					}
-				}
-			}
             final double[] center = doc().cornerPosition(3,
 					doc().getTile(i).getChamber());
 			final double[] cneg = new double[3];
 			for (int j = 0; j < 3; ++j) {
 				cneg[j] = -center[j];
 			}
-            MatrixBuilder.euclidean().translate(center).scale(getTileSize())
-    				.translate(cneg).assignTo(sgc);
+            final MatrixBuilder mb = MatrixBuilder.euclidean()
+            	.translate(center).scale(getTileSize()).translate(cneg);
+			for (final SceneGraphComponent child : sgc.getChildComponents()) {
+				final String name = child.getName();
+				if (name.startsWith("outline:")) {
+					final int j = Integer.parseInt(name.substring(8));
+					final Tiling.Facet f = b.facet(j);
+					child.setVisible(getDrawEdges()
+							&& !doc().isHiddenFacetClass(f));
+					mb.assignTo(child);
+				} else if (name.startsWith("face:")) {
+					final int j = Integer.parseInt(name.substring(5));
+					final Tiling.Facet f = b.facet(j);
+					child.setVisible(getDrawFaces()
+							&& !doc().isHiddenFacetClass(f));
+					mb.assignTo(child);
+				}
+			}
 		}
     	
 		makeUnitCell();
@@ -2735,6 +2771,8 @@ public class Main extends EventSource {
     		_selectionPopupForTiles.add(actionRecolorTileClass());
     		_selectionPopupForTiles.add(actionRecolorFacetClass());
     		_selectionPopupForTiles.add(actionUncolorFacetClass());
+    		_selectionPopupForTiles.addSeparator();
+    		_selectionPopupForTiles.add(actionAddFacet());
     		
     		_selectionPopupForTiles.addPopupMenuListener(new PopupMenuListener() {
 				public void popupMenuCanceled(PopupMenuEvent e) {

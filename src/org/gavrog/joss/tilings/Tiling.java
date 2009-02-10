@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2009 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -661,6 +661,14 @@ public class Tiling {
         return Vector.toMatrix(dif);
     }
     
+    // --- maps cover chambers to tile numbers, tile kinds and facet numbers
+    final private Map<Object, Integer> chamber2tile =
+    	new HashMap<Object, Integer>();
+    final private Map<Object, Integer> chamber2kind =
+    	new HashMap<Object, Integer>();
+    final private Map<Object, Integer> chamber2facet =
+    	new HashMap<Object, Integer>();
+
     /**
      * Represents a facet (co-dimension 1 constituent) of this tiling.
      */
@@ -686,6 +694,10 @@ public class Tiling {
             	this.chambers.add(cover.op(0, E0));
             } else {
             	throw new UnsupportedOperationException("dimension must be 2 or 3");
+            }
+            for (final Object E: chambers) {
+            	chamber2facet.put(E, index);
+            	chamber2facet.put(cover.op(0, E), index);
             }
             this.tile = tile;
             this.index = index;
@@ -723,6 +735,13 @@ public class Tiling {
         	return getTiles().get(this.tile);
         }
         
+        public Facet opposite() {
+        	final DelaneySymbol cov = getCover();
+        	final Object E = cov.op(cov.dim(), getChamber());
+        	final Tile t = getTiles().get(chamber2tile.get(E));
+        	return t.facet(chamber2facet.get(E));
+        }
+        
         public int hashCode() {
         	return (this.tilingId * 37 + this.tile) * 37 + this.index;
         }
@@ -734,12 +753,6 @@ public class Tiling {
         }
     }
     
-    // --- maps cover chambers to tile numbers and tile kinds
-    final private Map<Object, Integer> chamber2tile =
-    	new HashMap<Object, Integer>();
-    final private Map<Object, Integer> chamber2kind =
-    	new HashMap<Object, Integer>();
-
     /**
      * Represents a tile (top-dimensional constituent) of this tiling.
      */

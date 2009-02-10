@@ -449,6 +449,13 @@ public class DisplayList extends EventSource implements
 		return add(tile.neighbor(face), newShift);
 	}
 
+	public Item addNeighborFacet(final Item item, final int face) {
+		final Tile tile = item.getTile();
+		final Vector shift = item.getShift();
+		final Vector newShift = (Vector) shift.plus(tile.neighborShift(face));
+		return add(tile.facet(face).opposite(), newShift);
+	}
+
 	@SuppressWarnings("unchecked")
 	public int addIncident(final Item item) {
 		int count = 0;
