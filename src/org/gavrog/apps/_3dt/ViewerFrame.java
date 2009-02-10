@@ -196,7 +196,6 @@ public class ViewerFrame extends JFrame {
 		final SceneGraphPath scenePath = ts.getEmptyPickPath();
 		final SceneGraphPath cameraPath = viewer.getCameraPath();
 		final double aspectRatio = CameraUtility.getAspectRatio(viewer);
-        final int signature = viewer.getSignature();
 		
         // --- compute scene-to-avatar transformation
 		final Matrix toAvatar = new Matrix();
@@ -241,7 +240,7 @@ public class ViewerFrame extends JFrame {
 				.getLength());
 		final SceneGraphComponent avatar = avatarPath.getLastComponent();
 		final Matrix m = new Matrix(avatar.getTransformation());
-		MatrixBuilder.init(m, signature).translate(c).translate(
+		MatrixBuilder.euclidean(m).translate(c).translate(
 				camMatrix.getColumn(3)).assignTo(avatar);
 	}
 
