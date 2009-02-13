@@ -17,7 +17,7 @@ import org.gavrog.apps._3dt.ViewerFrame
 object View {
   def log(message: String) = System.err.println(message)
   
-  class XDouble(d: Double) { def degrees = d / 180.0 * Math.Pi }
+  class XDouble(d: Double) { def deg = d / 180.0 * Math.Pi }
   implicit def xdouble(d: Double) = new XDouble(d)
   implicit def xint(i: Int) = new XDouble(i)
 
@@ -39,15 +39,13 @@ object View {
     val l1 = new DirectionalLight
     l1.setIntensity(0.8)
     val t1 = new Transformation
-    MatrixBuilder.euclidean.rotateX(-30 degrees).rotateY(-30 degrees).
-      assignTo(t1)
+    MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg).assignTo(t1)
     frame.setLight("Main Light", l1, t1)
 
     val l2 = new DirectionalLight()
     l2.setIntensity(0.2)
     val t2 = new Transformation()
-    MatrixBuilder.euclidean().rotateX(10 degrees).rotateY(20 degrees).
-      assignTo(t2)
+    MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg).assignTo(t2)
     frame.setLight("Fill Light", l2, t2)
 
     frame.validate
