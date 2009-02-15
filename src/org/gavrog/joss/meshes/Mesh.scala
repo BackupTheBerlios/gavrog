@@ -126,6 +126,17 @@ object Mesh {
       if (c != null && c.tVertex != this) c.tVertex = this
     }
     
+    def cellChambers = chamber.vertex.cellChambers
+    def faces = cellChambers.filter(_.tVertex == this).map(_.cell)
+    def onBorder = cellChambers.exists(c =>
+      c.tVertex != this || c.s0.tVertex != c.s2.s0.tVertex)
+    def degree = cellChambers.sum(c =>
+      if (c.tVertex == this || c.s2.tVertex == this)
+        if (c.tVertex == c.s2.tVertex && c.s0.tVertex != c.s2.s0.tVertex) 2
+        else 1
+      else 0
+    )
+    
     override def toString = "TextureVertex(%d: %f, %f)" format (nr, x, y)
 
     def pos = Vec2(x, y)
@@ -215,6 +226,9 @@ object Mesh {
     def coarseningClassifications = faces.elements.next.vertices
       .map(mesh.classifyForCoarsening(_)).filter(null !=)
   }
+  
+  case class Chart(mesh : Mesh,
+                   faces : Set[Face], vertices : Set[TextureVertex])
   
   case class VertexClassification(wasVertex:     Set[Vertex],
                                   wasEdgeCenter: Set[Vertex],
@@ -398,7 +412,8 @@ object Mesh {
     writer.flush()
   }
   
-  def matchTopologies(ch1 : Chamber, ch2 : Chamber) : Map[Chamber, Chamber] = {
+  def matchTopologies(ch1: Chamber, ch2: Chamber,
+                      uvs: Boolean) : Map[Chamber, Chamber] = {
     val seen1 = new HashSet[Chamber]
     val seen2 = new HashSet[Chamber]
     val queue = new Queue[(Chamber, Chamber)]
@@ -408,10 +423,13 @@ object Mesh {
     queue += (ch1, ch2)
     map(ch1) = ch2
     
+    def neighbors(c: Chamber) =
+      List(c.s0, c.s1, if (!uvs || c.s2.tVertex == c.tVertex) c.s2 else null)
+    
     while (queue.length > 0) {
       val (d1, d2) = queue.dequeue
       if (d1.start.degree != d2.start.degree) return null
-      for ((e1, e2) <- List((d1.s0, d2.s0), (d1.s1, d2.s1), (d1.s2, d2.s2))) {
+      for ((e1, e2) <- neighbors(d1).zip(neighbors(d2))) {
         if (seen1(e1) != seen2(e2)) return null
         if (e1.cell.getClass != e2.cell.getClass) return null
         if (seen1(e1)) {
@@ -427,6 +445,7 @@ object Mesh {
     map
   }
   
+  //TODO avoid code duplication in the following
   def allMatches(c1 : Component,
                  c2 : Component) : Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
@@ -451,11 +470,45 @@ object Mesh {
       var ch2 = v2.chamber
       do {
         for (d <- List(ch2, ch2.s1)) {
-          val map = matchTopologies(ch1, d)
+          val map = matchTopologies(ch1, d, false)
           if (map != null) result += map
         }
         ch2 = ch2.nextAtVertex
       } while (ch2 != v2.chamber)
+    }
+    
+    result
+  }
+  
+  def allMatches(c1 : Chart, c2 : Chart) : Seq[Map[Chamber, Chamber]] = {
+    val result = new ArrayBuffer[Map[Chamber, Chamber]]
+    if (c1.vertices.size != c2.vertices.size)
+      return result
+    
+    val counts = new HashMap[Int, Int]
+    for (v <- c1.vertices if v.onBorder) {
+      val d = v.degree
+      counts(d) = counts.getOrElse(d, 0) + 1
+    }
+    var (bestD, minN) = (0, c1.vertices.size + 1)
+    for ((d, n) <- counts)
+      if (n > 0 && n < minN) {
+        bestD = d
+        minN = n
+      }
+    //print(" %s" format counts)
+
+    val v1 =
+      c1.vertices.filter(v => v.onBorder && v.degree == bestD).elements.next
+    val ch1 = v1.chamber
+    for (v2 <- c2.vertices.filter(v => v.degree == bestD && v.onBorder)) {
+      for (ch2 <- v2.cellChambers;
+           d <- List(ch2, ch2.s1)
+           if (d.cell.isInstanceOf[Face]
+               && c2.faces.contains(d.cell.asInstanceOf[Face]))) {
+        val map = matchTopologies(ch1, d, false)
+        if (map != null) result += map
+      }
     }
     
     result
@@ -475,6 +528,20 @@ object Mesh {
   }
   
   def bestMatch(c1 : Component, c2 : Component) : Map[Chamber, Chamber] = {
+    var best : Map[Chamber, Chamber] = null
+    var dist = Double.MaxValue
+    
+    for (map <- allMatches(c1, c2)) {
+      val d = distance(map)
+      if (d < dist) {
+        dist = d
+        best = map
+      }
+    }
+    best
+  }
+  
+  def bestMatch(c1 : Chart, c2 : Chart) : Map[Chamber, Chamber] = {
     var best : Map[Chamber, Chamber] = null
     var dist = Double.MaxValue
     
@@ -704,6 +771,42 @@ class Mesh(s : String) {
       }
       
       result += Component(this, faces, vertices)
+    }
+    
+    result
+  }
+  
+  def charts = {
+    val result = new ArrayBuffer[Chart]
+    val seen   = new HashSet[Chamber]
+    
+    for (c <- chambers if !seen(c) && c.tVertex != null) {
+      val faces  = new HashSet[Face]
+      val tVerts = new HashSet[TextureVertex]
+      val queue  = new Queue[Chamber]
+      queue += c
+      seen  += c
+      
+      while (queue.length > 0) {
+        val d = queue.dequeue
+        val t = d.tVertex
+        if (t != null) {
+          tVerts += t
+          val f = d.cell
+          if (f.isInstanceOf[Face]) faces += f.asInstanceOf[Face]
+          for (e <- List(d.s0, d.s1) if !seen(e)) {
+            queue += e
+            seen  += e
+          }
+          val e = d.s2
+          if (!seen(e) && e.tVertex == t) {
+            queue += e
+            seen  += e
+          }
+        }
+      }
+      
+      result += Chart(this, faces, tVerts)
     }
     
     result

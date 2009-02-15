@@ -1,6 +1,6 @@
 package org.gavrog.joss.meshes
 
-import java.awt.Dimension
+import java.awt.{Color, Dimension}
 import java.awt.event.{WindowAdapter, WindowEvent}
 import javax.swing.{JMenu, JMenuBar}
 
@@ -28,6 +28,8 @@ object View {
     val a = new Appearance
     a.setAttribute(CommonAttributes.EDGE_DRAW, false)
     a.setAttribute(CommonAttributes.VERTEX_DRAW, false)
+    a.setAttribute(CommonAttributes.POLYGON_SHADER + '.' +
+                     CommonAttributes.DIFFUSE_COLOR, Color.WHITE)
     content.setAppearance(a)
 
     frame.addWindowListener(new WindowAdapter() {
@@ -71,7 +73,7 @@ object View {
         toList.toArray
       ifsf setGenerateEdgesFromFaces true
       ifsf setGenerateFaceNormals    true
-      ifsf setGenerateVertexNormals  true
+      //ifsf setGenerateVertexNormals  true
       ifsf.update
 
       val obj = new SceneGraphComponent(mesh.name)

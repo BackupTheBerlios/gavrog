@@ -1,5 +1,6 @@
 package org.gavrog.joss.meshes
 
+import scala.util.Sorting._
 import Sums._
 
 object Info {
@@ -8,16 +9,28 @@ object Info {
       if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
 
     for (mesh <- meshes) {
-      val parts = mesh.components
+      val parts = mesh.components.toList.sort((a: Mesh.Component,
+                                               b: Mesh.Component) =>
+        a.vertices.size < b.vertices.size)
       println
-      println("Mesh '%s':"             format mesh.name)
-      println("  %5d components"       format parts.size)
+      println("Mesh '%s':"          format mesh.name)
+      println("  %5d components"    format parts.size)
       for (p <- parts) {
-        println("       %5d vertices" format p.vertices.size)
-        println("       %5d symmetries" format Mesh.allMatches(p, p).size)
+        print("       %5d vertices" format p.vertices.size)
+        print(", %5d faces"         format p.faces.size)
+        print(", %3d symmetries"    format Mesh.allMatches(p, p).size)
         val c = p.coarseningClassifications
-        println("       %5d coarsenings" format c.size)
-        println("       %5d strict coarsenings" format c.count(_.isStrict))
+        print(", %1d coarsenings"   format c.size)
+        print(" (%1d strict)"       format c.count(_.isStrict))
+        println
+      }
+      val charts = mesh.charts.toList.sort((a: Mesh.Chart, b: Mesh.Chart) =>
+        a.vertices.size < b.vertices.size)
+      println("  %5d charts"        format charts.size)
+      for (p <- charts) {
+        print("       %5d vertices" format p.vertices.size)
+        print(", %5d faces"         format p.faces.size)
+        print(", %3d symmetries"    format Mesh.allMatches(p, p).size)
         println
       }
       println("  %5d vertices"          format mesh.numberOfVertices)
@@ -32,7 +45,7 @@ object Info {
     
       println
       println("  First vertex:         " + mesh.vertices.next)
-      println("  First texls ture vertex: " + mesh.textureVertices.next)
+      println("  First texture vertex: " + mesh.textureVertices.next)
       println("  First normal:         " + mesh.normals.next)
       println("  First group:          " + mesh.groups.next)
       println("  First material:       " + mesh.materials.next)
