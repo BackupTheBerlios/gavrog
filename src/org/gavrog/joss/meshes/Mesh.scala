@@ -81,6 +81,8 @@ object Mesh {
     def start        = vertex
     def end          = s0.vertex
     
+    def onTextureBorder = tVertex != s2.tVertex || s0.tVertex != s0.s2.tVertex
+    
     override def toString = "Chamber(%s -> %s, %s)" format (start, end, cell)
   }
 
@@ -128,8 +130,8 @@ object Mesh {
     
     def cellChambers = chamber.vertex.cellChambers
     def faces = cellChambers.filter(_.tVertex == this).map(_.cell)
-    def onBorder = cellChambers.exists(c =>
-      c.tVertex != this || c.s0.tVertex != c.s2.s0.tVertex)
+    def onBorder = cellChambers.exists(_.onTextureBorder)
+
     def degree = cellChambers.sum(c =>
       if (c.tVertex == this || c.s2.tVertex == this)
         if (c.tVertex == c.s2.tVertex && c.s0.tVertex != c.s2.s0.tVertex) 2
@@ -424,22 +426,25 @@ object Mesh {
     map(ch1) = ch2
     
     def neighbors(c: Chamber) =
-      List(c.s0, c.s1, if (!uvs || c.s2.tVertex == c.tVertex) c.s2 else null)
+      List(c.s0, c.s1, if (!(uvs && c.onTextureBorder)) c.s2 else null)
     
     while (queue.length > 0) {
       val (d1, d2) = queue.dequeue
-      if (d1.start.degree != d2.start.degree) return null
+      //if (d1.start.degree != d2.start.degree) return null
       for ((e1, e2) <- neighbors(d1).zip(neighbors(d2))) {
-        if (seen1(e1) != seen2(e2)) return null
-        if (e1.cell.getClass != e2.cell.getClass) return null
-        if (seen1(e1)) {
-          if (map(e1) != e2) return null
-        } else {
-          queue += (e1, e2)
-          seen1 += e1
-          seen2 += e2
-          map(e1) = e2
-        }
+        if ((e1 == null) != (e2 == null)) return null
+        if (e1 != null) {
+	        if (seen1(e1) != seen2(e2)) return null
+	        if (e1.cell.getClass != e2.cell.getClass) return null
+	        if (seen1(e1)) {
+	          if (map(e1) != e2) return null
+	        } else {
+	          queue += (e1, e2)
+	          seen1 += e1
+	          seen2 += e2
+	          map(e1) = e2
+	        }
+         }
       }
     }
     map
@@ -496,7 +501,6 @@ object Mesh {
         bestD = d
         minN = n
       }
-    //print(" %s" format counts)
 
     val v1 =
       c1.vertices.filter(v => v.onBorder && v.degree == bestD).elements.next
@@ -506,7 +510,7 @@ object Mesh {
            d <- List(ch2, ch2.s1)
            if (d.cell.isInstanceOf[Face]
                && c2.faces.contains(d.cell.asInstanceOf[Face]))) {
-        val map = matchTopologies(ch1, d, false)
+        val map = matchTopologies(ch1, d, true)
         if (map != null) result += map
       }
     }
@@ -733,6 +737,7 @@ class Mesh(s : String) {
         d.s2 = boundary(i)
         if (i % 2 == 0) d.s0 = hole(i + 1) else d.s1 = hole((i + 1) % n)
       }
+      for (d <- hole) d.tVertex = null
       _holes += f
     }
   }

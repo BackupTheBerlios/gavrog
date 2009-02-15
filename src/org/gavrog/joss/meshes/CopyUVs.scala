@@ -23,6 +23,15 @@ object CopyUVs {
     val donor = modified(0)
     val mod = donor.charts
     
-    null
+    for (chart <- mod) {
+      for (c <- old) {
+        val map = Mesh.bestMatch(chart, c)
+        if (map != null) {
+          System.err.println(
+            "Transferring data for chart with %d vertices and %d faces."
+            format (chart.vertices.size, chart.faces.size))
+        }
+      }
+    }
   }
 }
