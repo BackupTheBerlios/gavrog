@@ -11,27 +11,24 @@ object CopyUVs {
   
   def main(args: Array[String]) : Unit = {
     var i = 0
+
     if (args.size < i + 2) bail("need two .obj files as arguments")
-    val originals = Mesh.read(args(i))
-    if (originals.size != 1) bail("original must have 1 body")
+    val mesh = Mesh.read(args(i), true)(0)
+    val donor  = Mesh.read(args(i + 1), true)(0)
+
+    val originals = mesh.charts
     
-    val modified  = Mesh.read(args(i + 1))
-    if (modified.size != 1) bail("modified must have 1 body")
-    
-    val mesh = originals(0)
-    val old = mesh.charts
-    val donor = modified(0)
-    val mod = donor.charts
-    
-    for (chart <- mod) {
-      for (c <- old) {
+    for (chart <- donor.charts) {
+      for (c <- originals) {
         val map = Mesh.bestMatch(chart, c)
         if (map != null) {
           System.err.println(
             "Transferring data for chart with %d vertices and %d faces."
             format (chart.vertices.size, chart.faces.size))
+          for ((c, d) <- map) d.tVertex.moveTo(c.tVertex)
         }
       }
     }
+    Mesh.write(System.out, List(mesh), "materials")
   }
 }

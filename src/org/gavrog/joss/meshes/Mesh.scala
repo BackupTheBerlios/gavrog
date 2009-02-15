@@ -485,6 +485,33 @@ object Mesh {
     result
   }
   
+  def distance(map : Map[Chamber, Chamber]) : Double = {
+    val verts = new HashSet[Vertex]
+    for ((c, d) <- map) verts += c.vertex
+    
+    var dist : Double = 0
+    for (v <- verts) {
+      val w = map(v.chamber).start
+      val (dx, dy, dz) = (w.x - v.x, w.y - v.y, w.z - v.z)
+      dist += dx * dx + dy * dy + dz * dz
+    }
+    dist
+  }
+  
+  def bestMatch(c1 : Component, c2 : Component) : Map[Chamber, Chamber] = {
+    var best : Map[Chamber, Chamber] = null
+    var dist = Double.MaxValue
+    
+    for (map <- allMatches(c1, c2)) {
+      val d = distance(map)
+      if (d < dist) {
+        dist = d
+        best = map
+      }
+    }
+    best
+  }
+  
   def allMatches(c1 : Chart, c2 : Chart) : Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
     if (c1.vertices.size != c2.vertices.size)
@@ -518,31 +545,17 @@ object Mesh {
     result
   }
   
-  def distance(map : Map[Chamber, Chamber]) : Double = {
-    val verts = new HashSet[Vertex]
-    for ((c, d) <- map) verts += c.vertex
+  def textureDistance(map : Map[Chamber, Chamber]) : Double = {
+    val verts = new HashSet[TextureVertex]
+    for ((c, d) <- map) verts += c.tVertex
     
     var dist : Double = 0
     for (v <- verts) {
-      val w = map(v.chamber).start
-      val (dx, dy, dz) = (w.x - v.x, w.y - v.y, w.z - v.z)
-      dist += dx * dx + dy * dy + dz * dz
+      val w = map(v.chamber).tVertex
+      val (dx, dy) = (w.x - v.x, w.y - v.y)
+      dist += dx * dx + dy * dy
     }
     dist
-  }
-  
-  def bestMatch(c1 : Component, c2 : Component) : Map[Chamber, Chamber] = {
-    var best : Map[Chamber, Chamber] = null
-    var dist = Double.MaxValue
-    
-    for (map <- allMatches(c1, c2)) {
-      val d = distance(map)
-      if (d < dist) {
-        dist = d
-        best = map
-      }
-    }
-    best
   }
   
   def bestMatch(c1 : Chart, c2 : Chart) : Map[Chamber, Chamber] = {
@@ -550,7 +563,7 @@ object Mesh {
     var dist = Double.MaxValue
     
     for (map <- allMatches(c1, c2)) {
-      val d = distance(map)
+      val d = textureDistance(map)
       if (d < dist) {
         dist = d
         best = map
