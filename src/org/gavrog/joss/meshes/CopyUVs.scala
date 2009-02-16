@@ -23,7 +23,7 @@ object CopyUVs {
         System.err.println(
           "Transferring data for chart with %d vertices and %d faces."
           format (chart.vertices.size, chart.faces.size))
-        for ((c, d) <- map) d.tVertex.moveTo(c.tVertex)
+        for ((c, d) <- map) d.tVertex.moveTo(c.tVertex.pos)
       }
     }
     Mesh.write(System.out, List(mesh), "materials")
