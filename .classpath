@@ -23,6 +23,6 @@
 	</classpathentry>
 	<classpathentry kind="con" path="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="Deploy/jReality/jReality.jar" sourcepath="/home/olaf/Software/jReality/src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jreality"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
