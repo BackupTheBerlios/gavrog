@@ -26,7 +26,11 @@ object View {
     val frame = new ViewerFrame(content)
     
     val a = new Appearance
-    a.setAttribute(CommonAttributes.EDGE_DRAW, false)
+    a.setAttribute(CommonAttributes.EDGE_DRAW, true)
+    a.setAttribute(CommonAttributes.TUBES_DRAW, false)
+    a.setAttribute(CommonAttributes.LINE_WIDTH, 1)
+    a.setAttribute(CommonAttributes.LINE_SHADER + '.' +
+                     CommonAttributes.DIFFUSE_COLOR, Color.GRAY)
     a.setAttribute(CommonAttributes.VERTEX_DRAW, false)
     a.setAttribute(CommonAttributes.POLYGON_SHADER + '.' +
                      CommonAttributes.DIFFUSE_COLOR, Color.WHITE)
