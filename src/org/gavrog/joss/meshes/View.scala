@@ -29,8 +29,6 @@ import de.jreality.scene.{Appearance,
                           Transformation}
 import de.jreality.shader.CommonAttributes
 
-import org.gavrog.apps._3dt.ViewerFrame
-
 object View {
   def log(message: String) = System.err.println(message)
   
@@ -40,12 +38,12 @@ object View {
 
   def main(args : Array[String]) : Unit = {
     val content = new SceneGraphComponent
-    val frame = new ViewerFrame(content)
+    val frame = new JRealityViewerComponent(content)
     
     val a = new Appearance
     a.setAttribute(CommonAttributes.EDGE_DRAW, true)
     a.setAttribute(CommonAttributes.TUBES_DRAW, false)
-    a.setAttribute(CommonAttributes.LINE_WIDTH, 1)
+    a.setAttribute(CommonAttributes.LINE_WIDTH, 1.0)
     a.setAttribute(CommonAttributes.LINE_SHADER + '.' +
                      CommonAttributes.DIFFUSE_COLOR, Color.GRAY)
     a.setAttribute(CommonAttributes.VERTEX_DRAW, false)
@@ -75,7 +73,7 @@ object View {
     frame.setVisible(true)
     frame.startRendering
 
-    frame.setViewerSize(new Dimension(800, 600))
+    frame.viewerSize = new Dimension(800, 600)
     
     frame.pauseRendering
     log("Reading...")
@@ -101,7 +99,7 @@ object View {
       obj.setGeometry(ifsf.getIndexedFaceSet())
       content.addChild(obj)
     }
-    frame.encompass
+    //frame.encompass
     frame.startRendering
     log("Done!")
   }
