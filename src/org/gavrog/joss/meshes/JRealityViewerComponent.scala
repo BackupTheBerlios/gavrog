@@ -66,7 +66,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   private val renderTrigger  = new RenderTrigger
 
   private var currentViewer: Viewer = null
-  private var lastCenter: List[Double] = null
+  private var lastCenter: Array[Double] = null
 
   rootNode     addChild geometryNode
   rootNode     addChild cameraNode
@@ -233,6 +233,26 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
   }
   
+  def rotateScene(axis: Seq[Double], angle: Double) {
+    val root = contentNode
+
+    if (lastCenter == null) {
+      // -- compute the center of the scene in world coordinates
+      val bounds = GeometryUtility.calculateBoundingBox(root)
+      if (bounds.isEmpty) return
+      else lastCenter = (new Matrix(root.getTransformation).getInverse
+                           .multiplyVector(bounds.getCenter))
+    }
+
+	// -- rotate around the last computed scene center
+	val tOld = new Matrix(root.getTransformation)
+	val tNew = (MatrixBuilder.euclidean.rotate(angle, axis.toArray).times(tOld)
+               .getMatrix)
+	val p = tOld.multiplyVector(lastCenter)
+	val q = tNew.multiplyVector(lastCenter)
+	MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew).assignTo(root)
+  }
+	
   def screenshot(size: Dimension, antialias: Int, file: String) {
     val width = size.width
     val height = size.height

@@ -101,8 +101,11 @@ object View {
     }
     viewer.encompass
     viewer.startRendering
-    log("Taking screenshot...")
-    viewer.screenshot(viewer.viewerSize, 4, "x.png")
+    for (i <- 1 to 6) {
+      log("Taking screenshot #%d ..." format i)
+      viewer.screenshot(viewer.viewerSize, 4, "x%d.png" format i)
+      viewer.rotateScene(List(0, 1, 0), 15 deg)
+    }
     log("Done!")
   }
 }
