@@ -17,7 +17,9 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.{Color, Component, Dimension}
+import java.awt.{Color, Component, Dimension, Graphics2D, Image, RenderingHints}
+import java.awt.image.BufferedImage
+import java.io.File
 import javax.media.opengl.GLException
 import javax.swing.{JFrame, SwingUtilities}
 
@@ -36,7 +38,7 @@ import de.jreality.shader.CommonAttributes
 import de.jreality.softviewer.SoftViewer
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
-import de.jreality.util.{CameraUtility, RenderTrigger}
+import de.jreality.util.{CameraUtility, ImageUtility, RenderTrigger}
 
 class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
   implicit def asRunnable(body: => unit) = new Runnable() { def run { body } }
@@ -222,5 +224,19 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
 	val avatar = avatarPath.getLastComponent
 	val mb = MatrixBuilder.euclidean(new Matrix(avatar.getTransformation))
     mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
+  }
+  
+  def screenshot(size: Dimension, antialias: Int, file: String) {
+    val width = size.width
+    val height = size.height
+    val img =
+      softwareViewer.renderOffscreen(width * antialias, height * antialias)
+    val scaledImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+    val gr = scaledImg.getGraphics.asInstanceOf[Graphics2D]
+    gr.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+    scaledImg.getGraphics.drawImage(
+      img.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null)
+    ImageUtility.writeBufferedImage(new File(file), scaledImg)
   }
 }

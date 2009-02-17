@@ -101,6 +101,8 @@ object View {
     }
     frame.encompass
     frame.startRendering
+    log("Taking screenshot...")
+    frame.screenshot(frame.viewerSize, 4, "x.png")
     log("Done!")
   }
 }
