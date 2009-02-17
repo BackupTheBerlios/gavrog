@@ -99,7 +99,7 @@ object View {
       obj.setGeometry(ifsf.getIndexedFaceSet())
       content.addChild(obj)
     }
-    //frame.encompass
+    frame.encompass
     frame.startRendering
     log("Done!")
   }

@@ -23,7 +23,8 @@ import javax.swing.{JFrame, SwingUtilities}
 
 import scala.collection.mutable.HashMap
 
-import de.jreality.math.MatrixBuilder
+import de.jreality.geometry.GeometryUtility
+import de.jreality.math.{Matrix, MatrixBuilder}
 import de.jreality.scene.{Appearance,
                           Camera,
                           Light,
@@ -35,17 +36,16 @@ import de.jreality.shader.CommonAttributes
 import de.jreality.softviewer.SoftViewer
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
-import de.jreality.util.RenderTrigger
+import de.jreality.util.{CameraUtility, RenderTrigger}
 
 class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
-  implicit def asRunnable(func: () => unit) =
-    new Runnable() { def run() { func() } }
-  def invokeAndWait(runnable: Runnable) =
-    if (SwingUtilities.isEventDispatchThread) runnable.run
-    else SwingUtilities.invokeAndWait(runnable)
-  def invokeLater(runnable: Runnable) =
-    if (SwingUtilities.isEventDispatchThread) runnable.run
-    else SwingUtilities.invokeLater(runnable)
+  implicit def asRunnable(body: => unit) = new Runnable() { def run { body } }
+  def invokeAndWait(body: => unit) =
+    if (SwingUtilities.isEventDispatchThread) body.run
+    else SwingUtilities.invokeAndWait(body)
+  def invokeLater(body: => unit) =
+    if (SwingUtilities.isEventDispatchThread) body.run
+    else SwingUtilities.invokeLater(body)
   
   private val rootNode     = new SceneGraphComponent
   private val cameraNode   = new SceneGraphComponent
@@ -104,7 +104,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
   viewerSize = new Dimension(640, 400)
   pack
   
-  if (viewer.isInstanceOf[de.jreality.jogl.Viewer]) invokeAndWait(() => {
+  if (viewer.isInstanceOf[de.jreality.jogl.Viewer]) invokeAndWait {
     try {
       viewer.asInstanceOf[de.jreality.jogl.Viewer].run
       System.err.println("OpenGL okay!")
@@ -115,7 +115,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
       }
       case ex: Exception => ex.printStackTrace
     }
-  })
+  }
 
   renderTrigger.addSceneGraphComponent(rootNode)
 
@@ -174,58 +174,53 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
   def startRendering = renderTrigger.finishCollect
   def pauseRendering = renderTrigger.startCollect
 
-//	public void encompass() {
-//		// --- extract parameters from scene and viewer
-//		final ToolSystem ts = ToolSystem.toolSystemForViewer(viewer);
-//		final SceneGraphPath avatarPath = ts.getAvatarPath();
-//		final SceneGraphPath scenePath = ts.getEmptyPickPath();
-//		final SceneGraphPath cameraPath = viewer.getCameraPath();
-//		final double aspectRatio = CameraUtility.getAspectRatio(viewer);
-//		
-//        // --- compute scene-to-avatar transformation
-//		final Matrix toAvatar = new Matrix();
-//		scenePath.getMatrix(toAvatar.getArray(), 0, scenePath.getLength() - 2);
-//		toAvatar.multiplyOnRight(avatarPath.getInverseMatrix(null));
-//		
-//		// --- compute bounding box of scene
-//		final Rectangle3D bounds = GeometryUtility.calculateBoundingBox(
-//				toAvatar.getArray(), scenePath.getLastComponent());
-//		if (bounds.isEmpty()) {
-//			return;
-//		}
-//		
-//		// --- compute best camera position based on bounding box and viewport
-//        final Camera camera = (Camera) cameraPath.getLastElement();
-//		final Rectangle2D vp = CameraUtility.getViewport(camera, aspectRatio);
-//		final double[] e = bounds.getExtent();
-//		final double radius = Math
-//				.sqrt(e[0] * e[0] + e[2] * e[2] + e[1] * e[1]) / 2.0;
-//		final double front = e[2] / 2;
-//
-//		final double xscale = e[0] / vp.getWidth();
-//		final double yscale = e[1] / vp.getHeight();
-//		double camdist = Math.max(xscale, yscale) * 1.1;
-//		if (!camera.isPerspective()) {
-//			camdist *= camera.getFocus(); // adjust for viewport scaling
-//			camera.setFocus(camdist);
-//		}
-//
-//		// --- compute new camera position and adjust near/far clipping planes
-//		final double[] c = bounds.getCenter();
-//		c[2] += front + camdist;
-//		camera.setFar(camdist + front + 5 * radius);
-//		camera.setNear(0.1 * camdist);
-//		
-//		// --- make rotateScene() recompute the center
-//		lastCenter = null;
-//		
-//		// --- adjust the avatar position to make scene fit
-//		final Matrix camMatrix = new Matrix();
-//		cameraPath.getInverseMatrix(camMatrix.getArray(), avatarPath
-//				.getLength());
-//		final SceneGraphComponent avatar = avatarPath.getLastComponent();
-//		final Matrix m = new Matrix(avatar.getTransformation());
-//		MatrixBuilder.euclidean(m).translate(c).translate(
-//				camMatrix.getColumn(3)).assignTo(avatar);
-//	}
+  def encompass {
+    // -- extract parameters from scene and viewer
+    val ts = ToolSystem.toolSystemForViewer(viewer)
+    val avatarPath = ts.getAvatarPath
+    val scenePath = ts.getEmptyPickPath
+    val cameraPath = viewer.getCameraPath
+    val aspectRatio = CameraUtility.getAspectRatio(viewer)
+
+    // -- compute scene-to-avatar transformation
+    val toAvatar = new Matrix
+    scenePath.getMatrix(toAvatar.getArray, 0, scenePath.getLength - 2)
+    toAvatar.multiplyOnRight(avatarPath.getInverseMatrix(null))
+
+    // -- compute bounding box of scene
+    val bounds = GeometryUtility.calculateBoundingBox(
+      toAvatar.getArray, scenePath.getLastComponent)
+    if (bounds.isEmpty) return
+
+    // -- compute best camera position based on bounding box and viewport
+    val camera = cameraPath.getLastElement.asInstanceOf[Camera]
+	val vp = CameraUtility.getViewport(camera, aspectRatio)
+	val e = bounds.getExtent
+	val radius = Math.sqrt(e(0) * e(0) + e(2) * e(2) + e(1) * e(1)) / 2.0
+    val front = e(2) / 2.0
+
+    val xscale = e(0) / vp.getWidth
+	val yscale = e(1) / vp.getHeight
+	var camdist = Math.max(xscale, yscale) * 1.1
+	if (!camera.isPerspective) {
+	  camdist *= camera.getFocus // adjust for viewport scaling
+      camera.setFocus(camdist)
+	}
+
+	// -- compute new camera position and adjust near/far clipping planes
+    val c = bounds.getCenter
+	c(2) += front + camdist
+	camera.setFar(camdist + front + 5 * radius)
+	camera.setNear(0.1 * camdist)
+
+	// -- make rotateScene() recompute the center
+	lastCenter = null
+
+	// -- adjust the avatar position to make scene fit
+	val camMatrix = new Matrix
+	cameraPath.getInverseMatrix(camMatrix.getArray, avatarPath.getLength)
+	val avatar = avatarPath.getLastComponent
+	val mb = MatrixBuilder.euclidean(new Matrix(avatar.getTransformation))
+    mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
+  }
 }
