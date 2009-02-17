@@ -19,7 +19,7 @@ package org.gavrog.joss.meshes
 
 import java.awt.{Color, Dimension}
 import java.awt.event.{WindowAdapter, WindowEvent}
-import javax.swing.{JMenu, JMenuBar}
+import javax.swing.{JFrame, JMenu, JMenuBar}
 
 import de.jreality.geometry.{Primitives, IndexedFaceSetFactory}
 import de.jreality.math.MatrixBuilder
@@ -38,7 +38,8 @@ object View {
 
   def main(args : Array[String]) : Unit = {
     val content = new SceneGraphComponent
-    val frame = new JRealityViewerComponent(content)
+    val frame = new JFrame
+    val viewer = new JRealityViewerComponent(content)
     
     val a = new Appearance
     a.setAttribute(CommonAttributes.EDGE_DRAW, true)
@@ -61,21 +62,20 @@ object View {
     l1.setIntensity(0.8)
     val t1 = new Transformation
     MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg).assignTo(t1)
-    frame.setLight("Main Light", l1, t1)
+    viewer.setLight("Main Light", l1, t1)
 
     val l2 = new DirectionalLight()
     l2.setIntensity(0.2)
     val t2 = new Transformation()
     MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg).assignTo(t2)
-    frame.setLight("Fill Light", l2, t2)
+    viewer.setLight("Fill Light", l2, t2)
 
-    frame.validate
+    viewer.viewerSize = new Dimension(800, 600)
+    frame.getContentPane.add(viewer)
+    frame.pack
     frame.setVisible(true)
-    frame.startRendering
-
-    frame.viewerSize = new Dimension(800, 600)
     
-    frame.pauseRendering
+    viewer.pauseRendering
     log("Reading...")
     val meshes =
       if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
@@ -99,10 +99,10 @@ object View {
       obj.setGeometry(ifsf.getIndexedFaceSet())
       content.addChild(obj)
     }
-    frame.encompass
-    frame.startRendering
+    viewer.encompass
+    viewer.startRendering
     log("Taking screenshot...")
-    frame.screenshot(frame.viewerSize, 4, "x.png")
+    viewer.screenshot(viewer.viewerSize, 4, "x.png")
     log("Done!")
   }
 }

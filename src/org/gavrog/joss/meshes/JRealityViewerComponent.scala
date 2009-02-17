@@ -17,11 +17,17 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.{Color, Component, Dimension, Graphics2D, Image, RenderingHints}
+import java.awt.{BorderLayout,
+                 Color,
+                 Component,
+                 Dimension,
+                 Graphics2D,
+                 Image,
+                 RenderingHints}
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.media.opengl.GLException
-import javax.swing.{JFrame, SwingUtilities}
+import javax.swing.{JComponent, SwingUtilities}
 
 import scala.collection.mutable.HashMap
 
@@ -40,12 +46,12 @@ import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
 import de.jreality.util.{CameraUtility, ImageUtility, RenderTrigger}
 
-class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
-  implicit def asRunnable(body: => unit) = new Runnable() { def run { body } }
-  def invokeAndWait(body: => unit) =
+class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
+  implicit def asRunnable(body: => Unit) = new Runnable() { def run { body } }
+  def invokeAndWait(body: => Unit) : Unit =
     if (SwingUtilities.isEventDispatchThread) body.run
     else SwingUtilities.invokeAndWait(body)
-  def invokeLater(body: => unit) =
+  def invokeLater(body: => Unit) : Unit =
     if (SwingUtilities.isEventDispatchThread) body.run
     else SwingUtilities.invokeLater(body)
   
@@ -90,6 +96,8 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
   softwareViewer.setCameraPath(camPath)
   setupToolSystem(softwareViewer, emptyPickPath);
 
+  setLayout(new BorderLayout)
+  
   viewer = try {
     val v = new de.jreality.jogl.Viewer()
     v.setSceneRoot(rootNode)
@@ -104,7 +112,6 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
   }
   
   viewerSize = new Dimension(640, 400)
-  pack
   
   if (viewer.isInstanceOf[de.jreality.jogl.Viewer]) invokeAndWait {
     try {
@@ -131,22 +138,22 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JFrame {
  
   def viewer = currentViewer
   
-  def viewer_=(newViewer: Viewer) {
+  def viewer_=(newViewer: Viewer) = invokeAndWait {
     val d = viewerSize
     this.renderTrigger.removeViewer(viewer)
     this.renderTrigger.addViewer(newViewer)
     this.currentViewer = newViewer
-    getContentPane().removeAll()
-    getContentPane().add(viewingComponent)
+    removeAll
+    add(viewingComponent, BorderLayout.CENTER)
     viewerSize = d
   }
 
   def viewerSize = if (currentViewer == null) new Dimension(0, 0)
                    else currentViewer.getViewingComponentSize
   
-  def viewerSize_=(d: Dimension) {
-    viewingComponent setPreferredSize d
-    pack
+  def viewerSize_=(d: Dimension) = invokeAndWait {
+    setPreferredSize(d)
+    revalidate
   }
 
   def setLight(name: String, light: Light, t: Transformation) {
