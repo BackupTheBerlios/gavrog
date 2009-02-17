@@ -29,8 +29,6 @@ import java.io.File
 import javax.media.opengl.GLException
 import javax.swing.{JComponent, SwingUtilities}
 
-import scala.collection.mutable.HashMap
-
 import de.jreality.geometry.GeometryUtility
 import de.jreality.math.{Matrix, MatrixBuilder}
 import de.jreality.scene.{Appearance,
@@ -61,8 +59,8 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   private val lightNode    = new SceneGraphComponent
   private val contentNode  = content
 	
-  private val lights = new HashMap[String, SceneGraphComponent]
-	
+  private var lights = Map[String, SceneGraphComponent]()
+
   private val renderTrigger  = new RenderTrigger
 
   private var currentViewer: Viewer = null
