@@ -17,32 +17,19 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.{BorderLayout,
-                 Color,
-                 Component,
-                 Dimension,
-                 Graphics2D,
-                 Image,
-                 RenderingHints}
-import java.awt.image.BufferedImage
-import java.io.File
+import java.awt.{BorderLayout, Color, Component, Dimension}
 import javax.media.opengl.GLException
 import javax.swing.{JComponent, SwingUtilities}
 
 import de.jreality.geometry.GeometryUtility
 import de.jreality.math.{Matrix, MatrixBuilder}
-import de.jreality.scene.{Appearance,
-                          Camera,
-                          Light,
-                          SceneGraphComponent,
-                          SceneGraphPath,
-                          Transformation,
-                          Viewer}
+import de.jreality.scene.{Appearance, Camera, Light, SceneGraphComponent,
+                          SceneGraphPath, Transformation, Viewer}
 import de.jreality.shader.CommonAttributes
 import de.jreality.softviewer.SoftViewer
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
-import de.jreality.util.{CameraUtility, ImageUtility, RenderTrigger}
+import de.jreality.util.{CameraUtility, RenderTrigger}
 
 class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   implicit def asRunnable(body: => Unit) = new Runnable() { def run { body } }
@@ -252,6 +239,11 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   }
 	
   def screenshot(size: Dimension, antialias: Int, file: String) {
+    import java.awt.{Graphics2D, Image, RenderingHints}
+    import java.awt.image.BufferedImage
+    import java.io.File
+    import de.jreality.util.ImageUtility
+    
     val width = size.width
     val height = size.height
     val img =
