@@ -17,14 +17,14 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.Color
+import java.awt.Color._
 import javax.swing.KeyStroke
 
-import de.jreality.geometry.{Primitives, IndexedFaceSetFactory}
+import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
 import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{Appearance, DirectionalLight,
                           SceneGraphComponent, Transformation}
-import de.jreality.shader.CommonAttributes
+import de.jreality.shader.CommonAttributes._
 import de.jreality.util.SceneGraphUtility
 
 import scala.swing.{Action, BorderPanel, FileChooser,
@@ -51,16 +51,6 @@ object View {
   
   def main(args : Array[String]) : Unit = {
     val scene = new SceneGraphComponent {
-      setAppearance(new Appearance {
-        setAttribute(CommonAttributes.EDGE_DRAW, true)
-        setAttribute(CommonAttributes.TUBES_DRAW, false)
-        setAttribute(CommonAttributes.LINE_WIDTH, 1.0)
-        setAttribute(CommonAttributes.LINE_SHADER + '.' +
-                       CommonAttributes.DIFFUSE_COLOR, Color.GRAY)
-        setAttribute(CommonAttributes.VERTEX_DRAW, false)
-        setAttribute(CommonAttributes.POLYGON_SHADER + '.' +
-                       CommonAttributes.DIFFUSE_COLOR, Color.WHITE)
-      })
     }
 
     val viewer = new JRealityViewerComponent(scene) {
@@ -89,7 +79,10 @@ object View {
                   viewer.pauseRendering
                 }
                 SceneGraphUtility.removeChildren(scene)
-                for (mesh <- meshes) scene.addChild(nodeFromMesh(mesh))
+                for (mesh <- meshes) {
+                  scene.addChild(faceSetFromMesh(mesh))
+                  scene.addChild(lineSetFromMesh(mesh))
+                }
                 invokeAndWait {
                   viewer.encompass
                   viewer.startRendering
@@ -136,8 +129,14 @@ object View {
     viewer.startRendering
   }
   
-  def nodeFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
+  def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
     setGeometry(new IndexedFaceSetFactory {	
+      setAppearance(new Appearance {
+        setAttribute(EDGE_DRAW, false)
+        setAttribute(VERTEX_DRAW, false)
+        setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, WHITE)
+        setAttribute(SMOOTH_SHADING, false)
+      })
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
       setVertexCoordinates(mesh.vertices.map(v =>
@@ -146,8 +145,30 @@ object View {
         f.vertexChambers.map(c => c.vertexNr-1).toArray).toList.toArray)
       setGenerateEdgesFromFaces(true)
       setGenerateFaceNormals(true)
-      // setGenerateVertexNormals(true)
+      setGenerateVertexNormals(true)
       update
     }.getIndexedFaceSet)
+  }
+  
+  def lineSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
+    mesh.computeNormals
+    setAppearance(new Appearance {
+      setAttribute(EDGE_DRAW, true)
+      setAttribute(TUBES_DRAW, false)
+      setAttribute(VERTEX_DRAW, false)
+      setAttribute(LINE_WIDTH, 1.0)
+      setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR, BLACK)
+    })
+    setGeometry(new IndexedLineSetFactory {	
+      setVertexCount(mesh.numberOfVertices)
+      setLineCount(mesh.numberOfEdges)
+      setVertexCoordinates(mesh.vertices.map(v => {
+        val n = v.pos + v.chamber.normal.value / 10000
+        Array(n.x, n.y, n.z)
+      }).toList.toArray)
+      setEdgeIndices(mesh.edges.map(e =>
+        Array(e.from.nr-1, e.to.nr-1)).toList.toArray)
+      update
+    }.getIndexedLineSet)
   }
 }

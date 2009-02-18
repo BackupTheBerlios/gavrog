@@ -671,6 +671,7 @@ class Mesh(s : String) {
   }
   
   def numberOfEdges    = _edges.size
+  def edges            = _edges.keys
   
   def numberOfFaces    = _faces.size
   def faces            = _faces.elements
