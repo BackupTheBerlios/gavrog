@@ -18,6 +18,7 @@
 package org.gavrog.joss.meshes
 
 import java.awt.Color
+import java.awt.event.{MouseEvent, MouseMotionListener}
 import Color._
 import javax.swing.KeyStroke
 
@@ -131,6 +132,16 @@ object View {
                     })
 
     viewer.startRendering
+//    viewer.viewingComponent.addMouseMotionListener(new MouseMotionListener {
+//       def mouseMoved(e: MouseEvent) {
+//        val p = e.getPoint
+//        System.err.println("mouse moved to %4d,%4d" format (p.x, p.y))
+//      }
+//      def mouseDragged(e: MouseEvent) {
+//        val p = e.getPoint
+//        System.err.println("mouse dragged to %4d,%4d" format (p.x, p.y))
+//      }
+//    })
   }
   
   def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
