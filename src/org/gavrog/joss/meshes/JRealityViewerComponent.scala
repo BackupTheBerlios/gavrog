@@ -18,8 +18,9 @@
 package org.gavrog.joss.meshes
 
 import java.awt.{BorderLayout, Color, Component, Dimension}
+import java.io.File
 import javax.media.opengl.GLException
-import javax.swing.{JComponent, SwingUtilities}
+import javax.swing.JComponent
 
 import de.jreality.geometry.GeometryUtility
 import de.jreality.math.{Matrix, MatrixBuilder}
@@ -31,15 +32,9 @@ import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
 import de.jreality.util.{CameraUtility, RenderTrigger}
 
+import SwingSupport._
+
 class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
-  implicit def asRunnable(body: => Unit) = new Runnable() { def run { body } }
-  def invokeAndWait(body: => Unit) : Unit =
-    if (SwingUtilities.isEventDispatchThread) body.run
-    else SwingUtilities.invokeAndWait(body)
-  def invokeLater(body: => Unit) : Unit =
-    if (SwingUtilities.isEventDispatchThread) body.run
-    else SwingUtilities.invokeLater(body)
-  
   private val rootNode     = new SceneGraphComponent
   private val cameraNode   = new SceneGraphComponent
   private val geometryNode = new SceneGraphComponent
@@ -241,10 +236,9 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
 	MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew).assignTo(root)
   }
 	
-  def screenshot(size: (Int, Int), antialias: Int, file: String) {
+  def screenshot(size: (Int, Int), antialias: Int, file: File) {
     import java.awt.{Graphics2D, Image, RenderingHints}
     import java.awt.image.BufferedImage
-    import java.io.File
     import de.jreality.util.ImageUtility
     
     val width = size._1
@@ -257,6 +251,10 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
                         RenderingHints.VALUE_INTERPOLATION_BICUBIC)
     scaledImg.getGraphics.drawImage(
       img.getScaledInstance(width, height, Image.SCALE_SMOOTH), 0, 0, null)
-    ImageUtility.writeBufferedImage(new File(file), scaledImg)
+    ImageUtility.writeBufferedImage(file, scaledImg)
+  }
+
+  def screenshot(size: (Int, Int), antialias: Int, file: String) {
+    screenshot(size, antialias, new File(file))
   }
 }

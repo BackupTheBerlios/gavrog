@@ -25,8 +25,12 @@ import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{Appearance, DirectionalLight,
                           SceneGraphComponent, Transformation}
 import de.jreality.shader.CommonAttributes
+import de.jreality.util.SceneGraphUtility
 
-import scala.swing.{Action, BorderPanel, MainFrame, Menu, MenuBar, MenuItem}
+import scala.swing.{Action, BorderPanel, FileChooser,
+                    MainFrame, Menu, MenuBar, MenuItem}
+
+import SwingSupport._
 
 object View {
   def log(message: String) = System.err.println(message)
@@ -35,13 +39,13 @@ object View {
   implicit def xdouble(d: Double) = new XDouble(d)
   implicit def xint(i: Int) = new XDouble(i)
   
-  class SimpleAction(name: String,
-                     keySpec: Option[String],
-                     body: =>Unit) extends Action(name) {
-    def apply { body }
-    accelerator = keySpec match {
-      case Some(s) => Some(KeyStroke.getKeyStroke(s))
-      case None    => None
+  class ActionMenuItem(name: String, body: => Unit) extends MenuItem(name) {
+    action = new Action(name) {
+      def apply { body }
+    }
+    def accelerator = action.accelerator
+    def accelerator_=(spec: String) {
+      action.accelerator = Some(KeyStroke.getKeyStroke(spec))
     }
   }
   
@@ -63,6 +67,9 @@ object View {
       viewerSize = (800, 600)
     }
     
+    val loadMeshChooser = new FileChooser
+    val screenShotChooser = new FileChooser
+    
     val top = new MainFrame {
       title = "Scala Mesh Viewer"
       contents = new BorderPanel {
@@ -71,10 +78,40 @@ object View {
       }
       menuBar = new MenuBar {
         contents += new Menu("File") {
-          contents += new MenuItem(
-            new SimpleAction("Dummy", Some("control D"),
-                             System.err.println("Dummy was selected"))
-          )
+          contents += new ActionMenuItem("Load Mesh ...", {
+            loadMeshChooser.showOpenDialog(menuBar) match {
+              case FileChooser.Result.Approve => {
+                val file = loadMeshChooser.selectedFile
+                log("Reading...")
+                val meshes = Mesh.read(file.getAbsolutePath)
+                log("Converting...")
+                invokeAndWait {
+                  viewer.pauseRendering
+                }
+                SceneGraphUtility.removeChildren(scene)
+                for (mesh <- meshes) scene.addChild(nodeFromMesh(mesh))
+                invokeAndWait {
+                  viewer.encompass
+                  viewer.startRendering
+                }
+                log("Done!")
+              }
+            }
+          }) {
+            accelerator = "control O"
+          }
+          contents += new ActionMenuItem("Screen Shot Image ...", {
+            screenShotChooser.showSaveDialog(menuBar) match {
+              case FileChooser.Result.Approve => {
+                log("Taking screenshot ...")
+                val file = screenShotChooser.selectedFile
+                viewer.screenshot(viewer.viewerSize, 4, file)
+                log("Wrote image to %s" format file.getName)
+              }
+            }
+          }) {
+            accelerator = "control I"
+          }
         }
       }
     }
@@ -96,34 +133,21 @@ object View {
                         .assignTo(this)
                     })
 
-    log("Reading...")
-    val meshes =
-      if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
-
-    log("Converting...")
-    for (mesh <- meshes) scene.addChild(new SceneGraphComponent(mesh.name) {
-      setGeometry(new IndexedFaceSetFactory {	
-        setVertexCount(mesh.numberOfVertices)
-        setFaceCount(mesh.numberOfFaces)
-        setVertexCoordinates(mesh.vertices.map(v =>
-          Array(v.x, v.y, v.z)).toList.toArray)
-        setFaceIndices(mesh.faces.map(f =>
-          f.vertexChambers.map(c => c.vertexNr-1).toArray).toList.toArray)
-        setGenerateEdgesFromFaces(true)
-        setGenerateFaceNormals(true)
-        // setGenerateVertexNormals(true)
-        update
-      }.getIndexedFaceSet)
-    })
-
-    viewer.encompass
     viewer.startRendering
-    for (i <- 1 to 24) {
-      viewer.rotateScene(List(0, 1, 0), 15 deg)
-      Thread.sleep(40)
-    }
-    log("Taking screenshot ...")
-    viewer.screenshot(viewer.viewerSize, 4, "x.png")
-    log("Done!")
+  }
+  
+  def nodeFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
+    setGeometry(new IndexedFaceSetFactory {	
+      setVertexCount(mesh.numberOfVertices)
+      setFaceCount(mesh.numberOfFaces)
+      setVertexCoordinates(mesh.vertices.map(v =>
+        Array(v.x, v.y, v.z)).toList.toArray)
+      setFaceIndices(mesh.faces.map(f =>
+        f.vertexChambers.map(c => c.vertexNr-1).toArray).toList.toArray)
+      setGenerateEdgesFromFaces(true)
+      setGenerateFaceNormals(true)
+      // setGenerateVertexNormals(true)
+      update
+    }.getIndexedFaceSet)
   }
 }
