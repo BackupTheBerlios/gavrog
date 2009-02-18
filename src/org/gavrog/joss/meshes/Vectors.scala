@@ -30,6 +30,9 @@ object Vectors {
     def norm = Math.sqrt(this * this)
     def || = norm
     def unit = this / this.||
+
+    def toArray = Array(x, y)
+    def toList = List(x, y)
   }
   object zero2 extends Vec2(0, 0)
   implicit object Vec2Monoid extends Monoid[Vec2] {
@@ -50,6 +53,9 @@ object Vectors {
     def norm = Math.sqrt(this * this)
     def || = norm
     def unit = this / this.||
+
+    def toArray = Array(x, y, z)
+    def toList = List(x, y, z)
   }
   object zero3 extends Vec3(0, 0, 0)
   implicit object Vec3Monoid extends Monoid[Vec3] {

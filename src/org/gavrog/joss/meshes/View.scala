@@ -17,7 +17,8 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.Color._
+import java.awt.Color
+import Color._
 import javax.swing.KeyStroke
 
 import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
@@ -30,6 +31,7 @@ import de.jreality.util.SceneGraphUtility
 import scala.swing.{Action, BorderPanel, FileChooser,
                     MainFrame, Menu, MenuBar, MenuItem}
 
+import Mesh._
 import SwingSupport._
 
 object View {
@@ -38,6 +40,8 @@ object View {
   class XDouble(d: Double) { def deg = d / 180.0 * Math.Pi }
   implicit def xdouble(d: Double) = new XDouble(d)
   implicit def xint(i: Int) = new XDouble(i)
+  
+  implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
   
   class ActionMenuItem(name: String, body: => Unit) extends MenuItem(name) {
     action = new Action(name) {
@@ -130,19 +134,17 @@ object View {
   }
   
   def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
+    setAppearance(new Appearance {
+      setAttribute(EDGE_DRAW, false)
+      setAttribute(VERTEX_DRAW, false)
+      setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, WHITE)
+      setAttribute(SMOOTH_SHADING, false)
+    })
     setGeometry(new IndexedFaceSetFactory {	
-      setAppearance(new Appearance {
-        setAttribute(EDGE_DRAW, false)
-        setAttribute(VERTEX_DRAW, false)
-        setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, WHITE)
-        setAttribute(SMOOTH_SHADING, false)
-      })
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
-      setVertexCoordinates(mesh.vertices.map(v =>
-        Array(v.x, v.y, v.z)).toList.toArray)
-      setFaceIndices(mesh.faces.map(f =>
-        f.vertexChambers.map(c => c.vertexNr-1).toArray).toList.toArray)
+      setVertexCoordinates(mesh.vertices.map(_.toArray))
+      setFaceIndices(mesh.faces.map(_.vertices.map(_.nr-1).toArray))
       setGenerateEdgesFromFaces(true)
       setGenerateFaceNormals(true)
       setGenerateVertexNormals(true)
@@ -157,17 +159,15 @@ object View {
       setAttribute(TUBES_DRAW, false)
       setAttribute(VERTEX_DRAW, false)
       setAttribute(LINE_WIDTH, 1.0)
-      setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR, BLACK)
+      setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR,
+                   new Color(0.1f, 0.1f, 0.1f))
     })
     setGeometry(new IndexedLineSetFactory {	
       setVertexCount(mesh.numberOfVertices)
       setLineCount(mesh.numberOfEdges)
-      setVertexCoordinates(mesh.vertices.map(v => {
-        val n = v.pos + v.chamber.normal.value / 10000
-        Array(n.x, n.y, n.z)
-      }).toList.toArray)
-      setEdgeIndices(mesh.edges.map(e =>
-        Array(e.from.nr-1, e.to.nr-1)).toList.toArray)
+      setVertexCoordinates(
+        mesh.vertices.map(v => (v + v.chamber.normal / 10000).toArray))
+      setEdgeIndices(mesh.edges.map(e => Array(e.from.nr-1, e.to.nr-1)))
       update
     }.getIndexedLineSet)
   }
