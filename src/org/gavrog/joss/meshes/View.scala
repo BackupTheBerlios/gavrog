@@ -17,17 +17,16 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.{Color, Dimension}
-import java.awt.event.{WindowAdapter, WindowEvent}
-import javax.swing.{JFrame, JMenu, JMenuBar}
+import java.awt.Color
+import javax.swing.KeyStroke
 
 import de.jreality.geometry.{Primitives, IndexedFaceSetFactory}
 import de.jreality.math.MatrixBuilder
-import de.jreality.scene.{Appearance,
-                          DirectionalLight,
-                          SceneGraphComponent,
-                          Transformation}
+import de.jreality.scene.{Appearance, DirectionalLight,
+                          SceneGraphComponent, Transformation}
 import de.jreality.shader.CommonAttributes
+
+import scala.swing.{Action, BorderPanel, MainFrame, Menu, MenuBar, MenuItem}
 
 object View {
   def log(message: String) = System.err.println(message)
@@ -35,70 +34,88 @@ object View {
   class XDouble(d: Double) { def deg = d / 180.0 * Math.Pi }
   implicit def xdouble(d: Double) = new XDouble(d)
   implicit def xint(i: Int) = new XDouble(i)
-
+  
+  class SimpleAction(name: String,
+                     keySpec: Option[String],
+                     body: =>Unit) extends Action(name) {
+    def apply { body }
+    accelerator = keySpec match {
+      case Some(s) => Some(KeyStroke.getKeyStroke(s))
+      case None    => None
+    }
+  }
+  
   def main(args : Array[String]) : Unit = {
-    val content = new SceneGraphComponent
-    val frame = new JFrame
-    val viewer = new JRealityViewerComponent(content)
+    val scene = new SceneGraphComponent {
+      setAppearance(new Appearance {
+        setAttribute(CommonAttributes.EDGE_DRAW, true)
+        setAttribute(CommonAttributes.TUBES_DRAW, false)
+        setAttribute(CommonAttributes.LINE_WIDTH, 1.0)
+        setAttribute(CommonAttributes.LINE_SHADER + '.' +
+                       CommonAttributes.DIFFUSE_COLOR, Color.GRAY)
+        setAttribute(CommonAttributes.VERTEX_DRAW, false)
+        setAttribute(CommonAttributes.POLYGON_SHADER + '.' +
+                       CommonAttributes.DIFFUSE_COLOR, Color.WHITE)
+      })
+    }
+
+    val viewer = new JRealityViewerComponent(scene) {
+      viewerSize = (800, 600)
+    }
     
-    val a = new Appearance
-    a.setAttribute(CommonAttributes.EDGE_DRAW, true)
-    a.setAttribute(CommonAttributes.TUBES_DRAW, false)
-    a.setAttribute(CommonAttributes.LINE_WIDTH, 1.0)
-    a.setAttribute(CommonAttributes.LINE_SHADER + '.' +
-                     CommonAttributes.DIFFUSE_COLOR, Color.GRAY)
-    a.setAttribute(CommonAttributes.VERTEX_DRAW, false)
-    a.setAttribute(CommonAttributes.POLYGON_SHADER + '.' +
-                     CommonAttributes.DIFFUSE_COLOR, Color.WHITE)
-    content.setAppearance(a)
-
-    frame.addWindowListener(new WindowAdapter() {
-	  override def windowClosing(arg0: WindowEvent) = System.exit(0)
-    })
-    frame.setJMenuBar(new JMenuBar)
-    frame.getJMenuBar.add(new JMenu("File"))
-    
-    val l1 = new DirectionalLight
-    l1.setIntensity(0.8)
-    val t1 = new Transformation
-    MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg).assignTo(t1)
-    viewer.setLight("Main Light", l1, t1)
-
-    val l2 = new DirectionalLight()
-    l2.setIntensity(0.2)
-    val t2 = new Transformation()
-    MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg).assignTo(t2)
-    viewer.setLight("Fill Light", l2, t2)
-
-    viewer.viewerSize = new Dimension(800, 600)
-    frame.getContentPane.add(viewer)
-    frame.pack
-    frame.setVisible(true)
+    val top = new MainFrame {
+      title = "Scala Mesh Viewer"
+      contents = new BorderPanel {
+        add(new scala.swing.Component { override lazy val peer = viewer },
+            BorderPanel.Position.Center)
+      }
+      menuBar = new MenuBar {
+        contents += new Menu("File") {
+          contents += new MenuItem(
+            new SimpleAction("Dummy", Some("control D"),
+                             System.err.println("Dummy was selected"))
+          )
+        }
+      }
+    }
+    top.pack
+    top.visible = true
     
     viewer.pauseRendering
+    
+    viewer.setLight("Main Light",
+                    new DirectionalLight { setIntensity(0.8) },
+                    new Transformation {
+                      MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg)
+                        .assignTo(this)
+                    })
+    viewer.setLight("Fill Light",
+                    new DirectionalLight { setIntensity(0.2) },
+                    new Transformation {
+                      MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg)
+                        .assignTo(this)
+                    })
+
     log("Reading...")
     val meshes =
       if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
 
     log("Converting...")
-    for (mesh <- meshes) {
-      val ifsf = new IndexedFaceSetFactory
-      ifsf setVertexCount mesh.numberOfVertices
-      ifsf setFaceCount   mesh.numberOfFaces
-      ifsf setVertexCoordinates
-        mesh.vertices.map(v => Array(v.x, v.y, v.z)).toList.toArray
-      ifsf setFaceIndices
-        mesh.faces.map(f => f.vertexChambers.map(c => c.vertexNr-1).toArray).
-        toList.toArray
-      ifsf setGenerateEdgesFromFaces true
-      ifsf setGenerateFaceNormals    true
-      //ifsf setGenerateVertexNormals  true
-      ifsf.update
+    for (mesh <- meshes) scene.addChild(new SceneGraphComponent(mesh.name) {
+      setGeometry(new IndexedFaceSetFactory {	
+        setVertexCount(mesh.numberOfVertices)
+        setFaceCount(mesh.numberOfFaces)
+        setVertexCoordinates(mesh.vertices.map(v =>
+          Array(v.x, v.y, v.z)).toList.toArray)
+        setFaceIndices(mesh.faces.map(f =>
+          f.vertexChambers.map(c => c.vertexNr-1).toArray).toList.toArray)
+        setGenerateEdgesFromFaces(true)
+        setGenerateFaceNormals(true)
+        // setGenerateVertexNormals(true)
+        update
+      }.getIndexedFaceSet)
+    })
 
-      val obj = new SceneGraphComponent(mesh.name)
-      obj.setGeometry(ifsf.getIndexedFaceSet())
-      content.addChild(obj)
-    }
     viewer.encompass
     viewer.startRendering
     for (i <- 1 to 24) {

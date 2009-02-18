@@ -96,7 +96,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     }
   }
   
-  viewerSize = new Dimension(640, 400)
+  viewerSize = (640, 400)
   
   if (viewer.isInstanceOf[de.jreality.jogl.Viewer]) invokeAndWait {
     try {
@@ -133,11 +133,14 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     viewerSize = d
   }
 
-  def viewerSize = if (currentViewer == null) new Dimension(0, 0)
-                   else currentViewer.getViewingComponentSize
+  def viewerSize = if (currentViewer == null) (0, 0)
+                   else {
+                     val d = currentViewer.getViewingComponentSize
+                     (d.width, d.height)
+                   }
   
-  def viewerSize_=(d: Dimension) = invokeAndWait {
-    setPreferredSize(d)
+  def viewerSize_=(d: (Int, Int)) = invokeAndWait {
+    viewingComponent.setPreferredSize(new Dimension(d._1, d._2))
     revalidate
   }
 
@@ -238,14 +241,14 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
 	MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew).assignTo(root)
   }
 	
-  def screenshot(size: Dimension, antialias: Int, file: String) {
+  def screenshot(size: (Int, Int), antialias: Int, file: String) {
     import java.awt.{Graphics2D, Image, RenderingHints}
     import java.awt.image.BufferedImage
     import java.io.File
     import de.jreality.util.ImageUtility
     
-    val width = size.width
-    val height = size.height
+    val width = size._1
+    val height = size._2
     val img =
       softwareViewer.renderOffscreen(width * antialias, height * antialias)
     val scaledImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
