@@ -33,7 +33,9 @@ import scala.swing.{Action, BorderPanel, FileChooser,
                     MainFrame, Menu, MenuBar, MenuItem}
 
 import Mesh._
+import Sums._
 import SwingSupport._
+import Vectors._
 
 object View {
   def log(message: String) = System.err.println(message)
@@ -44,6 +46,8 @@ object View {
   
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
   
+  def max(xs: Iterator[Double]) = (0.0 /: xs)((x, y) => if (x > y) x else y)
+      
   class ActionMenuItem(name: String, body: => Unit) extends MenuItem(name) {
     action = new Action(name) {
       def apply { body }
@@ -173,11 +177,15 @@ object View {
       setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR,
                    new Color(0.1f, 0.1f, 0.1f))
     })
-    setGeometry(new IndexedLineSetFactory {	
+    setGeometry(new IndexedLineSetFactory {
+      val n = mesh.numberOfVertices
+      val center = mesh.vertices.sum(_.pos) / n
+      val radius = max(mesh.vertices.map(v => (v.pos - center).||))
+      val f = radius / 1000
       setVertexCount(mesh.numberOfVertices)
       setLineCount(mesh.numberOfEdges)
       setVertexCoordinates(
-        mesh.vertices.map(v => (v + v.chamber.normal / 10000).toArray))
+        mesh.vertices.map(v => (v + v.chamber.normal * f).toArray))
       setEdgeIndices(mesh.edges.map(e => Array(e.from.nr-1, e.to.nr-1)))
       update
     }.getIndexedLineSet)
