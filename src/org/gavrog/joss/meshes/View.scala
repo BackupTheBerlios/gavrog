@@ -20,7 +20,6 @@ package org.gavrog.joss.meshes
 import java.awt.Color
 import java.awt.event.{MouseEvent, MouseMotionListener}
 import Color._
-import javax.swing.KeyStroke
 
 import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
 import de.jreality.math.MatrixBuilder
@@ -29,8 +28,7 @@ import de.jreality.scene.{Appearance, DirectionalLight,
 import de.jreality.shader.CommonAttributes._
 import de.jreality.util.SceneGraphUtility
 
-import scala.swing.{Action, BorderPanel, FileChooser,
-                    MainFrame, Menu, MenuBar, MenuItem}
+import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar}
 
 import Mesh._
 import Sums._
@@ -38,37 +36,41 @@ import SwingSupport._
 import Vectors._
 
 object View {
-  def log(message: String) = System.err.println(message)
-  
   class XDouble(d: Double) { def deg = d / 180.0 * Math.Pi }
   implicit def xdouble(d: Double) = new XDouble(d)
   implicit def xint(i: Int) = new XDouble(i)
   
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
-  
   def max(xs: Iterator[Double]) = (0.0 /: xs)((x, y) => if (x > y) x else y)
       
-  class ActionMenuItem(name: String, body: => Unit) extends MenuItem(name) {
-    action = new Action(name) {
-      def apply { body }
-    }
-    def accelerator = action.accelerator
-    def accelerator_=(spec: String) {
-      action.accelerator = Some(KeyStroke.getKeyStroke(spec))
+  def log(message: String) = System.err.println(message)
+  
+  implicit def asTransformation(mb: MatrixBuilder) = new Transformation {
+    mb.assignTo(this)
+  }
+  
+  class RichAppearance extends Appearance {
+    def update(attr: (String, Any)*) {
+      for ((k, v) <- attr) setAttribute(k, v)
     }
   }
   
-  def main(args : Array[String]) : Unit = {
-    val scene = new SceneGraphComponent {
-    }
+  val loadMeshChooser = new FileChooser
+  val screenShotChooser = new FileChooser
+    
+  val scene = new SceneGraphComponent
+  
+  val viewer = new JRealityViewerComponent(scene) {
+    viewerSize = (800, 600)
+    setLight("Main Light",
+             new DirectionalLight { setIntensity(0.8) },
+             MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
+    setLight("Fill Light",
+             new DirectionalLight { setIntensity(0.2) },
+             MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg))
+  }
 
-    val viewer = new JRealityViewerComponent(scene) {
-      viewerSize = (800, 600)
-    }
-    
-    val loadMeshChooser = new FileChooser
-    val screenShotChooser = new FileChooser
-    
+  def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
       title = "Scala Mesh Viewer"
       contents = new BorderPanel {
@@ -76,66 +78,12 @@ object View {
             BorderPanel.Position.Center)
       }
       menuBar = new MenuBar {
-        contents += new Menu("File") {
-          contents += new ActionMenuItem("Load Mesh ...", {
-            loadMeshChooser.showOpenDialog(menuBar) match {
-              case FileChooser.Result.Approve => {
-                val file = loadMeshChooser.selectedFile
-                log("Reading...")
-                val meshes = Mesh.read(file.getAbsolutePath)
-                log("Converting...")
-                invokeAndWait {
-                  viewer.pauseRendering
-                }
-                SceneGraphUtility.removeChildren(scene)
-                for (mesh <- meshes) {
-                  scene.addChild(faceSetFromMesh(mesh))
-                  scene.addChild(lineSetFromMesh(mesh))
-                }
-                invokeAndWait {
-                  viewer.encompass
-                  viewer.startRendering
-                }
-                log("Done!")
-              }
-            }
-          }) {
-            accelerator = "control O"
-          }
-          contents += new ActionMenuItem("Screen Shot Image ...", {
-            screenShotChooser.showSaveDialog(menuBar) match {
-              case FileChooser.Result.Approve => {
-                log("Taking screenshot ...")
-                val file = screenShotChooser.selectedFile
-                viewer.screenshot(viewer.viewerSize, 4, file)
-                log("Wrote image to %s" format file.getName)
-              }
-            }
-          }) {
-            accelerator = "control I"
-          }
-        }
+        contents ++ List(fileMenu)
       }
     }
     top.pack
     top.visible = true
     
-    viewer.pauseRendering
-    
-    viewer.setLight("Main Light",
-                    new DirectionalLight { setIntensity(0.8) },
-                    new Transformation {
-                      MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg)
-                        .assignTo(this)
-                    })
-    viewer.setLight("Fill Light",
-                    new DirectionalLight { setIntensity(0.2) },
-                    new Transformation {
-                      MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg)
-                        .assignTo(this)
-                    })
-
-    viewer.startRendering
 //    viewer.viewingComponent.addMouseMotionListener(new MouseMotionListener {
 //       def mouseMoved(e: MouseEvent) {
 //        val p = e.getPoint
@@ -148,12 +96,54 @@ object View {
 //    })
   }
   
+  def fileMenu = new Menu("File") {
+    contents += new ActionMenuItem("Load Mesh ...", {
+      loadMeshChooser.showOpenDialog(this) match {
+        case FileChooser.Result.Approve => {
+          val file = loadMeshChooser.selectedFile
+          log("Reading...")
+          val meshes = Mesh.read(file.getAbsolutePath)
+          log("Converting...")
+          invokeAndWait {
+            viewer.pauseRendering
+          }
+          SceneGraphUtility.removeChildren(scene)
+          for (mesh <- meshes) {
+            scene.addChild(faceSetFromMesh(mesh))
+            scene.addChild(lineSetFromMesh(mesh))
+          }
+          invokeAndWait {
+            viewer.encompass
+            viewer.startRendering
+          }
+          log("Done!")
+        }
+      }
+    }) {
+      accelerator = "control O"
+    }
+    contents += new ActionMenuItem("Take Screen Shot ...", {
+      screenShotChooser.showSaveDialog(this) match {
+        case FileChooser.Result.Approve => {
+          log("Taking screenshot ...")
+          val file = screenShotChooser.selectedFile
+          viewer.screenshot(viewer.viewerSize, 4, file)
+          log("Wrote image to %s" format file.getName)
+        }
+      }
+    }) {
+      accelerator = "control I"
+    }
+  }
+  
   def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    setAppearance(new Appearance {
-      setAttribute(EDGE_DRAW, false)
-      setAttribute(VERTEX_DRAW, false)
-      setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, WHITE)
-      setAttribute(SMOOTH_SHADING, false)
+    setAppearance(new RichAppearance {
+      update(
+        EDGE_DRAW                            -> false,
+        VERTEX_DRAW                          -> false,
+        POLYGON_SHADER + '.' + DIFFUSE_COLOR -> WHITE,
+        SMOOTH_SHADING                       -> false
+      )
     })
     setGeometry(new IndexedFaceSetFactory {	
       setVertexCount(mesh.numberOfVertices)
@@ -168,14 +158,14 @@ object View {
   }
   
   def lineSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    mesh.computeNormals
-    setAppearance(new Appearance {
-      setAttribute(EDGE_DRAW, true)
-      setAttribute(TUBES_DRAW, false)
-      setAttribute(VERTEX_DRAW, false)
-      setAttribute(LINE_WIDTH, 1.0)
-      setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR,
-                   new Color(0.1f, 0.1f, 0.1f))
+    setAppearance(new RichAppearance {
+      update(
+      	EDGE_DRAW                         -> true,
+      	TUBES_DRAW                        -> false,
+      	VERTEX_DRAW                       -> false,
+      	LINE_WIDTH                        -> 1.0,
+      	LINE_SHADER + '.' + DIFFUSE_COLOR -> new Color(0.1f, 0.1f, 0.1f)
+      )
     })
     setGeometry(new IndexedLineSetFactory {
       val n = mesh.numberOfVertices
@@ -184,6 +174,7 @@ object View {
       val f = radius / 1000
       setVertexCount(mesh.numberOfVertices)
       setLineCount(mesh.numberOfEdges)
+      mesh.computeNormals
       setVertexCoordinates(
         mesh.vertices.map(v => (v + v.chamber.normal * f).toArray))
       setEdgeIndices(mesh.edges.map(e => Array(e.from.nr-1, e.to.nr-1)))
