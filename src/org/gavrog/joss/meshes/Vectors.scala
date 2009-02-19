@@ -21,6 +21,7 @@ import Sums._
 
 object Vectors {
   case class Vec2(x: Double, y: Double) {
+    def unary_- = Vec2(-x, -y)
     def +(that: Vec2) = Vec2(this.x + that.x, this.y + that.y)
     def -(that: Vec2) = Vec2(this.x - that.x, this.y - that.y)
     def *(f: Double) = Vec2(x * f, y * f)
@@ -39,8 +40,10 @@ object Vectors {
     def add(x: Vec2, y: Vec2) = x + y
     def unit = Vec2(0, 0)
   }
+  implicit def asArray(v: Vec2) = v.toArray
   
   case class Vec3(x: Double, y: Double, z: Double) {
+    def unary_- = Vec3(-x, -y, -z)
     def +(that: Vec3) = Vec3(this.x + that.x, this.y + that.y, this.z + that.z)
     def -(that: Vec3) = Vec3(this.x - that.x, this.y - that.y, this.z - that.z)
     def *(f: Double) = Vec3(x * f, y * f, z * f)
@@ -62,6 +65,7 @@ object Vectors {
     def add(x: Vec3, y: Vec3) = x + y
     def unit = Vec3(0, 0, 0)
   }
+  implicit def asArray(v: Vec3) = v.toArray
   
   case class Scalar(x: Double) {
     def *(that: Vec3) = that * x

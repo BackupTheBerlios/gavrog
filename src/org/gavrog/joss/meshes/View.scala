@@ -28,7 +28,8 @@ import de.jreality.scene.{Appearance, DirectionalLight,
 import de.jreality.shader.CommonAttributes._
 import de.jreality.util.SceneGraphUtility
 
-import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar}
+import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
+                    Separator}
 
 import Mesh._
 import Sums._
@@ -78,7 +79,7 @@ object View {
             BorderPanel.Position.Center)
       }
       menuBar = new MenuBar {
-        contents ++ List(fileMenu)
+        contents ++ List(fileMenu, viewMenu)
       }
     }
     top.pack
@@ -97,43 +98,91 @@ object View {
   }
   
   def fileMenu = new Menu("File") {
-    contents += new ActionMenuItem("Load Mesh ...", {
-      loadMeshChooser.showOpenDialog(this) match {
-        case FileChooser.Result.Approve => {
-          val file = loadMeshChooser.selectedFile
-          log("Reading...")
-          val meshes = Mesh.read(file.getAbsolutePath)
-          log("Converting...")
-          invokeAndWait {
-            viewer.pauseRendering
+    contents ++ List(
+      
+      new ActionMenuItem("Load Mesh ...", {
+        loadMeshChooser.showOpenDialog(this) match {
+          case FileChooser.Result.Approve => {
+            val file = loadMeshChooser.selectedFile
+            log("Reading...")
+            val meshes = Mesh.read(file.getAbsolutePath)
+            log("Converting...")
+            invokeAndWait {
+              viewer.pauseRendering
+            }
+            SceneGraphUtility.removeChildren(scene)
+            for (mesh <- meshes) {
+              scene.addChild(faceSetFromMesh(mesh))
+              scene.addChild(lineSetFromMesh(mesh))
+            }
+            invokeAndWait {
+              viewer.encompass
+              viewer.startRendering
+            }
+            log("Done!")
           }
-          SceneGraphUtility.removeChildren(scene)
-          for (mesh <- meshes) {
-            scene.addChild(faceSetFromMesh(mesh))
-            scene.addChild(lineSetFromMesh(mesh))
-          }
-          invokeAndWait {
-            viewer.encompass
-            viewer.startRendering
-          }
-          log("Done!")
         }
-      }
-    }) {
-      accelerator = "control O"
-    }
-    contents += new ActionMenuItem("Take Screen Shot ...", {
-      screenShotChooser.showSaveDialog(this) match {
-        case FileChooser.Result.Approve => {
-          log("Taking screenshot ...")
-          val file = screenShotChooser.selectedFile
-          viewer.screenshot(viewer.viewerSize, 4, file)
-          log("Wrote image to %s" format file.getName)
+      }) { accelerator = "control O" },
+      
+      new ActionMenuItem("Take Screen Shot ...", {
+        screenShotChooser.showSaveDialog(this) match {
+          case FileChooser.Result.Approve => {
+            log("Taking screenshot ...")
+            val file = screenShotChooser.selectedFile
+            viewer.screenshot(viewer.viewerSize, 4, file)
+            log("Wrote image to %s" format file.getName)
+          }
         }
-      }
-    }) {
-      accelerator = "control I"
-    }
+      }) { accelerator = "control I" }
+    )
+  }
+  
+  def viewMenu = new Menu("View") {
+    contents ++ List(
+      new ActionMenuItem("Home", {
+        viewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+        viewer.encompass
+      }) { accelerator = "H" },
+      new ActionMenuItem("Fit", viewer.encompass) { accelerator = "0" },
+      new Separator,
+      new ActionMenuItem("View From +X",
+                         viewer.viewFrom(Vec3(1, 0, 0), Vec3(0, 1, 0))
+      ) { accelerator = "X" },
+      new ActionMenuItem("View From +Y",
+                         viewer.viewFrom(Vec3(0, 1, 0), Vec3(0, 0, -1))
+      ) { accelerator = "Y" },
+      new ActionMenuItem("View From +Z",
+                         viewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+      ) { accelerator = "Z" },
+      new ActionMenuItem("View From -X",
+                         viewer.viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0))
+      ) { accelerator = "shift X" },
+      new ActionMenuItem("View From -Y",
+                         viewer.viewFrom(Vec3(0, -1, 0), Vec3(0, 0, 1))
+      ) { accelerator = "shift Y" },
+      new ActionMenuItem("View From -Z",
+                         viewer.viewFrom(Vec3(0, 0, -1), Vec3(0, 1, 0))
+      ) { accelerator = "shift Z" },
+      new Separator,
+      new ActionMenuItem("Rotate Left",
+                         viewer.rotateScene(Vec3(0, 1, 0), -5 deg)
+      ) { accelerator = "LEFT" },
+      new ActionMenuItem("Rotate Right",
+                         viewer.rotateScene(Vec3(0, 1, 0),  5 deg)
+      ) { accelerator = "RIGHT" },
+      new ActionMenuItem("Rotate Up",
+                         viewer.rotateScene(Vec3(1, 0, 0), -5 deg)
+      ) { accelerator = "UP" },
+      new ActionMenuItem("Rotate Down",
+                         viewer.rotateScene(Vec3(1, 0, 0),  5 deg)
+      ) { accelerator = "DOWN" },
+      new ActionMenuItem("Rotate Clockwise",
+                         viewer.rotateScene(Vec3(0, 0, 1), -5 deg)
+      ) { accelerator = "control RIGHT" },
+      new ActionMenuItem("Rotate Counterclockwise",
+                         viewer.rotateScene(Vec3(0, 0, 1),  5 deg)
+      ) { accelerator = "control LEFT" }
+    )
   }
   
   def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {

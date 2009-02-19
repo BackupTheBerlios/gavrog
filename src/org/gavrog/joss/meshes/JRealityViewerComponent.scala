@@ -33,6 +33,7 @@ import de.jreality.toolsystem.ToolSystem
 import de.jreality.util.{CameraUtility, RenderTrigger}
 
 import SwingSupport._
+import Vectors._
 
 class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   private val rootNode     = new SceneGraphComponent
@@ -216,7 +217,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
   }
   
-  def rotateScene(axis: Seq[Double], angle: Double) {
+  def rotateScene(axis: Vec3, angle: Double) {
     val root = contentNode
 
     if (lastCenter == null) {
@@ -235,7 +236,19 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
 	val q = tNew.multiplyVector(lastCenter)
 	MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew).assignTo(root)
   }
-	
+
+  def viewFrom(eye: Vec3, up: Vec3) {
+    var (u, v, w) = (up x eye, up, eye)
+    u = u.unit
+    v = (v - u * v * u).unit
+    w = (w - u * w * u - v * w * v).unit
+    val m = new Matrix(u.x, v.x, w.x, 0,
+                       u.y, v.y, w.y, 0,
+                       u.z, v.z, w.z, 0,
+                         0,   0,   0, 1)
+    MatrixBuilder.euclidean(m.getInverse).assignTo(contentNode)
+  }
+  
   def screenshot(size: (Int, Int), antialias: Int, file: File) {
     import java.awt.{Graphics2D, Image, RenderingHints}
     import java.awt.image.BufferedImage
