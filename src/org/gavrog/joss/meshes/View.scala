@@ -220,7 +220,7 @@ object View {
       val n = mesh.numberOfVertices
       val center = mesh.vertices.sum(_.pos) / n
       val radius = max(mesh.vertices.map(v => (v.pos - center).||))
-      val f = radius / 1000
+      val f = radius / 10000
       setVertexCount(mesh.numberOfVertices)
       setLineCount(mesh.numberOfEdges)
       mesh.computeNormals

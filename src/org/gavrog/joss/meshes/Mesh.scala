@@ -1096,6 +1096,7 @@ class Mesh(s : String) {
       val groups    = new HashMap[Group, Int]
       val materials = new HashMap[Material, Int]
       val sgroups   = new HashMap[Int, Int]
+      var badUVs    = false
       for (c <- cs) {
         val face = c.cell
         groups(face.group) = groups.getOrElse(face.group, 0) + 1
@@ -1103,10 +1104,14 @@ class Mesh(s : String) {
         sgroups(face.smoothingGroup) =
           sgroups.getOrElse(face.smoothingGroup, 0) + 1
         if (c.tVertex != c.s2.tVertex || c.s0.tVertex != c.s0.s2.tVertex)
-          messages += "Inconsistent texture vertices."
+          badUVs = true
       }
-      if (groups.size > 1) messages += "Inconsistent grouping."
-      if (materials.size > 1) messages += "Inconsistent materials."
+      if (badUVs)
+          messages += ("Inconsistent texture vertices: %s" format groups)
+      if (groups.size > 1)
+        messages += ("Inconsistent grouping: %s" format groups)
+      if (materials.size > 1)
+        messages += ("Inconsistent materials: %s" format materials)
       if (sgroups.size > 1) messages += "Inconsistent smoothing groups."
       face.group = groups.keys.next
       face.material = materials.keys.next
