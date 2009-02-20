@@ -70,18 +70,10 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
   scene addTool new DraggingTool
   scene addTool new ClickWheelCameraZoomTool
 
-  private val softwareViewer = new SoftViewer {
-  	setSceneRoot(rootNode)
-  	setCameraPath(camPath)
-  }
-  setupToolSystem(softwareViewer, emptyPickPath);
+  private val softwareViewer = new SoftViewer { setupViewer(this) }
 
   viewer = try {
-    val v = new de.jreality.jogl.Viewer()
-    v.setSceneRoot(rootNode)
-    v.setCameraPath(camPath)
-    setupToolSystem(v, emptyPickPath)
-    v
+    new de.jreality.jogl.Viewer { setupViewer(this) }
   } catch {
     case ex: Exception => {
       System.err.println("OpenGL viewer could not be initialized.")
@@ -106,7 +98,9 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
 
   renderTrigger.addSceneGraphComponent(rootNode)
 
-  private def setupToolSystem(viewer: Viewer, emptyPickPath: SceneGraphPath) {
+  private def setupViewer(viewer: Viewer) {
+    viewer.setSceneRoot(rootNode)
+    viewer.setCameraPath(camPath)
     val ts = ToolSystem.toolSystemForViewer(viewer)
     ts.initializeSceneTools()
     ts.setEmptyPickPath(emptyPickPath)
