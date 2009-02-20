@@ -101,6 +101,7 @@ object View {
             for (mesh <- meshes) {
               scene.addChild(faceSetFromMesh(mesh))
               scene.addChild(lineSetFromMesh(mesh))
+//              scene.addChild(faceSetFromMeshUVs(mesh))
             }
             invokeAndWait {
               viewer.encompass
@@ -203,8 +204,7 @@ object View {
       )
     )
     setGeometry(new IndexedLineSetFactory {
-      val n = mesh.numberOfVertices
-      val center = mesh.vertices.map(_.pos).sum / n
+      val center = mesh.vertices.map(_.pos).sum / mesh.numberOfVertices
       val radius = max(mesh.vertices.map(v => (v.pos - center).||))
       val f = radius / 10000
       setVertexCount(mesh.numberOfVertices)
@@ -215,5 +215,34 @@ object View {
       setEdgeIndices(mesh.edges.map(e => Array(e.from.nr-1, e.to.nr-1)))
       update
     }.getIndexedLineSet)
+  }
+  
+  def faceSetFromMeshUVs(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
+    setAppearance(new RichAppearance(
+      EDGE_DRAW                    -> true,
+      TUBES_DRAW                   -> false,
+      VERTEX_DRAW                  -> false,
+      FACE_DRAW                    -> true,
+      LINE_WIDTH                   -> 1.0,
+      LINE_SHADER +
+        '.' + DIFFUSE_COLOR        -> Color.BLACK,
+      LINE_SHADER +
+        '.' + SPECULAR_COEFFICIENT -> 0.0,
+      POLYGON_SHADER +
+        '.' + DIFFUSE_COLOR        -> WHITE,
+      POLYGON_SHADER +
+        '.' + SPECULAR_COEFFICIENT -> 0.0,
+      SMOOTH_SHADING               -> false
+    ))
+    setGeometry(new IndexedFaceSetFactory {	
+      setVertexCount(mesh.numberOfTextureVertices)
+      setFaceCount(mesh.numberOfFaces)
+      setVertexCoordinates(mesh.textureVertices.map(v => Array(v.x, v.y, 0)))
+      setFaceIndices(mesh.faces.map(_.textureVertices.map(_.nr-1).toArray))
+      setGenerateEdgesFromFaces(true)
+      setGenerateFaceNormals(true)
+      setGenerateVertexNormals(true)
+      update
+    }.getIndexedFaceSet)
   }
 }
