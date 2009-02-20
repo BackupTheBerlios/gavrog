@@ -25,13 +25,19 @@ object JRealitySupport {
     mb.assignTo(this)
   }
   
-  class RichAppearance(attr: (String, Any)*) extends Appearance {
-    private def update(attr: Seq[(String, Any)]) {
+  class RichAppearance extends Appearance {
+    private def update(attr: Iterable[(String, Any)]) {
       for ((k, v) <- attr) setAttribute(k, v)
     }
     
-    update(attr)
+    def this(attr: (String, Any)*) {
+      this()
+      update(attr)
+    }
     
-    def setAttributes(attr: (String, Any)*) = update(attr)
+    def this(attr: Map[String, Any]) {
+      this()
+      update(attr)
+    }
   }
 }

@@ -48,6 +48,36 @@ object View {
 
   def log(message: String) = System.err.println(message)
   
+  val meshFaceAttributes = Map(
+    EDGE_DRAW                                   -> false,
+    VERTEX_DRAW                                 -> false,
+    FACE_DRAW                                   -> true,
+    POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
+    POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.1,
+    POLYGON_SHADER + '.' + DEPTH_FUDGE_FACTOR   -> 0.0,
+    SMOOTH_SHADING                              -> false
+  )
+  
+  val meshLineAttributes = Map(
+    EDGE_DRAW                              -> true,
+    TUBES_DRAW                             -> false,
+    VERTEX_DRAW                            -> false,
+    FACE_DRAW                              -> false,
+    LINE_WIDTH                             -> 1.0,
+    LINE_SHADER + '.' + DIFFUSE_COLOR      -> new Color(0.1f, 0.1f, 0.1f),
+    LINE_SHADER + '.' + DEPTH_FUDGE_FACTOR -> 1.0
+  )
+
+  val uvsFaceAttributes = Map(
+    EDGE_DRAW                                   -> false,
+    VERTEX_DRAW                                 -> false,
+    FACE_DRAW                                   -> true,
+    POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
+    POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.0,
+    POLYGON_SHADER + '.' + DEPTH_FUDGE_FACTOR   -> 0.0,
+    SMOOTH_SHADING                              -> false
+  )
+  
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
     
@@ -60,7 +90,7 @@ object View {
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
     setLight("Fill Light",
              new DirectionalLight { setIntensity(0.2) },
-             MatrixBuilder.euclidean().rotateX(10 deg).rotateY(20 deg))
+             MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
   }
 
   def main(args : Array[String]) : Unit = {
@@ -99,9 +129,14 @@ object View {
             }
             SceneGraphUtility.removeChildren(scene)
             for (mesh <- meshes) {
-              scene.addChild(faceSetFromMesh(mesh))
-              scene.addChild(lineSetFromMesh(mesh))
-//              scene.addChild(faceSetFromMeshUVs(mesh))
+              scene.addChild(new UVsGeometry(mesh) {
+                setAppearance(new RichAppearance(uvsFaceAttributes))
+              })
+              scene.addChild(new UVsGeometry(mesh) {
+                setAppearance(new RichAppearance(meshLineAttributes))
+                setTransformation(
+                  MatrixBuilder.euclidean.translate(0, 0, 1/1000))
+              })
             }
             invokeAndWait {
               viewer.encompass
@@ -174,14 +209,7 @@ object View {
     )
   }
   
-  def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    setAppearance(new RichAppearance(
-        EDGE_DRAW                            -> false,
-        VERTEX_DRAW                          -> false,
-        POLYGON_SHADER + '.' + DIFFUSE_COLOR -> WHITE,
-        SMOOTH_SHADING                       -> false
-      )
-    )
+  class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     setGeometry(new IndexedFaceSetFactory {	
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
@@ -194,46 +222,7 @@ object View {
     }.getIndexedFaceSet)
   }
   
-  def lineSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    setAppearance(new RichAppearance(
-      	EDGE_DRAW                         -> true,
-      	TUBES_DRAW                        -> false,
-      	VERTEX_DRAW                       -> false,
-      	LINE_WIDTH                        -> 1.0,
-      	LINE_SHADER + '.' + DIFFUSE_COLOR -> new Color(0.1f, 0.1f, 0.1f)
-      )
-    )
-    setGeometry(new IndexedLineSetFactory {
-      val center = mesh.vertices.map(_.pos).sum / mesh.numberOfVertices
-      val radius = max(mesh.vertices.map(v => (v.pos - center).||))
-      val f = radius / 10000
-      setVertexCount(mesh.numberOfVertices)
-      setLineCount(mesh.numberOfEdges)
-      mesh.computeNormals
-      setVertexCoordinates(
-        mesh.vertices.map(v => (v + v.chamber.normal * f).toArray))
-      setEdgeIndices(mesh.edges.map(e => Array(e.from.nr-1, e.to.nr-1)))
-      update
-    }.getIndexedLineSet)
-  }
-  
-  def faceSetFromMeshUVs(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    setAppearance(new RichAppearance(
-      EDGE_DRAW                    -> true,
-      TUBES_DRAW                   -> false,
-      VERTEX_DRAW                  -> false,
-      FACE_DRAW                    -> true,
-      LINE_WIDTH                   -> 1.0,
-      LINE_SHADER +
-        '.' + DIFFUSE_COLOR        -> Color.BLACK,
-      LINE_SHADER +
-        '.' + SPECULAR_COEFFICIENT -> 0.0,
-      POLYGON_SHADER +
-        '.' + DIFFUSE_COLOR        -> WHITE,
-      POLYGON_SHADER +
-        '.' + SPECULAR_COEFFICIENT -> 0.0,
-      SMOOTH_SHADING               -> false
-    ))
+  class UVsGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     setGeometry(new IndexedFaceSetFactory {	
       setVertexCount(mesh.numberOfTextureVertices)
       setFaceCount(mesh.numberOfFaces)
