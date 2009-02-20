@@ -39,8 +39,13 @@ object Sums {
     def foreach(f: T => Unit): Unit
   
     def sum[A](f: T => A)(implicit m : Monoid[A]) : A = {
-      var s : A = m.unit;
+      var s = m.unit;
       for (x <- this) s = m.add(s, f(x));
+      s
+    }
+    def sum()(implicit m : Monoid[T]) : T = {
+      var s = m.unit;
+      for (x <- this) s = m.add(s, x);
       s
     }
     def count(f: T => Boolean) = sum(x => if (f(x)) 1 else 0)

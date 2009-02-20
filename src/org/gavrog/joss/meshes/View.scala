@@ -42,8 +42,10 @@ object View {
   implicit def xint(i: Int) = new XDouble(i)
   
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
-  def max(xs: Iterator[Double]) = (0.0 /: xs)((x, y) => if (x > y) x else y)
-      
+
+  def max[A <% Ordered[A]](xs: Iterator[A]) =
+    xs.reduceLeft((x, y) => if (x > y) x else y)
+
   def log(message: String) = System.err.println(message)
   
   implicit def asTransformation(mb: MatrixBuilder) = new Transformation {
@@ -218,7 +220,7 @@ object View {
     })
     setGeometry(new IndexedLineSetFactory {
       val n = mesh.numberOfVertices
-      val center = mesh.vertices.sum(_.pos) / n
+      val center = mesh.vertices.map(_.pos).sum / n
       val radius = max(mesh.vertices.map(v => (v.pos - center).||))
       val f = radius / 10000
       setVertexCount(mesh.numberOfVertices)
