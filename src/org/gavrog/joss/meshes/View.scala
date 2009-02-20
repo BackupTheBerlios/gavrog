@@ -54,7 +54,7 @@ object View {
   val scene = new SceneGraphComponent
   
   val viewer = new JRealityViewerComponent(scene) {
-    viewerSize = (800, 600)
+    size = (800, 600)
     setLight("Main Light",
              new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
@@ -116,7 +116,8 @@ object View {
           case FileChooser.Result.Approve => {
             log("Taking screenshot ...")
             val file = screenShotChooser.selectedFile
-            viewer.screenshot(viewer.viewerSize, 4, file)
+            val d = viewer.size
+            viewer.screenshot((d.width, d.height), 4, file)
             log("Wrote image to %s" format file.getName)
           }
         }

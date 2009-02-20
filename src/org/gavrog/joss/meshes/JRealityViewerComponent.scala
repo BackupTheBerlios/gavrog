@@ -93,7 +93,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
     }
   }
   
-  viewerSize = (640, 400)
+  size = (640, 400)
   
   if (viewer.isInstanceOf[de.jreality.jogl.Viewer]) invokeAndWait {
     try {
@@ -122,25 +122,26 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
   def viewer = currentViewer
   
   def viewer_=(newViewer: Viewer) = invokeAndWait {
-    val d = viewerSize
+    val d = size
     this.renderTrigger.removeViewer(viewer)
     this.renderTrigger.addViewer(newViewer)
     this.currentViewer = newViewer
     add(new Component { override lazy val peer = viewingComponent },
         BorderPanel.Position.Center)
-    viewerSize = d
+    size = d
   }
 
-  def viewerSize = if (currentViewer == null) (0, 0)
-                   else {
-                     val d = currentViewer.getViewingComponentSize
-                     (d.width, d.height)
-                   }
+  override def size = if (currentViewer == null) new Dimension(0, 0)
+                      else {
+                        val d = currentViewer.getViewingComponentSize
+                        new Dimension(d.width, d.height)
+                      }
   
-  def viewerSize_=(d: (Int, Int)) = invokeAndWait {
-    viewingComponent.setPreferredSize(new Dimension(d._1, d._2))
+  override def size_=(d: Dimension) = invokeAndWait {
+    viewingComponent.setPreferredSize(d)
     revalidate
   }
+  override def size_=(d: (Int, Int)) = size_=(new Dimension(d._1, d._2))
 
   def setLight(name: String, light: Light, t: Transformation) {
     val node = lights.get(name) match {
