@@ -32,6 +32,7 @@ import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
 import de.jreality.util.{CameraUtility, RenderTrigger}
 
+import JRealitySupport._
 import SwingSupport._
 import Vectors._
 
@@ -62,10 +63,10 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   cameraNode.setCamera(camera)
   MatrixBuilder.euclidean translate (0, 0, 3) assignTo cameraNode
 
-  private val rootApp = new Appearance
-  rootApp.setAttribute(CommonAttributes.BACKGROUND_COLOR, Color.DARK_GRAY)
-  rootApp.setAttribute(CommonAttributes.DIFFUSE_COLOR, Color.RED)
-  rootNode.setAppearance(rootApp)
+  rootNode setAppearance new RichAppearance(
+    CommonAttributes.BACKGROUND_COLOR -> Color.DARK_GRAY,
+    CommonAttributes.DIFFUSE_COLOR    -> Color.RED
+  )
 
   private val camPath = new SceneGraphPath(rootNode, cameraNode)
   camPath.push(camera)
@@ -217,37 +218,46 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
   }
   
-  def rotateScene(axis: Vec3, angle: Double) {
-    val root = contentNode
-
+  private def center = {
     if (lastCenter == null) {
-      // -- compute the center of the scene in world coordinates
+      val root = contentNode
       val bounds = GeometryUtility.calculateBoundingBox(root)
-      if (bounds.isEmpty) return
-      else lastCenter = (new Matrix(root.getTransformation).getInverse
-                           .multiplyVector(bounds.getCenter))
+      lastCenter = if (bounds.isEmpty) Array(0.0, 0.0, 0.0, 1.0)
+                   else (new Matrix(root.getTransformation)
+                           .getInverse.multiplyVector(bounds.getCenter))
     }
-
-	// -- rotate around the last computed scene center
-	val tOld = new Matrix(root.getTransformation)
-	val tNew = (MatrixBuilder.euclidean.rotate(angle, axis.toArray).times(tOld)
-               .getMatrix)
-	val p = tOld.multiplyVector(lastCenter)
-	val q = tNew.multiplyVector(lastCenter)
-	MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew).assignTo(root)
+    lastCenter
+  }
+  
+  def rotateScene(axis: Vec3, angle: Double) {
+    val m = new Matrix(contentNode.getTransformation)
+    sceneRotation = MatrixBuilder.euclidean.rotate(angle, axis.toArray).times(m)
   }
 
   def viewFrom(eye: Vec3, up: Vec3) {
+    val root = contentNode
     var (u, v, w) = (up x eye, up, eye)
     u = u.unit
     v = (v - u * v * u).unit
     w = (w - u * w * u - v * w * v).unit
-    val m = new Matrix(u.x, v.x, w.x, 0,
-                       u.y, v.y, w.y, 0,
-                       u.z, v.z, w.z, 0,
-                         0,   0,   0, 1)
-    MatrixBuilder.euclidean(m.getInverse).assignTo(contentNode)
+    sceneRotation = new Matrix(u.x, v.x, w.x, 0,
+                               u.y, v.y, w.y, 0,
+                               u.z, v.z, w.z, 0,
+                                 0,   0,   0, 1 ).getInverse
   }
+  
+  def sceneRotation = new Matrix(contentNode.getTransformation)
+  
+  def sceneRotation_=(tNew: Matrix) {
+    val tOld = sceneRotation
+    val p = tOld.multiplyVector(center)
+    val q = tNew.multiplyVector(center)
+    val mb = MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew)
+    mb.assignTo(contentNode)
+  }
+  
+  def sceneRotation_=(mb: MatrixBuilder) : Unit = sceneRotation_=(mb.getMatrix)
+  def sceneRotation_=(t: Transformation) : Unit = sceneRotation_=(new Matrix(t))
   
   def screenshot(size: (Int, Int), antialias: Int, file: File) {
     import java.awt.{Graphics2D, Image, RenderingHints}
