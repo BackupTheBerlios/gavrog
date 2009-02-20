@@ -18,8 +18,6 @@
 package org.gavrog.joss.meshes
 
 import java.awt.{Color, Dimension}
-import java.io.File
-import javax.media.opengl.GLException
 
 import scala.swing.{BorderPanel, Component}
 
@@ -39,45 +37,43 @@ import Vectors._
 
 class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
 {
-  private val rootNode     = new SceneGraphComponent
-  private val cameraNode   = new SceneGraphComponent
-  private val geometryNode = new SceneGraphComponent
-  private val lightNode    = new SceneGraphComponent
-  private val contentNode  = content
+  private val rootNode   = new SceneGraphComponent
+  private val cameraNode = new SceneGraphComponent
+  private val sceneNode  = new SceneGraphComponent
+  private val lightNode  = new SceneGraphComponent
 	
+  private val renderTrigger = new RenderTrigger
+
   private var lights = Map[String, SceneGraphComponent]()
-
-  private val renderTrigger  = new RenderTrigger
-
   private var currentViewer: Viewer = null
   private var lastCenter: Array[Double] = null
 
-  rootNode     addChild geometryNode
-  rootNode     addChild cameraNode
-  rootNode     addChild lightNode
-  geometryNode addChild contentNode
-
-  contentNode  addTool  new RotateTool
-  contentNode  addTool  new DraggingTool
-  contentNode  addTool  new ClickWheelCameraZoomTool
+  rootNode  addChild sceneNode
+  rootNode  addChild cameraNode
+  rootNode  addChild lightNode
+  sceneNode addChild content
 
   private val camera = new Camera
   cameraNode.setCamera(camera)
   MatrixBuilder.euclidean translate (0, 0, 3) assignTo cameraNode
+
+  private val camPath =
+    new SceneGraphPath(rootNode, cameraNode) { push(camera) }
+  private val emptyPickPath = new SceneGraphPath(rootNode, sceneNode, content)
 
   rootNode setAppearance new RichAppearance(
     CommonAttributes.BACKGROUND_COLOR -> Color.DARK_GRAY,
     CommonAttributes.DIFFUSE_COLOR    -> Color.RED
   )
 
-  private val camPath = new SceneGraphPath(rootNode, cameraNode)
-  camPath.push(camera)
-  private val emptyPickPath =
-    new SceneGraphPath(rootNode, geometryNode, contentNode)
+  scene addTool new RotateTool
+  scene addTool new DraggingTool
+  scene addTool new ClickWheelCameraZoomTool
 
-  private val softwareViewer = new SoftViewer
-  softwareViewer.setSceneRoot(rootNode)
-  softwareViewer.setCameraPath(camPath)
+  private val softwareViewer = new SoftViewer {
+  	setSceneRoot(rootNode)
+  	setCameraPath(camPath)
+  }
   setupToolSystem(softwareViewer, emptyPickPath);
 
   viewer = try {
@@ -100,7 +96,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
       viewer.asInstanceOf[de.jreality.jogl.Viewer].run
       System.err.println("OpenGL okay!")
     } catch {
-      case ex: GLException => {
+      case ex: javax.media.opengl.GLException => {
         System.err.println("OpenGL viewer could not render.");
         viewer = softwareViewer
       }
@@ -143,6 +139,8 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
   }
   override def size_=(d: (Int, Int)) = size_=(new Dimension(d._1, d._2))
 
+  def scene = emptyPickPath.getLastComponent
+  
   def setLight(name: String, light: Light, t: Transformation) {
     val node = lights.get(name) match {
       case Some(node) => node
@@ -222,22 +220,20 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
   
   private def center = {
     if (lastCenter == null) {
-      val root = contentNode
-      val bounds = GeometryUtility.calculateBoundingBox(root)
+      val bounds = GeometryUtility.calculateBoundingBox(scene)
       lastCenter = if (bounds.isEmpty) Array(0.0, 0.0, 0.0, 1.0)
-                   else (new Matrix(root.getTransformation)
+                   else (new Matrix(scene.getTransformation)
                            .getInverse.multiplyVector(bounds.getCenter))
     }
     lastCenter
   }
   
   def rotateScene(axis: Vec3, angle: Double) {
-    val m = new Matrix(contentNode.getTransformation)
+    val m = new Matrix(scene.getTransformation)
     sceneRotation = MatrixBuilder.euclidean.rotate(angle, axis.toArray).times(m)
   }
 
   def viewFrom(eye: Vec3, up: Vec3) {
-    val root = contentNode
     var (u, v, w) = (up x eye, up, eye)
     u = u.unit
     v = (v - u * v * u).unit
@@ -248,20 +244,20 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
                                  0,   0,   0, 1 ).getInverse
   }
   
-  def sceneRotation = new Matrix(contentNode.getTransformation)
+  def sceneRotation = new Matrix(content.getTransformation)
   
   def sceneRotation_=(tNew: Matrix) {
     val tOld = sceneRotation
     val p = tOld.multiplyVector(center)
     val q = tNew.multiplyVector(center)
     val mb = MatrixBuilder.euclidean.translateFromTo(q, p).times(tNew)
-    mb.assignTo(contentNode)
+    mb.assignTo(scene)
   }
   
   def sceneRotation_=(mb: MatrixBuilder) : Unit = sceneRotation_=(mb.getMatrix)
   def sceneRotation_=(t: Transformation) : Unit = sceneRotation_=(new Matrix(t))
   
-  def screenshot(size: (Int, Int), antialias: Int, file: File) {
+  def screenshot(size: (Int, Int), antialias: Int, file: java.io.File) {
     import java.awt.{Graphics2D, Image, RenderingHints}
     import java.awt.image.BufferedImage
     import de.jreality.util.ImageUtility
@@ -280,6 +276,6 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
   }
 
   def screenshot(size: (Int, Int), antialias: Int, file: String) {
-    screenshot(size, antialias, new File(file))
+    screenshot(size, antialias, new java.io.File(file))
   }
 }
