@@ -37,38 +37,38 @@ import Vectors._
 
 class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
 {
-  private val rootNode   = new SceneGraphComponent
-  private val cameraNode = new SceneGraphComponent
-  private val sceneNode  = new SceneGraphComponent
+  private val sceneNode  = new SceneGraphComponent {
+    addChild(content)
+  }
+  private val cameraNode = new SceneGraphComponent {
+    setCamera(new Camera)
+    setTransformation(MatrixBuilder.euclidean.translate(0, 0, 3))
+  }
   private val lightNode  = new SceneGraphComponent
 	
+  private val rootNode = new SceneGraphComponent {
+    addChild(sceneNode)
+    addChild(cameraNode)
+    addChild(lightNode)
+    setAppearance(new RichAppearance(
+      CommonAttributes.BACKGROUND_COLOR -> Color.DARK_GRAY,
+      CommonAttributes.DIFFUSE_COLOR    -> Color.RED
+    ))
+  }
+
   private val renderTrigger = new RenderTrigger
 
-  private var lights = Map[String, SceneGraphComponent]()
-  private var currentViewer: Viewer = null
-  private var lastCenter: Array[Double] = null
-
-  rootNode  addChild sceneNode
-  rootNode  addChild cameraNode
-  rootNode  addChild lightNode
-  sceneNode addChild content
-
-  private val camera = new Camera
-  cameraNode.setCamera(camera)
-  MatrixBuilder.euclidean translate (0, 0, 3) assignTo cameraNode
-
   private val camPath =
-    new SceneGraphPath(rootNode, cameraNode) { push(camera) }
+    new SceneGraphPath(rootNode, cameraNode) { push(cameraNode.getCamera) }
   private val emptyPickPath = new SceneGraphPath(rootNode, sceneNode, content)
-
-  rootNode setAppearance new RichAppearance(
-    CommonAttributes.BACKGROUND_COLOR -> Color.DARK_GRAY,
-    CommonAttributes.DIFFUSE_COLOR    -> Color.RED
-  )
 
   scene addTool new RotateTool
   scene addTool new DraggingTool
   scene addTool new ClickWheelCameraZoomTool
+
+  private var lights                    = Map[String, SceneGraphComponent]()
+  private var currentViewer: Viewer     = null
+  private var lastCenter: Array[Double] = null
 
   private val softwareViewer = new SoftViewer { setupViewer(this) }
 
@@ -106,21 +106,21 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
     ts.setEmptyPickPath(emptyPickPath)
   }
   
-  def viewingComponent =
-    viewer.getViewingComponent.asInstanceOf[javax.swing.JComponent]
- 
   def viewer = currentViewer
   
   def viewer_=(newViewer: Viewer) = invokeAndWait {
     val d = size
-    this.renderTrigger.removeViewer(viewer)
-    this.renderTrigger.addViewer(newViewer)
-    this.currentViewer = newViewer
+    renderTrigger.removeViewer(viewer)
+    renderTrigger.addViewer(newViewer)
+    currentViewer = newViewer
     add(new Component { override lazy val peer = viewingComponent },
         BorderPanel.Position.Center)
     size = d
   }
 
+  private def viewingComponent =
+    viewer.getViewingComponent.asInstanceOf[javax.swing.JComponent]
+ 
   override def size = if (currentViewer == null) new Dimension(0, 0)
                       else {
                         val d = currentViewer.getViewingComponentSize
@@ -133,8 +133,6 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
   }
   override def size_=(d: (Int, Int)) = size_=(new Dimension(d._1, d._2))
 
-  def scene = emptyPickPath.getLastComponent
-  
   def setLight(name: String, light: Light, t: Transformation) {
     val node = lights.get(name) match {
       case Some(node) => node
@@ -212,6 +210,8 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
     mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
   }
   
+  def scene = emptyPickPath.getLastComponent
+  
   private def center = {
     if (lastCenter == null) {
       val bounds = GeometryUtility.calculateBoundingBox(scene)
@@ -256,10 +256,9 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
     import java.awt.image.BufferedImage
     import de.jreality.util.ImageUtility
     
-    val width = size._1
-    val height = size._2
-    val img =
-      softwareViewer.renderOffscreen(width * antialias, height * antialias)
+    val (width, height) = size
+    val img = softwareViewer.renderOffscreen(width * antialias,
+                                             height * antialias)
     val scaledImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
     val gr = scaledImg.getGraphics.asInstanceOf[Graphics2D]
     gr.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
