@@ -28,8 +28,7 @@ import de.jreality.scene.{Appearance, DirectionalLight,
 import de.jreality.shader.CommonAttributes._
 import de.jreality.util.SceneGraphUtility
 
-import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
-                    Separator}
+import scala.swing.{FileChooser, MainFrame, Menu, MenuBar, Separator}
 
 import JRealitySupport._
 import Mesh._
@@ -66,14 +65,9 @@ object View {
 
   def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
-      title = "Scala Mesh Viewer"
-      contents = new BorderPanel {
-        add(new scala.swing.Component { override lazy val peer = viewer },
-            BorderPanel.Position.Center)
-      }
-      menuBar = new MenuBar {
-        contents ++ List(fileMenu, viewMenu)
-      }
+      title    = "Scala Mesh Viewer"
+      contents = viewer
+      menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
     }
     top.pack
     top.visible = true

@@ -17,10 +17,11 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.{BorderLayout, Color, Component, Dimension}
+import java.awt.{Color, Dimension}
 import java.io.File
 import javax.media.opengl.GLException
-import javax.swing.JComponent
+
+import scala.swing.{BorderPanel, Component}
 
 import de.jreality.geometry.GeometryUtility
 import de.jreality.math.{Matrix, MatrixBuilder}
@@ -36,7 +37,8 @@ import JRealitySupport._
 import SwingSupport._
 import Vectors._
 
-class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
+class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
+{
   private val rootNode     = new SceneGraphComponent
   private val cameraNode   = new SceneGraphComponent
   private val geometryNode = new SceneGraphComponent
@@ -78,8 +80,6 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
   softwareViewer.setCameraPath(camPath)
   setupToolSystem(softwareViewer, emptyPickPath);
 
-  setLayout(new BorderLayout)
-  
   viewer = try {
     val v = new de.jreality.jogl.Viewer()
     v.setSceneRoot(rootNode)
@@ -116,7 +116,8 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     ts.setEmptyPickPath(emptyPickPath)
   }
   
-  def viewingComponent = viewer.getViewingComponent.asInstanceOf[Component]
+  def viewingComponent =
+    viewer.getViewingComponent.asInstanceOf[javax.swing.JComponent]
  
   def viewer = currentViewer
   
@@ -125,8 +126,8 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends JComponent {
     this.renderTrigger.removeViewer(viewer)
     this.renderTrigger.addViewer(newViewer)
     this.currentViewer = newViewer
-    removeAll
-    add(viewingComponent, BorderLayout.CENTER)
+    add(new Component { override lazy val peer = viewingComponent },
+        BorderPanel.Position.Center)
     viewerSize = d
   }
 
