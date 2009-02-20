@@ -31,6 +31,7 @@ import de.jreality.util.SceneGraphUtility
 import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
                     Separator}
 
+import JRealitySupport._
 import Mesh._
 import Sums._
 import SwingSupport._
@@ -47,16 +48,6 @@ object View {
     xs.reduceLeft((x, y) => if (x > y) x else y)
 
   def log(message: String) = System.err.println(message)
-  
-  implicit def asTransformation(mb: MatrixBuilder) = new Transformation {
-    mb.assignTo(this)
-  }
-  
-  class RichAppearance extends Appearance {
-    def update(attr: (String, Any)*) {
-      for ((k, v) <- attr) setAttribute(k, v)
-    }
-  }
   
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
@@ -188,14 +179,13 @@ object View {
   }
   
   def faceSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    setAppearance(new RichAppearance {
-      update(
+    setAppearance(new RichAppearance(
         EDGE_DRAW                            -> false,
         VERTEX_DRAW                          -> false,
         POLYGON_SHADER + '.' + DIFFUSE_COLOR -> WHITE,
         SMOOTH_SHADING                       -> false
       )
-    })
+    )
     setGeometry(new IndexedFaceSetFactory {	
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
@@ -209,15 +199,14 @@ object View {
   }
   
   def lineSetFromMesh(mesh: Mesh) = new SceneGraphComponent(mesh.name) {
-    setAppearance(new RichAppearance {
-      update(
+    setAppearance(new RichAppearance(
       	EDGE_DRAW                         -> true,
       	TUBES_DRAW                        -> false,
       	VERTEX_DRAW                       -> false,
       	LINE_WIDTH                        -> 1.0,
       	LINE_SHADER + '.' + DIFFUSE_COLOR -> new Color(0.1f, 0.1f, 0.1f)
       )
-    })
+    )
     setGeometry(new IndexedLineSetFactory {
       val n = mesh.numberOfVertices
       val center = mesh.vertices.map(_.pos).sum / n
