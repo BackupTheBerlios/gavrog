@@ -25,6 +25,7 @@ import de.jreality.geometry.GeometryUtility
 import de.jreality.math.{Matrix, MatrixBuilder}
 import de.jreality.scene.{Appearance, Camera, Light, SceneGraphComponent,
                           SceneGraphPath, Transformation, Viewer}
+import de.jreality.scene.tool.Tool
 import de.jreality.shader.CommonAttributes
 import de.jreality.softviewer.SoftViewer
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
@@ -35,8 +36,14 @@ import JRealitySupport._
 import SwingSupport._
 import Vectors._
 
-class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
+class JRealityViewerComponent(content: SceneGraphComponent,
+                              tools: Seq[Tool]) extends BorderPanel
 {
+  def this(content: SceneGraphComponent) =
+    this(content, List(new RotateTool,
+                       new DraggingTool,
+                       new ClickWheelCameraZoomTool))
+  
   private val sceneNode  = new SceneGraphComponent {
     addChild(content)
   }
@@ -62,9 +69,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
     new SceneGraphPath(rootNode, cameraNode) { push(cameraNode.getCamera) }
   private val emptyPickPath = new SceneGraphPath(rootNode, sceneNode, content)
 
-  scene addTool new RotateTool
-  scene addTool new DraggingTool
-  scene addTool new ClickWheelCameraZoomTool
+  for (tool <- tools) scene.addTool(tool)
 
   private var lights                    = Map[String, SceneGraphComponent]()
   private var currentViewer: Viewer     = null

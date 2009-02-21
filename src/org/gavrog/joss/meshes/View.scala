@@ -26,9 +26,11 @@ import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{Appearance, DirectionalLight,
                           SceneGraphComponent, Transformation}
 import de.jreality.shader.CommonAttributes._
+import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.util.SceneGraphUtility
 
-import scala.swing.{FileChooser, MainFrame, Menu, MenuBar, Separator}
+import scala.swing.{FileChooser, MainFrame, Menu, MenuBar, Orientation,
+                    Separator, SplitPane}
 
 import JRealitySupport._
 import Mesh._
@@ -81,10 +83,11 @@ object View {
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
     
-  val scene = new SceneGraphComponent
+  val scene  = new SceneGraphComponent
+  val layout = new SceneGraphComponent
   
-  val viewer = new JRealityViewerComponent(scene) {
-    size = (800, 600)
+  val sceneViewer = new JRealityViewerComponent(scene) {
+    size = (600, 800)
     setLight("Main Light",
              new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
@@ -93,10 +96,20 @@ object View {
              MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
   }
 
+  val layoutViewer =
+    new JRealityViewerComponent(layout, List(new DraggingTool,
+                                             new ClickWheelCameraZoomTool))
+  {
+      size = (600, 800)
+      setLight("Main Light",
+               new DirectionalLight { setIntensity(1.0) },
+               MatrixBuilder.euclidean)
+  }
+
   def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
       title    = "Scala Mesh Viewer"
-      contents = viewer
+      contents = new SplitPane(Orientation.Vertical, sceneViewer, layoutViewer)
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
     }
     top.pack
@@ -125,22 +138,33 @@ object View {
             val meshes = Mesh.read(file.getAbsolutePath)
             log("Converting...")
             invokeAndWait {
-              viewer.pauseRendering
+              sceneViewer.pauseRendering
+              layoutViewer.pauseRendering
             }
             SceneGraphUtility.removeChildren(scene)
             for (mesh <- meshes) {
-              scene.addChild(new UVsGeometry(mesh) {
+              layout.addChild(new UVsGeometry(mesh) {
                 setAppearance(new RichAppearance(uvsFaceAttributes))
               })
-              scene.addChild(new UVsGeometry(mesh) {
+              layout.addChild(new UVsGeometry(mesh) {
+                setAppearance(new RichAppearance(meshLineAttributes))
+                setTransformation(
+                  MatrixBuilder.euclidean.translate(0, 0, 1/1000))
+              })
+              scene.addChild(new MeshGeometry(mesh) {
+                setAppearance(new RichAppearance(meshFaceAttributes))
+              })
+              scene.addChild(new MeshGeometry(mesh) {
                 setAppearance(new RichAppearance(meshLineAttributes))
                 setTransformation(
                   MatrixBuilder.euclidean.translate(0, 0, 1/1000))
               })
             }
             invokeAndWait {
-              viewer.encompass
-              viewer.startRendering
+              sceneViewer.encompass
+              layoutViewer.encompass
+              sceneViewer.startRendering
+              layoutViewer.startRendering
             }
             log("Done!")
           }
@@ -152,8 +176,8 @@ object View {
           case FileChooser.Result.Approve => {
             log("Taking screenshot ...")
             val file = screenShotChooser.selectedFile
-            val d = viewer.size
-            viewer.screenshot((d.width, d.height), 4, file)
+            val d = sceneViewer.size
+            sceneViewer.screenshot((d.width, d.height), 4, file)
             log("Wrote image to %s" format file.getName)
           }
         }
@@ -164,47 +188,47 @@ object View {
   def viewMenu = new Menu("View") {
     contents ++ List(
       new ActionMenuItem("Home", {
-        viewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-        viewer.encompass
+        sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+        sceneViewer.encompass
       }) { accelerator = "H" },
-      new ActionMenuItem("Fit", viewer.encompass) { accelerator = "0" },
+      new ActionMenuItem("Fit", sceneViewer.encompass) { accelerator = "0" },
       new Separator,
       new ActionMenuItem("View From +X",
-                         viewer.viewFrom(Vec3(1, 0, 0), Vec3(0, 1, 0))
+                         sceneViewer.viewFrom(Vec3(1, 0, 0), Vec3(0, 1, 0))
       ) { accelerator = "X" },
       new ActionMenuItem("View From +Y",
-                         viewer.viewFrom(Vec3(0, 1, 0), Vec3(0, 0, -1))
+                         sceneViewer.viewFrom(Vec3(0, 1, 0), Vec3(0, 0, -1))
       ) { accelerator = "Y" },
       new ActionMenuItem("View From +Z",
-                         viewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+                         sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
       ) { accelerator = "Z" },
       new ActionMenuItem("View From -X",
-                         viewer.viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0))
+                         sceneViewer.viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0))
       ) { accelerator = "shift X" },
       new ActionMenuItem("View From -Y",
-                         viewer.viewFrom(Vec3(0, -1, 0), Vec3(0, 0, 1))
+                         sceneViewer.viewFrom(Vec3(0, -1, 0), Vec3(0, 0, 1))
       ) { accelerator = "shift Y" },
       new ActionMenuItem("View From -Z",
-                         viewer.viewFrom(Vec3(0, 0, -1), Vec3(0, 1, 0))
+                         sceneViewer.viewFrom(Vec3(0, 0, -1), Vec3(0, 1, 0))
       ) { accelerator = "shift Z" },
       new Separator,
       new ActionMenuItem("Rotate Left",
-                         viewer.rotateScene(Vec3(0, 1, 0), -5 deg)
+                         sceneViewer.rotateScene(Vec3(0, 1, 0), -5 deg)
       ) { accelerator = "LEFT" },
       new ActionMenuItem("Rotate Right",
-                         viewer.rotateScene(Vec3(0, 1, 0),  5 deg)
+                         sceneViewer.rotateScene(Vec3(0, 1, 0),  5 deg)
       ) { accelerator = "RIGHT" },
       new ActionMenuItem("Rotate Up",
-                         viewer.rotateScene(Vec3(1, 0, 0), -5 deg)
+                         sceneViewer.rotateScene(Vec3(1, 0, 0), -5 deg)
       ) { accelerator = "UP" },
       new ActionMenuItem("Rotate Down",
-                         viewer.rotateScene(Vec3(1, 0, 0),  5 deg)
+                         sceneViewer.rotateScene(Vec3(1, 0, 0),  5 deg)
       ) { accelerator = "DOWN" },
       new ActionMenuItem("Rotate Clockwise",
-                         viewer.rotateScene(Vec3(0, 0, 1), -5 deg)
+                         sceneViewer.rotateScene(Vec3(0, 0, 1), -5 deg)
       ) { accelerator = "control RIGHT" },
       new ActionMenuItem("Rotate Counterclockwise",
-                         viewer.rotateScene(Vec3(0, 0, 1),  5 deg)
+                         sceneViewer.rotateScene(Vec3(0, 0, 1),  5 deg)
       ) { accelerator = "control LEFT" }
     )
   }
