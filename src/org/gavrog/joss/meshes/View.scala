@@ -56,19 +56,17 @@ object View {
     FACE_DRAW                                   -> true,
     POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
     POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.1,
-    POLYGON_SHADER + '.' + DEPTH_FUDGE_FACTOR   -> 0.0,
     SMOOTH_SHADING                              -> false
   )
   
   val meshLineAttributes = Map(
-    EDGE_DRAW                              -> true,
-    TUBES_DRAW                             -> false,
-    VERTEX_DRAW                            -> false,
-    FACE_DRAW                              -> false,
-    LINE_WIDTH                             -> 1.0,
-    LINE_SHADER + '.' + DIFFUSE_COLOR      -> new Color(0.1f, 0.1f, 0.1f),
-    LINE_SHADER + '.' + DEPTH_FUDGE_FACTOR -> 1.0
-  )
+    EDGE_DRAW                                   -> true,
+    TUBES_DRAW                                  -> false,
+    VERTEX_DRAW                                 -> false,
+    FACE_DRAW                                   -> false,
+    LINE_WIDTH                                  -> 1.0,
+    LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f)
+ )
 
   val uvsFaceAttributes = Map(
     EDGE_DRAW                                   -> false,
@@ -76,7 +74,6 @@ object View {
     FACE_DRAW                                   -> true,
     POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
     POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.0,
-    POLYGON_SHADER + '.' + DEPTH_FUDGE_FACTOR   -> 0.0,
     SMOOTH_SHADING                              -> false
   )
   
@@ -94,16 +91,18 @@ object View {
     setLight("Fill Light",
              new DirectionalLight { setIntensity(0.2) },
              MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
+    fieldOfView = 25.0
   }
 
   val layoutViewer =
     new JRealityViewerComponent(layout, List(new DraggingTool,
                                              new ClickWheelCameraZoomTool))
   {
-      size = (600, 800)
-      setLight("Main Light",
-               new DirectionalLight { setIntensity(1.0) },
-               MatrixBuilder.euclidean)
+    size = (600, 800)
+    setLight("Main Light",
+             new DirectionalLight { setIntensity(1.0) },
+             MatrixBuilder.euclidean)
+    fieldOfView = 1.0
   }
 
   def main(args : Array[String]) : Unit = {
@@ -149,15 +148,13 @@ object View {
               layout.addChild(new UVsGeometry(mesh) {
                 setAppearance(new RichAppearance(meshLineAttributes))
                 setTransformation(
-                  MatrixBuilder.euclidean.translate(0, 0, 1/1000))
+                  MatrixBuilder.euclidean.translate(0, 0, 0.001))
               })
-              scene.addChild(new MeshGeometry(mesh) {
+              scene.addChild(new MeshGeometry(mesh, 0) {
                 setAppearance(new RichAppearance(meshFaceAttributes))
               })
-              scene.addChild(new MeshGeometry(mesh) {
+              scene.addChild(new MeshGeometry(mesh, 0.001) {
                 setAppearance(new RichAppearance(meshLineAttributes))
-                setTransformation(
-                  MatrixBuilder.euclidean.translate(0, 0, 1/1000))
               })
             }
             invokeAndWait {
@@ -233,11 +230,14 @@ object View {
     )
   }
   
-  class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
-    setGeometry(new IndexedFaceSetFactory {	
+  class MeshGeometry(mesh: Mesh, expansion: Double)
+  extends SceneGraphComponent(mesh.name) {
+    setGeometry(new IndexedFaceSetFactory {
+      mesh.computeNormals
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
-      setVertexCoordinates(mesh.vertices.map(_.toArray))
+      setVertexCoordinates(mesh.vertices.map(v =>
+        (v + v.chamber.normal * expansion).toArray))
       setFaceIndices(mesh.faces.map(_.vertices.map(_.nr-1).toArray))
       setGenerateEdgesFromFaces(true)
       setGenerateFaceNormals(true)
