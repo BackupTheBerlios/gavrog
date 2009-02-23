@@ -29,6 +29,7 @@ import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.util.SceneGraphUtility
 
+import scala.collection.mutable.HashMap
 import scala.swing.{FileChooser, MainFrame, Menu, MenuBar, Orientation,
                     Separator, SplitPane}
 
@@ -44,6 +45,7 @@ object View {
   implicit def xint(i: Int) = new XDouble(i)
   
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
+  implicit def asArray[A](it: Iterable[A]) = it.toList.toArray
 
   def max[A <% Ordered[A]](xs: Iterator[A]) =
     xs.reduceLeft((x, y) => if (x > y) x else y)
@@ -135,29 +137,29 @@ object View {
           case FileChooser.Result.Approve => {
             val file = loadMeshChooser.selectedFile
             log("Reading...")
-            val meshes = Mesh.read(file.getAbsolutePath)
+            val mesh = Mesh.read(file.getAbsolutePath, true)(0)
             log("Converting...")
             invokeAndWait {
               sceneViewer.pauseRendering
               layoutViewer.pauseRendering
             }
             SceneGraphUtility.removeChildren(scene)
-            for (mesh <- meshes) {
-              layout.addChild(new UVsGeometry(mesh) {
+            for (chart <- mesh.charts) {
+              layout.addChild(new UVsGeometry(chart, "x-polys") {
                 setAppearance(new RichAppearance(uvsFaceAttributes))
               })
-              layout.addChild(new UVsGeometry(mesh) {
+              layout.addChild(new UVsGeometry(chart, "x-lines") {
                 setAppearance(new RichAppearance(meshLineAttributes))
                 setTransformation(
                   MatrixBuilder.euclidean.translate(0, 0, 0.001))
               })
-              scene.addChild(new MeshGeometry(mesh, 0) {
-                setAppearance(new RichAppearance(meshFaceAttributes))
-              })
-              scene.addChild(new MeshGeometry(mesh, 0.001) {
-                setAppearance(new RichAppearance(meshLineAttributes))
-              })
             }
+            scene.addChild(new MeshGeometry(mesh, 0) {
+              setAppearance(new RichAppearance(meshFaceAttributes))
+            })
+            scene.addChild(new MeshGeometry(mesh, 0.001) {
+              setAppearance(new RichAppearance(meshLineAttributes))
+            })
             invokeAndWait {
               sceneViewer.encompass
               layoutViewer.encompass
@@ -247,12 +249,17 @@ object View {
     }.getIndexedFaceSet)
   }
   
-  class UVsGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
-    setGeometry(new IndexedFaceSetFactory {	
-      setVertexCount(mesh.numberOfTextureVertices)
-      setFaceCount(mesh.numberOfFaces)
-      setVertexCoordinates(mesh.textureVertices.map(v => Array(v.x, v.y, 0)))
-      setFaceIndices(mesh.faces.map(_.textureVertices.map(_.nr-1).toArray))
+  class UVsGeometry(chart: Mesh.Chart, name: String)
+  extends SceneGraphComponent(name) {
+    setGeometry(new IndexedFaceSetFactory {
+      val vertices = chart.vertices.toArray
+      val toNr = new HashMap[Mesh.TextureVertex, Int]
+      for ((v, n) <- vertices.zipWithIndex) toNr(v) = n
+      val faces = chart.faces.toArray
+      setVertexCount(vertices.size)
+      setFaceCount(faces.size)
+      setVertexCoordinates(vertices.map(v => Array(v.x, v.y, 0)))
+      setFaceIndices(faces.map(_.textureVertices.map(toNr).toArray))
       setGenerateEdgesFromFaces(true)
       setGenerateFaceNormals(true)
       setGenerateVertexNormals(true)
