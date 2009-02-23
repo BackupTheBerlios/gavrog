@@ -69,7 +69,7 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     new SceneGraphPath(rootNode, cameraNode) { push(cameraNode.getCamera) }
   private val emptyPickPath = new SceneGraphPath(rootNode, sceneNode, content)
 
-  for (tool <- tools) scene.addTool(tool)
+  for (tool <- tools) addTool(tool)
 
   private var lights                    = Map[String, SceneGraphComponent]()
   private var currentViewer: Viewer     = null
@@ -162,6 +162,8 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     }
   }
  
+  def addTool(t: Tool) = scene.addTool(t)
+  
   def startRendering = renderTrigger.finishCollect
   def pauseRendering = renderTrigger.startCollect
 

@@ -25,6 +25,7 @@ import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
 import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{Appearance, DirectionalLight,
                           SceneGraphComponent, Transformation}
+import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.util.SceneGraphUtility
@@ -47,6 +48,11 @@ object View {
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
   implicit def asArray[A](it: Iterable[A]) = it.toList.toArray
 
+  implicit def wrapIter[T](it: java.util.Iterator[T]) = new Iterator[T] {
+    def hasNext = it.hasNext
+    def next = it.next
+  }
+  
   def max[A <% Ordered[A]](xs: Iterator[A]) =
     xs.reduceLeft((x, y) => if (x > y) x else y)
 
@@ -106,6 +112,32 @@ object View {
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
     fieldOfView = 1.0
+    addTool(new AbstractTool {
+        val activationSlot = InputSlot.getDevice("PrimarySelection");
+        val addSlot = InputSlot.getDevice("SecondarySelection");
+        val removeSlot = InputSlot.getDevice("Meta");
+        addCurrentSlot(activationSlot)
+        addCurrentSlot(removeSlot)
+        addCurrentSlot(addSlot)
+        
+        override def perform(tc: ToolContext) {
+          if (tc.getAxisState(activationSlot).isReleased) return
+          val pr = tc.getCurrentPick
+          if (pr == null) return
+          val selection = pr.getPickPath
+          for (node <- selection.iterator) {
+            if (node.getName.startsWith("uv-chart")) {
+              println(node.getName)
+              invokeAndWait {
+                pauseRendering
+                node.asInstanceOf[SceneGraphComponent].getAppearance
+                  .setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR, Color.RED)
+                startRendering
+              }
+            }
+          }
+        }
+    })
   }
 
   def main(args : Array[String]) : Unit = {
@@ -145,10 +177,7 @@ object View {
             }
             SceneGraphUtility.removeChildren(scene)
             for (chart <- mesh.charts) {
-              layout.addChild(new UVsGeometry(chart, "x-polys") {
-                setAppearance(new RichAppearance(uvsFaceAttributes))
-              })
-              layout.addChild(new UVsGeometry(chart, "x-lines") {
+              layout.addChild(new UVsGeometry(chart, "uv-chart") {
                 setAppearance(new RichAppearance(meshLineAttributes))
                 setTransformation(
                   MatrixBuilder.euclidean.translate(0, 0, 0.001))
