@@ -59,31 +59,17 @@ object View {
   def log(message: String) = System.err.println(message)
   
   val meshFaceAttributes = Map(
-    EDGE_DRAW                                   -> false,
+    EDGE_DRAW                                   -> true,
+    TUBES_DRAW                                  -> false,
     VERTEX_DRAW                                 -> false,
     FACE_DRAW                                   -> true,
     POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
     POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.1,
-    SMOOTH_SHADING                              -> false
-  )
-  
-  val meshLineAttributes = Map(
-    EDGE_DRAW                                   -> true,
-    TUBES_DRAW                                  -> false,
-    VERTEX_DRAW                                 -> false,
-    FACE_DRAW                                   -> false,
+    SMOOTH_SHADING                              -> false,
+    DEPTH_FUDGE_FACTOR                          -> 0.99999,
     LINE_WIDTH                                  -> 1.0,
     LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f),
     LINE_SHADER + '.' + SPECULAR_COEFFICIENT    -> 0.0
- )
-
-  val uvsFaceAttributes = Map(
-    EDGE_DRAW                                   -> false,
-    VERTEX_DRAW                                 -> false,
-    FACE_DRAW                                   -> true,
-    POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
-    POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.0,
-    SMOOTH_SHADING                              -> false
   )
   
   val loadMeshChooser = new FileChooser
@@ -178,16 +164,13 @@ object View {
             SceneGraphUtility.removeChildren(scene)
             for (chart <- mesh.charts) {
               layout.addChild(new UVsGeometry(chart, "uv-chart") {
-                setAppearance(new RichAppearance(meshLineAttributes))
+                setAppearance(new RichAppearance(meshFaceAttributes))
                 setTransformation(
                   MatrixBuilder.euclidean.translate(0, 0, 0.001))
               })
             }
             scene.addChild(new MeshGeometry(mesh, 0) {
               setAppearance(new RichAppearance(meshFaceAttributes))
-            })
-            scene.addChild(new MeshGeometry(mesh, 0.001) {
-              setAppearance(new RichAppearance(meshLineAttributes))
             })
             invokeAndWait {
               sceneViewer.encompass
