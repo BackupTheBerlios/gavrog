@@ -65,7 +65,8 @@ object View {
     VERTEX_DRAW                                 -> false,
     FACE_DRAW                                   -> false,
     LINE_WIDTH                                  -> 1.0,
-    LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f)
+    LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f),
+    LINE_SHADER + '.' + SPECULAR_COEFFICIENT    -> 0.0
  )
 
   val uvsFaceAttributes = Map(
