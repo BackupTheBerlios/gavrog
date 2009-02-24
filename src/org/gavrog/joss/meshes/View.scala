@@ -126,28 +126,28 @@ object View {
     }
     
     addTool(new AbstractTool {
-        val activationSlot = InputSlot.getDevice("PrimarySelection");
-        val addSlot = InputSlot.getDevice("SecondarySelection");
-        val removeSlot = InputSlot.getDevice("Meta");
-        addCurrentSlot(activationSlot)
-        addCurrentSlot(removeSlot)
-        addCurrentSlot(addSlot)
+      val activationSlot = InputSlot.getDevice("PrimarySelection");
+      val addSlot = InputSlot.getDevice("SecondarySelection");
+      val removeSlot = InputSlot.getDevice("Meta");
+      addCurrentSlot(activationSlot)
+      addCurrentSlot(removeSlot)
+      addCurrentSlot(addSlot)
         
-        override def perform(tc: ToolContext) {
-          if (tc.getAxisState(activationSlot).isReleased) return
-          val pr = tc.getCurrentPick
-          if (pr == null) return
-          val selection = pr.getPickPath
-          for (node <- selection.iterator) {
-            if (node.getName.startsWith("uv-chart")) modify {
-              val app = node.asInstanceOf[SceneGraphComponent].getAppearance
-              val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
-              if (app.getAttribute(key) == Color.RED)
-                app.setAttribute(key, Color.WHITE)
-              else app.setAttribute(key, Color.RED)
-            }
+      override def perform(tc: ToolContext) {
+        if (tc.getAxisState(activationSlot).isReleased) return
+        val pr = tc.getCurrentPick
+        if (pr == null) return
+        val selection = pr.getPickPath
+        for (node <- selection.iterator) {
+          if (node.getName.startsWith("uv-chart")) modify {
+            val app = node.asInstanceOf[SceneGraphComponent].getAppearance
+            val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+            if (app.getAttribute(key) == Color.RED)
+              app.setAttribute(key, Color.WHITE)
+            else app.setAttribute(key, Color.RED)
           }
         }
+      }
     })
   }
 
