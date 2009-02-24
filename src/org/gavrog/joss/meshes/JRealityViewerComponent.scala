@@ -214,9 +214,9 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     val c = bounds.getCenter
 	c(2) += front + camdist
 	camera.setFar(camdist + front + 5 * radius)
-	camera.setNear(0.1 * camdist)
+	camera.setNear(0.5 * camdist)
 
-	// -- make rotateScene() recompute the center
+	// -- make sceneRotation recompute the center
 	lastCenter = null
 
 	// -- adjust the avatar position to make scene fit
@@ -229,14 +229,11 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   
   def scene = emptyPickPath.getLastComponent
   
-  private def center = {
-    if (lastCenter == null) {
-      val bounds = GeometryUtility.calculateBoundingBox(scene)
-      lastCenter = if (bounds.isEmpty) Array(0.0, 0.0, 0.0, 1.0)
-                   else (new Matrix(scene.getTransformation)
-                           .getInverse.multiplyVector(bounds.getCenter))
-    }
-    lastCenter
+  def computeCenter = {
+    val bounds = GeometryUtility.calculateBoundingBox(scene)
+    if (bounds.isEmpty) Array(0.0, 0.0, 0.0, 1.0)
+    else (new Matrix(scene.getTransformation).getInverse
+            .multiplyVector(bounds.getCenter))
   }
   
   def rotateScene(axis: Vec3, angle: Double) {
@@ -258,6 +255,8 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   def sceneRotation = new Matrix(content.getTransformation)
   
   def sceneRotation_=(tNew: Matrix) {
+    if (lastCenter == null) lastCenter = computeCenter
+    val center = lastCenter
     val tOld = sceneRotation
     val p = tOld.multiplyVector(center)
     val q = tNew.multiplyVector(center)

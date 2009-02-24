@@ -36,8 +36,17 @@ object SwingSupport {
       def apply { body }
     }
     def accelerator = action.accelerator
+    def accelerator_=(stroke: KeyStroke) {
+      action.accelerator = Some(stroke)
+    }
     def accelerator_=(spec: String) {
-      action.accelerator = Some(KeyStroke.getKeyStroke(spec))
+      accelerator = KeyStroke.getKeyStroke(spec)
+    }
+    def accelerator_=(keyCode: Int) {
+      accelerator = KeyStroke.getKeyStroke(keyCode, 0)
+    }
+    def accelerator_=(spec: Pair[Int, Int]) {
+      accelerator = KeyStroke.getKeyStroke(spec._1, spec._2)
     }
   }
 }

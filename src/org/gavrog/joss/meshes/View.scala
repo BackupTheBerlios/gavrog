@@ -18,7 +18,7 @@
 package org.gavrog.joss.meshes
 
 import java.awt.Color
-import java.awt.event.{MouseEvent, MouseMotionListener}
+import java.awt.event.{KeyEvent, MouseEvent, MouseMotionListener}
 import Color._
 
 import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
@@ -88,18 +88,23 @@ object View {
              MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
     fieldOfView = 25.0
     
+    var center = Array(0.0, 0.0, 0.0, 1.0)
+    
+    override def computeCenter = center
+    
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(scene)
       scene.addChild(new MeshGeometry(mesh, 0) {
         setAppearance(new RichAppearance(meshFaceAttributes))
       })
+      center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
       encompass
     }
   }
 
   val uvMapViewer =
     new JRealityViewerComponent(uvMap, List(new DraggingTool,
-                                             new ClickWheelCameraZoomTool))
+                                            new ClickWheelCameraZoomTool))
   {
     size = (600, 800)
     setLight("Main Light",
@@ -224,16 +229,16 @@ object View {
       new Separator,
       new ActionMenuItem("Rotate Left",
                          sceneViewer.rotateScene(Vec3(0, 1, 0), -5 deg)
-      ) { accelerator = "LEFT" },
+      ) { accelerator = "alt LEFT" },
       new ActionMenuItem("Rotate Right",
                          sceneViewer.rotateScene(Vec3(0, 1, 0),  5 deg)
-      ) { accelerator = "RIGHT" },
+      ) { accelerator = "alt RIGHT" },
       new ActionMenuItem("Rotate Up",
                          sceneViewer.rotateScene(Vec3(1, 0, 0), -5 deg)
-      ) { accelerator = "UP" },
+      ) { accelerator = "alt UP" },
       new ActionMenuItem("Rotate Down",
                          sceneViewer.rotateScene(Vec3(1, 0, 0),  5 deg)
-      ) { accelerator = "DOWN" },
+      ) { accelerator = "alt DOWN" },
       new ActionMenuItem("Rotate Clockwise",
                          sceneViewer.rotateScene(Vec3(0, 0, 1), -5 deg)
       ) { accelerator = "control RIGHT" },
