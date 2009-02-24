@@ -94,7 +94,7 @@ object View {
     
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(scene)
-      scene.addChild(new MeshGeometry(mesh, 0) {
+      scene.addChild(new MeshGeometry(mesh) {
         setAppearance(new RichAppearance(meshFaceAttributes))
       })
       center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
@@ -248,14 +248,13 @@ object View {
     )
   }
   
-  class MeshGeometry(mesh: Mesh, expansion: Double)
+  class MeshGeometry(mesh: Mesh)
   extends SceneGraphComponent(mesh.name) {
     setGeometry(new IndexedFaceSetFactory {
       mesh.computeNormals
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
-      setVertexCoordinates(mesh.vertices.map(v =>
-        (v + v.chamber.normal * expansion).toArray))
+      setVertexCoordinates(mesh.vertices.map(_.toArray))
       setFaceIndices(mesh.faces.map(_.vertices.map(_.nr-1).toArray))
       setGenerateEdgesFromFaces(true)
       setGenerateFaceNormals(true)
