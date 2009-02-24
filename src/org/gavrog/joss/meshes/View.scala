@@ -66,7 +66,7 @@ object View {
     POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
     POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.1,
     SMOOTH_SHADING                              -> false,
-    DEPTH_FUDGE_FACTOR                          -> 0.99999,
+    DEPTH_FUDGE_FACTOR                          -> 0.99998,
     LINE_WIDTH                                  -> 1.0,
     LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f),
     LINE_SHADER + '.' + SPECULAR_COEFFICIENT    -> 0.0
@@ -75,8 +75,8 @@ object View {
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
     
-  val scene  = new SceneGraphComponent
-  val layout = new SceneGraphComponent
+  val scene = new SceneGraphComponent
+  val uvMap = new SceneGraphComponent
   
   val sceneViewer = new JRealityViewerComponent(scene) {
     size = (600, 800)
@@ -87,10 +87,18 @@ object View {
              new DirectionalLight { setIntensity(0.2) },
              MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
     fieldOfView = 25.0
+    
+    def setMesh(mesh: Mesh) = modify {
+      SceneGraphUtility.removeChildren(scene)
+      scene.addChild(new MeshGeometry(mesh, 0) {
+        setAppearance(new RichAppearance(meshFaceAttributes))
+      })
+      encompass
+    }
   }
 
-  val layoutViewer =
-    new JRealityViewerComponent(layout, List(new DraggingTool,
+  val uvMapViewer =
+    new JRealityViewerComponent(uvMap, List(new DraggingTool,
                                              new ClickWheelCameraZoomTool))
   {
     size = (600, 800)
@@ -98,6 +106,17 @@ object View {
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
     fieldOfView = 1.0
+    
+    def setMesh(mesh: Mesh) = modify {
+      SceneGraphUtility.removeChildren(uvMap)
+      for (chart <- mesh.charts) {
+        uvMap.addChild(new UVsGeometry(chart, "uv-chart") {
+          setAppearance(new RichAppearance(meshFaceAttributes))
+        })
+      }
+      encompass
+    }
+    
     addTool(new AbstractTool {
         val activationSlot = InputSlot.getDevice("PrimarySelection");
         val addSlot = InputSlot.getDevice("SecondarySelection");
@@ -112,14 +131,12 @@ object View {
           if (pr == null) return
           val selection = pr.getPickPath
           for (node <- selection.iterator) {
-            if (node.getName.startsWith("uv-chart")) {
-              println(node.getName)
-              invokeAndWait {
-                pauseRendering
-                node.asInstanceOf[SceneGraphComponent].getAppearance
-                  .setAttribute(LINE_SHADER + '.' + DIFFUSE_COLOR, Color.RED)
-                startRendering
-              }
+            if (node.getName.startsWith("uv-chart")) modify {
+              val app = node.asInstanceOf[SceneGraphComponent].getAppearance
+              val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+              if (app.getAttribute(key) == Color.RED)
+                app.setAttribute(key, Color.WHITE)
+              else app.setAttribute(key, Color.RED)
             }
           }
         }
@@ -129,7 +146,7 @@ object View {
   def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
       title    = "Scala Mesh Viewer"
-      contents = new SplitPane(Orientation.Vertical, sceneViewer, layoutViewer)
+      contents = new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer)
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
     }
     top.pack
@@ -152,46 +169,27 @@ object View {
       
       new ActionMenuItem("Load Mesh ...", {
         loadMeshChooser.showOpenDialog(this) match {
-          case FileChooser.Result.Approve => {
+          case FileChooser.Result.Approve => new Thread {
             val file = loadMeshChooser.selectedFile
             log("Reading...")
             val mesh = Mesh.read(file.getAbsolutePath, true)(0)
             log("Converting...")
-            invokeAndWait {
-              sceneViewer.pauseRendering
-              layoutViewer.pauseRendering
-            }
-            SceneGraphUtility.removeChildren(scene)
-            for (chart <- mesh.charts) {
-              layout.addChild(new UVsGeometry(chart, "uv-chart") {
-                setAppearance(new RichAppearance(meshFaceAttributes))
-                setTransformation(
-                  MatrixBuilder.euclidean.translate(0, 0, 0.001))
-              })
-            }
-            scene.addChild(new MeshGeometry(mesh, 0) {
-              setAppearance(new RichAppearance(meshFaceAttributes))
-            })
-            invokeAndWait {
-              sceneViewer.encompass
-              layoutViewer.encompass
-              sceneViewer.startRendering
-              layoutViewer.startRendering
-            }
+            sceneViewer.setMesh(mesh)
+            uvMapViewer.setMesh(mesh)
             log("Done!")
-          }
+          }.start
         }
       }) { accelerator = "control O" },
       
       new ActionMenuItem("Take Screen Shot ...", {
         screenShotChooser.showSaveDialog(this) match {
-          case FileChooser.Result.Approve => {
+          case FileChooser.Result.Approve => new Thread {
             log("Taking screenshot ...")
             val file = screenShotChooser.selectedFile
             val d = sceneViewer.size
             sceneViewer.screenshot((d.width, d.height), 4, file)
             log("Wrote image to %s" format file.getName)
-          }
+          }.start
         }
       }) { accelerator = "control I" }
     )
