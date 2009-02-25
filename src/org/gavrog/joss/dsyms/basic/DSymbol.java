@@ -213,7 +213,9 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
                         throw new IllegalArgumentException(msg);
                     }
                     op[i][D] = Di;
-                    op[i][Di] = D;
+                    if (Di != 0) {
+                    	op[i][Di] = D;
+                    }
                 }
             }
         }
