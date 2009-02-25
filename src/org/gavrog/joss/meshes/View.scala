@@ -66,7 +66,7 @@ object View {
     POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
     POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.1,
     SMOOTH_SHADING                              -> false,
-    DEPTH_FUDGE_FACTOR                          -> 0.99998,
+    DEPTH_FUDGE_FACTOR                          -> 0.9999,
     LINE_WIDTH                                  -> 1.0,
     LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f),
     LINE_SHADER + '.' + SPECULAR_COEFFICIENT    -> 0.0
@@ -114,37 +114,40 @@ object View {
     
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(uvMap)
+      var z = 0.0
       for (chart <- mesh.charts) {
         uvMap.addChild(new UVsGeometry(chart, "uv-chart") {
           setAppearance(new RichAppearance(meshFaceAttributes))
+          setTransformation(MatrixBuilder.euclidean.translate(0, 0, z))
+          z += 0.01
         })
       }
       encompass
     }
     
     addTool(new AbstractTool {
-        val activationSlot = InputSlot.getDevice("PrimarySelection");
-        val addSlot = InputSlot.getDevice("SecondarySelection");
-        val removeSlot = InputSlot.getDevice("Meta");
-        addCurrentSlot(activationSlot)
-        addCurrentSlot(removeSlot)
-        addCurrentSlot(addSlot)
+      val activationSlot = InputSlot.getDevice("PrimarySelection");
+      val addSlot = InputSlot.getDevice("SecondarySelection");
+      val removeSlot = InputSlot.getDevice("Meta");
+      addCurrentSlot(activationSlot)
+      addCurrentSlot(removeSlot)
+      addCurrentSlot(addSlot)
         
-        override def perform(tc: ToolContext) {
-          if (tc.getAxisState(activationSlot).isReleased) return
-          val pr = tc.getCurrentPick
-          if (pr == null) return
-          val selection = pr.getPickPath
-          for (node <- selection.iterator) {
-            if (node.getName.startsWith("uv-chart")) modify {
-              val app = node.asInstanceOf[SceneGraphComponent].getAppearance
-              val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
-              if (app.getAttribute(key) == Color.RED)
-                app.setAttribute(key, Color.WHITE)
-              else app.setAttribute(key, Color.RED)
-            }
+      override def perform(tc: ToolContext) {
+        if (tc.getAxisState(activationSlot).isReleased) return
+        val pr = tc.getCurrentPick
+        if (pr == null) return
+        val selection = pr.getPickPath
+        for (node <- selection.iterator) {
+          if (node.getName.startsWith("uv-chart")) modify {
+            val app = node.asInstanceOf[SceneGraphComponent].getAppearance
+            val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+            if (app.getAttribute(key) == Color.RED)
+              app.setAttribute(key, Color.WHITE)
+            else app.setAttribute(key, Color.RED)
           }
         }
+      }
     })
   }
 
@@ -204,9 +207,13 @@ object View {
     contents ++ List(
       new ActionMenuItem("Home", {
         sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+        sceneViewer.fieldOfView = 25.0
         sceneViewer.encompass
       }) { accelerator = "H" },
-      new ActionMenuItem("Fit", sceneViewer.encompass) { accelerator = "0" },
+      new ActionMenuItem("Fit", {
+        sceneViewer.fieldOfView = 25.0
+        sceneViewer.encompass
+      }) { accelerator = "0" },
       new Separator,
       new ActionMenuItem("View From +X",
                          sceneViewer.viewFrom(Vec3(1, 0, 0), Vec3(0, 1, 0))
