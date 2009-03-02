@@ -126,7 +126,7 @@ object View {
     }
     
     addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("PrimarySelection");
+      val activationSlot = InputSlot.getDevice("RotateActivation");
       val addSlot = InputSlot.getDevice("SecondarySelection");
       val removeSlot = InputSlot.getDevice("Meta");
       addCurrentSlot(activationSlot)
