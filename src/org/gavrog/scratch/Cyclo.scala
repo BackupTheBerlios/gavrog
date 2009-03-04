@@ -94,19 +94,22 @@ object Cyclo {
            s <- degree_sequences(n, n + k - 1);
            l <- 0 to k)
       {
-        var count = 0
-        val sequence = 0 :: l :: s
-        for (g  <- generate(sequence) map simplified) {
+        val graphs = generate(0 :: l :: s)
+        val n = graphs.size
+        println("# Found %d graph%s with degree sequence (%s) and %d loop%s%s"
+                format (n, if (n == 1) "" else "s",
+                        s map (_.toString) reduceLeft(_ + ", " + _),
+                        l, if (l == 1) "" else "s",
+                        if (n > 0) ":" else "."))
+        for (g  <- graphs map simplified)
           println(edges(g) map (_.toString) reduceLeft(_ + _))
-          count += 1
-        }
-        println("# Generated %d graphs for degree sequence %s."
-                format (count, sequence))
-        total_count += count
+        total_count += n
       }
 
+      println
       println("# " + "=" * 72)
-      println("# Generated a total of %d graphs." format total_count)
+      println("# A total of %d genus %d graphs were generated."
+              format (total_count, k))
     } catch {
       case ex: Throwable => println(ex)
     }
