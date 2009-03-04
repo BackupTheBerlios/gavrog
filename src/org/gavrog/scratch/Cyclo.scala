@@ -108,7 +108,7 @@ object Cyclo {
 
       println
       println("# " + "=" * 72)
-      println("# A total of %d genus %d graphs were generated."
+      println("# A total of %d graphs with cyclomatic number %d were generated."
               format (total_count, k))
     } catch {
       case ex: Throwable => println(ex)
