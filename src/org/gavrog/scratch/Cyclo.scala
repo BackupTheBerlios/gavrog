@@ -4,14 +4,11 @@ import java.io.{DataInputStream, EOFException, InputStream}
 import java.lang.ProcessBuilder
 
 import scala.collection.mutable.HashMap
+import scala.collection.immutable.TreeSet
 
 object Cyclo {
-  class Pluralizer(n: Int) {
-    def apply(s: String) = "%d %s%s" format (n, s, if (n == 1) "" else "s")
-  }
-  implicit def i2pl(n: Int) = new Pluralizer(n)
-
   type Graph = Map[Int, List[Int]]
+  type Edge = (Int, Int)
   
   def degree_sequences(n: Int, m: Int) = {
     def seq(n: Int, m: Int, min_d: Int) : Seq[List[Int]] =
@@ -57,7 +54,7 @@ object Cyclo {
   
   def simplified(gr: Graph) = {
     var old2new   = Map[Int, Int]().withDefaultValue(0)
-    var new_edges = Nil: List[(Int, Int)]
+    var new_edges = Nil: List[Edge]
     
     for ((i, neighbors) <- gr)
       if (neighbors.size == 2)
@@ -82,12 +79,22 @@ object Cyclo {
   def edges(gr: Graph) =
     for ((i, neighbors) <- gr; j <- neighbors if i <= j) yield (i, j)
   
+  def sorted_edges(gr: Graph) = {
+    implicit def order(p: Edge) = new Ordered[Edge] {
+      def compare(other: Edge) = -p.compare(other)
+    }
+    var e = new TreeSet[Edge]
+    for ((v, w) <- edges(gr))
+      e += (v, w)
+    e
+  }
+  
   def bridges(gr: Graph) = {
     var time   = 0
     var dfsnum = Map[Int, Int]().withDefaultValue(0)
     var low    = Map[Int, Int]().withDefaultValue(0)
     var is_art = Set[Int]()
-    var result = Nil: List[(Int, Int)]
+    var result = Nil: List[Edge]
     
     def art(v: Int, u: Int) {
       time += 1
@@ -123,6 +130,11 @@ object Cyclo {
   }
   
   def main(args : Array[String]) : Unit = {
+    class Pluralizer(n: Int) {
+      def apply(s: String) = "%d %s%s" format (n, s, if (n == 1) "" else "s")
+    }
+    implicit def i2pl(n: Int) = new Pluralizer(n)
+
     try {
       val k = args(0).toInt
       var n_total      = 0
@@ -139,12 +151,12 @@ object Cyclo {
                         l("loop"), if (n > 0) ":" else "."))
         for (gr <- graphs) {
           val b = bridges(gr).size
+          val e = sorted_edges(simplified(gr))
+          println("%s # (%s)"
+                  format (e.map(_.toString).reduceLeft(_ + _), b("bridge")))
+          n_total += 1
           if (b == 0) n_bridgeless += 1
-          println("%s # (%s)" format
-                    (edges(simplified(gr)).map(_.toString).reduceLeft(_ + _),
-                     b("bridge")))
         }
-        n_total += n
       }
 
       println
