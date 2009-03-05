@@ -76,18 +76,9 @@ object Cyclo {
     Map(output.toSeq: _*)
   }
   
-  def edges(gr: Graph) =
-    for ((i, neighbors) <- gr; j <- neighbors if i <= j) yield (i, j)
+  def edges(gr: Graph) = for ((i, nb) <- gr; j <- nb if i <= j) yield (i, j)
   
-  def sorted_edges(gr: Graph) = {
-    implicit def order(p: Edge) = new Ordered[Edge] {
-      def compare(other: Edge) = -p.compare(other)
-    }
-    var e = new TreeSet[Edge]
-    for ((v, w) <- edges(gr))
-      e += (v, w)
-    e
-  }
+  def sorted_edges(gr: Graph) = (new TreeSet[Edge] ++ edges(gr)).toSeq
   
   def bridges(gr: Graph) = {
     var time   = 0
