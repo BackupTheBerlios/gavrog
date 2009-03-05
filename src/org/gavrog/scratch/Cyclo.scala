@@ -5,6 +5,7 @@ import java.lang.ProcessBuilder
 
 import scala.collection.mutable.HashMap
 import scala.collection.immutable.TreeSet
+import scala.util.Sorting._
 
 object Cyclo {
   type Graph = Map[Int, List[Int]]
@@ -16,8 +17,8 @@ object Cyclo {
         Nil
       else if (n == 0)
         if (m == 0) List(Nil) else Nil
-      else for (i <- 0 to m / min_d if i <= n;
-                s <- seq(n - i, m - i * min_d, min_d + 1))
+      else for { i <- 0 to m / min_d if i <= n
+                 s <- seq(n - i, m - i * min_d, min_d + 1) }
         yield i :: s
     
     seq(n, 2 * m, 3)
@@ -78,7 +79,7 @@ object Cyclo {
   
   def edges(gr: Graph) = for ((i, nb) <- gr; j <- nb if i <= j) yield (i, j)
   
-  def sorted_edges(gr: Graph) = (new TreeSet[Edge] ++ edges(gr)).toSeq
+  def sorted_edges(gr: Graph) = stableSort(edges(gr).toSeq)
   
   def bridges(gr: Graph) = {
     var time   = 0
@@ -130,9 +131,9 @@ object Cyclo {
       var n_total      = 0
       var n_bridgeless = 0
 
-      for (n <- 0 to 2 * (k - 1);
-           s <- degree_sequences(n, n + k - 1);
-           l <- 0 to k)
+      for { n <- 0 to 2 * (k - 1)
+            s <- degree_sequences(n, n + k - 1)
+            l <- 0 to k }
       {
         val graphs = generate(0 :: l :: s)
         val n = graphs.size
