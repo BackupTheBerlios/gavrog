@@ -12,12 +12,12 @@ object Cyclo {
   type Edge = (Int, Int)
   
   def degree_sequences(n: Int, m: Int) = {
-    def seq(n: Int, m: Int, min_d: Int) : Seq[List[Int]] =
+    def seq(n: Int, m: Int, min_d: Int) : Stream[List[Int]] =
       if (n * min_d > m)
-        Nil
+        Stream.empty
       else if (n == 0)
-        if (m == 0) List(Nil) else Nil
-      else for { i <- 0 to m / min_d if i <= n
+        if (m == 0) Stream(Nil) else Stream.empty
+      else for { i <- Stream.range(0, m / min_d + 1) if i <= n
                  s <- seq(n - i, m - i * min_d, min_d + 1) }
         yield i :: s
     
@@ -113,7 +113,7 @@ object Cyclo {
     result
   }
   
-  def generate(seq: List[Int]) : Seq[Graph] = {
+  def generate(seq: List[Int]) : Stream[Graph] = {
     val args   = "mgraph_p" :: seq.map(_.toString) ::: List("o", "p")
     val proc   = new ProcessBuilder(args.toArray: _*).start
     val result = read_graphs(proc.getInputStream)
