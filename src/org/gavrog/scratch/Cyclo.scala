@@ -121,10 +121,9 @@ object Cyclo {
   }
   
   def main(args : Array[String]) : Unit = {
-    class Pluralizer(n: Int) {
-      def apply(s: String) = "%d %s%s" format (n, s, if (n == 1) "" else "s")
+    implicit def as_pluralizer(n: Int) = new {
+      def of(s: String) = "%d %s%s" format (n, s, if (n == 1) "" else "s")
     }
-    implicit def i2pl(n: Int) = new Pluralizer(n)
 
     try {
       val k = args(0).toInt
@@ -138,12 +137,12 @@ object Cyclo {
         val graphs = generate(0 :: l :: s)
         val n = graphs.size
         println("# Found %s with degree sequence %s and %s%s"
-                format (n("graph"), s.mkString("(", ",", ")"),
-                        l("loop"), if (n > 0) ":" else "."))
+                format (n of "graph", s.mkString("(", ",", ")"),
+                        l of "loop", if (n > 0) ":" else "."))
         for (gr <- graphs) {
           val b = bridges(gr).size
           val e = sorted_edges(simplified(gr))
-          println("%s # (%s)" format (e.mkString, b("bridge")))
+          println("%s # (%s)" format (e.mkString, b of "bridge"))
           n_total += 1
           if (b == 0) n_bridgeless += 1
         }
@@ -151,8 +150,8 @@ object Cyclo {
 
       println
       println("# " + "=" * 72)
-      println("# A total of %d graphs with cyclomatic number %d were generated."
-              format (n_total, k))
+      println("# A total of %s with cyclomatic number %d were generated."
+              format (n_total of "graph", k))
       println("# %d of those were bridgeless." format n_bridgeless)
     } catch {
       case ex: Throwable => println(ex)
