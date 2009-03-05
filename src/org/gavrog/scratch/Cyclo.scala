@@ -137,14 +137,13 @@ object Cyclo {
       {
         val graphs = generate(0 :: l :: s)
         val n = graphs.size
-        println("# Found %s with degree sequence (%s) and %s%s"
-                format (n("graph"), s map (_.toString) reduceLeft(_ + ", " + _),
+        println("# Found %s with degree sequence %s and %s%s"
+                format (n("graph"), s.mkString("(", ",", ")"),
                         l("loop"), if (n > 0) ":" else "."))
         for (gr <- graphs) {
           val b = bridges(gr).size
           val e = sorted_edges(simplified(gr))
-          println("%s # (%s)"
-                  format (e.map(_.toString).reduceLeft(_ + _), b("bridge")))
+          println("%s # (%s)" format (e.mkString, b("bridge")))
           n_total += 1
           if (b == 0) n_bridgeless += 1
         }
