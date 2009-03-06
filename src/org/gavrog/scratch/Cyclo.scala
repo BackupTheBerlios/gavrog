@@ -158,7 +158,8 @@ object Cyclo {
       println
       println("# " + "=" * 72)
       println("# A total of %s with cyclomatic number %d were generated."
-              format (n_total of "graph", k))
+              format (n_total of (if (loopless) "loopless " else "") + "graph",
+                      k))
       println("# %d of those were bridgeless." format n_bridgeless)
     } catch {
       case ex: Throwable => println(ex)
