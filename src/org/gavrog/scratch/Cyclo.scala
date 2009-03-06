@@ -114,11 +114,8 @@ object Cyclo {
   }
   
   def generate(seq: List[Int]) : Iterator[Graph] = {
-    val args   = "mgraph_p" :: seq.map(_.toString) ::: List("o", "p")
-    val proc   = new ProcessBuilder(args.toArray: _*).start
-    val result = read_graphs(proc.getInputStream)
-    proc.waitFor
-    result
+    val args = "mgraph_p" :: seq.map(_.toString) ::: List("o", "p")
+    read_graphs(new ProcessBuilder(args.toArray: _*).start.getInputStream)
   }
   
   def main(args : Array[String]) : Unit = {
@@ -142,12 +139,12 @@ object Cyclo {
             s <- degree_sequences(n, n + k - 1)
             l <- 0 to (if (loopless) 0 else k) }
       {
-        val graphs = generate(0 :: l :: s)
-        var count = 0
         val kind = "degree sequence %s and %s".format(s.mkString("(", ",", ")"),
                                                       l of "loop")
         println("# Graphs with %s:" format kind)
-        for (gr <- graphs) {
+
+        var count = 0
+        for (gr <- generate(0 :: l :: s)) {
           val b = bridges(gr).size
           val e = sorted_edges(simplified(gr))
           println("%s # (%s)" format (e.mkString, b of "bridge"))
