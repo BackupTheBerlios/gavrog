@@ -12,19 +12,19 @@ object Cyclo {
   type Edge = (Int, Int)
   
   def degree_sequences(n: Int, m: Int) = {
-    def seq(n: Int, m: Int, min_d: Int) : Stream[List[Int]] =
+    def seq(n: Int, m: Int, min_d: Int) : Iterator[List[Int]] =
       if (n * min_d > m)
-        Stream.empty
+        Iterator.empty
       else if (n == 0)
-        if (m == 0) Stream(Nil) else Stream.empty
-      else for { i <- Stream.range(0, m / min_d + 1) if i <= n
+        if (m == 0) Iterator.single(Nil) else Iterator.empty
+      else for { i <- Iterator.range(0, m / min_d + 1) if i <= n
                  s <- seq(n - i, m - i * min_d, min_d + 1) }
         yield i :: s
     
     seq(n, 2 * m, 3)
   }
   
-  def read_graphs(is: InputStream) : Stream[Graph] = {
+  def read_graphs(is: InputStream) : Iterator[Graph] = {
     val src = new DataInputStream(is)
     
     val first_byte = try {
@@ -34,7 +34,7 @@ object Cyclo {
     }
     
     first_byte match {
-      case None => Stream.empty
+      case None => Iterator.empty
       case Some(x) => {
         def next: Int = if (x == 0) src.readUnsignedShort else src.readByte
         val size: Int = if (x == 0) next else x
@@ -48,7 +48,7 @@ object Cyclo {
             adj(j) = i :: adj.getOrElse(j, Nil)
           }
         }
-        Stream.cons(Map(adj.toSeq: _*), read_graphs(is))
+        Iterator.single(Map(adj.toSeq: _*)) ++ read_graphs(is)
       }
     }
   }
@@ -113,7 +113,7 @@ object Cyclo {
     result
   }
   
-  def generate(seq: List[Int]) : Stream[Graph] = {
+  def generate(seq: List[Int]) : Iterator[Graph] = {
     val args   = "mgraph_p" :: seq.map(_.toString) ::: List("o", "p")
     val proc   = new ProcessBuilder(args.toArray: _*).start
     val result = read_graphs(proc.getInputStream)
@@ -127,26 +127,35 @@ object Cyclo {
     }
 
     try {
-      val k = args(0).toInt
+      var i = 0
+      var loopless = false
+      if (args(0) == "-l") {
+        i += 1
+        loopless = true
+      }
+      
+      val k = args(i).toInt
       var n_total      = 0
       var n_bridgeless = 0
 
       for { n <- 0 to 2 * (k - 1)
             s <- degree_sequences(n, n + k - 1)
-            l <- 0 to k }
+            l <- 0 to (if (loopless) 0 else k) }
       {
         val graphs = generate(0 :: l :: s)
-        val n = graphs.size
-        println("# Found %s with degree sequence %s and %s%s"
-                format (n of "graph", s.mkString("(", ",", ")"),
-                        l of "loop", if (n > 0) ":" else "."))
+        var count = 0
+        val kind = "degree sequence %s and %s".format(s.mkString("(", ",", ")"),
+                                                      l of "loop")
+        println("# Graphs with %s:" format kind)
         for (gr <- graphs) {
           val b = bridges(gr).size
           val e = sorted_edges(simplified(gr))
           println("%s # (%s)" format (e.mkString, b of "bridge"))
+          count += 1
           n_total += 1
           if (b == 0) n_bridgeless += 1
         }
+        println("#   => %s with %s." format (count of "graph", kind))
       }
 
       println
