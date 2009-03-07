@@ -25,34 +25,55 @@ object Cyclo {
   }
   
   def read_graphs(is: InputStream) = {
-    def read_one(src: DataInputStream) : Iterator[Graph] = {
-      val first_byte = try {
-        Some(src.readByte)
-      } catch {
-        case ex: EOFException => None
-      }
+    val src = new DataInputStream(new BufferedInputStream(is))
     
-      first_byte match {
-        case None => Iterator.empty
-        case Some(x) => {
-          def next: Int = if (x == 0) src.readUnsignedShort else src.readByte
-          val size: Int = if (x == 0) next else x
-          val adj = new HashMap[Int, List[Int]]
-          var i = 1
-          while (i < size) {
-            val j = next
-            if (j == 0) i += 1
-            else {
-              adj(i) = j :: adj.getOrElse(i, Nil)
-              adj(j) = i :: adj.getOrElse(j, Nil)
+    new Iterator[Graph] {
+      var cache: Option[Graph] = None
+      
+      def findNext: Option[Graph] = {
+        cache match {
+          case Some(g) => Some(g)
+          case None => {
+            val first_byte = try {
+              Some(src.readByte)
+            } catch {
+              case ex: EOFException => None
             }
+    
+            cache = first_byte match {
+              case None => None
+              case Some(x) => {
+                def next: Int =
+                  if (x == 0) src.readUnsignedShort else src.readByte
+                val size: Int = if (x == 0) next else x
+                val adj = new HashMap[Int, List[Int]]
+                var i = 1
+                while (i < size) {
+                  val j = next
+                  if (j == 0) i += 1
+                  else {
+                    adj(i) = j :: adj.getOrElse(i, Nil)
+                    adj(j) = i :: adj.getOrElse(j, Nil)
+                  }
+                }
+                Some(Map(adj.toSeq: _*))
+              }
+            }
+            cache
           }
-          Iterator.single(Map(adj.toSeq: _*)) ++ read_one(src)
+        }
+      }
+      
+      def hasNext = (findNext != None)
+      
+      def next = findNext match {
+        case None => throw new NoSuchElementException("at end")
+        case Some(g) => {
+          cache = None
+          g
         }
       }
     }
-
-    read_one(new DataInputStream(new BufferedInputStream(is)))
   }
   
   def simplified(gr: Graph) = {
