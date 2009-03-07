@@ -1,6 +1,6 @@
 package org.gavrog.scratch
 
-import java.io.{DataInputStream, EOFException, InputStream}
+import java.io.{BufferedInputStream, DataInputStream, EOFException, InputStream}
 import java.lang.ProcessBuilder
 
 import scala.collection.mutable.HashMap
@@ -24,33 +24,35 @@ object Cyclo {
     seq(n, 2 * m, 3)
   }
   
-  def read_graphs(is: InputStream) : Iterator[Graph] = {
-    val src = new DataInputStream(is)
+  def read_graphs(is: InputStream) = {
+    def read_one(src: DataInputStream) : Iterator[Graph] = {
+      val first_byte = try {
+        Some(src.readByte)
+      } catch {
+        case ex: EOFException => None
+      }
     
-    val first_byte = try {
-      Some(src.readByte)
-    } catch {
-      case ex: EOFException => None
-    }
-    
-    first_byte match {
-      case None => Iterator.empty
-      case Some(x) => {
-        def next: Int = if (x == 0) src.readUnsignedShort else src.readByte
-        val size: Int = if (x == 0) next else x
-        val adj = new HashMap[Int, List[Int]]
-        var i = 1
-        while (i < size) {
-          val j = next
-          if (j == 0) i += 1
-          else {
-            adj(i) = j :: adj.getOrElse(i, Nil)
-            adj(j) = i :: adj.getOrElse(j, Nil)
+      first_byte match {
+        case None => Iterator.empty
+        case Some(x) => {
+          def next: Int = if (x == 0) src.readUnsignedShort else src.readByte
+          val size: Int = if (x == 0) next else x
+          val adj = new HashMap[Int, List[Int]]
+          var i = 1
+          while (i < size) {
+            val j = next
+            if (j == 0) i += 1
+            else {
+              adj(i) = j :: adj.getOrElse(i, Nil)
+              adj(j) = i :: adj.getOrElse(j, Nil)
+            }
           }
+          Iterator.single(Map(adj.toSeq: _*)) ++ read_one(src)
         }
-        Iterator.single(Map(adj.toSeq: _*)) ++ read_graphs(is)
       }
     }
+
+    read_one(new DataInputStream(new BufferedInputStream(is)))
   }
   
   def simplified(gr: Graph) = {
