@@ -37,7 +37,10 @@ object Cyclo {
             val first_byte = try {
               Some(src.readByte)
             } catch {
-              case ex: EOFException => None
+              case ex: EOFException => {
+                is.close
+                None
+              }
             }
     
             cache = first_byte match {
