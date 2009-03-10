@@ -169,8 +169,10 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   
   def modify(body: => Unit) {
     invokeAndWait { pauseRendering }
-    new Thread(body).start
-    invokeAndWait { startRendering }
+    new Thread {
+      body
+      invokeAndWait { startRendering }
+    }.start
   }
 
   private def camera = camPath.getLastElement.asInstanceOf[Camera]

@@ -23,8 +23,8 @@ import Color._
 
 import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
 import de.jreality.math.MatrixBuilder
-import de.jreality.scene.{Appearance, DirectionalLight,
-                          SceneGraphComponent, Transformation}
+import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
+                          Transformation}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
@@ -106,6 +106,8 @@ object View {
     new JRealityViewerComponent(uvMap, List(new DraggingTool,
                                             new ClickWheelCameraZoomTool))
   {
+    var front_to_back: List[SceneGraphComponent] = Nil
+    
     size = (600, 800)
     setLight("Main Light",
              new DirectionalLight { setIntensity(1.0) },
@@ -115,14 +117,18 @@ object View {
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(uvMap)
       var z = 0.0
-      for (chart <- mesh.charts) {
+      for (chart <- mesh.charts)
         uvMap.addChild(new UVsGeometry(chart, "uv-chart") {
           setAppearance(new RichAppearance(meshFaceAttributes))
-          setTransformation(MatrixBuilder.euclidean.translate(0, 0, z))
-          z += 0.01
+          front_to_back = this :: front_to_back
         })
-      }
+      update_z_order
       encompass
+    }
+    
+    def update_z_order = modify {
+      for ((node, z) <- front_to_back.zipWithIndex)
+        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -0.1*z))
     }
     
     addTool(new AbstractTool {
@@ -137,14 +143,19 @@ object View {
         if (tc.getAxisState(activationSlot).isReleased) return
         val pr = tc.getCurrentPick
         if (pr == null) return
-        val selection = pr.getPickPath
-        for (node <- selection.iterator) {
-          if (node.getName.startsWith("uv-chart")) modify {
+        pr.getPickPath.iterator.find(_.getName.startsWith("uv-chart")) match {
+          case None => ()
+          case Some(node) => modify {
             val app = node.asInstanceOf[SceneGraphComponent].getAppearance
             val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
             if (app.getAttribute(key) == Color.RED)
               app.setAttribute(key, Color.WHITE)
-            else app.setAttribute(key, Color.RED)
+            else {
+              app.setAttribute(key, Color.RED)
+              val sgc = node.asInstanceOf[SceneGraphComponent]
+              front_to_back = sgc :: (front_to_back - sgc)
+              update_z_order
+            }
           }
         }
       }
