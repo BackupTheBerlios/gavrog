@@ -7,6 +7,35 @@ import scala.collection.mutable.HashMap
 import scala.collection.immutable.TreeSet
 import scala.util.Sorting._
 
+trait SimpleIterator[A] extends Iterator[A] {
+  var cache : Option[A] = None
+  
+  def advance : Option[A]
+  
+  private def next_with_cacheing: Option[A] = {
+    cache match {
+      case Some(g) => Some(g)
+      case None => {
+        cache = advance
+        cache
+      }
+    }
+  }
+  
+  def hasNext = (next_with_cacheing != None)
+      
+  def next = next_with_cacheing match {
+    case None => throw new NoSuchElementException("at end")
+    case Some(x) => {
+      cache = None
+      x
+    }
+  }
+}
+
+object Test {
+}
+
 object Cyclo {
   type Graph = Map[Int, List[Int]]
   type Edge = (Int, Int)
@@ -27,53 +56,34 @@ object Cyclo {
   def read_graphs(is: InputStream) = {
     val src = new DataInputStream(new BufferedInputStream(is))
     
-    new Iterator[Graph] {
-      var cache: Option[Graph] = None
-      
-      def findNext: Option[Graph] = {
-        cache match {
-          case Some(g) => Some(g)
-          case None => {
-            val first_byte = try {
-              Some(src.readByte)
-            } catch {
-              case ex: EOFException => {
-                is.close
-                None
-              }
-            }
-    
-            cache = first_byte match {
-              case None => None
-              case Some(x) => {
-                def next: Int =
-                  if (x == 0) src.readUnsignedShort else src.readByte
-                val size: Int = if (x == 0) next else x
-                val adj = new HashMap[Int, List[Int]]
-                var i = 1
-                while (i < size) {
-                  val j = next
-                  if (j == 0) i += 1
-                  else {
-                    adj(i) = j :: adj.getOrElse(i, Nil)
-                    adj(j) = i :: adj.getOrElse(j, Nil)
-                  }
-                }
-                Some(Map(adj.toSeq: _*))
-              }
-            }
-            cache
+    new SimpleIterator[Graph] {
+      def advance = {
+        val first_byte = try {
+          Some(src.readByte)
+        } catch {
+          case ex: EOFException => {
+            is.close
+            None
           }
         }
-      }
-      
-      def hasNext = (findNext != None)
-      
-      def next = findNext match {
-        case None => throw new NoSuchElementException("at end")
-        case Some(g) => {
-          cache = None
-          g
+    
+        first_byte match {
+          case None => None
+          case Some(x) => {
+            def next: Int = if (x == 0) src.readUnsignedShort else src.readByte
+            val size: Int = if (x == 0) next else x
+            val adj = new HashMap[Int, List[Int]]
+            var i = 1
+            while (i < size) {
+              val j = next
+              if (j == 0) i += 1
+              else {
+                adj(i) = j :: adj.getOrElse(i, Nil)
+                adj(j) = i :: adj.getOrElse(j, Nil)
+              }
+            }
+            Some(Map(adj.toSeq: _*))
+          }
         }
       }
     }
