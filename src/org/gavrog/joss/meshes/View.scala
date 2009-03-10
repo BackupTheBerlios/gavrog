@@ -188,7 +188,7 @@ object View {
       
       new ActionMenuItem("Load Mesh ...", {
         loadMeshChooser.showOpenDialog(this) match {
-          case FileChooser.Result.Approve => new Thread {
+          case FileChooser.Result.Approve => run {
             val file = loadMeshChooser.selectedFile
             log("Reading...")
             val mesh = Mesh.read(file.getAbsolutePath, true)(0)
@@ -196,19 +196,19 @@ object View {
             sceneViewer.setMesh(mesh)
             uvMapViewer.setMesh(mesh)
             log("Done!")
-          }.start
+          }
         }
       }) { accelerator = "control O" },
       
       new ActionMenuItem("Take Screen Shot ...", {
         screenShotChooser.showSaveDialog(this) match {
-          case FileChooser.Result.Approve => new Thread {
+          case FileChooser.Result.Approve => run {
             log("Taking screenshot ...")
             val file = screenShotChooser.selectedFile
             val d = sceneViewer.size
             sceneViewer.screenshot((d.width, d.height), 4, file)
             log("Wrote image to %s" format file.getName)
-          }.start
+          }
         }
       }) { accelerator = "control I" }
     )

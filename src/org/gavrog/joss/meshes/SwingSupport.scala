@@ -31,6 +31,8 @@ object SwingSupport {
     if (SwingUtilities.isEventDispatchThread) body.run
     else SwingUtilities.invokeLater(body)
 
+  def run(body: => Unit) = new Thread(body).start
+  
   class ActionMenuItem(name: String, body: => Unit) extends MenuItem(name) {
     action = new Action(name) {
       def apply { body }
