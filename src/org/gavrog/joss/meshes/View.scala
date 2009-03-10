@@ -215,54 +215,36 @@ object View {
   }
   
   def viewMenu = new Menu("View") {
+    implicit def as_vec3(t: (Int, Int, Int)) = Vec3(t._1, t._2, t._3)
+    def item(name: String, key: String, code: => unit) : ActionMenuItem =
+      new ActionMenuItem(name, code) { accelerator = key }
+    def item(name: String, key: String,
+             eye: (Int, Int, Int), up: (Int, Int, Int)) : ActionMenuItem =
+      item(name, key, sceneViewer.viewFrom(eye, up))
+    def item(name: String, key: String,
+             axis: (Int, Int, Int), angle: Double) : ActionMenuItem =
+      item(name, key, sceneViewer.rotateScene(axis, angle))
+    
     contents ++ List(
-      new ActionMenuItem("Home", {
-        sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-        sceneViewer.fieldOfView = 25.0
-        sceneViewer.encompass
-      }) { accelerator = "H" },
-      new ActionMenuItem("Fit", {
-        sceneViewer.fieldOfView = 25.0
-        sceneViewer.encompass
-      }) { accelerator = "0" },
+      item("Home", "H", { sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+                          sceneViewer.fieldOfView = 25.0
+                          sceneViewer.encompass }),
+      item("Fit", "0", { sceneViewer.fieldOfView = 25.0
+                         sceneViewer.encompass }),
       new Separator,
-      new ActionMenuItem("View From +X",
-                         sceneViewer.viewFrom(Vec3(1, 0, 0), Vec3(0, 1, 0))
-      ) { accelerator = "X" },
-      new ActionMenuItem("View From +Y",
-                         sceneViewer.viewFrom(Vec3(0, 1, 0), Vec3(0, 0, -1))
-      ) { accelerator = "Y" },
-      new ActionMenuItem("View From +Z",
-                         sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-      ) { accelerator = "Z" },
-      new ActionMenuItem("View From -X",
-                         sceneViewer.viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0))
-      ) { accelerator = "shift X" },
-      new ActionMenuItem("View From -Y",
-                         sceneViewer.viewFrom(Vec3(0, -1, 0), Vec3(0, 0, 1))
-      ) { accelerator = "shift Y" },
-      new ActionMenuItem("View From -Z",
-                         sceneViewer.viewFrom(Vec3(0, 0, -1), Vec3(0, 1, 0))
-      ) { accelerator = "shift Z" },
+      item("View From +X", "X",       ( 1, 0, 0), ( 0, 1, 0)),
+      item("View From +Y", "Y",       ( 0, 1, 0), ( 0, 0,-1)),
+      item("View From +Z", "Z",       ( 0, 0, 1), ( 0, 1, 0)),
+      item("View From -X", "shift X", (-1, 0, 0), ( 0, 1, 0)),
+      item("View From -Y", "shift Y", ( 0,-1, 0), ( 0, 0, 1)),
+      item("View From -Z", "shift Z", ( 0, 0,-1), ( 0, 1, 0)),
       new Separator,
-      new ActionMenuItem("Rotate Left",
-                         sceneViewer.rotateScene(Vec3(0, 1, 0), -5 deg)
-      ) { accelerator = "alt LEFT" },
-      new ActionMenuItem("Rotate Right",
-                         sceneViewer.rotateScene(Vec3(0, 1, 0),  5 deg)
-      ) { accelerator = "alt RIGHT" },
-      new ActionMenuItem("Rotate Up",
-                         sceneViewer.rotateScene(Vec3(1, 0, 0), -5 deg)
-      ) { accelerator = "alt UP" },
-      new ActionMenuItem("Rotate Down",
-                         sceneViewer.rotateScene(Vec3(1, 0, 0),  5 deg)
-      ) { accelerator = "alt DOWN" },
-      new ActionMenuItem("Rotate Clockwise",
-                         sceneViewer.rotateScene(Vec3(0, 0, 1), -5 deg)
-      ) { accelerator = "control RIGHT" },
-      new ActionMenuItem("Rotate Counterclockwise",
-                         sceneViewer.rotateScene(Vec3(0, 0, 1),  5 deg)
-      ) { accelerator = "control LEFT" }
+      item("Rotate Left",             "alt LEFT",      (0, 1, 0), -5 deg),
+      item("Rotate Right",            "alt RIGHT",     (0, 1, 0),  5 deg),
+      item("Rotate Up",               "alt UP",        (1, 0, 0), -5 deg),
+      item("Rotate Down",             "alt DOWN",      (1, 0, 0),  5 deg),
+      item("Rotate Clockwise",        "control RIGHT", (0, 0, 1), -5 deg),
+      item("Rotate Counterclockwise", "control LEFT",  (0, 0, 1),  5 deg)
     )
   }
   
