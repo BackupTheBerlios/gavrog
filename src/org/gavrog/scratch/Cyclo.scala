@@ -12,14 +12,9 @@ trait SimpleIterator[A] extends Iterator[A] {
   
   def advance : Option[A]
   
-  private def next_with_cacheing: Option[A] = {
-    cache match {
-      case Some(g) => Some(g)
-      case None => {
-        cache = advance
-        cache
-      }
-    }
+  private def next_with_cacheing = {
+    if (cache == None) cache = advance
+    cache
   }
   
   def hasNext = (next_with_cacheing != None)
@@ -31,9 +26,6 @@ trait SimpleIterator[A] extends Iterator[A] {
       x
     }
   }
-}
-
-object Test {
 }
 
 object Cyclo {
