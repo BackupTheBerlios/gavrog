@@ -53,9 +53,6 @@ object View {
     def next = it.next
   }
   
-  def max[A <% Ordered[A]](xs: Iterator[A]) =
-    xs.reduceLeft((x, y) => if (x > y) x else y)
-
   def log(message: String) = System.err.println(message)
   
   val meshFaceAttributes = Map(
@@ -75,10 +72,7 @@ object View {
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
     
-  val scene = new SceneGraphComponent
-  val uvMap = new SceneGraphComponent
-  
-  val sceneViewer = new JRealityViewerComponent(scene) {
+  val sceneViewer = new JRealityViewerComponent {
     size = (600, 800)
     setLight("Main Light",
              new DirectionalLight { setIntensity(0.8) },
@@ -102,12 +96,12 @@ object View {
     }
   }
 
-  val uvMapViewer =
-    new JRealityViewerComponent(uvMap, List(new DraggingTool,
-                                            new ClickWheelCameraZoomTool))
+  val uvMapViewer = new JRealityViewerComponent(new DraggingTool,
+                                                new ClickWheelCameraZoomTool)	
   {
     var front_to_back: List[SceneGraphComponent] = Nil
     
+    background_color = LIGHT_GRAY
     size = (600, 800)
     setLight("Main Light",
              new DirectionalLight { setIntensity(1.0) },
@@ -115,10 +109,10 @@ object View {
     fieldOfView = 1.0
     
     def setMesh(mesh: Mesh) = modify {
-      SceneGraphUtility.removeChildren(uvMap)
+      SceneGraphUtility.removeChildren(scene)
       var z = 0.0
       for (chart <- mesh.charts)
-        uvMap.addChild(new UVsGeometry(chart, "uv-chart") {
+        scene.addChild(new UVsGeometry(chart, "uv-chart") {
           setAppearance(new RichAppearance(meshFaceAttributes))
           front_to_back = this :: front_to_back
         })
@@ -170,17 +164,6 @@ object View {
     }
     top.pack
     top.visible = true
-    
-//    viewer.viewingComponent.addMouseMotionListener(new MouseMotionListener {
-//       def mouseMoved(e: MouseEvent) {
-//        val p = e.getPoint
-//        System.err.println("mouse moved to %4d,%4d" format (p.x, p.y))
-//      }
-//      def mouseDragged(e: MouseEvent) {
-//        val p = e.getPoint
-//        System.err.println("mouse dragged to %4d,%4d" format (p.x, p.y))
-//      }
-//    })
   }
   
   def fileMenu = new Menu("File") {
@@ -251,7 +234,6 @@ object View {
   class MeshGeometry(mesh: Mesh)
   extends SceneGraphComponent(mesh.name) {
     setGeometry(new IndexedFaceSetFactory {
-      mesh.computeNormals
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
       setVertexCoordinates(mesh.vertices.map(_.toArray))

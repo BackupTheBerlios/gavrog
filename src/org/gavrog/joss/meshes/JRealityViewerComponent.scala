@@ -37,12 +37,14 @@ import SwingSupport._
 import Vectors._
 
 class JRealityViewerComponent(content: SceneGraphComponent,
-                              tools: Seq[Tool]) extends BorderPanel
+                              tools: Tool*) extends BorderPanel
 {
-  def this(content: SceneGraphComponent) =
-    this(content, List(new RotateTool,
-                       new DraggingTool,
-                       new ClickWheelCameraZoomTool))
+  def this(sgc: SceneGraphComponent) =
+    this(sgc, new RotateTool, new DraggingTool, new ClickWheelCameraZoomTool)
+  
+  def this(tools: Tool*) = this(new SceneGraphComponent, tools: _*)
+  
+  def this() = this(new SceneGraphComponent)
   
   private val sceneNode  = new SceneGraphComponent {
     addChild(content)
@@ -138,6 +140,12 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   }
   override def size_=(d: (Int, Int)) = size_=(new Dimension(d._1, d._2))
 
+  def background_color =
+    rootNode.getAppearance.getAttribute(CommonAttributes.BACKGROUND_COLOR)
+  
+  def background_color_=(c: Color) =
+    rootNode.getAppearance.setAttribute(CommonAttributes.BACKGROUND_COLOR, c)
+  
   def setLight(name: String, light: Light, t: Transformation) {
     val node = lights.get(name) match {
       case Some(node) => node
