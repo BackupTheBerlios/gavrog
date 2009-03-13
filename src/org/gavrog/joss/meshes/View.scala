@@ -103,11 +103,10 @@ object View {
     setLight("Main Light",
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
-    fieldOfView = 1.0
+    fieldOfView = 0.01
     
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(scene)
-      var z = 0.0
       for (chart <- mesh.charts)
         scene.addChild(new UVsGeometry(chart, "uv-chart") {
           setAppearance(new RichAppearance(meshFaceAttributes))
@@ -119,7 +118,7 @@ object View {
     
     def update_z_order = modify {
       for ((node, z) <- front_to_back.zipWithIndex)
-        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -0.1*z))
+        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -z))
     }
     
     addTool(new AbstractTool {
