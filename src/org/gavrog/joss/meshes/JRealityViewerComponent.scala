@@ -125,7 +125,7 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     size = d
   }
 
-  private def viewingComponent =
+  def viewingComponent =
     viewer.getViewingComponent.asInstanceOf[javax.swing.JComponent]
  
   override def size = if (currentViewer == null) new Dimension(0, 0)

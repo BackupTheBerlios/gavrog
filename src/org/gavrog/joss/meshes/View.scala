@@ -18,7 +18,7 @@
 package org.gavrog.joss.meshes
 
 import java.awt.Color
-import java.awt.event.{KeyEvent, MouseEvent, MouseMotionListener}
+import java.awt.event.{KeyEvent, MouseEvent, MouseListener}
 import Color._
 
 import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
@@ -123,7 +123,7 @@ object View {
     }
     
     addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("PrimaryAction")
+      val activationSlot = InputSlot.getDevice("PrimaryAction") // Mouse left
       addCurrentSlot(activationSlot)
         
       override def perform(tc: ToolContext) {
@@ -149,7 +149,7 @@ object View {
     })
     
     addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("JumpActivation")
+      val activationSlot = InputSlot.getDevice("JumpActivation") // Space
       addCurrentSlot(activationSlot)
       
       override def perform(tc: ToolContext) {
@@ -169,6 +169,18 @@ object View {
     }
     top.pack
     top.visible = true
+    sceneViewer.viewingComponent.addMouseListener(new MouseListener {
+      def callback(e: MouseEvent, action: String) {
+        val p = e.getPoint
+        System.err.println("mouse %s, position %4d,%4d"
+                           format (action, p.x, p.y))
+      }
+      def mouseEntered (e: MouseEvent) = callback(e, "entered")
+      def mouseExited  (e: MouseEvent) = callback(e, "exited")
+      def mousePressed (e: MouseEvent) = callback(e, "pressed")
+      def mouseReleased(e: MouseEvent) = callback(e, "released")
+      def mouseClicked (e: MouseEvent) = callback(e, "clicked")
+    })
   }
   
   def fileMenu = new Menu("File") {
