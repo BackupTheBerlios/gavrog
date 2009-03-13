@@ -74,11 +74,9 @@ object View {
     
   val sceneViewer = new JRealityViewerComponent {
     size = (600, 800)
-    setLight("Main Light",
-             new DirectionalLight { setIntensity(0.8) },
+    setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
-    setLight("Fill Light",
-             new DirectionalLight { setIntensity(0.2) },
+    setLight("Fill Light", new DirectionalLight { setIntensity(0.2) },
              MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
     fieldOfView = 25.0
     
@@ -97,8 +95,7 @@ object View {
   }
 
   val uvMapViewer = new JRealityViewerComponent(new DraggingTool,
-                                                new ClickWheelCameraZoomTool)	
-  {
+                                                new ClickWheelCameraZoomTool) {
     var front_to_back: List[SceneGraphComponent] = Nil
     
     background_color = LIGHT_GRAY
@@ -126,12 +123,8 @@ object View {
     }
     
     addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("RotateActivation");
-      val addSlot = InputSlot.getDevice("SecondarySelection");
-      val removeSlot = InputSlot.getDevice("Meta");
+      val activationSlot = InputSlot.getDevice("PrimaryAction")
       addCurrentSlot(activationSlot)
-      addCurrentSlot(removeSlot)
-      addCurrentSlot(addSlot)
         
       override def perform(tc: ToolContext) {
         if (tc.getAxisState(activationSlot).isReleased) return
@@ -151,6 +144,18 @@ object View {
               update_z_order
             }
           }
+        }
+      }
+    })
+    
+    addTool(new AbstractTool {
+      val activationSlot = InputSlot.getDevice("JumpActivation")
+      addCurrentSlot(activationSlot)
+      
+      override def perform(tc: ToolContext) {
+        if (!tc.getAxisState(activationSlot).isReleased) modify {
+          val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+          for (sgc <- front_to_back) sgc.getAppearance.setAttribute(key, WHITE)
         }
       }
     })
