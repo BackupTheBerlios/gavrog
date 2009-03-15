@@ -160,6 +160,7 @@ object Mesh {
 
     def pos = Vec2(x, y)
     def moveTo(p: Vec2) { x = p.x; y = p.y }
+    def pos_=(p: Vec2) = moveTo(p)
   }
   implicit def tVertex2vec2(t: TextureVertex) = t.pos
 
