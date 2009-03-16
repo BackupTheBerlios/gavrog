@@ -168,7 +168,7 @@ object View {
       }
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
       
-      def report(p: Point, action: String) {
+      def report(src: AnyRef, p: Point, action: String) {
         System.err.println("mouse %s, position %4d,%4d"
                            format (action, p.x, p.y))
       }
