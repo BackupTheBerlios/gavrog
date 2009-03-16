@@ -17,8 +17,7 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.Color
-import java.awt.event.{KeyEvent, MouseEvent, MouseListener}
+import java.awt.{Color, Point}
 import Color._
 
 import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
@@ -33,6 +32,7 @@ import de.jreality.util.SceneGraphUtility
 import scala.collection.mutable.HashMap
 import scala.swing.{FileChooser, MainFrame, Menu, MenuBar, Orientation,
                     Separator, SplitPane}
+import scala.swing.event._
 
 import JRealitySupport._
 import Mesh._
@@ -163,23 +163,27 @@ object View {
   def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
       title    = "Scala Mesh Viewer"
-      contents = new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer)
+      contents = new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer) {
+        continuousLayout = true
+      }
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
-    }
-    top.pack
-    top.visible = true
-    sceneViewer.viewingComponent.addMouseListener(new MouseListener {
-      def callback(e: MouseEvent, action: String) {
-        val p = e.getPoint
+      
+      def report(p: Point, action: String) {
         System.err.println("mouse %s, position %4d,%4d"
                            format (action, p.x, p.y))
       }
-      def mouseEntered (e: MouseEvent) = callback(e, "entered")
-      def mouseExited  (e: MouseEvent) = callback(e, "exited")
-      def mousePressed (e: MouseEvent) = callback(e, "pressed")
-      def mouseReleased(e: MouseEvent) = callback(e, "released")
-      def mouseClicked (e: MouseEvent) = callback(e, "clicked")
-    })
+      listenTo(sceneViewer, sceneViewer.mouse.clicks, sceneViewer.mouse.moves)
+      reactions += {
+        case MouseEntered (src, pt, _)       => report(src, pt, "entered")
+        case MouseExited  (src, pt, _)       => report(src, pt, "exited")
+        case MouseDragged (src, pt, _)       => report(src, pt, "dragged")
+        case MousePressed (src, pt, _, _, _) => report(src, pt, "pressed")
+        case MouseReleased(src, pt, _, _, _) => report(src, pt, "released")
+        case MouseClicked (src, pt, _, _, _) => report(src, pt, "clicked")
+      }
+    }
+    top.pack
+    top.visible = true
   }
   
   def fileMenu = new Menu("File") {

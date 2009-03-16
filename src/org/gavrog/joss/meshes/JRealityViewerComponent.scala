@@ -17,7 +17,10 @@
 
 package org.gavrog.joss.meshes
 
-import java.awt.{Color, Dimension}
+import java.awt.{BorderLayout, Color, Dimension}
+import java.awt.event.{KeyEvent, KeyListener, MouseEvent, MouseListener,
+                       MouseMotionListener, MouseWheelEvent, MouseWheelListener}
+import javax.swing.JPanel
 
 import scala.swing.{BorderPanel, Component}
 
@@ -80,7 +83,56 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   private val softwareViewer = new SoftViewer { setupViewer(this) }
 
   viewer = try {
-    new de.jreality.jogl.Viewer { setupViewer(this) }
+    new de.jreality.jogl.Viewer {
+      var component: JPanel = null
+      
+      override def getViewingComponent = {
+        if (component == null) {
+          component=new JPanel {
+            setLayout(new BorderLayout)
+            setMaximumSize(new Dimension(32768,32768))
+            setMinimumSize(new Dimension(10,10))
+            add("Center", canvas)
+          }
+
+          def dispatchK(e: KeyEvent) = component.dispatchEvent(
+            new KeyEvent(component, e.getID, e.getWhen, e.getModifiers,
+                         e.getKeyCode, e.getKeyChar))
+          def dispatchM(e: MouseEvent) = component.dispatchEvent(
+            new MouseEvent(component, e.getID, e.getWhen, e.getModifiers,
+                           e.getX, e.getY, e.getClickCount,
+                           e.isPopupTrigger, e.getButton))
+          def dispatchW(e: MouseWheelEvent) = component.dispatchEvent(
+            new MouseWheelEvent(component, e.getID, e.getWhen, e.getModifiers,
+                                e.getX, e.getY, e.getClickCount,
+                                e.isPopupTrigger, e.getScrollType,
+                                e.getScrollAmount, e.getWheelRotation))
+          
+          canvas.addKeyListener(new KeyListener {
+            def keyPressed (e: KeyEvent) = dispatchK(e)
+            def keyReleased(e: KeyEvent) = dispatchK(e)
+            def keyTyped   (e: KeyEvent) = dispatchK(e)
+          })
+          canvas.addMouseListener(new MouseListener {
+            def mouseClicked (e: MouseEvent) = dispatchM(e)
+            def mouseEntered (e: MouseEvent) = dispatchM(e)
+            def mouseExited  (e: MouseEvent) = dispatchM(e)
+            def mousePressed (e: MouseEvent) = dispatchM(e)
+            def mouseReleased(e: MouseEvent) = dispatchM(e)
+	      })
+          canvas.addMouseMotionListener(new MouseMotionListener {
+            def mouseDragged (e: MouseEvent) = dispatchM(e)
+            def mouseMoved   (e: MouseEvent) = dispatchM(e)
+          })
+          canvas.addMouseWheelListener(new MouseWheelListener {
+            def mouseWheelMoved(e: MouseWheelEvent) = dispatchW(e)
+          })
+        }
+        component
+      }
+      
+      setupViewer(this)
+    }
   } catch {
     case ex: Exception => {
       System.err.println("OpenGL viewer could not be initialized.")
@@ -125,9 +177,11 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     size = d
   }
 
-  def viewingComponent =
+  private def viewingComponent =
     viewer.getViewingComponent.asInstanceOf[javax.swing.JComponent]
  
+  def mouse = contents(0).Mouse
+  
   override def size = if (currentViewer == null) new Dimension(0, 0)
                       else {
                         val d = currentViewer.getViewingComponentSize
