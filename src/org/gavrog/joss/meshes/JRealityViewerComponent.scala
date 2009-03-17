@@ -96,14 +96,15 @@ class JRealityViewerComponent(content: SceneGraphComponent,
           }
 
           def dispatchK(e: KeyEvent) = component.dispatchEvent(
-            new KeyEvent(component, e.getID, e.getWhen, e.getModifiers,
-                         e.getKeyCode, e.getKeyChar))
+            new KeyEvent(JRealityViewerComponent.this.peer, e.getID, e.getWhen,
+                         e.getModifiers, e.getKeyCode, e.getKeyChar))
           def dispatchM(e: MouseEvent) = component.dispatchEvent(
-            new MouseEvent(component, e.getID, e.getWhen, e.getModifiers,
-                           e.getX, e.getY, e.getClickCount,
-                           e.isPopupTrigger, e.getButton))
+            new MouseEvent(JRealityViewerComponent.this.peer,
+                           e.getID, e.getWhen, e.getModifiers, e.getX, e.getY,
+                           e.getClickCount, e.isPopupTrigger, e.getButton))
           def dispatchW(e: MouseWheelEvent) = component.dispatchEvent(
-            new MouseWheelEvent(component, e.getID, e.getWhen, e.getModifiers,
+            new MouseWheelEvent(JRealityViewerComponent.this.peer,
+                                e.getID, e.getWhen, e.getModifiers,
                                 e.getX, e.getY, e.getClickCount,
                                 e.isPopupTrigger, e.getScrollType,
                                 e.getScrollAmount, e.getWheelRotation))

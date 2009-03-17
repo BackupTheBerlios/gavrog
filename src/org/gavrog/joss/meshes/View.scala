@@ -30,8 +30,8 @@ import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.util.SceneGraphUtility
 
 import scala.collection.mutable.HashMap
-import scala.swing.{FileChooser, MainFrame, Menu, MenuBar, Orientation,
-                    Separator, SplitPane}
+import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar, Orientation,
+                    Separator, SplitPane, TextArea}
 import scala.swing.event._
 
 import JRealitySupport._
@@ -71,7 +71,9 @@ object View {
   
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
-    
+  
+  val statusLine = new TextArea(1, 80)
+  
   val sceneViewer = new JRealityViewerComponent {
     size = (600, 800)
     setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
@@ -163,16 +165,27 @@ object View {
   def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
       title    = "Scala Mesh Viewer"
-      contents = new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer) {
-        continuousLayout = true
+      contents = new BorderPanel {
+        add(new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer) {
+          continuousLayout = true
+        }, BorderPanel.Position.North)
+        add(statusLine, BorderPanel.Position.South)
       }
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
       
       def report(src: AnyRef, p: Point, action: String) {
-        System.err.println("mouse %s, position %4d,%4d"
-                           format (action, p.x, p.y))
+        statusLine.text = "  mouse %s, position %4d,%4d in %s" format (
+          action, p.x, p.y,
+          src match {
+            case `sceneViewer` => "model"
+            case `uvMapViewer` => "uvs"
+            case _             => "unknown"
+          }
+        )
       }
-      listenTo(sceneViewer, sceneViewer.mouse.clicks, sceneViewer.mouse.moves)
+
+      listenTo(sceneViewer.mouse.clicks, sceneViewer.mouse.moves)
+      listenTo(uvMapViewer.mouse.clicks, uvMapViewer.mouse.moves)
       reactions += {
         case MouseEntered (src, pt, _)       => report(src, pt, "entered")
         case MouseExited  (src, pt, _)       => report(src, pt, "exited")
@@ -190,7 +203,8 @@ object View {
     contents ++ List(
       
       new ActionMenuItem("Load Mesh ...", {
-        loadMeshChooser.showOpenDialog(this) match {
+        val result = loadMeshChooser.showOpenDialog(this)
+        result match {
           case FileChooser.Result.Approve => run {
             val file = loadMeshChooser.selectedFile
             log("Reading...")
@@ -200,11 +214,13 @@ object View {
             uvMapViewer.setMesh(mesh)
             log("Done!")
           }
+          case _ => {}
         }
       }) { accelerator = "control O" },
       
       new ActionMenuItem("Take Screen Shot ...", {
-        screenShotChooser.showSaveDialog(this) match {
+        val result = screenShotChooser.showSaveDialog(this)
+        result match {
           case FileChooser.Result.Approve => run {
             log("Taking screenshot ...")
             val file = screenShotChooser.selectedFile
@@ -212,6 +228,7 @@ object View {
             sceneViewer.screenshot((d.width, d.height), 4, file)
             log("Wrote image to %s" format file.getName)
           }
+          case _ => {}
         }
       }) { accelerator = "control I" }
     )
