@@ -84,53 +84,40 @@ class JRealityViewerComponent(content: SceneGraphComponent,
 
   viewer = try {
     new de.jreality.jogl.Viewer {
-      var component: JPanel = null
-      
-      override def getViewingComponent = {
-        if (component == null) {
-          component=new JPanel {
-            setLayout(new BorderLayout)
-            setMaximumSize(new Dimension(32768,32768))
-            setMinimumSize(new Dimension(10,10))
-            add("Center", canvas)
-          }
-
-          def dispatchK(e: KeyEvent) = component.dispatchEvent(
-            new KeyEvent(JRealityViewerComponent.this.peer, e.getID, e.getWhen,
-                         e.getModifiers, e.getKeyCode, e.getKeyChar))
-          def dispatchM(e: MouseEvent) = component.dispatchEvent(
-            new MouseEvent(JRealityViewerComponent.this.peer,
-                           e.getID, e.getWhen, e.getModifiers, e.getX, e.getY,
-                           e.getClickCount, e.isPopupTrigger, e.getButton))
-          def dispatchW(e: MouseWheelEvent) = component.dispatchEvent(
-            new MouseWheelEvent(JRealityViewerComponent.this.peer,
-                                e.getID, e.getWhen, e.getModifiers,
-                                e.getX, e.getY, e.getClickCount,
-                                e.isPopupTrigger, e.getScrollType,
-                                e.getScrollAmount, e.getWheelRotation))
+      def source = JRealityViewerComponent.this.peer
           
-          canvas.addKeyListener(new KeyListener {
-            def keyPressed (e: KeyEvent) = dispatchK(e)
-            def keyReleased(e: KeyEvent) = dispatchK(e)
-            def keyTyped   (e: KeyEvent) = dispatchK(e)
-          })
-          canvas.addMouseListener(new MouseListener {
-            def mouseClicked (e: MouseEvent) = dispatchM(e)
-            def mouseEntered (e: MouseEvent) = dispatchM(e)
-            def mouseExited  (e: MouseEvent) = dispatchM(e)
-            def mousePressed (e: MouseEvent) = dispatchM(e)
-            def mouseReleased(e: MouseEvent) = dispatchM(e)
-	      })
-          canvas.addMouseMotionListener(new MouseMotionListener {
-            def mouseDragged (e: MouseEvent) = dispatchM(e)
-            def mouseMoved   (e: MouseEvent) = dispatchM(e)
-          })
-          canvas.addMouseWheelListener(new MouseWheelListener {
-            def mouseWheelMoved(e: MouseWheelEvent) = dispatchW(e)
-          })
-        }
-        component
-      }
+      def dispatchK(e: KeyEvent) = source.dispatchEvent(
+        new KeyEvent(source, e.getID, e.getWhen, e.getModifiers,
+                     e.getKeyCode, e.getKeyChar))
+      def dispatchM(e: MouseEvent) = source.dispatchEvent(
+        new MouseEvent(source, e.getID, e.getWhen, e.getModifiers,
+                       e.getX, e.getY, e.getClickCount,
+                       e.isPopupTrigger, e.getButton))
+      def dispatchW(e: MouseWheelEvent) = source.dispatchEvent(
+        new MouseWheelEvent(source, e.getID, e.getWhen, e.getModifiers,
+                            e.getX, e.getY, e.getClickCount,
+                            e.isPopupTrigger, e.getScrollType,
+                            e.getScrollAmount, e.getWheelRotation))
+          
+      canvas.addKeyListener(new KeyListener {
+        def keyPressed (e: KeyEvent) = dispatchK(e)
+        def keyReleased(e: KeyEvent) = dispatchK(e)
+        def keyTyped   (e: KeyEvent) = dispatchK(e)
+      })
+      canvas.addMouseListener(new MouseListener {
+        def mouseClicked (e: MouseEvent) = dispatchM(e)
+        def mouseEntered (e: MouseEvent) = dispatchM(e)
+        def mouseExited  (e: MouseEvent) = dispatchM(e)
+        def mousePressed (e: MouseEvent) = dispatchM(e)
+        def mouseReleased(e: MouseEvent) = dispatchM(e)
+      })
+      canvas.addMouseMotionListener(new MouseMotionListener {
+        def mouseDragged (e: MouseEvent) = dispatchM(e)
+        def mouseMoved   (e: MouseEvent) = dispatchM(e)
+      })
+      canvas.addMouseWheelListener(new MouseWheelListener {
+        def mouseWheelMoved(e: MouseWheelEvent) = dispatchW(e)
+      })
       
       setupViewer(this)
     }
@@ -181,8 +168,6 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   private def viewingComponent =
     viewer.getViewingComponent.asInstanceOf[javax.swing.JComponent]
  
-  def mouse = contents(0).Mouse
-  
   override def size = if (currentViewer == null) new Dimension(0, 0)
                       else {
                         val d = currentViewer.getViewingComponentSize

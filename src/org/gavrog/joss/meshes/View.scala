@@ -53,7 +53,7 @@ object View {
     def next = it.next
   }
   
-  def log(message: String) = System.err.println(message)
+  def log(message: String) = statusLine.text = message
   
   val meshFaceAttributes = Map(
     EDGE_DRAW                                   -> true,
@@ -184,8 +184,8 @@ object View {
         )
       }
 
-      listenTo(sceneViewer.mouse.clicks, sceneViewer.mouse.moves)
-      listenTo(uvMapViewer.mouse.clicks, uvMapViewer.mouse.moves)
+      listenTo(sceneViewer.Mouse.clicks, sceneViewer.Mouse.moves)
+      listenTo(uvMapViewer.Mouse.clicks, uvMapViewer.Mouse.moves)
       reactions += {
         case MouseEntered (src, pt, _)       => report(src, pt, "entered")
         case MouseExited  (src, pt, _)       => report(src, pt, "exited")
