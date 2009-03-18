@@ -173,9 +173,10 @@ object View {
       }
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
       
-      def report(src: AnyRef, p: Point, action: String) {
-        statusLine.text = "  mouse %s, position %4d,%4d in %s" format (
-          action, p.x, p.y,
+      def show(src: AnyRef, p: Point, action: String) {
+        statusLine.text = "  %s%s in %s" format (
+          action,
+          if (p == null) "" else ", position %4d,%4d" format (p.x, p.y),
           src match {
             case `sceneViewer` => "model"
             case `uvMapViewer` => "uvs"
@@ -183,16 +184,25 @@ object View {
           }
         )
       }
+      def show(src: AnyRef, action: String) {
+        show(src, null, action)
+      }
 
-      listenTo(sceneViewer.Mouse.clicks, sceneViewer.Mouse.moves)
-      listenTo(uvMapViewer.Mouse.clicks, uvMapViewer.Mouse.moves)
+      listenTo(sceneViewer.Mouse.clicks, sceneViewer.Mouse.moves,
+               sceneViewer.keyClicks)
+      listenTo(uvMapViewer.Mouse.clicks, uvMapViewer.Mouse.moves,
+               uvMapViewer.keyClicks)
       reactions += {
-        case MouseEntered (src, pt, _)       => report(src, pt, "entered")
-        case MouseExited  (src, pt, _)       => report(src, pt, "exited")
-        case MouseDragged (src, pt, _)       => report(src, pt, "dragged")
-        case MousePressed (src, pt, _, _, _) => report(src, pt, "pressed")
-        case MouseReleased(src, pt, _, _, _) => report(src, pt, "released")
-        case MouseClicked (src, pt, _, _, _) => report(src, pt, "clicked")
+        case KeyTyped     (src, _, _, c)     => show(src, "typed: " + c)
+        case MouseEntered (src, pt, _)       => {
+          show(src, pt, "mouse entered")
+          src.requestFocus
+        }
+        case MouseExited  (src, pt, _)       => show(src, pt, "mouse exited")
+        case MouseDragged (src, pt, _)       => show(src, pt, "mouse dragged")
+        case MousePressed (src, pt, _, _, _) => show(src, pt, "mouse pressed")
+        case MouseReleased(src, pt, _, _, _) => show(src, pt, "mouse released")
+        case MouseClicked (src, pt, _, _, _) => show(src, pt, "mouse clicked")
       }
     }
     top.pack
