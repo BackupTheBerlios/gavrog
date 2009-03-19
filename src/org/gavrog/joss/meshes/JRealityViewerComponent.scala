@@ -165,6 +165,7 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     }
   }
 
+  fieldOfView = defaultFieldOfView
   renderTrigger.addSceneGraphComponent(rootNode)
 
   private def setupViewer(viewer: Viewer) {
@@ -248,7 +249,8 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   private def camera = camPath.getLastElement.asInstanceOf[Camera]
   def fieldOfView = camera.getFieldOfView
   def fieldOfView_=(x: Double) = camera.setFieldOfView(x)
-  
+  def defaultFieldOfView = 25.0
+    
   def encompass {
     // -- extract parameters from scene and viewer
     val ts = ToolSystem.toolSystemForViewer(viewer)

@@ -76,7 +76,6 @@ object View {
   
   trait MeshViewer extends JRealityViewerComponent {
     def setMesh(mesh: Mesh)
-    def fit
   }
   
   val sceneViewer = new MeshViewer {
@@ -85,10 +84,8 @@ object View {
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
     setLight("Fill Light", new DirectionalLight { setIntensity(0.2) },
              MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
-    fieldOfView = 25.0
     
     var center = Array(0.0, 0.0, 0.0, 1.0)
-    
     override def computeCenter = center
 
     def setMesh(mesh: Mesh) = modify {
@@ -99,16 +96,12 @@ object View {
       center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
       encompass
     }
-    
-    def fit {
-      fieldOfView = 25.0
-      encompass
-    }
   }
 
   val uvMapViewer =
     new JRealityViewerComponent(new DraggingTool,new ClickWheelCameraZoomTool)
   with MeshViewer {
+    override def defaultFieldOfView = 0.01
     var front_to_back: List[SceneGraphComponent] = Nil
     
     background_color = LIGHT_GRAY
@@ -116,7 +109,6 @@ object View {
     setLight("Main Light",
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
-    fieldOfView = 0.01
     
     def update_z_order = modify {
       for ((node, z) <- front_to_back.zipWithIndex)
@@ -134,14 +126,10 @@ object View {
       encompass
     }
     
-    def fit {
-      fieldOfView = 0.01
-      encompass
-    }
-    
     override def rotateScene(axis: Vec3, angle: Double) =
       super.rotateScene(new Vec3(0, 0, 1), angle)
-    override def viewFrom(eye: Vec3, up: Vec3) {}
+    override def viewFrom(eye: Vec3, up: Vec3) =
+      super.viewFrom(new Vec3(0, 0, 1), up)
     
     addTool(new AbstractTool {
       val activationSlot = InputSlot.getDevice("PrimaryAction") // Mouse left
@@ -173,7 +161,7 @@ object View {
     reactions += {
       case KeyTyped(src, _, _, c) if (src == this) => {
         c match {
-          case ' ' => {
+          case ' ' => modify {
             val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
             for (sgc <- front_to_back)
               sgc.getAppearance.setAttribute(key, WHITE)
@@ -283,8 +271,15 @@ object View {
       item(name, key, onActive(_.rotateScene(axis, angle)))
     
     contents ++ List(
-      item("Home", "H", onActive(v => { v.viewFrom((0,0,1), (0,1,0)); v.fit })),
-      item("Fit", "0", onActive(_.fit)),
+      item("Home", "H", onActive(v => {
+        v.viewFrom((0,0,1), (0,1,0))
+        v.fieldOfView = v.defaultFieldOfView
+        v.encompass
+      })),
+      item("Fit", "0", onActive(v => {
+        v.fieldOfView = v.defaultFieldOfView
+        v.encompass
+      })),
       new Separator,
       view("View From +X", "X",       ( 1, 0, 0), ( 0, 1, 0)),
       view("View From +Y", "Y",       ( 0, 1, 0), ( 0, 0,-1)),
