@@ -17,8 +17,27 @@
 
 package org.gavrog.joss.meshes
 
+import java.awt.Point
+
 import javax.swing.{KeyStroke, SwingUtilities}
-import scala.swing.{Action, MenuItem}
+import scala.swing.{Action, Component, MenuItem}
+import scala.swing.event.InputEvent
+
+class KeyEvent(val source: Component,
+               val modifiers: Int,
+               keyCode: Int, keyChar: Char)(val when: Long) extends InputEvent
+case class KeyPressed(override val source: Component,
+                      override val modifiers: Int, 
+                      keyCode: Int, keyChar: Char)(when: Long) extends
+  KeyEvent(source, modifiers, keyCode, keyChar)(when)
+case class KeyReleased(override val source: Component,
+                       override val modifiers: Int, 
+                       keyCode: Int, keyChar: Char)(when: Long) extends
+  KeyEvent(source, modifiers, keyCode, keyChar)(when)
+case class KeyTyped(override val source: Component,
+                    override val modifiers: Int, 
+                    keyCode: Int, keyChar: Char)(when: Long) extends
+  KeyEvent(source, modifiers, keyCode, keyChar)(when)
 
 object SwingSupport {
   implicit def asRunnable(body: => Unit) = new Runnable() { def run { body } }
