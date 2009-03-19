@@ -149,17 +149,18 @@ object View {
       }
     })
     
-    addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("JumpActivation") // Space
-      addCurrentSlot(activationSlot)
-      
-      override def perform(tc: ToolContext) {
-        if (!tc.getAxisState(activationSlot).isReleased) modify {
-          val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
-          for (sgc <- front_to_back) sgc.getAppearance.setAttribute(key, WHITE)
+    listenTo(keyClicks)
+    reactions += {
+      case KeyTyped(src, _, _, c) if (src == this) => {
+        c match {
+          case ' ' => {
+            val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+            for (sgc <- front_to_back)
+              sgc.getAppearance.setAttribute(key, WHITE)
+          }
         }
       }
-    })
+    }
   }
 
   def main(args : Array[String]) : Unit = {
@@ -199,7 +200,6 @@ object View {
           src.requestFocus
         }
         case MouseExited  (src, pt, _)       => show(src, pt, "mouse exited")
-        case MouseDragged (src, pt, _)       => show(src, pt, "mouse dragged")
         case MousePressed (src, pt, _, _, _) => show(src, pt, "mouse pressed")
         case MouseReleased(src, pt, _, _, _) => show(src, pt, "mouse released")
         case MouseClicked (src, pt, _, _, _) => show(src, pt, "mouse clicked")
