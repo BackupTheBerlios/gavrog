@@ -30,8 +30,8 @@ import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.util.SceneGraphUtility
 
 import scala.collection.mutable.HashMap
-import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar, Orientation,
-                    Separator, SplitPane, TextArea}
+import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
+                    Orientation, Separator, SplitPane, TextArea}
 import scala.swing.event._
 
 import JRealitySupport._
@@ -74,7 +74,12 @@ object View {
   
   val statusLine = new TextArea(1, 80)
   
-  val sceneViewer = new JRealityViewerComponent {
+  trait MeshViewer extends JRealityViewerComponent {
+    def setMesh(mesh: Mesh)
+    def fit
+  }
+  
+  val sceneViewer = new MeshViewer {
     size = (600, 800)
     setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
@@ -85,7 +90,7 @@ object View {
     var center = Array(0.0, 0.0, 0.0, 1.0)
     
     override def computeCenter = center
-    
+
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(scene)
       scene.addChild(new MeshGeometry(mesh) {
@@ -94,10 +99,16 @@ object View {
       center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
       encompass
     }
+    
+    def fit {
+      fieldOfView = 25.0
+      encompass
+    }
   }
 
-  val uvMapViewer = new JRealityViewerComponent(new DraggingTool,
-                                                new ClickWheelCameraZoomTool) {
+  val uvMapViewer =
+    new JRealityViewerComponent(new DraggingTool,new ClickWheelCameraZoomTool)
+  with MeshViewer {
     var front_to_back: List[SceneGraphComponent] = Nil
     
     background_color = LIGHT_GRAY
@@ -106,6 +117,11 @@ object View {
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
     fieldOfView = 0.01
+    
+    def update_z_order = modify {
+      for ((node, z) <- front_to_back.zipWithIndex)
+        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -z))
+    }
     
     def setMesh(mesh: Mesh) = modify {
       SceneGraphUtility.removeChildren(scene)
@@ -118,10 +134,14 @@ object View {
       encompass
     }
     
-    def update_z_order = modify {
-      for ((node, z) <- front_to_back.zipWithIndex)
-        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -z))
+    def fit {
+      fieldOfView = 0.01
+      encompass
     }
+    
+    override def rotateScene(axis: Vec3, angle: Double) =
+      super.rotateScene(new Vec3(0, 0, 1), angle)
+    override def viewFrom(eye: Vec3, up: Vec3) {}
     
     addTool(new AbstractTool {
       val activationSlot = InputSlot.getDevice("PrimaryAction") // Mouse left
@@ -158,11 +178,14 @@ object View {
             for (sgc <- front_to_back)
               sgc.getAppearance.setAttribute(key, WHITE)
           }
+          case _ => {}
         }
       }
     }
   }
 
+  var active = List(sceneViewer, uvMapViewer)
+  
   def main(args : Array[String]) : Unit = {
     val top = new MainFrame {
       title    = "Scala Mesh Viewer"
@@ -194,15 +217,20 @@ object View {
       listenTo(uvMapViewer.Mouse.clicks, uvMapViewer.Mouse.moves,
                uvMapViewer.keyClicks)
       reactions += {
-        case KeyTyped     (src, _, _, c)     => show(src, "typed: " + c)
-        case MouseEntered (src, pt, _)       => {
+        case MouseEntered(src, pt, _) => {
           show(src, pt, "mouse entered")
           src.requestFocus
+          if (src.isInstanceOf[MeshViewer])
+            active = List(src.asInstanceOf[MeshViewer])
         }
-        case MouseExited  (src, pt, _)       => show(src, pt, "mouse exited")
+        case MouseExited(src, pt, _) => {
+          show(src, pt, "mouse exited")
+          active = List(sceneViewer, uvMapViewer)
+        }
         case MousePressed (src, pt, _, _, _) => show(src, pt, "mouse pressed")
         case MouseReleased(src, pt, _, _, _) => show(src, pt, "mouse released")
         case MouseClicked (src, pt, _, _, _) => show(src, pt, "mouse clicked")
+        case KeyTyped(src, _, _, c) => show(src, "typed: " + c)
       }
     }
     top.pack
@@ -246,35 +274,31 @@ object View {
   
   def viewMenu = new Menu("View") {
     implicit def as_vec3(t: (Int, Int, Int)) = Vec3(t._1, t._2, t._3)
-    def item(name: String, key: String, code: => unit) : ActionMenuItem =
+    def onActive(f: MeshViewer => Unit) = for (v <- active) f(v)
+    def item(name: String, key: String, code: => unit) =
       new ActionMenuItem(name, code) { accelerator = key }
-    def item(name: String, key: String,
-             eye: (Int, Int, Int), up: (Int, Int, Int)) : ActionMenuItem =
-      item(name, key, sceneViewer.viewFrom(eye, up))
-    def item(name: String, key: String,
-             axis: (Int, Int, Int), angle: Double) : ActionMenuItem =
-      item(name, key, sceneViewer.rotateScene(axis, angle))
+    def view(name: String, key: String, eye: Vec3, up: Vec3) =
+      item(name, key, onActive(_.viewFrom(eye, up)))
+    def rot(name: String, key: String, axis: Vec3, angle: Double) =
+      item(name, key, onActive(_.rotateScene(axis, angle)))
     
     contents ++ List(
-      item("Home", "H", { sceneViewer.viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-                          sceneViewer.fieldOfView = 25.0
-                          sceneViewer.encompass }),
-      item("Fit", "0", { sceneViewer.fieldOfView = 25.0
-                         sceneViewer.encompass }),
+      item("Home", "H", onActive(v => { v.viewFrom((0,0,1), (0,1,0)); v.fit })),
+      item("Fit", "0", onActive(_.fit)),
       new Separator,
-      item("View From +X", "X",       ( 1, 0, 0), ( 0, 1, 0)),
-      item("View From +Y", "Y",       ( 0, 1, 0), ( 0, 0,-1)),
-      item("View From +Z", "Z",       ( 0, 0, 1), ( 0, 1, 0)),
-      item("View From -X", "shift X", (-1, 0, 0), ( 0, 1, 0)),
-      item("View From -Y", "shift Y", ( 0,-1, 0), ( 0, 0, 1)),
-      item("View From -Z", "shift Z", ( 0, 0,-1), ( 0, 1, 0)),
+      view("View From +X", "X",       ( 1, 0, 0), ( 0, 1, 0)),
+      view("View From +Y", "Y",       ( 0, 1, 0), ( 0, 0,-1)),
+      view("View From +Z", "Z",       ( 0, 0, 1), ( 0, 1, 0)),
+      view("View From -X", "shift X", (-1, 0, 0), ( 0, 1, 0)),
+      view("View From -Y", "shift Y", ( 0,-1, 0), ( 0, 0, 1)),
+      view("View From -Z", "shift Z", ( 0, 0,-1), ( 0, 1, 0)),
       new Separator,
-      item("Rotate Left",             "alt LEFT",      (0, 1, 0), -5 deg),
-      item("Rotate Right",            "alt RIGHT",     (0, 1, 0),  5 deg),
-      item("Rotate Up",               "alt UP",        (1, 0, 0), -5 deg),
-      item("Rotate Down",             "alt DOWN",      (1, 0, 0),  5 deg),
-      item("Rotate Clockwise",        "control RIGHT", (0, 0, 1), -5 deg),
-      item("Rotate Counterclockwise", "control LEFT",  (0, 0, 1),  5 deg)
+      rot("Rotate Left",             "alt LEFT",      (0, 1, 0), -5 deg),
+      rot("Rotate Right",            "alt RIGHT",     (0, 1, 0),  5 deg),
+      rot("Rotate Up",               "alt UP",        (1, 0, 0), -5 deg),
+      rot("Rotate Down",             "alt DOWN",      (1, 0, 0),  5 deg),
+      rot("Rotate Clockwise",        "control RIGHT", (0, 0, 1), -5 deg),
+      rot("Rotate Counterclockwise", "control LEFT",  (0, 0, 1),  5 deg)
     )
   }
   
