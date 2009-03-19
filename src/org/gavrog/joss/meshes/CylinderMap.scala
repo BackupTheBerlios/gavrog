@@ -36,7 +36,7 @@ object CylinderMap {
     val tMap = new LazyMap((t: TextureVertex) => {
       val v = t.chamber.vertex
       val n = t.chamber.normal
-      dst.addTextureVertex(atan2(n.z, n.x)/ 2 / Pi, v.y)
+      dst.addTextureVertex(atan2(n.z, n.x)/ 4 / Pi + 0.5, v.y)
     })
 
     for (f <- src.faces) {
@@ -66,8 +66,8 @@ object CylinderMap {
           val t2 = d.s0.tVertex
           val u1 = t1.pos.x
           var u2 = t2.pos.x
-          if (abs(u1 - (u2 + 1)) < abs(u1 - u2)) u2 += 1
-          if (abs(u1 - (u2 - 1)) < abs(u1 - u2)) u2 -= 1
+          if (abs(u1 - (u2 + 0.5)) < abs(u1 - u2)) u2 += 0.5
+          if (abs(u1 - (u2 - 0.5)) < abs(u1 - u2)) u2 -= 0.5
           t2.pos = new Vec2(u2, t2.pos.y)
           if (d.s2.tVertex == t1) store(d.s2)
         }
