@@ -102,7 +102,8 @@ object View {
     new JRealityViewerComponent(new DraggingTool,new ClickWheelCameraZoomTool)
   with MeshViewer {
     override def defaultFieldOfView = 0.01
-    var front_to_back: List[SceneGraphComponent] = Nil
+    var front_to_back = List[SceneGraphComponent]()
+    var selection = Set[SceneGraphComponent]()
     
     background_color = LIGHT_GRAY
     size = (600, 800)
@@ -131,6 +132,24 @@ object View {
     override def viewFrom(eye: Vec3, up: Vec3) =
       super.viewFrom(new Vec3(0, 0, 1), up)
     
+    val keyForFaceColor = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+    
+    def select(sgc: SceneGraphComponent) {
+      sgc.getAppearance.setAttribute(keyForFaceColor, Color.RED)
+      selection += sgc
+    }
+    def deselect(sgc: SceneGraphComponent) {
+      sgc.getAppearance.setAttribute(keyForFaceColor, Color.WHITE)
+      selection -= sgc
+    }
+    def hide(sgc: SceneGraphComponent) {
+      sgc.setVisible(false)
+      deselect(sgc)
+    }
+    def show(sgc: SceneGraphComponent) {
+      sgc.setVisible(true)
+    }
+    
     addTool(new AbstractTool {
       val activationSlot = InputSlot.getDevice("PrimaryAction") // Mouse left
       addCurrentSlot(activationSlot)
@@ -142,13 +161,11 @@ object View {
         pr.getPickPath.iterator.find(_.getName.startsWith("uv-chart")) match {
           case None => ()
           case Some(node) => modify {
-            val app = node.asInstanceOf[SceneGraphComponent].getAppearance
-            val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
-            if (app.getAttribute(key) == Color.RED)
-              app.setAttribute(key, Color.WHITE)
+            val sgc = node.asInstanceOf[SceneGraphComponent]
+            if (selection contains sgc)
+              deselect(sgc)
             else {
-              app.setAttribute(key, Color.RED)
-              val sgc = node.asInstanceOf[SceneGraphComponent]
+              select(sgc)
               front_to_back = sgc :: (front_to_back - sgc)
               update_z_order
             }
@@ -161,11 +178,9 @@ object View {
     reactions += {
       case KeyTyped(src, _, _, c) if (src == this) => {
         c match {
-          case ' ' => modify {
-            val key = POLYGON_SHADER + '.' + DIFFUSE_COLOR
-            for (sgc <- front_to_back)
-              sgc.getAppearance.setAttribute(key, WHITE)
-          }
+          case ' ' => modify { selection map deselect }
+          case 'h' => modify { selection map hide }
+          case 'u' => modify { front_to_back map show }
           case _ => {}
         }
       }
