@@ -101,7 +101,8 @@ object View {
   val uvMapViewer =
     new JRealityViewerComponent(new DraggingTool,new ClickWheelCameraZoomTool)
   with MeshViewer {
-    override def defaultFieldOfView = 0.01
+    //override def defaultFieldOfView = 0.01
+    perspective = false
     var front_to_back = List[SceneGraphComponent]()
     var selection = Set[SceneGraphComponent]()
     
@@ -113,7 +114,7 @@ object View {
     
     def update_z_order = modify {
       for ((node, z) <- front_to_back.zipWithIndex)
-        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -z))
+        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -0.01 * z))
     }
     
     def setMesh(mesh: Mesh) = modify {
@@ -286,7 +287,7 @@ object View {
       item(name, key, onActive(_.rotateScene(axis, angle)))
     
     contents ++ List(
-      item("Home", "H", onActive(v => {
+      item("Home", "shift H", onActive(v => {
         v.viewFrom((0,0,1), (0,1,0))
         v.fieldOfView = v.defaultFieldOfView
         v.encompass

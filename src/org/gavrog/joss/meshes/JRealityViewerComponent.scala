@@ -250,7 +250,10 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   def fieldOfView = camera.getFieldOfView
   def fieldOfView_=(x: Double) = camera.setFieldOfView(x)
   def defaultFieldOfView = 25.0
-    
+  
+  def perspective = camera.isPerspective
+  def perspective_=(value: Boolean) { camera.setPerspective(value) }
+  
   def encompass {
     // -- extract parameters from scene and viewer
     val ts = ToolSystem.toolSystemForViewer(viewer)
@@ -270,7 +273,6 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     if (bounds.isEmpty) return
 
     // -- compute best camera position based on bounding box and viewport
-    val camera = cameraPath.getLastElement.asInstanceOf[Camera]
 	val vp = CameraUtility.getViewport(camera, aspectRatio)
 	val e = bounds.getExtent
 	val radius = Math.sqrt(e(0) * e(0) + e(2) * e(2) + e(1) * e(1)) / 2.0
