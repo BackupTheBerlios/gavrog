@@ -100,7 +100,7 @@ object Mesh {
     
     def onTextureBorder = tVertex != s2.tVertex || s0.tVertex != s0.s2.tVertex
     
-    override def toString = "Chamber(%s -> %s, %s)" format (start, end, cell)
+    override def toString = "Chamber(%s -> %s)" format (start, end)
   }
 
   class Vertex(number : Int, xpos : Double, ypos : Double, zpos : Double) {
@@ -360,7 +360,7 @@ object Mesh {
         val ft = new ArrayBuffer[Int]
         val fn = new ArrayBuffer[Int]
         pars.foreach { s =>
-          val parts = (s + "/0").split("/").map(
+          val parts = (s + "/0/0").split("/").map(
             (s : String) => if (s.length == 0) 0 else s.toInt)
           fc += parts(0)
           ft += parts(1)
