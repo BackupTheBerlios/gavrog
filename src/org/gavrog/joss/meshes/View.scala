@@ -101,7 +101,6 @@ object View {
   val uvMapViewer =
     new JRealityViewerComponent(new DraggingTool,new ClickWheelCameraZoomTool)
   with MeshViewer {
-    //override def defaultFieldOfView = 0.01
     perspective = false
     var front_to_back = List[SceneGraphComponent]()
     var selection = Set[SceneGraphComponent]()
@@ -115,7 +114,7 @@ object View {
     
     def update_z_order = modify {
       for ((node, z) <- front_to_back.zipWithIndex)
-        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -0.01 * z))
+        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -z))
     }
     
     def setMesh(mesh: Mesh) = modify {
@@ -178,7 +177,7 @@ object View {
       }
     })
     
-    listenTo(keyClicks)
+    listenTo(keyClicks, Mouse.clicks)
     reactions += {
       case KeyTyped(src, _, _, c) if (src == this) => {
         c match {
@@ -206,8 +205,8 @@ object View {
 
   var active = List(sceneViewer, uvMapViewer)
   
-  def main(args : Array[String]) : Unit = {
-    val top = new MainFrame {
+  def main(args : Array[String]) {
+    new MainFrame {
       title    = "Scala Mesh Viewer"
       contents = new BorderPanel {
         add(new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer) {
@@ -216,45 +215,9 @@ object View {
         add(statusLine, BorderPanel.Position.South)
       }
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
-      
-      def show(src: AnyRef, p: Point, action: String) {
-        statusLine.text = "  %s%s in %s" format (
-          action,
-          if (p == null) "" else ", position %4d,%4d" format (p.x, p.y),
-          src match {
-            case `sceneViewer` => "model"
-            case `uvMapViewer` => "uvs"
-            case _             => "unknown"
-          }
-        )
-      }
-      def show(src: AnyRef, action: String) {
-        show(src, null, action)
-      }
-
-      listenTo(sceneViewer.Mouse.clicks, sceneViewer.Mouse.moves,
-               sceneViewer.keyClicks)
-      listenTo(uvMapViewer.Mouse.clicks, uvMapViewer.Mouse.moves,
-               uvMapViewer.keyClicks)
-      reactions += {
-        case MouseEntered(src, pt, _) => {
-          show(src, pt, "mouse entered")
-          src.requestFocus
-          if (src.isInstanceOf[MeshViewer])
-            active = List(src.asInstanceOf[MeshViewer])
-        }
-        case MouseExited(src, pt, _) => {
-          show(src, pt, "mouse exited")
-          active = List(sceneViewer, uvMapViewer)
-        }
-        case MousePressed (src, pt, _, _, _) => show(src, pt, "mouse pressed")
-        case MouseReleased(src, pt, _, _, _) => show(src, pt, "mouse released")
-        case MouseClicked (src, pt, _, _, _) => show(src, pt, "mouse clicked")
-        case KeyTyped(src, _, _, c) => show(src, "typed: " + c)
-      }
+      pack
+      visible = true
     }
-    top.pack
-    top.visible = true
   }
   
   def fileMenu = new Menu("File") {
