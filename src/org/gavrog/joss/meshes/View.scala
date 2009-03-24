@@ -26,7 +26,7 @@ import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
                           Transformation}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
-import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
+import de.jreality.tools.{ClickWheelCameraZoomTool, DraggingTool }
 import de.jreality.util.SceneGraphUtility
 
 import scala.collection.mutable.HashMap
@@ -105,6 +105,7 @@ object View {
     var front_to_back = List[SceneGraphComponent]()
     var selection = Set[SceneGraphComponent]()
     var hidden = List[Set[SceneGraphComponent]]()
+    var hot: SceneGraphComponent = null
     
     background_color = LIGHT_GRAY
     size = (600, 800)
@@ -133,15 +134,27 @@ object View {
     override def viewFrom(eye: Vec3, up: Vec3) =
       super.viewFrom(new Vec3(0, 0, 1), up)
     
-    val keyForFaceColor = POLYGON_SHADER + '.' + DIFFUSE_COLOR
+    def set_color(sgc: SceneGraphComponent, c: Color) =
+      sgc.getAppearance.setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, c)
     
     def select(sgc: SceneGraphComponent) {
-      sgc.getAppearance.setAttribute(keyForFaceColor, Color.RED)
+      set_color(sgc, Color.RED)
       selection += sgc
+      clear_hot
     }
     def deselect(sgc: SceneGraphComponent) {
-      sgc.getAppearance.setAttribute(keyForFaceColor, Color.WHITE)
+      set_color(sgc, Color.WHITE)
       selection -= sgc
+      clear_hot
+    }
+    def clear_hot = if (hot != null) {
+      set_color(hot, if (selection.contains(hot)) Color.RED else Color.WHITE)
+      hot = null
+    }
+    def make_hot(sgc: SceneGraphComponent) = if (hot != sgc) {
+      clear_hot
+      set_color(sgc, if (selection.contains(sgc)) Color.GREEN else Color.YELLOW)
+      hot = sgc
     }
     def hide(sgc: SceneGraphComponent) {
       sgc.setVisible(false)
@@ -160,19 +173,26 @@ object View {
     }
     
     addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("PrimaryAction") // Mouse left
+      addCurrentSlot(InputSlot.getDevice("PointerTransformation")) // mouse move
+      
+      override def perform(tc: ToolContext) = modify {
+        val pr = tc.getCurrentPick
+        if (pr == null) clear_hot
+        else make_hot(pr.getPickPath.getLastComponent)
+      }
+    })
+    
+    addTool(new AbstractTool {
+      val activationSlot = InputSlot.getDevice("PrimaryAction") // mouse left
       addCurrentSlot(activationSlot)
         
       override def perform(tc: ToolContext) {
         if (tc.getAxisState(activationSlot).isReleased) return
         val pr = tc.getCurrentPick
         if (pr == null) return
-        pr.getPickPath.iterator.find(_.getName.startsWith("uv-chart")) match {
-          case None => ()
-          case Some(node) => modify {
-            val sgc = node.asInstanceOf[SceneGraphComponent]
-            if (selection contains sgc) deselect(sgc) else select(sgc)
-          }
+        val sgc = pr.getPickPath.getLastComponent
+        modify {
+          if (selection contains sgc) deselect(sgc) else select(sgc)
         }
       }
     })
@@ -190,7 +210,7 @@ object View {
           }
           case 'u' => modify {
             hidden match {
-              case last_batch :: rest => {
+              case last_batch :: rest => modify {
                 last_batch map show
                 hidden = rest
               }
