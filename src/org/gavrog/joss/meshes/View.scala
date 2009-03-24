@@ -231,7 +231,7 @@ object View {
       contents = new BorderPanel {
         add(new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer) {
           continuousLayout = true
-        }, BorderPanel.Position.North)
+        }, BorderPanel.Position.Center)
         add(statusLine, BorderPanel.Position.South)
       }
       menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
