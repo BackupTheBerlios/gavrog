@@ -20,14 +20,15 @@ package org.gavrog.joss.meshes
 import java.awt.{Color, Point}
 import Color._
 
-import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
+import de.jreality.geometry.{GeometryUtility,
+                             IndexedFaceSetFactory, IndexedLineSetFactory}
 import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
                           Transformation}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.{ClickWheelCameraZoomTool, DraggingTool }
-import de.jreality.util.SceneGraphUtility
+import de.jreality.util.{Rectangle3D, SceneGraphUtility}
 
 import scala.collection.mutable.HashMap
 import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
@@ -115,6 +116,8 @@ object View {
     setLight("Main Light",
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
+    scene.addChild(grid)
+    encompass
     
     def update_z_order = modify {
       for ((node, z) <- front_to_back.zipWithIndex)
@@ -129,6 +132,7 @@ object View {
           front_to_back = this :: front_to_back
         })
       update_z_order
+      scene.addChild(grid)
       encompass
     }
     
@@ -141,22 +145,22 @@ object View {
       sgc.getAppearance.setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, c)
     
     def select(sgc: SceneGraphComponent) {
-      set_color(sgc, Color.RED)
+      set_color(sgc, RED)
       selection += sgc
       clear_hot
     }
     def deselect(sgc: SceneGraphComponent) {
-      set_color(sgc, Color.WHITE)
+      set_color(sgc, WHITE)
       selection -= sgc
       clear_hot
     }
     def clear_hot = if (hot != null) {
-      set_color(hot, if (selection.contains(hot)) Color.RED else Color.WHITE)
+      set_color(hot, if (selection.contains(hot)) RED else WHITE)
       hot = null
     }
     def make_hot(sgc: SceneGraphComponent) = if (hot != sgc) {
       clear_hot
-      set_color(sgc, if (selection.contains(sgc)) Color.GREEN else Color.YELLOW)
+      set_color(sgc, if (selection.contains(sgc)) GREEN else YELLOW)
       hot = sgc
     }
     def hide(sgc: SceneGraphComponent) {
@@ -345,5 +349,34 @@ object View {
       setGenerateVertexNormals(true)
       update
     }.getIndexedFaceSet)
+    
+  }
+  
+  object grid extends SceneGraphComponent("Grid") {
+    setGeometry(new IndexedLineSetFactory {
+      setVertexCount(16)
+      setLineCount(8)
+      setVertexCoordinates(Array[Array[Double]](
+        Array(-1, -1, 0), Array(-1,  0, 0), Array(-1,  1, 0), Array(-1,  2, 0),
+        Array( 2, -1, 0), Array( 2,  0, 0), Array( 2,  1, 0), Array( 2,  2, 0),
+        Array(-1, -1, 0), Array( 0, -1, 0), Array( 1, -1, 0), Array( 2, -1, 0),
+        Array(-1,  2, 0), Array( 0,  2, 0), Array( 1,  2, 0), Array( 2,  2, 0)
+      ))
+      setEdgeIndices(Array(
+        Array( 0,  4), Array( 1,  5), Array( 2,  6), Array( 3,  7),
+        Array( 8, 12), Array( 9, 13), Array(10, 14), Array(11, 15)))
+      update
+    }.getIndexedLineSet)
+    setPickable(false)
+    setAppearance(new RichAppearance(
+      FACE_DRAW                                -> false,
+      EDGE_DRAW                                -> true,
+      TUBES_DRAW                               -> false,
+      VERTEX_DRAW                              -> false,
+      LINE_WIDTH                               -> 1.0,
+      LINE_SHADER + '.' + DIFFUSE_COLOR        -> BLUE,
+      LINE_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.0,
+      PICKABLE                                 -> false
+    ))
   }
 }
