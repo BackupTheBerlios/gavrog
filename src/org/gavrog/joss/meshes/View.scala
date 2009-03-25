@@ -121,8 +121,8 @@ object View {
     super.encompass
     
     def update_z_order = modify {
-      for ((node, z) <- front_to_back.zipWithIndex)
-        node.setTransformation(MatrixBuilder.euclidean.translate(0, 0, -z))
+      for ((node, z) <- front_to_back.zipWithIndex) node.setTransformation(
+        MatrixBuilder.euclidean.translate(0, 0, -0.01 * z))
     }
     
     def setMesh(mesh: Mesh) = modify {
