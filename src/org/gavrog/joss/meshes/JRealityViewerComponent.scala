@@ -64,9 +64,7 @@ class JRealityViewerComponent(content: SceneGraphComponent,
     addChild(lightNode)
     setAppearance(new RichAppearance(
       CommonAttributes.BACKGROUND_COLOR -> Color.DARK_GRAY,
-      CommonAttributes.DIFFUSE_COLOR    -> Color.RED,
-      CommonAttributes.TUBE_RADIUS      -> 0.00001,
-      CommonAttributes.POINT_RADIUS     -> 0.00001
+      CommonAttributes.DIFFUSE_COLOR    -> Color.RED
     ))
   }
 

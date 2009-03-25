@@ -66,7 +66,10 @@ object View {
     DEPTH_FUDGE_FACTOR                          -> 0.9999,
     LINE_WIDTH                                  -> 1.0,
     LINE_SHADER + '.' + DIFFUSE_COLOR           -> new Color(0.1f, 0.1f, 0.1f),
-    LINE_SHADER + '.' + SPECULAR_COEFFICIENT    -> 0.0
+    LINE_SHADER + '.' + SPECULAR_COEFFICIENT    -> 0.0,
+    // the following make sure no imaginary tubes and sphere are picked
+    TUBE_RADIUS                                 -> 0.00001,
+    POINT_RADIUS                                -> 0.00001
   )
   
   val loadMeshChooser = new FileChooser
