@@ -53,6 +53,7 @@ object View {
     def hasNext = it.hasNext
     def next = it.next
   }
+  implicit def wrap[T](it: java.lang.Iterable[T]) = wrapIter(it.iterator)
   
   def log(message: String) = statusLine.text = message
   
@@ -117,7 +118,7 @@ object View {
              new DirectionalLight { setIntensity(1.0) },
              MatrixBuilder.euclidean)
     scene.addChild(grid)
-    encompass
+    super.encompass
     
     def update_z_order = modify {
       for ((node, z) <- front_to_back.zipWithIndex)
@@ -134,6 +135,19 @@ object View {
       update_z_order
       scene.addChild(grid)
       encompass
+    }
+    
+    override def encompass {
+      var hidden = Set[SceneGraphComponent](grid)
+      grid.setVisible(false)
+      if (!selection.isEmpty)
+        for (sgc <- scene.getChildComponents
+             if (!selection.contains(sgc) && sgc.isVisible)) {
+          hidden += sgc
+          sgc.setVisible(false)
+        }
+      super.encompass
+      for (sgc <- hidden) sgc.setVisible(true)
     }
     
     override def rotateScene(axis: Vec3, angle: Double) =
