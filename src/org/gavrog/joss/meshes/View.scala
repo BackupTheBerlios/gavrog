@@ -101,6 +101,12 @@ object View {
       center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
       encompass
     }
+    
+    listenTo(keyClicks, Mouse.clicks, Mouse.moves)
+    reactions += {
+      case MouseEntered(src, _, _) if (src == this) => requestFocus
+      case _ => {}
+    }
   }
 
   val uvMapViewer =
@@ -174,7 +180,7 @@ object View {
     }
     def make_hot(sgc: SceneGraphComponent) = if (hot != sgc) {
       clear_hot
-      set_color(sgc, if (selection.contains(sgc)) GREEN else YELLOW)
+      set_color(sgc, if (selection.contains(sgc)) YELLOW else GREEN)
       hot = sgc
     }
     def hide(sgc: SceneGraphComponent) {
@@ -218,8 +224,9 @@ object View {
       }
     })
     
-    listenTo(keyClicks, Mouse.clicks)
+    listenTo(keyClicks, Mouse.clicks, Mouse.moves)
     reactions += {
+      case MouseEntered(src, _, _) if (src == this) => requestFocus
       case KeyTyped(src, _, _, c) if (src == this) => {
         c match {
           case ' ' => modify { selection map deselect }
