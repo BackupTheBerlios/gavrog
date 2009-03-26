@@ -31,7 +31,6 @@ import de.jreality.scene.{Appearance, Camera, Light, SceneGraphComponent,
 import de.jreality.scene.tool.Tool
 import de.jreality.shader.CommonAttributes
 import de.jreality.softviewer.SoftViewer
-import de.jreality.tools.{DraggingTool, RotateTool, ClickWheelCameraZoomTool}
 import de.jreality.toolsystem.ToolSystem
 import de.jreality.util.{CameraUtility, RenderTrigger}
 
@@ -42,9 +41,6 @@ import Vectors._
 class JRealityViewerComponent(content: SceneGraphComponent,
                               tools: Tool*) extends BorderPanel
 {
-  def this(sgc: SceneGraphComponent) =
-    this(sgc, new RotateTool, new DraggingTool, new ClickWheelCameraZoomTool)
-  
   def this(tools: Tool*) = this(new SceneGraphComponent, tools: _*)
   
   def this() = this(new SceneGraphComponent)

@@ -23,12 +23,12 @@ import Color._
 
 import de.jreality.geometry.{GeometryUtility,
                              IndexedFaceSetFactory, IndexedLineSetFactory}
-import de.jreality.math.MatrixBuilder
+import de.jreality.math.{Matrix, MatrixBuilder}
 import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
                           Transformation}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
-import de.jreality.tools.{ClickWheelCameraZoomTool, DraggingTool }
+import de.jreality.tools.{ClickWheelCameraZoomTool, RotateTool }
 import de.jreality.util.{Rectangle3D, SceneGraphUtility}
 
 import scala.collection.mutable.HashMap
@@ -84,7 +84,10 @@ object View {
     def setMesh(mesh: Mesh)
   }
   
-  val sceneViewer = new MeshViewer {
+  val sceneViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
+                                                new DragTool,
+                                                new RotateTool)
+  with MeshViewer {
     size = (600, 800)
     setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
@@ -139,8 +142,8 @@ object View {
     }
   }
 
-  val uvMapViewer =
-    new JRealityViewerComponent(new DraggingTool,new ClickWheelCameraZoomTool)
+  val uvMapViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
+                                                new DragTool)
   with MeshViewer {
     perspective = false
     var front_to_back = List[SceneGraphComponent]()
@@ -348,6 +351,26 @@ object View {
       pack
       visible = true
     }
+  }
+  
+  class DragTool extends AbstractTool(InputSlot.getDevice("DragActivation")) {
+	val evolutionSlot = InputSlot.getDevice("PointerEvolution")
+	addCurrentSlot(evolutionSlot)
+      
+	var comp: SceneGraphComponent = null
+      
+	override def activate(tc: ToolContext) {
+	  comp = tc.getRootToToolComponent.getLastComponent
+	  if (comp.getTransformation == null)
+		comp.setTransformation(new Transformation)
+	}
+	
+	override def perform(tc: ToolContext) {
+	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
+	  evolution.conjugateBy(
+	    new Matrix(tc.getRootToToolComponent.getInverseMatrix(null)))
+	  comp.getTransformation.multiplyOnRight(evolution.getArray)
+	}
   }
   
   class MeshGeometry(mesh: Mesh)
