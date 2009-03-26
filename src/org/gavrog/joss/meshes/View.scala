@@ -375,7 +375,7 @@ object View {
   
   class RotTool(viewer: JRealityViewerComponent)
   extends AbstractTool(InputSlot.getDevice("RotateActivation")) {
-	val evolutionSlot = InputSlot.getDevice("PointerEvolution")
+	val evolutionSlot = InputSlot.getDevice("TrackballTransformation")
 	addCurrentSlot(evolutionSlot)
 	
 	var comp: SceneGraphComponent = null
@@ -390,8 +390,7 @@ object View {
 	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
 	  val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
 	  val axis = e.getRotationAxis
-	  viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)),
-                      	-10 * e.getRotationAngle)
+	  viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), e.getRotationAngle)
 	}
   }
   
