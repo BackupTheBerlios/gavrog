@@ -23,7 +23,7 @@ import Color._
 
 import de.jreality.geometry.{GeometryUtility,
                              IndexedFaceSetFactory, IndexedLineSetFactory}
-import de.jreality.math.{Matrix, MatrixBuilder}
+import de.jreality.math.{FactoredMatrix, Matrix, MatrixBuilder, Pn}
 import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
                           Transformation}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
@@ -85,9 +85,9 @@ object View {
   }
   
   val sceneViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
-                                                new DragTool,
-                                                new RotateTool)
+                                                new DragTool)
   with MeshViewer {
+    addTool(new RotTool(this))
     size = (600, 800)
     setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
@@ -370,6 +370,28 @@ object View {
 	  evolution.conjugateBy(
 	    new Matrix(tc.getRootToToolComponent.getInverseMatrix(null)))
 	  comp.getTransformation.multiplyOnRight(evolution.getArray)
+	}
+  }
+  
+  class RotTool(viewer: JRealityViewerComponent)
+  extends AbstractTool(InputSlot.getDevice("RotateActivation")) {
+	val evolutionSlot = InputSlot.getDevice("PointerEvolution")
+	addCurrentSlot(evolutionSlot)
+	
+	var comp: SceneGraphComponent = null
+      
+	override def activate(tc: ToolContext) {
+	  comp = tc.getRootToToolComponent.getLastComponent
+	  if (comp.getTransformation == null)
+		comp.setTransformation(new Transformation)
+	}
+	
+	override def perform(tc: ToolContext) {
+	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
+	  val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
+	  val axis = e.getRotationAxis
+	  viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)),
+                      	-10 * e.getRotationAngle)
 	}
   }
   
