@@ -90,15 +90,15 @@ class JRealityViewerComponent(content: SceneGraphComponent,
       }
 
       def keyPressed (e: java.awt.event.KeyEvent) {
-        publish(KeyPressed(wrappedSource(e), e.getModifiersEx,
+        publish(KeyPressed(wrappedSource(e), e.getModifiers,
                            e.getKeyCode, e.getKeyChar)(e.getWhen))
       }
       def keyReleased(e: java.awt.event.KeyEvent) {
-        publish(KeyReleased(wrappedSource(e), e.getModifiersEx,
+        publish(KeyReleased(wrappedSource(e), e.getModifiers,
                             e.getKeyCode, e.getKeyChar)(e.getWhen))
       }
       def keyTyped   (e: java.awt.event.KeyEvent) {
-        publish(KeyTyped(wrappedSource(e), e.getModifiersEx,
+        publish(KeyTyped(wrappedSource(e), e.getModifiers,
                          e.getKeyCode, e.getKeyChar)(e.getWhen))
       }
     })

@@ -18,6 +18,7 @@
 package org.gavrog.joss.meshes
 
 import java.awt.{Color, Point}
+import java.awt.event.KeyEvent
 import Color._
 
 import de.jreality.geometry.{GeometryUtility,
@@ -77,7 +78,7 @@ object View {
   val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
   
-  val statusLine = new TextArea(1, 80)
+  val statusLine = new TextArea(1, 80) { editable = false }
   
   trait MeshViewer extends JRealityViewerComponent {
     def setMesh(mesh: Mesh)
@@ -105,7 +106,36 @@ object View {
     listenTo(keyClicks, Mouse.clicks, Mouse.moves)
     reactions += {
       case MouseEntered(src, _, _) if (src == this) => requestFocus
-      case _ => {}
+      case KeyPressed(src, modifiers, code, _) if (src == this) => {
+        val key = KeyEvent.getKeyText(code)
+        val mod = KeyEvent.getKeyModifiersText(modifiers)
+    	val txt = mod + (if (mod.size > 0) "-" else "") + key
+    	txt match {
+    	  case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), +5 deg) }
+    	  case "Ctrl-Right" => modify { rotateScene(Vec3(0, 0, 1), -5 deg) }
+    	  case "Left"       => modify { rotateScene(Vec3(0, 1, 0), -5 deg) }
+    	  case "Right"      => modify { rotateScene(Vec3(0, 1, 0), +5 deg) }
+    	  case "Up"         => modify { rotateScene(Vec3(1, 0, 0), -5 deg) }
+    	  case "Down"       => modify { rotateScene(Vec3(1, 0, 0), +5 deg) }
+      	  case "Home"       => modify {
+      	    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+      	    fieldOfView = defaultFieldOfView
+            encompass
+      	  }
+      	  case "0"          => modify {
+      	    fieldOfView = defaultFieldOfView
+            encompass
+      	  }
+      	  case "X"       => modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) }
+      	  case "Shift-X" => modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) }
+      	  case "Y"       => modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) }
+      	  case "Shift-Y" => modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) }
+      	  case "Z"       => modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) }
+      	  case "Shift-Z" => modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) }
+
+      	  case _  => log(txt)
+        }
+      }
     }
   }
 
@@ -144,6 +174,12 @@ object View {
     }
     
     override def encompass {
+      grid.setVisible(false)
+      super.encompass
+      grid.setVisible(true)
+    }
+    
+    def encompassSelected {
       var hidden = Set[SceneGraphComponent](grid)
       grid.setVisible(false)
       if (!selection.isEmpty)
@@ -227,26 +263,34 @@ object View {
     listenTo(keyClicks, Mouse.clicks, Mouse.moves)
     reactions += {
       case MouseEntered(src, _, _) if (src == this) => requestFocus
-      case KeyTyped(src, _, _, c) if (src == this) => {
-        c match {
-          case ' ' => modify { selection map deselect }
-          case 'b' => modify { selection map push_to_back }
-          case 'f' => modify { selection map pull_to_front }
-          case 'h' => modify {
+      case KeyPressed(src, modifiers, code, _) if (src == this) => {
+        val key = KeyEvent.getKeyText(code)
+        val mod = KeyEvent.getKeyModifiersText(modifiers)
+    	val txt = mod + (if (mod.size > 0) "-" else "") + key
+    	txt match {
+    	  case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), 5 deg) }
+    	  case "Ctrl-Right" => modify { rotateScene(Vec3(0, 0, 1), -5 deg) }
+      	  case "Home"       => modify {
+      	    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+            encompass
+      	  }
+    	  case "0"     => modify { encompassSelected }
+      	  case "Space" => modify { selection map deselect }
+      	  case "B"     => modify { selection map push_to_back }
+      	  case "F"     => modify { selection map pull_to_front }
+      	  case "H"     => if (selection.size > 0) modify {
             hidden = (Set() ++ selection) :: hidden
-            selection map hide
-          }
-          case 'u' => modify {
-            hidden match {
-              case last_batch :: rest => modify {
-                last_batch map show
-                hidden = rest
-              }
-              case Nil => ()
-            }
-          }
-          case _ => {}
-        }
+      	  	selection map hide
+      	  }
+      	  case "U"     => hidden match {
+      	    case last_batch :: rest => modify {
+      	      last_batch map show
+      	      hidden = rest
+      	    }
+      	    case Nil => ()
+      	  }
+      	  case _  => log(txt)
+    	}
       }
     }
   }
@@ -262,82 +306,48 @@ object View {
         }, BorderPanel.Position.Center)
         add(statusLine, BorderPanel.Position.South)
       }
-      menuBar  = new MenuBar { contents ++ List(fileMenu, viewMenu) }
+      menuBar = new MenuBar {
+        contents += new Menu("File") {
+          contents ++ List(
+    	    new ActionMenuItem("Load Mesh ...", {
+    		  val result = loadMeshChooser.showOpenDialog(this)
+    		  result match {
+    		    case FileChooser.Result.Approve => run {
+    			  val file = loadMeshChooser.selectedFile
+    			  log("Reading...")
+    			  val mesh = Mesh.read(file.getAbsolutePath, true)(0)
+    			  log("Converting...")
+    			  sceneViewer.setMesh(mesh)
+    			  uvMapViewer.setMesh(mesh)
+    			  log("Done!")
+    		    }
+    		    case _ => {}
+    		  }
+    	    }) { accelerator = "control O" },
+      
+    	    new Separator,
+    	    new ActionMenuItem("Take Screen Shot ...", {
+    	      val result = screenShotChooser.showSaveDialog(this)
+    	      result match {
+    	        case FileChooser.Result.Approve => run {
+    	          log("Taking screenshot ...")
+    	          val file = screenShotChooser.selectedFile
+    	          val d = sceneViewer.size
+    	          sceneViewer.screenshot((d.width, d.height), 4, file)
+    	          log("Wrote image to %s" format file.getName)
+    	        }
+    	        case _ => {}
+    	      }
+    	    }) { accelerator = "control I" },
+      
+    	    new Separator,
+    	    new ActionMenuItem("Exit", System.exit(0))
+          )
+        }
+      }
       pack
       visible = true
     }
-  }
-  
-  def fileMenu = new Menu("File") {
-    contents ++ List(
-      
-      new ActionMenuItem("Load Mesh ...", {
-        val result = loadMeshChooser.showOpenDialog(this)
-        result match {
-          case FileChooser.Result.Approve => run {
-            val file = loadMeshChooser.selectedFile
-            log("Reading...")
-            val mesh = Mesh.read(file.getAbsolutePath, true)(0)
-            log("Converting...")
-            sceneViewer.setMesh(mesh)
-            uvMapViewer.setMesh(mesh)
-            log("Done!")
-          }
-          case _ => {}
-        }
-      }) { accelerator = "control O" },
-      
-      new ActionMenuItem("Take Screen Shot ...", {
-        val result = screenShotChooser.showSaveDialog(this)
-        result match {
-          case FileChooser.Result.Approve => run {
-            log("Taking screenshot ...")
-            val file = screenShotChooser.selectedFile
-            val d = sceneViewer.size
-            sceneViewer.screenshot((d.width, d.height), 4, file)
-            log("Wrote image to %s" format file.getName)
-          }
-          case _ => {}
-        }
-      }) { accelerator = "control I" }
-    )
-  }
-  
-  def viewMenu = new Menu("View") {
-    implicit def as_vec3(t: (Int, Int, Int)) = Vec3(t._1, t._2, t._3)
-    def onActive(f: MeshViewer => Unit) = for (v <- active) f(v)
-    def item(name: String, key: String, code: => unit) =
-      new ActionMenuItem(name, code) { accelerator = key }
-    def viewFrom(txt: String, key: String, eye: Vec3, up: Vec3) =
-      item("View from " + txt, key, onActive(_.viewFrom(eye, up)))
-    def rotate(txt: String, key: String, axis: Vec3, angle: Double) =
-      item("Rotate " + txt, key, onActive(_.rotateScene(axis, angle)))
-    
-    contents ++ List(
-      item("Home", "shift H", onActive(v => {
-        v.viewFrom((0,0,1), (0,1,0))
-        v.fieldOfView = v.defaultFieldOfView
-        v.encompass
-      })),
-      item("Fit", "0", onActive(v => {
-        v.fieldOfView = v.defaultFieldOfView
-        v.encompass
-      })),
-      new Separator,
-      viewFrom("+X", "X",       ( 1, 0, 0), ( 0, 1, 0)),
-      viewFrom("+Y", "Y",       ( 0, 1, 0), ( 0, 0,-1)),
-      viewFrom("+Z", "Z",       ( 0, 0, 1), ( 0, 1, 0)),
-      viewFrom("-X", "shift X", (-1, 0, 0), ( 0, 1, 0)),
-      viewFrom("-Y", "shift Y", ( 0,-1, 0), ( 0, 0, 1)),
-      viewFrom("-Z", "shift Z", ( 0, 0,-1), ( 0, 1, 0)),
-      new Separator,
-      rotate("Left",             "alt LEFT",      (0, 1, 0), -5 deg),
-      rotate("Right",            "alt RIGHT",     (0, 1, 0),  5 deg),
-      rotate("Up",               "alt UP",        (1, 0, 0), -5 deg),
-      rotate("Down",             "alt DOWN",      (1, 0, 0),  5 deg),
-      rotate("Clockwise",        "control RIGHT", (0, 0, 1), -5 deg),
-      rotate("Counterclockwise", "control LEFT",  (0, 0, 1),  5 deg)
-    )
   }
   
   class MeshGeometry(mesh: Mesh)
