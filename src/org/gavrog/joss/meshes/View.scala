@@ -385,12 +385,10 @@ object View {
       
 	override def perform(tc: ToolContext) {
 	  if (tc.getAxisState(activationSlot).isReleased) return
-	  tc.getSource match {
-	    case slot if List(activationSlot, restrictionSlot) contains slot => {
+	  if (List(activationSlot, restrictionSlot) contains tc.getSource) {
 	      restrict = tc.getAxisState(restrictionSlot).isPressed
 	      axisName = null
-	    }
-	    case _ => {
+	  } else {
 	      var angle = 0.0
 	      var axis = Array(0.0, 0.0, 0.0)
 	      if (restrict) {
@@ -413,7 +411,6 @@ object View {
 	      }
 	      viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), angle)
 	    }
-	  }
 	}
   }
   
