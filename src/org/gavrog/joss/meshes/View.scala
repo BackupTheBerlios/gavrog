@@ -18,7 +18,6 @@
 package org.gavrog.joss.meshes
 
 import java.awt.{Color, Point}
-import java.awt.event.KeyEvent
 import Color._
 
 import de.jreality.geometry.{GeometryUtility,
@@ -28,13 +27,13 @@ import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
                           Transformation}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
-import de.jreality.tools.{ClickWheelCameraZoomTool, RotateTool }
+import de.jreality.tools.ClickWheelCameraZoomTool
 import de.jreality.util.{Rectangle3D, SceneGraphUtility}
 
 import scala.collection.mutable.HashMap
 import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
                     Orientation, Separator, SplitPane, TextArea}
-import scala.swing.event._
+import scala.swing.event.MouseEntered
 
 import JRealitySupport._
 import Mesh._
@@ -85,9 +84,10 @@ object View {
   }
   
   val sceneViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
-                                                new DragTool)
+                                                new PanTool)
   with MeshViewer {
-    addTool(new RotTool(this))
+    addTool(new RotateTool(this))
+    
     size = (600, 800)
     setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
              MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
@@ -110,8 +110,8 @@ object View {
     reactions += {
       case MouseEntered(src, _, _) if (src == this) => requestFocus
       case KeyPressed(src, modifiers, code, _) if (src == this) => {
-        val key = KeyEvent.getKeyText(code)
-        val mod = KeyEvent.getKeyModifiersText(modifiers)
+        val key = java.awt.event.KeyEvent.getKeyText(code)
+        val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
     	val txt = mod + (if (mod.size > 0) "-" else "") + key
     	txt match {
     	  case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), +5 deg) }
@@ -143,7 +143,7 @@ object View {
   }
 
   val uvMapViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
-                                                new DragTool)
+                                                new PanTool)
   with MeshViewer {
     perspective = false
     var front_to_back = List[SceneGraphComponent]()
@@ -267,8 +267,8 @@ object View {
     reactions += {
       case MouseEntered(src, _, _) if (src == this) => requestFocus
       case KeyPressed(src, modifiers, code, _) if (src == this) => {
-        val key = KeyEvent.getKeyText(code)
-        val mod = KeyEvent.getKeyModifiersText(modifiers)
+        val key = java.awt.event.KeyEvent.getKeyText(code)
+        val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
     	val txt = mod + (if (mod.size > 0) "-" else "") + key
     	txt match {
     	  case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), 5 deg) }
@@ -353,7 +353,7 @@ object View {
     }
   }
   
-  class DragTool extends AbstractTool(InputSlot.getDevice("DragActivation")) {
+  class PanTool extends AbstractTool(InputSlot.getDevice("DragActivation")) {
 	val evolutionSlot = InputSlot.getDevice("PointerEvolution")
 	addCurrentSlot(evolutionSlot)
       
@@ -373,7 +373,7 @@ object View {
 	}
   }
   
-  class RotTool(viewer: JRealityViewerComponent)
+  class RotateTool(viewer: JRealityViewerComponent)
   extends AbstractTool(InputSlot.getDevice("RotateActivation")) {
 	val evolutionSlot = InputSlot.getDevice("TrackballTransformation")
 	addCurrentSlot(evolutionSlot)
@@ -390,7 +390,8 @@ object View {
 	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
 	  val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
 	  val axis = e.getRotationAxis
-	  viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), e.getRotationAngle)
+	  val angle = e.getRotationAngle
+	  viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), angle)
 	}
   }
   
