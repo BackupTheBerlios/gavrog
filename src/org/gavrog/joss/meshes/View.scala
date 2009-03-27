@@ -248,18 +248,12 @@ object View {
       }
     })
     
-    addTool(new AbstractTool {
-      val activationSlot = InputSlot.getDevice("PrimaryAction") // mouse left
-      addCurrentSlot(activationSlot)
-        
-      override def perform(tc: ToolContext) {
-        if (tc.getAxisState(activationSlot).isReleased) return
+    addTool(new AbstractTool(InputSlot.getDevice("PrimaryAction")) { // mouse 1
+      override def activate(tc: ToolContext) {
         val pr = tc.getCurrentPick
         if (pr == null) return
         val sgc = pr.getPickPath.getLastComponent
-        modify {
-          if (selection contains sgc) deselect(sgc) else select(sgc)
-        }
+        modify { if (selection contains sgc) deselect(sgc) else select(sgc) }
       }
     })
     
@@ -374,24 +368,52 @@ object View {
   }
   
   class RotateTool(viewer: JRealityViewerComponent)
-  extends AbstractTool(InputSlot.getDevice("RotateActivation")) {
+  extends AbstractTool() {
+    val activationSlot = InputSlot.getDevice("RotateActivation")
+    val restrictionSlot = InputSlot.getDevice("Meta")
 	val evolutionSlot = InputSlot.getDevice("TrackballTransformation")
+	val evolutionXSlot = InputSlot.getDevice("PointerNdcXevolution")
+	val evolutionYSlot = InputSlot.getDevice("PointerNdcYevolution")
+	addCurrentSlot(activationSlot)
+	addCurrentSlot(restrictionSlot)
 	addCurrentSlot(evolutionSlot)
+	addCurrentSlot(evolutionXSlot)
+	addCurrentSlot(evolutionYSlot)
 	
-	var comp: SceneGraphComponent = null
+	var restrict = false
+	var axisName: String = null
       
-	override def activate(tc: ToolContext) {
-	  comp = tc.getRootToToolComponent.getLastComponent
-	  if (comp.getTransformation == null)
-		comp.setTransformation(new Transformation)
-	}
-	
 	override def perform(tc: ToolContext) {
-	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
-	  val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
-	  val axis = e.getRotationAxis
-	  val angle = e.getRotationAngle
-	  viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), angle)
+	  if (tc.getAxisState(activationSlot).isReleased) return
+	  tc.getSource match {
+	    case slot if List(activationSlot, restrictionSlot) contains slot => {
+	      restrict = tc.getAxisState(restrictionSlot).isPressed
+	      axisName = null
+	    }
+	    case _ => {
+	      var angle = 0.0
+	      var axis = Array(0.0, 0.0, 0.0)
+	      if (restrict) {
+	    	val yrot = tc.getAxisState(evolutionXSlot).doubleValue
+	    	val xrot = tc.getAxisState(evolutionYSlot).doubleValue
+	    	if (axisName == null)
+	    	  axisName = if (xrot.abs > yrot.abs) "x" else "y"
+	    	if (axisName == "x") {
+	          axis = Array(1.0, 0.0, 0.0)
+	          angle = -xrot
+	    	} else {
+	    	  axis = Array(0.0, 1.0, 0.0)
+	    	  angle = yrot
+	    	}
+	      } else {
+	    	val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
+	    	val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
+	    	axis = e.getRotationAxis
+	    	angle = e.getRotationAngle
+	      }
+	      viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), angle)
+	    }
+	  }
 	}
   }
   
