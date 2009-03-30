@@ -15,7 +15,7 @@
 */
 
 
-package org.gavrog.joss.meshes
+package org.gavrog.joss.meshes.gui
 
 import java.awt.Point
 

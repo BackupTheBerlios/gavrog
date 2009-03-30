@@ -15,20 +15,17 @@
 */
 
 
-package org.gavrog.joss.meshes
+package org.gavrog.joss.meshes.gui
 
-import java.awt.{Color, Point}
-import Color._
+import java.awt.Color
 
-import de.jreality.geometry.{GeometryUtility,
-                             IndexedFaceSetFactory, IndexedLineSetFactory}
-import de.jreality.math.{FactoredMatrix, Matrix, MatrixBuilder, Pn}
-import de.jreality.scene.{Appearance, DirectionalLight, SceneGraphComponent,
-                          Transformation}
+import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
+import de.jreality.math.MatrixBuilder
+import de.jreality.scene.{DirectionalLight, SceneGraphComponent}
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.ClickWheelCameraZoomTool
-import de.jreality.util.{Rectangle3D, SceneGraphUtility}
+import de.jreality.util.SceneGraphUtility
 
 import scala.collection.mutable.HashMap
 import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
@@ -36,15 +33,13 @@ import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
 import scala.swing.event.MouseEntered
 
 import JRealitySupport._
-import Mesh._
 import Sums._
 import SwingSupport._
 import Vectors._
 
 object View {
-  class XDouble(d: Double) { def deg = d / 180.0 * Math.Pi }
-  implicit def xdouble(d: Double) = new XDouble(d)
-  implicit def xint(i: Int) = new XDouble(i)
+  implicit def xdouble(d: Double) = new { def deg = d / 180.0 * Math.Pi }
+  implicit def xint(i: Int) = new { def deg = i / 180.0 * Math.Pi }
   
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
   implicit def asArray[A](it: Iterable[A]) = it.toList.toArray
@@ -62,7 +57,7 @@ object View {
     TUBES_DRAW                                  -> false,
     VERTEX_DRAW                                 -> false,
     FACE_DRAW                                   -> true,
-    POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> WHITE,
+    POLYGON_SHADER + '.' + DIFFUSE_COLOR        -> Color.WHITE,
     POLYGON_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.1,
     SMOOTH_SHADING                              -> false,
     DEPTH_FUDGE_FACTOR                          -> 0.9999,
@@ -79,13 +74,9 @@ object View {
   
   val statusLine = new TextArea(1, 80) { editable = false }
   
-  trait MeshViewer extends JRealityViewerComponent {
-    def setMesh(mesh: Mesh)
-  }
-  
   val sceneViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
                                                 new PanTool)
-  with MeshViewer {
+  {
     addTool(new RotateTool(this))
     
     size = (600, 800)
@@ -144,14 +135,14 @@ object View {
 
   val uvMapViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
                                                 new PanTool)
-  with MeshViewer {
+  {
     perspective = false
     var front_to_back = List[SceneGraphComponent]()
     var selection = Set[SceneGraphComponent]()
     var hidden = List[Set[SceneGraphComponent]]()
     var hot: SceneGraphComponent = null
     
-    background_color = LIGHT_GRAY
+    background_color = Color.LIGHT_GRAY
     size = (600, 800)
     setLight("Main Light",
              new DirectionalLight { setIntensity(1.0) },
@@ -204,22 +195,22 @@ object View {
       sgc.getAppearance.setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, c)
     
     def select(sgc: SceneGraphComponent) {
-      set_color(sgc, RED)
+      set_color(sgc, Color.RED)
       selection += sgc
       clear_hot
     }
     def deselect(sgc: SceneGraphComponent) {
-      set_color(sgc, WHITE)
+      set_color(sgc, Color.WHITE)
       selection -= sgc
       clear_hot
     }
     def clear_hot = if (hot != null) {
-      set_color(hot, if (selection.contains(hot)) RED else WHITE)
+      set_color(hot, if (selection.contains(hot)) Color.RED else Color.WHITE)
       hot = null
     }
     def make_hot(sgc: SceneGraphComponent) = if (hot != sgc) {
       clear_hot
-      set_color(sgc, if (selection.contains(sgc)) YELLOW else GREEN)
+      set_color(sgc, if (selection.contains(sgc)) Color.YELLOW else Color.GREEN)
       hot = sgc
     }
     def hide(sgc: SceneGraphComponent) {
@@ -347,79 +338,12 @@ object View {
     }
   }
   
-  class PanTool extends AbstractTool(InputSlot.getDevice("DragActivation")) {
-	val evolutionSlot = InputSlot.getDevice("PointerEvolution")
-	addCurrentSlot(evolutionSlot)
-      
-	var comp: SceneGraphComponent = null
-      
-	override def activate(tc: ToolContext) {
-	  comp = tc.getRootToToolComponent.getLastComponent
-	  if (comp.getTransformation == null)
-		comp.setTransformation(new Transformation)
-	}
-	
-	override def perform(tc: ToolContext) {
-	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
-	  evolution.conjugateBy(
-	    new Matrix(tc.getRootToToolComponent.getInverseMatrix(null)))
-	  comp.getTransformation.multiplyOnRight(evolution.getArray)
-	}
-  }
-  
-  class RotateTool(viewer: JRealityViewerComponent)
-  extends AbstractTool() {
-    val activationSlot = InputSlot.getDevice("RotateActivation")
-    val restrictionSlot = InputSlot.getDevice("Meta")
-	val evolutionSlot = InputSlot.getDevice("TrackballTransformation")
-	val evolutionXSlot = InputSlot.getDevice("PointerNdcXevolution")
-	val evolutionYSlot = InputSlot.getDevice("PointerNdcYevolution")
-	addCurrentSlot(activationSlot)
-	addCurrentSlot(restrictionSlot)
-	addCurrentSlot(evolutionSlot)
-	addCurrentSlot(evolutionXSlot)
-	addCurrentSlot(evolutionYSlot)
-	
-	var restrict = false
-	var axisName: String = null
-      
-	override def perform(tc: ToolContext) {
-	  if (tc.getAxisState(activationSlot).isReleased) return
-	  if (List(activationSlot, restrictionSlot) contains tc.getSource) {
-	      restrict = tc.getAxisState(restrictionSlot).isPressed
-	      axisName = null
-	  } else {
-	      var angle = 0.0
-	      var axis = Array(0.0, 0.0, 0.0)
-	      if (restrict) {
-	    	val yrot = tc.getAxisState(evolutionXSlot).doubleValue
-	    	val xrot = tc.getAxisState(evolutionYSlot).doubleValue
-	    	if (axisName == null)
-	    	  axisName = if (xrot.abs > yrot.abs) "x" else "y"
-	    	if (axisName == "x") {
-	          axis = Array(1.0, 0.0, 0.0)
-	          angle = -xrot
-	    	} else {
-	    	  axis = Array(0.0, 1.0, 0.0)
-	    	  angle = yrot
-	    	}
-	      } else {
-	    	val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
-	    	val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
-	    	axis = e.getRotationAxis
-	    	angle = e.getRotationAngle
-	      }
-	      viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), angle)
-	    }
-	}
-  }
-  
   class MeshGeometry(mesh: Mesh)
   extends SceneGraphComponent(mesh.name) {
     setGeometry(new IndexedFaceSetFactory {
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
-      setVertexCoordinates(mesh.vertices.map(_.toArray))
+      setVertexCoordinates(mesh.vertices.map(_.pos.toArray))
       setFaceIndices(mesh.faces.map(_.vertices.map(_.nr-1).toArray))
       setGenerateEdgesFromFaces(true)
       setGenerateFaceNormals(true)
@@ -469,7 +393,7 @@ object View {
       TUBES_DRAW                               -> false,
       VERTEX_DRAW                              -> false,
       LINE_WIDTH                               -> 1.0,
-      LINE_SHADER + '.' + DIFFUSE_COLOR        -> BLUE,
+      LINE_SHADER + '.' + DIFFUSE_COLOR        -> Color.BLUE,
       LINE_SHADER + '.' + SPECULAR_COEFFICIENT -> 0.0,
       PICKABLE                                 -> false
     ))

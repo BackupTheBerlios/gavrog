@@ -15,7 +15,7 @@
 */
 
 
-package org.gavrog.joss.meshes
+package org.gavrog.joss.meshes.gui
 
 import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{Appearance, Transformation}
