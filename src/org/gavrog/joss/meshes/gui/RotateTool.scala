@@ -33,26 +33,46 @@ extends AbstractTool() {
   addCurrentSlot(evolutionSlot)
   addCurrentSlot(evolutionXSlot)
   addCurrentSlot(evolutionYSlot)
+  
+  var restricted = false
+  var lastAxis: InputSlot = null
 
   override def perform(tc: ToolContext) {
-	if (tc.getAxisState(activationSlot).isReleased) return
+	if (tc.getAxisState(activationSlot).isReleased) {
+	  restricted = false
+	  return
+    }
+	if (restricted == false && tc.getAxisState(restrictionSlot).isPressed) {
+	  restricted = true
+	  lastAxis = null
+    }
     var angle = 0.0
 	var axis = Array(0.0, 0.0, 0.0)
-	if (tc.getAxisState(restrictionSlot).isPressed) {
-	  val yrot = tc.getAxisState(evolutionXSlot).doubleValue
-	  val xrot = tc.getAxisState(evolutionYSlot).doubleValue
-	  if (xrot.abs > yrot.abs) {
-	    axis = Array(1.0, 0.0, 0.0)
-	    angle = -xrot
-	  } else {
-	    axis = Array(0.0, 1.0, 0.0)
-	    angle = yrot
+	
+	tc.getSource match {
+	  case `evolutionSlot` => {
+		val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
+		val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
+		axis = e.getRotationAxis
+		angle = e.getRotationAngle
+		if (restricted) {
+		  if (lastAxis == null) {
+		    val d = axis(0).abs - axis(1).abs
+		    if (d < 0) lastAxis = evolutionXSlot
+		    else if (d > 0) lastAxis = evolutionYSlot
+		  }
+		  return
+		}
 	  }
-	} else {
-	  val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
-	  val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
-	  axis = e.getRotationAxis
-	  angle = e.getRotationAngle
+	  case `evolutionXSlot` if (lastAxis == evolutionXSlot) => {
+		axis = Array(0.0, 1.0, 0.0)
+		angle = tc.getAxisState(evolutionXSlot).doubleValue
+	  }
+	  case `evolutionYSlot` if (lastAxis == evolutionYSlot) => {
+	    axis = Array(1.0, 0.0, 0.0)
+	    angle = -tc.getAxisState(evolutionYSlot).doubleValue
+	  }
+	  case _ => ()
 	}
 	viewer.rotateScene(Vec3(axis(0), axis(1), axis(2)), angle)
   }
