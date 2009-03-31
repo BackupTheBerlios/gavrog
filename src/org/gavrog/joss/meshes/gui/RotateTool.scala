@@ -36,6 +36,8 @@ extends AbstractTool() {
   
   var restricted = false
   var lastAxis: InputSlot = null
+  
+  val gain = 3.14
 
   override def perform(tc: ToolContext) {
 	if (tc.getAxisState(activationSlot).isReleased) {
@@ -66,11 +68,11 @@ extends AbstractTool() {
 	  }
 	  case `evolutionXSlot` if (lastAxis == evolutionXSlot) => {
 		axis = Array(0.0, 1.0, 0.0)
-		angle = tc.getAxisState(evolutionXSlot).doubleValue
+		angle = gain * tc.getAxisState(evolutionXSlot).doubleValue
 	  }
 	  case `evolutionYSlot` if (lastAxis == evolutionYSlot) => {
 	    axis = Array(1.0, 0.0, 0.0)
-	    angle = -tc.getAxisState(evolutionYSlot).doubleValue
+	    angle = -gain * tc.getAxisState(evolutionYSlot).doubleValue
 	  }
 	  case _ => ()
 	}
