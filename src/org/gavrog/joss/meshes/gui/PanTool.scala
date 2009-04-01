@@ -58,10 +58,15 @@ class PanTool extends AbstractTool {
 	    case (x, y) if x < y => Axis.Y
 	    case _               => return
 	  }
-	  t(if (lastAxis == Axis.X) 1 else 0) = 0.0
+      if (lastAxis == Axis.X) {
+        t(1) = 0.0
+        t(2) = 0.0
+      } else {
+        t(0) = 0.0
+        t(2) = 0.0
+      }
 	}
 	var comp = tc.getRootToToolComponent.getLastComponent
-	comp.setTransformation(
-	  MatrixBuilder.euclidean(comp.getTransformation).translate(t))
+    MatrixBuilder.euclidean(comp).translate(t).assignTo(comp)
   }
 }

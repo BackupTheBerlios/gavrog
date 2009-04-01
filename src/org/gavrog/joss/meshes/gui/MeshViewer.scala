@@ -19,10 +19,9 @@ package org.gavrog.joss.meshes.gui
 
 import java.awt.Color
 
-import de.jreality.geometry.{IndexedFaceSetFactory, IndexedLineSetFactory}
+import de.jreality.geometry.IndexedFaceSetFactory
 import de.jreality.math.MatrixBuilder
 import de.jreality.scene.{DirectionalLight, SceneGraphComponent}
-import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.ClickWheelCameraZoomTool
 import de.jreality.util.SceneGraphUtility
 
@@ -93,6 +92,8 @@ class MeshViewer extends JRealityViewerComponent {
   }
   
   class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
+    import de.jreality.shader.CommonAttributes._
+    
     setGeometry(new IndexedFaceSetFactory {
       setVertexCount(mesh.numberOfVertices)
       setFaceCount(mesh.numberOfFaces)
@@ -103,6 +104,7 @@ class MeshViewer extends JRealityViewerComponent {
       setGenerateVertexNormals(true)
       update
     }.getIndexedFaceSet)
+    
     setAppearance(new RichAppearance(
       EDGE_DRAW                                   -> true,
       TUBES_DRAW                                  -> false,

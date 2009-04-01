@@ -290,7 +290,7 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
 	val camMatrix = new Matrix
 	cameraPath.getInverseMatrix(camMatrix.getArray, avatarPath.getLength)
 	val avatar = avatarPath.getLastComponent
-	val mb = MatrixBuilder.euclidean(new Matrix(avatar.getTransformation))
+	val mb = MatrixBuilder.euclidean(avatar)
     mb.translate(c).translate(camMatrix.getColumn(3)).assignTo(avatar)
   }
   
