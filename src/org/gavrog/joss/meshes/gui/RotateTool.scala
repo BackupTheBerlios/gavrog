@@ -21,10 +21,9 @@ import de.jreality.math.{FactoredMatrix, Matrix, Pn}
 
 import org.gavrog.joss.meshes.Vectors.Vec3
 
-class RotateTool(viewer: JRealityViewerComponent)
-extends AbstractTool() {
+class RotateTool(viewer: JRealityViewerComponent) extends AbstractTool() {
   val activationSlot = InputSlot.getDevice("RotateActivation")
-  val restrictionSlot = InputSlot.getDevice("Meta")
+  val restrictionSlot = InputSlot.getDevice("Secondary")
   val evolutionSlot = InputSlot.getDevice("TrackballTransformation")
   val evolutionXSlot = InputSlot.getDevice("PointerNdcXevolution")
   val evolutionYSlot = InputSlot.getDevice("PointerNdcYevolution")
@@ -53,15 +52,15 @@ extends AbstractTool() {
 	
 	tc.getSource match {
 	  case `evolutionSlot` => {
-		val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
-		val e = new FactoredMatrix(evolution, Pn.EUCLIDEAN)
+		val e = new FactoredMatrix(tc.getTransformationMatrix(evolutionSlot))
 		axis = e.getRotationAxis
 		angle = e.getRotationAngle
 		if (restricted) {
-		  if (lastAxis == null) {
-		    val d = axis(0).abs - axis(1).abs
-		    if (d < 0) lastAxis = evolutionXSlot
-		    else if (d > 0) lastAxis = evolutionYSlot
+		  if (lastAxis == null && angle.abs > 0.02) {
+		    if (axis(1).abs > axis(0).abs)
+		      lastAxis = evolutionXSlot
+		    else if (axis(0).abs > axis(1).abs)
+		      lastAxis = evolutionYSlot
 		  }
 		  return
 		}
