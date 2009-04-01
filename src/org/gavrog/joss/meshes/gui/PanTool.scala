@@ -18,26 +18,23 @@
 package org.gavrog.joss.meshes.gui;
 
 import de.jreality.math.Matrix
-import de.jreality.scene.{SceneGraphComponent, Transformation}
+import de.jreality.scene.Transformation
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 
-class PanTool extends AbstractTool(InputSlot.getDevice("DragActivation")) {
+class PanTool extends AbstractTool {
+  val activationSlot = InputSlot.getDevice("DragActivation")
   val evolutionSlot = InputSlot.getDevice("PointerEvolution")
+  addCurrentSlot(activationSlot)
   addCurrentSlot(evolutionSlot)
-      
-  var comp: SceneGraphComponent = null
-      
-  override def activate(tc: ToolContext) {
-	comp = tc.getRootToToolComponent.getLastComponent
+
+  override def perform(tc: ToolContext) {
+	if (tc.getAxisState(activationSlot).isReleased) return
+	var comp = tc.getRootToToolComponent.getLastComponent
 	if (comp.getTransformation == null)
 	  comp.setTransformation(new Transformation)
-  }
-	
-  override def perform(tc: ToolContext) {
 	val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
 	evolution.conjugateBy(
 	  new Matrix(tc.getRootToToolComponent.getInverseMatrix(null)))
 	comp.getTransformation.multiplyOnRight(evolution.getArray)
   }
 }
-  

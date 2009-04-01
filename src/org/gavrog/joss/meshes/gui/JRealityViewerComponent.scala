@@ -38,11 +38,8 @@ import JRealitySupport._
 import SwingSupport._
 import Vectors._
 
-class JRealityViewerComponent(content: SceneGraphComponent,
-                              tools: Tool*) extends BorderPanel
+class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
 {
-  def this(tools: Tool*) = this(new SceneGraphComponent, tools: _*)
-  
   def this() = this(new SceneGraphComponent)
   
   private val sceneNode  = new SceneGraphComponent {
@@ -69,8 +66,6 @@ class JRealityViewerComponent(content: SceneGraphComponent,
   private val camPath =
     new SceneGraphPath(rootNode, cameraNode) { push(cameraNode.getCamera) }
   private val emptyPickPath = new SceneGraphPath(rootNode, sceneNode, content)
-
-  for (tool <- tools) addTool(tool)
 
   private var lights                    = Map[String, SceneGraphComponent]()
   private var currentViewer: Viewer     = null

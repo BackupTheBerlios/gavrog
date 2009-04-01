@@ -74,10 +74,10 @@ object View {
   
   val statusLine = new TextArea(1, 80) { editable = false }
   
-  val sceneViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
-                                                new PanTool)
-  {
+  val sceneViewer = new JRealityViewerComponent {
     addTool(new RotateTool(this))
+    addTool(new PanTool)
+    addTool(new ClickWheelCameraZoomTool)
     
     size = (600, 800)
     setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
@@ -133,9 +133,10 @@ object View {
     }
   }
 
-  val uvMapViewer = new JRealityViewerComponent(new ClickWheelCameraZoomTool,
-                                                new PanTool)
-  {
+  val uvMapViewer = new JRealityViewerComponent {
+    addTool(new PanTool)
+    addTool(new ClickWheelCameraZoomTool)
+    
     perspective = false
     var front_to_back = List[SceneGraphComponent]()
     var selection = Set[SceneGraphComponent]()
