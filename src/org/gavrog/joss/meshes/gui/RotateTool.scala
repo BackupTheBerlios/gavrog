@@ -17,7 +17,7 @@
 package org.gavrog.joss.meshes.gui
 
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
-import de.jreality.math.{FactoredMatrix, Matrix, Pn}
+import de.jreality.math.FactoredMatrix
 
 import org.gavrog.joss.meshes.Vectors.Vec3
 

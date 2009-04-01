@@ -17,24 +17,51 @@
 
 package org.gavrog.joss.meshes.gui;
 
-import de.jreality.math.Matrix
+import de.jreality.math.{FactoredMatrix, Matrix, MatrixBuilder}
 import de.jreality.scene.Transformation
 import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 
+import JRealitySupport._
+
+object Axis extends Enumeration {
+  val X, Y, None = Value
+}
+
 class PanTool extends AbstractTool {
   val activationSlot = InputSlot.getDevice("DragActivation")
+  val restrictionSlot = InputSlot.getDevice("Secondary")
   val evolutionSlot = InputSlot.getDevice("PointerEvolution")
   addCurrentSlot(activationSlot)
+  addCurrentSlot(restrictionSlot)
   addCurrentSlot(evolutionSlot)
 
+  var restricted = false
+  var lastAxis = Axis.None
+  
   override def perform(tc: ToolContext) {
-	if (tc.getAxisState(activationSlot).isReleased) return
-	var comp = tc.getRootToToolComponent.getLastComponent
-	if (comp.getTransformation == null)
-	  comp.setTransformation(new Transformation)
-	val evolution = new Matrix(tc.getTransformationMatrix(evolutionSlot))
+	if (tc.getAxisState(activationSlot).isReleased) {
+	  restricted = false
+	  return
+    }
+	if (restricted == false && tc.getAxisState(restrictionSlot).isPressed) {
+	  restricted = true
+	  lastAxis = Axis.None
+    }
+	val evolution =
+	  new FactoredMatrix(tc.getTransformationMatrix(evolutionSlot))
 	evolution.conjugateBy(
 	  new Matrix(tc.getRootToToolComponent.getInverseMatrix(null)))
-	comp.getTransformation.multiplyOnRight(evolution.getArray)
+	val t = evolution.getTranslation
+	if (restricted) {
+	  if (lastAxis == Axis.None) lastAxis = (t(0).abs, t(1).abs) match {
+	    case (x, y) if x > y => Axis.X
+	    case (x, y) if x < y => Axis.Y
+	    case _               => return
+	  }
+	  t(if (lastAxis == Axis.X) 1 else 0) = 0.0
+	}
+	var comp = tc.getRootToToolComponent.getLastComponent
+	comp.setTransformation(
+	  MatrixBuilder.euclidean(comp.getTransformation).translate(t))
   }
 }
