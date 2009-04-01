@@ -40,9 +40,6 @@ import Vectors._
 object View {
   implicit def xdouble(d: Double) = new { def deg = d / 180.0 * Math.Pi }
   implicit def xint(i: Int) = new { def deg = i / 180.0 * Math.Pi }
-  
-  implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
-  implicit def asArray[A](it: Iterable[A]) = it.toList.toArray
 
   implicit def wrapIter[T](it: java.util.Iterator[T]) = new Iterator[T] {
     def hasNext = it.hasNext
@@ -73,65 +70,7 @@ object View {
   val screenShotChooser = new FileChooser
   
   val statusLine = new TextArea(1, 80) { editable = false }
-  
-  val sceneViewer = new JRealityViewerComponent {
-    addTool(new RotateTool(this))
-    addTool(new PanTool)
-    addTool(new ClickWheelCameraZoomTool)
-    
-    size = (600, 800)
-    setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
-             MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
-    setLight("Fill Light", new DirectionalLight { setIntensity(0.2) },
-             MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
-    
-    var center = Array(0.0, 0.0, 0.0, 1.0)
-    override def computeCenter = center
-
-    def setMesh(mesh: Mesh) = modify {
-      SceneGraphUtility.removeChildren(scene)
-      scene.addChild(new MeshGeometry(mesh) {
-        setAppearance(new RichAppearance(meshFaceAttributes))
-      })
-      center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
-      encompass
-    }
-    
-    listenTo(keyClicks, Mouse.clicks, Mouse.moves)
-    reactions += {
-      case MouseEntered(src, _, _) if (src == this) => requestFocus
-      case KeyPressed(src, modifiers, code, _) if (src == this) => {
-        val key = java.awt.event.KeyEvent.getKeyText(code)
-        val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
-    	val txt = mod + (if (mod.size > 0) "-" else "") + key
-    	txt match {
-    	  case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), +5 deg) }
-    	  case "Ctrl-Right" => modify { rotateScene(Vec3(0, 0, 1), -5 deg) }
-    	  case "Left"       => modify { rotateScene(Vec3(0, 1, 0), -5 deg) }
-    	  case "Right"      => modify { rotateScene(Vec3(0, 1, 0), +5 deg) }
-    	  case "Up"         => modify { rotateScene(Vec3(1, 0, 0), -5 deg) }
-    	  case "Down"       => modify { rotateScene(Vec3(1, 0, 0), +5 deg) }
-      	  case "Home"       => modify {
-      	    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-      	    fieldOfView = defaultFieldOfView
-            encompass
-      	  }
-      	  case "0"          => modify {
-      	    fieldOfView = defaultFieldOfView
-            encompass
-      	  }
-      	  case "X"       => modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) }
-      	  case "Shift-X" => modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) }
-      	  case "Y"       => modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) }
-      	  case "Shift-Y" => modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) }
-      	  case "Z"       => modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) }
-      	  case "Shift-Z" => modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) }
-
-      	  case _  => log(txt)
-        }
-      }
-    }
-  }
+  val sceneViewer = new MeshViewer
 
   val uvMapViewer = new JRealityViewerComponent {
     addTool(new PanTool)
@@ -337,20 +276,6 @@ object View {
       pack
       visible = true
     }
-  }
-  
-  class MeshGeometry(mesh: Mesh)
-  extends SceneGraphComponent(mesh.name) {
-    setGeometry(new IndexedFaceSetFactory {
-      setVertexCount(mesh.numberOfVertices)
-      setFaceCount(mesh.numberOfFaces)
-      setVertexCoordinates(mesh.vertices.map(_.pos.toArray))
-      setFaceIndices(mesh.faces.map(_.vertices.map(_.nr-1).toArray))
-      setGenerateEdgesFromFaces(true)
-      setGenerateFaceNormals(true)
-      setGenerateVertexNormals(true)
-      update
-    }.getIndexedFaceSet)
   }
   
   class UVsGeometry(chart: Mesh.Chart, name: String)
