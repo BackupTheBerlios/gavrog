@@ -33,7 +33,7 @@ import JRealitySupport._
 import Sums._
 import Vectors._
 
-class UVsViewer extends JRealityViewerComponent {
+class UVsViewer extends JRealityViewerComponent with KeyPublisher {
   implicit def xdouble(d: Double) = new { def deg = d / 180.0 * Math.Pi }
   implicit def xint(i: Int) = new { def deg = i / 180.0 * Math.Pi }
   implicit def wrapIter[T](it: java.util.Iterator[T]) = new Iterator[T] {

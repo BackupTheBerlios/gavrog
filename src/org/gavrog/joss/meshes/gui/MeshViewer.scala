@@ -31,7 +31,7 @@ import JRealitySupport._
 import Sums._
 import Vectors._
 
-class MeshViewer extends JRealityViewerComponent {
+class MeshViewer extends JRealityViewerComponent with KeyPublisher {
   implicit def xdouble(d: Double) = new { def deg = d / 180.0 * Math.Pi }
   implicit def xint(i: Int) = new { def deg = i / 180.0 * Math.Pi }
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray

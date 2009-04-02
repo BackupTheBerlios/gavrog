@@ -17,12 +17,11 @@
 
 package org.gavrog.joss.meshes.gui
 
-import java.awt.{BorderLayout, Color, Dimension}
+import java.awt.{Color, Dimension}
 import java.awt.event.{KeyListener, MouseListener,
                        MouseMotionListener, MouseWheelListener}
-import javax.swing.{JComponent, JPanel}
 
-import scala.swing.{BorderPanel, Component, Publisher}
+import scala.swing.{BorderPanel, Component}
 
 import de.jreality.geometry.GeometryUtility
 import de.jreality.math.{Matrix, MatrixBuilder}
@@ -73,28 +72,6 @@ class JRealityViewerComponent(content: SceneGraphComponent) extends BorderPanel
 
   private val softwareViewer = new SoftViewer { setupViewer(this) }
 
-  val keyClicks: Publisher = new Publisher {
-    peer.addKeyListener(new KeyListener {
-      def wrappedSource[C<:Component](e: java.awt.event.ComponentEvent): C = {
-        val c = e.getSource.asInstanceOf[JComponent]
-        c.getClientProperty("scala.swingWrapper").asInstanceOf[C]
-      }
-
-      def keyPressed (e: java.awt.event.KeyEvent) {
-        publish(KeyPressed(wrappedSource(e), e.getModifiers,
-                           e.getKeyCode, e.getKeyChar)(e.getWhen))
-      }
-      def keyReleased(e: java.awt.event.KeyEvent) {
-        publish(KeyReleased(wrappedSource(e), e.getModifiers,
-                            e.getKeyCode, e.getKeyChar)(e.getWhen))
-      }
-      def keyTyped   (e: java.awt.event.KeyEvent) {
-        publish(KeyTyped(wrappedSource(e), e.getModifiers,
-                         e.getKeyCode, e.getKeyChar)(e.getWhen))
-      }
-    })
-  }
-    
   viewer = try {
     new de.jreality.jogl.Viewer {
       def source = JRealityViewerComponent.this.peer
