@@ -49,8 +49,6 @@ class PanTool extends AbstractTool {
     }
 	val evolution =
 	  new FactoredMatrix(tc.getTransformationMatrix(evolutionSlot))
-	evolution.conjugateBy(
-	  new Matrix(tc.getRootToToolComponent.getInverseMatrix(null)))
 	val t = evolution.getTranslation
 	if (restricted) {
 	  if (lastAxis == Axis.None) lastAxis = (t(0).abs, t(1).abs) match {
@@ -66,7 +64,8 @@ class PanTool extends AbstractTool {
         t(2) = 0.0
       }
 	}
-	var comp = tc.getRootToToolComponent.getLastComponent
-    MatrixBuilder.euclidean(comp).translate(t).assignTo(comp)
+    var path = tc.getRootToToolComponent
+    MatrixBuilder.euclidean.translate(t)
+      .times(path.getMatrix(null)).assignTo(path.getLastComponent)
   }
 }
