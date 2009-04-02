@@ -155,7 +155,7 @@ class UVsViewer extends JRealityViewerComponent with KeyPublisher {
       }
     })
     
-    listenTo(keyClicks, Mouse.clicks, Mouse.moves)
+    listenTo(keyClicks, Mouse.moves)
     reactions += {
       case MouseEntered(src, _, _) if (src == this) => requestFocus
       case KeyPressed(src, modifiers, code, _) if (src == this) => {

@@ -31,7 +31,9 @@ import JRealitySupport._
 import Sums._
 import Vectors._
 
-class MeshViewer extends JRealityViewerComponent with KeyPublisher {
+class MeshViewer extends JRealityViewerComponent
+with KeyPublisher with KeyDispatcher
+{
   implicit def xdouble(d: Double) = new { def deg = d / 180.0 * Math.Pi }
   implicit def xint(i: Int) = new { def deg = i / 180.0 * Math.Pi }
   implicit def asArray[A](it: Iterator[A]) = it.toList.toArray
@@ -57,39 +59,44 @@ class MeshViewer extends JRealityViewerComponent with KeyPublisher {
 	encompass
   }
 
-  listenTo(keyClicks, Mouse.clicks, Mouse.moves)
-  reactions += {
-    case MouseEntered(src, _, _) if (src == this) => requestFocus
-    case KeyPressed(src, modifiers, code, _) if (src == this) => {
-      val key = java.awt.event.KeyEvent.getKeyText(code)
-      val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
-      val txt = mod + (if (mod.size > 0) "-" else "") + key
-      txt match {
-        case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), +5 deg) }
-        case "Ctrl-Right" => modify { rotateScene(Vec3(0, 0, 1), -5 deg) }
-        case "Left"       => modify { rotateScene(Vec3(0, 1, 0), -5 deg) }
-        case "Right"      => modify { rotateScene(Vec3(0, 1, 0), +5 deg) }
-        case "Up"         => modify { rotateScene(Vec3(1, 0, 0), -5 deg) }
-        case "Down"       => modify { rotateScene(Vec3(1, 0, 0), +5 deg) }
-        case "Home"       => modify {
-          viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-          fieldOfView = defaultFieldOfView
-          encompass
-      	}
-        case "0"          => modify {
-      	  fieldOfView = defaultFieldOfView
-      	  encompass
-        }
-        case "X"       => modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) }
-        case "Shift-X" => modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) }
-        case "Y"       => modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) }
-        case "Shift-Y" => modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) }
-        case "Z"       => modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) }
-        case "Shift-Z" => modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) }
-        case _  => ()
-      }
-    }
-  }
+  addKeySource(this)
+  focusOnEnter(this)
+  
+  addBinding("Ctrl-Left" , "rotate counterclockwise",
+             modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
+  addBinding("Ctrl-Right", "rotate clockwise",
+             modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
+  addBinding("Left"      , "rotate left",
+             modify { rotateScene(Vec3(0, 1, 0), -5 deg) })
+  addBinding("Right"     , "rotate right",
+             modify { rotateScene(Vec3(0, 1, 0), +5 deg) })
+  addBinding("Up"        , "rotate up",
+             modify { rotateScene(Vec3(1, 0, 0), -5 deg) })
+  addBinding("Down"      , "rotate down",
+             modify { rotateScene(Vec3(1, 0, 0), +5 deg) })
+
+  addBinding("Home", "reset view", modify {
+	viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+	fieldOfView = defaultFieldOfView
+	encompass
+  })
+  addBinding("0", "adjust viewport to scene", modify {
+	fieldOfView = defaultFieldOfView
+	encompass
+  })
+  
+  addBinding("X"      , "view from +x",
+             modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) })
+  addBinding("Shift-X", "view from -x",
+             modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) })
+  addBinding("Y"      , "view from y",
+             modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) })
+  addBinding("Shift-Y", "view from -y",
+             modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) })
+  addBinding("Z"      , "view from z",
+             modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) })
+  addBinding("Shift-Z", "view from -z",
+             modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
   
   class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     import de.jreality.shader.CommonAttributes._
