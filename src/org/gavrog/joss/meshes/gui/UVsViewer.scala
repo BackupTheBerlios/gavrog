@@ -27,6 +27,7 @@ import de.jreality.shader.CommonAttributes._
 import de.jreality.tools.ClickWheelCameraZoomTool
 import de.jreality.util.SceneGraphUtility
 
+import scala.swing.Dialog
 import scala.swing.event.MouseEntered
 
 import JRealitySupport._
@@ -188,7 +189,7 @@ with KeyPublisher with KeyDispatcher
          case Nil => ()
        })
 
-  bind("?", "print key bindings", print(helpText))
+  bind("F1", "print key bindings", Dialog.showMessage(this, helpText))
 
   class UVsGeometry(chart: Mesh.Chart, name: String)
   extends SceneGraphComponent(name) {
