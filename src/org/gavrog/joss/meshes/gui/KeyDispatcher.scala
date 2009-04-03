@@ -19,10 +19,12 @@ package org.gavrog.joss.meshes.gui
 
 import scala.swing.Reactor
 import scala.swing.event.MouseEntered
+import scala.util.Sorting
 
 trait KeyDispatcher extends Reactor {
   class Binding(description: String, code: => Unit) {
     def execute { code }
+    override def toString = description
   }
   
   private var bindings = Map[String, List[Binding]]()
@@ -51,12 +53,21 @@ trait KeyDispatcher extends Reactor {
   }
   
   reactions += {
-    case KeyPressed(src, modifiers, code, _) if (sources contains src) => {
+    case KeyPressed(src, modifiers, code, char) if (sources contains src) => {
       val key = java.awt.event.KeyEvent.getKeyText(code)
       val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
       val txt = mod + (if (mod.size > 0) "-" else "") + key
       
-      for (binding <- bindings.getOrElse(txt, Nil)) binding.execute
+      bindings.getOrElse(txt, Nil) match {
+        case Nil => print("%s (%s)\n" format
+                          (txt, if (char.isControl) char.toInt else char))
+        case lst => for (binding <- lst) binding.execute
+      }
     }
   }
+  
+  def helpText =
+    Sorting.stableSort(bindings.keys.toList)
+      .map { k => k + "\t" + bindings(k).mkString("\n\t") }
+      .mkString("\n") + "\n"
 }

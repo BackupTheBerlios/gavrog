@@ -98,6 +98,8 @@ with KeyPublisher with KeyDispatcher
   addBinding("Shift-Z", "view from -z",
              modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
   
+  addBinding("Shift-Slash", "print key bindings", print(helpText))
+  
   class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     import de.jreality.shader.CommonAttributes._
     
