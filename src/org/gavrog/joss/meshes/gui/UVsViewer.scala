@@ -160,37 +160,36 @@ with KeyPublisher with KeyDispatcher
   addKeySource(this)
   focusOnEnter(this)
   
-  addBinding("Ctrl-Left" , "rotate counterclockwise",
-             modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
-  addBinding("Ctrl-Right", "rotate clockwise",
-             modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
-  addBinding("Home"      , "reset view",
-             modify {
-               viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-               encompass
-             })
-  addBinding("0"    , "adjust viewport to scene ",
-             modify { encompassSelected })
-  addBinding("Space", "deselect all",
-             modify { selection map deselect })
-  addBinding("B"    , "push selected to back",
-             modify { selection map push_to_back })
-  addBinding("F"    , "pull selected to front",
-             modify { selection map pull_to_front })
-  addBinding("H"    , "hide selected",
-             if (selection.size > 0) modify {
-               hidden = (Set() ++ selection) :: hidden
-               selection map hide
-             })
-  addBinding("U"    , "unhide last hidden",
-             hidden match {
-               case last_batch :: rest => modify {
-                 last_batch map show
-                 hidden = rest
-               }
-               case Nil => ()
-             })
+  bind("Ctrl-Left", "rotate counterclockwise",
+       modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
+  bind("Ctrl-Right", "rotate clockwise",
+       modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
+  bind("Home", "reset view",
+       modify {
+         viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+         encompass
+       })
+  bind("0",     "zoom on selection ",     modify { encompassSelected })
   
+  bind("Space", "deselect all",           modify { selection map deselect })
+  bind("b",     "push selected to back",  modify { selection map push_to_back })
+  bind("f",     "pull selected to front", modify { selection map pull_to_front })
+  bind("h",     "hide selected",
+       if (selection.size > 0) modify {
+         hidden = (Set() ++ selection) :: hidden
+         selection map hide
+       })
+  bind("u", "unhide last hidden",
+       hidden match {
+         case last_batch :: rest => modify {
+           last_batch map show
+           hidden = rest
+         }
+         case Nil => ()
+       })
+
+  bind("?", "print key bindings", print(helpText))
+
   class UVsGeometry(chart: Mesh.Chart, name: String)
   extends SceneGraphComponent(name) {
     setGeometry(new IndexedFaceSetFactory {

@@ -27,7 +27,7 @@ trait KeyDispatcher extends Reactor {
     override def toString = description
   }
   
-  private var bindings = Map[String, List[Binding]]()
+  private var bindings = Map[String, Binding]()
   private var sources = List[KeyPublisher]()
   
   def addKeySource(src: KeyPublisher) {
@@ -39,35 +39,30 @@ trait KeyDispatcher extends Reactor {
     reactions += { case MouseEntered(`src`, _, _) => src.requestFocus }
   }
   
-  def addBinding(keyStroke: String, description: String, code: => Unit) {
-    val old = bindings.getOrElse(keyStroke, Nil)
-    bindings += keyStroke -> (new Binding(description, code) :: old)
+  def bind(keyStroke: String, description: String, code: => Unit) {
+    bindings += keyStroke -> new Binding(description, code)
   }
   
-  def replaceBinding(keyStroke: String, description: String, code: => Unit) {
-    bindings += keyStroke -> (new Binding(description, code) :: Nil)
-  }
-  
-  def clearBindings(keyStroke: String) {
+  def unbind(keyStroke: String) {
     bindings -= keyStroke
   }
   
   reactions += {
     case KeyPressed(src, modifiers, code, char) if (sources contains src) => {
-      val key = java.awt.event.KeyEvent.getKeyText(code)
+      val key =java.awt.event.KeyEvent.getKeyText(code)
       val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
-      val txt = mod + (if (mod.size > 0) "-" else "") + key
-      
-      bindings.getOrElse(txt, Nil) match {
-        case Nil => print("%s (%s)\n" format
-                          (txt, if (char.isControl) char.toInt else char))
-        case lst => for (binding <- lst) binding.execute
+      val txt = if (char > 32 && char < 128)       "" + char
+                else if (mod.size > 0 && mod != key) mod + "-" + key
+                else                                 key
+      //print(txt + "\n")
+      bindings.get(txt) match {
+        case None => ()
+        case Some(binding) => binding.execute
       }
     }
   }
   
-  def helpText =
-    Sorting.stableSort(bindings.keys.toList)
-      .map { k => k + "\t" + bindings(k).mkString("\n\t") }
-      .mkString("\n") + "\n"
+  def helpText = Sorting.stableSort(bindings.keys.toList)
+                   .map { k => "%-20s%s" format (k, bindings(k)) }
+                   .mkString("\n") + "\n"
 }

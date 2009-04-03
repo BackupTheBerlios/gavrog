@@ -62,43 +62,43 @@ with KeyPublisher with KeyDispatcher
   addKeySource(this)
   focusOnEnter(this)
   
-  addBinding("Ctrl-Left" , "rotate counterclockwise",
-             modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
-  addBinding("Ctrl-Right", "rotate clockwise",
-             modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
-  addBinding("Left"      , "rotate left",
-             modify { rotateScene(Vec3(0, 1, 0), -5 deg) })
-  addBinding("Right"     , "rotate right",
-             modify { rotateScene(Vec3(0, 1, 0), +5 deg) })
-  addBinding("Up"        , "rotate up",
-             modify { rotateScene(Vec3(1, 0, 0), -5 deg) })
-  addBinding("Down"      , "rotate down",
-             modify { rotateScene(Vec3(1, 0, 0), +5 deg) })
+  bind("Ctrl-Left" , "rotate counterclockwise",
+	   modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
+  bind("Ctrl-Right", "rotate clockwise",
+       modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
+  bind("Left"      , "rotate left",
+       modify { rotateScene(Vec3(0, 1, 0), -5 deg) })
+  bind("Right"     , "rotate right",
+       modify { rotateScene(Vec3(0, 1, 0), +5 deg) })
+  bind("Up"        , "rotate up",
+       modify { rotateScene(Vec3(1, 0, 0), -5 deg) })
+  bind("Down"      , "rotate down",
+       modify { rotateScene(Vec3(1, 0, 0), +5 deg) })
 
-  addBinding("Home", "reset view", modify {
+  bind("Home", "reset view", modify {
 	viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
 	fieldOfView = defaultFieldOfView
 	encompass
   })
-  addBinding("0", "adjust viewport to scene", modify {
+  bind("0", "zoom on scene", modify {
 	fieldOfView = defaultFieldOfView
 	encompass
   })
   
-  addBinding("X"      , "view from +x",
-             modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) })
-  addBinding("Shift-X", "view from -x",
-             modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) })
-  addBinding("Y"      , "view from y",
-             modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) })
-  addBinding("Shift-Y", "view from -y",
-             modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) })
-  addBinding("Z"      , "view from z",
-             modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) })
-  addBinding("Shift-Z", "view from -z",
-             modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
+  bind("x", "view from +x",
+       modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) })
+  bind("X", "view from -x",
+       modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) })
+  bind("y", "view from y",
+       modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) })
+  bind("Y", "view from -y",
+       modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) })
+  bind("z", "view from z",
+       modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) })
+  bind("Z", "view from -z",
+       modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
   
-  addBinding("Shift-Slash", "print key bindings", print(helpText))
+  bind("?", "print key bindings", print(helpText))
   
   class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     import de.jreality.shader.CommonAttributes._
