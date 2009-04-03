@@ -25,9 +25,6 @@ import de.jreality.scene.{DirectionalLight, SceneGraphComponent}
 import de.jreality.tools.ClickWheelCameraZoomTool
 import de.jreality.util.SceneGraphUtility
 
-import scala.swing.Dialog
-import scala.swing.event.MouseEntered
-
 import JRealitySupport._
 import Sums._
 import Vectors._
@@ -99,7 +96,7 @@ with KeyPublisher with KeyDispatcher
   bind("Z", "view from -z",
        modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
   
-  bind("F1", "print key bindings", Dialog.showMessage(this, helpText))
+  bind("F1", "show key bindings", showKeyBindings(this))
   
   class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     import de.jreality.shader.CommonAttributes._

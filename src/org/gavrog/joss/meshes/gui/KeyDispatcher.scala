@@ -17,8 +17,10 @@
 
 package org.gavrog.joss.meshes.gui
 
-import scala.swing.Reactor
-import scala.swing.event.MouseEntered
+import java.awt.Point
+
+import scala.swing.{Alignment, GridPanel, Frame, Label, Reactor, UIElement}
+import scala.swing.event.{MouseEntered, WindowClosed}
 import scala.util.Sorting
 
 trait KeyDispatcher extends Reactor {
@@ -62,6 +64,20 @@ trait KeyDispatcher extends Reactor {
     }
   }
   
-  def helpText =
-    boundKeys.map(k => "%-20s%s" format(k, bindings(k))).mkString("\n") + "\n"
+  def bindingDescriptions = boundKeys.map(k => List(k, bindings(k).toString))
+  
+  def showKeyBindings(parent: UIElement) {
+    new Frame {
+      title = "Key Bindings"
+      setLocationRelativeTo(parent)
+      contents = new GridPanel(boundKeys.size, 2) {
+        for (k <- boundKeys; entry <- List(k, bindings(k).toString))
+          contents += new Label(entry, null, Alignment.Left)
+      }
+      pack
+      listenTo(this)
+      reactions += { case WindowClosed(w) if w == this => this.dispose }
+      visible = true
+    }
+  }
 }
