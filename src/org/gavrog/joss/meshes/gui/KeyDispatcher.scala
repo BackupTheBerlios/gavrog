@@ -28,6 +28,7 @@ trait KeyDispatcher extends Reactor {
   }
   
   private var bindings = Map[String, Binding]()
+  private var boundKeys = List[String]()
   private var sources = List[KeyPublisher]()
   
   def addKeySource(src: KeyPublisher) {
@@ -41,10 +42,12 @@ trait KeyDispatcher extends Reactor {
   
   def bind(keyStroke: String, description: String, code: => Unit) {
     bindings += keyStroke -> new Binding(description, code)
+    boundKeys = (boundKeys - keyStroke) ::: keyStroke :: Nil
   }
   
   def unbind(keyStroke: String) {
-    bindings -= keyStroke
+    bindings  -= keyStroke
+    boundKeys -= keyStroke
   }
   
   reactions += {
@@ -55,14 +58,10 @@ trait KeyDispatcher extends Reactor {
                 else if (mod.size > 0 && mod != key) mod + "-" + key
                 else                                 key
       //print(txt + "\n")
-      bindings.get(txt) match {
-        case None => ()
-        case Some(binding) => binding.execute
-      }
+      if (boundKeys contains txt) bindings(txt).execute
     }
   }
   
-  def helpText = Sorting.stableSort(bindings.keys.toList)
-                   .map { k => "%-20s%s" format (k, bindings(k)) }
-                   .mkString("\n") + "\n"
+  def helpText =
+    boundKeys.map(k => "%-20s%s" format(k, bindings(k))).mkString("\n") + "\n"
 }
