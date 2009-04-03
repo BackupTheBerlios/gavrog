@@ -33,7 +33,9 @@ import JRealitySupport._
 import Sums._
 import Vectors._
 
-class UVsViewer extends JRealityViewerComponent with KeyPublisher {
+class UVsViewer extends JRealityViewerComponent
+with KeyPublisher with KeyDispatcher
+{
   implicit def xdouble(d: Double) = new { def deg = d / 180.0 * Math.Pi }
   implicit def xint(i: Int) = new { def deg = i / 180.0 * Math.Pi }
   implicit def wrapIter[T](it: java.util.Iterator[T]) = new Iterator[T] {
@@ -43,151 +45,151 @@ class UVsViewer extends JRealityViewerComponent with KeyPublisher {
   implicit def wrap[T](it: java.lang.Iterable[T]) = wrapIter(it.iterator)
 
   addTool(new PanTool)
-    addTool(new ClickWheelCameraZoomTool)
+  addTool(new ClickWheelCameraZoomTool)
     
-    perspective = false
-    var front_to_back = List[SceneGraphComponent]()
-    var selection = Set[SceneGraphComponent]()
-    var hidden = List[Set[SceneGraphComponent]]()
-    var hot: SceneGraphComponent = null
+  perspective = false
+  var front_to_back = List[SceneGraphComponent]()
+  var selection = Set[SceneGraphComponent]()
+  var hidden = List[Set[SceneGraphComponent]]()
+  var hot: SceneGraphComponent = null
     
-    background_color = Color.LIGHT_GRAY
-    size = (600, 800)
-    setLight("Main Light",
-             new DirectionalLight { setIntensity(1.0) },
-             MatrixBuilder.euclidean)
+  background_color = Color.LIGHT_GRAY
+  size = (600, 800)
+  setLight("Main Light",
+           new DirectionalLight { setIntensity(1.0) },
+           MatrixBuilder.euclidean)
+  scene.addChild(grid)
+  super.encompass
+    
+  def update_z_order = modify {
+    for ((node, z) <- front_to_back.zipWithIndex)
+      MatrixBuilder.euclidean.translate(0, 0, -0.01 * z).assignTo(node)
+  }
+    
+  def setMesh(mesh: Mesh) = modify {
+    SceneGraphUtility.removeChildren(scene)
+    for (chart <- mesh.charts)
+      scene.addChild(new UVsGeometry(chart, "uv-chart"))
+    front_to_back = scene.getChildComponents.toList
+    update_z_order
     scene.addChild(grid)
+    encompass
+  }
+    
+  override def encompass {
+    grid.setVisible(false)
     super.encompass
+    grid.setVisible(true)
+  }
     
-    def update_z_order = modify {
-      for ((node, z) <- front_to_back.zipWithIndex)
-        MatrixBuilder.euclidean.translate(0, 0, -0.01 * z).assignTo(node)
-    }
+  def encompassSelected {
+    var hidden = Set[SceneGraphComponent](grid)
+    grid.setVisible(false)
+    if (!selection.isEmpty)
+      for (sgc <- scene.getChildComponents
+           if (!selection.contains(sgc) && sgc.isVisible)) {
+        hidden += sgc
+        sgc.setVisible(false)
+      }
+    super.encompass
+    for (sgc <- hidden) sgc.setVisible(true)
+  }
     
-    def setMesh(mesh: Mesh) = modify {
-      SceneGraphUtility.removeChildren(scene)
-      for (chart <- mesh.charts)
-        scene.addChild(new UVsGeometry(chart, "uv-chart"))
-      front_to_back = scene.getChildComponents.toList
-      update_z_order
-      scene.addChild(grid)
-      encompass
-    }
+  override def rotateScene(axis: Vec3, angle: Double) =
+    super.rotateScene(new Vec3(0, 0, 1), angle)
+  override def viewFrom(eye: Vec3, up: Vec3) =
+    super.viewFrom(new Vec3(0, 0, 1), up)
     
-    override def encompass {
-      grid.setVisible(false)
-      super.encompass
-      grid.setVisible(true)
-    }
+  def set_color(sgc: SceneGraphComponent, c: Color) =
+    sgc.getAppearance.setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, c)
     
-    def encompassSelected {
-      var hidden = Set[SceneGraphComponent](grid)
-      grid.setVisible(false)
-      if (!selection.isEmpty)
-        for (sgc <- scene.getChildComponents
-             if (!selection.contains(sgc) && sgc.isVisible)) {
-          hidden += sgc
-          sgc.setVisible(false)
-        }
-      super.encompass
-      for (sgc <- hidden) sgc.setVisible(true)
-    }
-    
-    override def rotateScene(axis: Vec3, angle: Double) =
-      super.rotateScene(new Vec3(0, 0, 1), angle)
-    override def viewFrom(eye: Vec3, up: Vec3) =
-      super.viewFrom(new Vec3(0, 0, 1), up)
-    
-    def set_color(sgc: SceneGraphComponent, c: Color) =
-      sgc.getAppearance.setAttribute(POLYGON_SHADER + '.' + DIFFUSE_COLOR, c)
-    
-    def select(sgc: SceneGraphComponent) {
-      set_color(sgc, Color.RED)
-      selection += sgc
-      clear_hot
-    }
-    def deselect(sgc: SceneGraphComponent) {
-      set_color(sgc, Color.WHITE)
-      selection -= sgc
-      clear_hot
-    }
-    def clear_hot = if (hot != null) {
-      set_color(hot, if (selection.contains(hot)) Color.RED else Color.WHITE)
-      hot = null
-    }
-    def make_hot(sgc: SceneGraphComponent) = if (hot != sgc) {
-      clear_hot
-      set_color(sgc, if (selection.contains(sgc)) Color.YELLOW else Color.GREEN)
-      hot = sgc
-    }
-    def hide(sgc: SceneGraphComponent) {
-      sgc.setVisible(false)
-      deselect(sgc)
-    }
-    def show(sgc: SceneGraphComponent) {
-      sgc.setVisible(true)
-    }
-    def push_to_back(sgc: SceneGraphComponent) {
-      front_to_back = (front_to_back - sgc) ::: List(sgc)
-      update_z_order
-    }
-    def pull_to_front(sgc: SceneGraphComponent) {
-      front_to_back = sgc :: (front_to_back - sgc)
-      update_z_order
-    }
-    
-    addTool(new AbstractTool {
-      addCurrentSlot(InputSlot.getDevice("PointerTransformation")) // mouse move
+  def select(sgc: SceneGraphComponent) {
+    set_color(sgc, Color.RED)
+    selection += sgc
+    clear_hot
+  }
+  def deselect(sgc: SceneGraphComponent) {
+    set_color(sgc, Color.WHITE)
+    selection -= sgc
+    clear_hot
+  }
+  def clear_hot = if (hot != null) {
+    set_color(hot, if (selection.contains(hot)) Color.RED else Color.WHITE)
+    hot = null
+  }
+  def make_hot(sgc: SceneGraphComponent) = if (hot != sgc) {
+    clear_hot
+    set_color(sgc, if (selection.contains(sgc)) Color.YELLOW else Color.GREEN)
+    hot = sgc
+  }
+  def hide(sgc: SceneGraphComponent) {
+    sgc.setVisible(false)
+    deselect(sgc)
+  }
+  def show(sgc: SceneGraphComponent) {
+    sgc.setVisible(true)
+  }
+  def push_to_back(sgc: SceneGraphComponent) {
+    front_to_back = (front_to_back - sgc) ::: List(sgc)
+    update_z_order
+  }
+  def pull_to_front(sgc: SceneGraphComponent) {
+    front_to_back = sgc :: (front_to_back - sgc)
+    update_z_order
+  }
+  
+  addTool(new AbstractTool {
+    addCurrentSlot(InputSlot.getDevice("PointerTransformation")) // mouse move
       
-      override def perform(tc: ToolContext) = modify {
-        val pr = tc.getCurrentPick
-        if (pr == null) clear_hot
-        else make_hot(pr.getPickPath.getLastComponent)
-      }
-    })
-    
-    addTool(new AbstractTool(InputSlot.getDevice("PrimaryAction")) { // mouse 1
-      override def activate(tc: ToolContext) {
-        val pr = tc.getCurrentPick
-        if (pr == null) return
-        val sgc = pr.getPickPath.getLastComponent
-        modify { if (selection contains sgc) deselect(sgc) else select(sgc) }
-      }
-    })
-    
-    listenTo(keyClicks, Mouse.moves)
-    reactions += {
-      case MouseEntered(src, _, _) if (src == this) => requestFocus
-      case KeyPressed(src, modifiers, code, _) if (src == this) => {
-        val key = java.awt.event.KeyEvent.getKeyText(code)
-        val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
-    	val txt = mod + (if (mod.size > 0) "-" else "") + key
-    	txt match {
-    	  case "Ctrl-Left"  => modify { rotateScene(Vec3(0, 0, 1), 5 deg) }
-    	  case "Ctrl-Right" => modify { rotateScene(Vec3(0, 0, 1), -5 deg) }
-      	  case "Home"       => modify {
-      	    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-            encompass
-      	  }
-    	  case "0"     => modify { encompassSelected }
-      	  case "Space" => modify { selection map deselect }
-      	  case "B"     => modify { selection map push_to_back }
-      	  case "F"     => modify { selection map pull_to_front }
-      	  case "H"     => if (selection.size > 0) modify {
-            hidden = (Set() ++ selection) :: hidden
-      	  	selection map hide
-      	  }
-      	  case "U"     => hidden match {
-      	    case last_batch :: rest => modify {
-      	      last_batch map show
-      	      hidden = rest
-      	    }
-      	    case Nil => ()
-      	  }
-      	  case _  => ()
-    	}
-      }
+    override def perform(tc: ToolContext) = modify {
+      val pr = tc.getCurrentPick
+      if (pr == null) clear_hot
+      else make_hot(pr.getPickPath.getLastComponent)
     }
+  })
+    
+  addTool(new AbstractTool(InputSlot.getDevice("PrimaryAction")) { // mouse 1
+    override def activate(tc: ToolContext) {
+      val pr = tc.getCurrentPick
+      if (pr == null) return
+      val sgc = pr.getPickPath.getLastComponent
+      modify { if (selection contains sgc) deselect(sgc) else select(sgc) }
+    }
+  })
+    
+  addKeySource(this)
+  focusOnEnter(this)
+  
+  addBinding("Ctrl-Left" , "rotate counterclockwise",
+             modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
+  addBinding("Ctrl-Right", "rotate clockwise",
+             modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
+  addBinding("Home"      , "reset view",
+             modify {
+               viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+               encompass
+             })
+  addBinding("0"    , "adjust viewport to scene ",
+             modify { encompassSelected })
+  addBinding("Space", "deselect all",
+             modify { selection map deselect })
+  addBinding("B"    , "push selected to back",
+             modify { selection map push_to_back })
+  addBinding("F"    , "pull selected to front",
+             modify { selection map pull_to_front })
+  addBinding("H"    , "hide selected",
+             if (selection.size > 0) modify {
+               hidden = (Set() ++ selection) :: hidden
+               selection map hide
+             })
+  addBinding("U"    , "unhide last hidden",
+             hidden match {
+               case last_batch :: rest => modify {
+                 last_batch map show
+                 hidden = rest
+               }
+               case Nil => ()
+             })
   
   class UVsGeometry(chart: Mesh.Chart, name: String)
   extends SceneGraphComponent(name) {
