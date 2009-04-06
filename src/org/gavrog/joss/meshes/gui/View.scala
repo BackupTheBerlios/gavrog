@@ -23,45 +23,44 @@ import scala.swing.{Action, BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
                     MenuItem, Orientation, Separator, SplitPane, TextArea}
 
 import SwingSupport._
+import actions.MeshLoadAction
 
 object View {
   def log(message: String) = statusLine.text = message
   
-  val loadMeshChooser = new FileChooser
   val screenShotChooser = new FileChooser
   
   val statusLine  = new TextArea(1, 80) { editable = false }
   val sceneViewer = new MeshViewer
   val uvMapViewer = new UVsViewer
-  var active      = List(sceneViewer, uvMapViewer)
   
   def main(args : Array[String]) {
     new MainFrame {
-      title    = "Scala Mesh Viewer"
-      contents = new BorderPanel {
+      title = "Scala Mesh Viewer"
+      val main = new BorderPanel {
         add(new SplitPane(Orientation.Vertical, sceneViewer, uvMapViewer) {
           continuousLayout = true
         }, BorderPanel.Position.Center)
         add(statusLine, BorderPanel.Position.South)
       }
+	  val meshLoader = new MeshLoadAction("Load mesh...", main) {
+	    accelerator = "control O"
+	  }
+
+	  listenTo(meshLoader)
+	  reactions += {
+	    case MessageEvent(text) => log(text)
+	    case meshLoader.LoadEvent(result, Some(mesh)) => {
+	      sceneViewer.setMesh(mesh)
+	      uvMapViewer.setMesh(mesh)
+	    }
+	  }
+  
+	  contents = main
       menuBar = new MenuBar {
         contents += new Menu("File") {
           contents ++ List(
-    	    new MenuItem(Action("Load Mesh ...") {
-    		  val result = loadMeshChooser.showOpenDialog(this)
-    		  result match {
-    		    case FileChooser.Result.Approve => run {
-    			  val file = loadMeshChooser.selectedFile
-    			  log("Reading...")
-    			  val mesh = Mesh.read(file.getAbsolutePath, true)(0)
-    			  log("Converting...")
-    			  sceneViewer.setMesh(mesh)
-    			  uvMapViewer.setMesh(mesh)
-    			  log("Done!")
-    		    }
-    		    case _ => {}
-    		  }
-    	    }) { action.accelerator = "control O" },
+    	    new MenuItem(meshLoader),
       
     	    new Separator,
     	    new MenuItem(Action("Take Screen Shot ...") {

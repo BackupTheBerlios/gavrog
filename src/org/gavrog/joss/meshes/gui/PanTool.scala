@@ -23,11 +23,11 @@ import de.jreality.scene.tool.{AbstractTool, InputSlot, ToolContext}
 
 import JRealitySupport._
 
-object Axis extends Enumeration {
-  val X, Y, None = Value
-}
-
 class PanTool extends AbstractTool {
+  object Axis extends Enumeration {
+    val X, Y, None = Value
+  }
+
   val activationSlot = InputSlot.getDevice("DragActivation")
   val restrictionSlot = InputSlot.getDevice("Secondary")
   val evolutionSlot = InputSlot.getDevice("PointerEvolution")
