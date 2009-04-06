@@ -19,8 +19,8 @@ package org.gavrog.joss.meshes.gui
 
 import java.awt.Color
 
-import scala.swing.{BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
-                    Orientation, Separator, SplitPane, TextArea}
+import scala.swing.{Action, BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
+                    MenuItem, Orientation, Separator, SplitPane, TextArea}
 
 import SwingSupport._
 
@@ -47,7 +47,7 @@ object View {
       menuBar = new MenuBar {
         contents += new Menu("File") {
           contents ++ List(
-    	    new ActionMenuItem("Load Mesh ...", {
+    	    new MenuItem(Action("Load Mesh ...") {
     		  val result = loadMeshChooser.showOpenDialog(this)
     		  result match {
     		    case FileChooser.Result.Approve => run {
@@ -61,10 +61,10 @@ object View {
     		    }
     		    case _ => {}
     		  }
-    	    }) { accelerator = "control O" },
+    	    }) { action.accelerator = "control O" },
       
     	    new Separator,
-    	    new ActionMenuItem("Take Screen Shot ...", {
+    	    new MenuItem(Action("Take Screen Shot ...") {
     	      val result = screenShotChooser.showSaveDialog(this)
     	      result match {
     	        case FileChooser.Result.Approve => run {
@@ -76,10 +76,10 @@ object View {
     	        }
     	        case _ => {}
     	      }
-    	    }) { accelerator = "control I" },
+    	    }) { action.accelerator = "control I" },
       
     	    new Separator,
-    	    new ActionMenuItem("Exit", System.exit(0))
+    	    new MenuItem(Action("Exit") { System.exit(0) })
           )
         }
       }

@@ -33,22 +33,5 @@ object SwingSupport {
 
   def run(body: => Unit) = new Thread(body).start
   
-  class ActionMenuItem(name: String, body: => Unit) extends MenuItem(name) {
-    action = new Action(name) {
-      def apply { body }
-    }
-    def accelerator = action.accelerator
-    def accelerator_=(stroke: KeyStroke) {
-      action.accelerator = Some(stroke)
-    }
-    def accelerator_=(spec: String) {
-      accelerator = KeyStroke.getKeyStroke(spec)
-    }
-    def accelerator_=(keyCode: Int) {
-      accelerator = KeyStroke.getKeyStroke(keyCode, 0)
-    }
-    def accelerator_=(spec: Pair[Int, Int]) {
-      accelerator = KeyStroke.getKeyStroke(spec._1, spec._2)
-    }
-  }
+  implicit def asKeyStroke(spec: String) = Some(KeyStroke.getKeyStroke(spec))
 }
