@@ -189,8 +189,8 @@ with KeyPublisher with KeyDispatcher
          case Nil => ()
        })
 
-  bind("F1", "print key bindings", Dialog.showMessage(this, helpText))
-
+  bind("F1", "show key bindings", showKeyBindings(this))
+  
   class UVsGeometry(chart: Mesh.Chart, name: String)
   extends SceneGraphComponent(name) {
     setGeometry(new IndexedFaceSetFactory {
