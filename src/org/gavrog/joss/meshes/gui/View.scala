@@ -19,20 +19,18 @@ package org.gavrog.joss.meshes.gui
 
 import java.awt.Color
 
-import scala.swing.{Action, BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
+import scala.swing.{Action, BorderPanel, MainFrame, Menu, MenuBar,
                     MenuItem, Orientation, Separator, SplitPane, TextArea}
 
 import SwingSupport._
-import actions.MeshLoadAction
+import actions.{MeshLoadAction, ScreenShotAction}
 
 object View {
-  def log(message: String) = statusLine.text = message
-  
-  val screenShotChooser = new FileChooser
-  
   val statusLine  = new TextArea(1, 80) { editable = false }
   val sceneViewer = new MeshViewer
   val uvMapViewer = new UVsViewer
+  
+  def log(message: String) = statusLine.text = message
   
   def main(args : Array[String]) {
     new MainFrame {
@@ -46,8 +44,12 @@ object View {
 	  val meshLoader = new MeshLoadAction("Load mesh...", main) {
 	    accelerator = "control O"
 	  }
+      val screenShotSaver =
+        new ScreenShotAction("Take Screen Shot...", main, sceneViewer) {
+          accelerator = "control I"
+        }
 
-	  listenTo(meshLoader)
+	  listenTo(meshLoader, screenShotSaver)
 	  reactions += {
 	    case MessageEvent(text) => log(text)
 	    case meshLoader.LoadEvent(result, Some(mesh)) => {
@@ -61,22 +63,8 @@ object View {
         contents += new Menu("File") {
           contents ++ List(
     	    new MenuItem(meshLoader),
-      
     	    new Separator,
-    	    new MenuItem(Action("Take Screen Shot ...") {
-    	      val result = screenShotChooser.showSaveDialog(this)
-    	      result match {
-    	        case FileChooser.Result.Approve => run {
-    	          log("Taking screenshot ...")
-    	          val file = screenShotChooser.selectedFile
-    	          val d = sceneViewer.size
-    	          sceneViewer.screenshot((d.width, d.height), 4, file)
-    	          log("Wrote image to %s" format file.getName)
-    	        }
-    	        case _ => {}
-    	      }
-    	    }) { action.accelerator = "control I" },
-      
+    	    new MenuItem(screenShotSaver),
     	    new Separator,
     	    new MenuItem(Action("Exit") { System.exit(0) })
           )
