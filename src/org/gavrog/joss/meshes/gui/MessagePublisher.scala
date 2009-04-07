@@ -20,8 +20,9 @@ package org.gavrog.joss.meshes.gui
 import scala.swing.Publisher
 import scala.swing.event.Event
 
-case class MessageEvent(val text: String) extends Event
+case class MessageSent(val src: MessagePublisher,
+                       val text: String) extends Event
 
 trait MessagePublisher extends Publisher {
-  def send(text: String) = publish(MessageEvent(text))
+  def send(text: String) = publish(MessageSent(this, text))
 }

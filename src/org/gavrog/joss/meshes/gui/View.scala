@@ -19,7 +19,7 @@ package org.gavrog.joss.meshes.gui
 
 import java.awt.Color
 
-import scala.swing.{Action, BorderPanel, MainFrame, Menu, MenuBar,
+import scala.swing.{Action, BorderPanel, FileChooser, MainFrame, Menu, MenuBar,
                     MenuItem, Orientation, Separator, SplitPane, TextArea}
 
 import SwingSupport._
@@ -51,11 +51,12 @@ object View {
 
 	  listenTo(meshLoader, screenShotSaver)
 	  reactions += {
-	    case MessageEvent(text) => log(text)
-	    case meshLoader.LoadEvent(result, Some(mesh)) => {
+	    case MessageSent(_, text) => log(text)
+	    case meshLoader.MeshLoaded(_, Some(mesh)) => {
 	      sceneViewer.setMesh(mesh)
 	      uvMapViewer.setMesh(mesh)
 	    }
+	    case meshLoader.ChoiceError(_) => log("Error in file selector.")
 	  }
   
 	  contents = main

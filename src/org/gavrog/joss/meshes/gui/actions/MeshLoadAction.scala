@@ -25,23 +25,26 @@ import SwingSupport._
 class MeshLoadAction(name: String, parent: Component)
 extends Action(name) with MessagePublisher
 {
-  case class LoadEvent(result: FileChooser.Result.Value, mesh: Option[Mesh])
-  extends Event
+  abstract class MeshLoaderEvent(src: MeshLoadAction) extends Event
+  case class MeshLoaded(src: MeshLoadAction,
+                        mesh: Option[Mesh]) extends MeshLoaderEvent(src)
+  case class ChoiceCancelled(src: MeshLoadAction) extends MeshLoaderEvent(this)
+  case class ChoiceError(src: MeshLoadAction) extends MeshLoaderEvent(this)
   
   val chooser = new FileChooser
   
   def apply {
-	val result = chooser.showOpenDialog(parent)
-	result match {
-      case FileChooser.Result.Approve => run {
-    	val file = chooser.selectedFile
-    	send("Reading...")
-    	val mesh = Mesh.read(file.getAbsolutePath, true)(0)
-    	send("Processing...")
-    	publish(LoadEvent(result, Some(mesh)))
-    	send("Done!")
-      }
-      case _ => publish(LoadEvent(result, None))
-	}
+	chooser.showOpenDialog(parent) match {
+	  case FileChooser.Result.Approve => run {
+        val file = chooser.selectedFile
+        send("Reading...")
+        val mesh = Mesh.read(file.getAbsolutePath, true)(0)
+        send("Processing...")
+        publish(MeshLoaded(this, Some(mesh)))
+        send("Done!")
+	  }
+	  case FileChooser.Result.Cancel => publish(ChoiceCancelled(this))
+	  case FileChooser.Result.Error => publish(ChoiceError(this))
+    }
   }
 }
