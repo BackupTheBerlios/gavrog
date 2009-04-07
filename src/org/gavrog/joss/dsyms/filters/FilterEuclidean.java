@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2009 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
@@ -38,10 +39,11 @@ public class FilterEuclidean {
         final String filename = args[0];
         final int f = (args.length > 1 ? Integer.parseInt(args[1]) : 10000);
 
-        final List good = new LinkedList();
-        final List ambiguous = new LinkedList();
+        final List<Integer> good = new LinkedList<Integer>();
+        final List<Pair> ambiguous = new LinkedList<Pair>();
         int count = 0;
-        final long before = System.currentTimeMillis();
+        final Stopwatch timer = new Stopwatch();
+        timer.start();
 
         for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
             final DSymbol ds = (DSymbol) input.next();
@@ -50,7 +52,7 @@ public class FilterEuclidean {
             final EuclidicityTester tester = new EuclidicityTester(ds, true, f);
             if (tester.isGood()) {
                 System.out.println("#Symbol " + count + " is good: " + tester.getCause());
-                good.add(new Integer(count));
+                good.add(count);
                 System.out.println(ds);
             } else if (tester.isBad()) {
                 System.out.println("#Symbol " + count + " is bad: " + tester.getCause());
@@ -62,7 +64,7 @@ public class FilterEuclidean {
             }
             System.out.flush();
         }
-        final long after = System.currentTimeMillis();
+        timer.stop();
 
         System.out.print("### " + good.size() + " good symbols:");
         for (final Iterator iter = good.iterator(); iter.hasNext();) {
@@ -79,7 +81,6 @@ public class FilterEuclidean {
             System.out.println("#   " + n + ":  " + ds.canonical());
             System.out.println("#       " + G);
         }
-        System.out.println("### Running time was " + (after - before) / 1000
-        		+ " seconds.");
+        System.out.println("### Running time was " + timer.format() + ".");
     }
 }

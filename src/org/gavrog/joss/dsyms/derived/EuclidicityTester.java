@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2009 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ public class EuclidicityTester {
             Whole.ZERO, Whole.ZERO, Whole.ZERO });
     final private static List empty = new LinkedList();
 
-    final private static Set goodInvariants = new HashSet();
+    final private static Set<String> goodInvariants = new HashSet<String>();
     static {
         final Package pkg = EuclidicityTester.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
