@@ -17,34 +17,22 @@
 
 package org.gavrog.joss.meshes.gui.actions
 
-import scala.swing.{Action, Component, FileChooser}
+import java.io.File
+import scala.swing.Component
 import scala.swing.event.Event
 
 import SwingSupport._
 
 class MeshLoadAction(name: String, parent: Component)
-extends Action(name) with MessagePublisher
+extends FileChoiceAction(name, parent) with MessagePublisher
 {
-  abstract class MeshLoaderEvent(src: MeshLoadAction) extends Event
-  case class MeshLoaded(src: MeshLoadAction,
-                        mesh: Option[Mesh]) extends MeshLoaderEvent(src)
-  case class ChoiceCancelled(src: MeshLoadAction) extends MeshLoaderEvent(this)
-  case class ChoiceError(src: MeshLoadAction) extends MeshLoaderEvent(this)
+  case class MeshLoaded(src: MeshLoadAction, mesh: Mesh) extends Event
   
-  val chooser = new FileChooser
-  
-  def apply {
-	chooser.showOpenDialog(parent) match {
-	  case FileChooser.Result.Approve => run {
-        val file = chooser.selectedFile
-        send("Reading...")
-        val mesh = Mesh.read(file.getAbsolutePath, true)(0)
-        send("Processing...")
-        publish(MeshLoaded(this, Some(mesh)))
-        send("Done!")
-	  }
-	  case FileChooser.Result.Cancel => publish(ChoiceCancelled(this))
-	  case FileChooser.Result.Error => publish(ChoiceError(this))
-    }
+  override def openFile(selected: File) = run {
+    send("Reading...")
+    val mesh = Mesh.read(selected.getAbsolutePath, true)(0)
+    send("Processing...")
+    publish(MeshLoaded(this, mesh))
+    send("Done!")
   }
 }

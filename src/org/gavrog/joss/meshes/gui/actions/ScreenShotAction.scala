@@ -17,27 +17,19 @@
 
 package org.gavrog.joss.meshes.gui.actions
 
-import scala.swing.{Action, Component, FileChooser}
-import scala.swing.event.Event
+import java.io.File
+import scala.swing.Component
 
 import SwingSupport._
 
 class ScreenShotAction(name: String, parent: Component,
                        viewer: JRealityViewerComponent)
-extends Action(name) with MessagePublisher
+extends FileChoiceAction(name, parent) with MessagePublisher
 {
-  val chooser = new FileChooser
-  
-  def apply {
-    chooser.showSaveDialog(parent) match {
-      case FileChooser.Result.Approve => run {
-        send("Taking screenshot ...")
-        val file = chooser.selectedFile
-        val d = viewer.size
-        viewer.screenshot((d.width, d.height), 4, file)
-        send("Wrote image to %s." format file.getName)
-      }
-      case _ => send("Did not write an image.")
-    }
+  override def openFile(selected: File) = run {
+    send("Taking screenshot ...")
+    val d = viewer.size
+    viewer.screenshot((d.width, d.height), 4, selected)
+    send("Wrote image to %s." format selected.getName)
   }
 }
