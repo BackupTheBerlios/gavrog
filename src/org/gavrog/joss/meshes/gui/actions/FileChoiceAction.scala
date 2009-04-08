@@ -32,16 +32,16 @@ extends Action(name) with Publisher
   case class ChoiceError(src: FileChoiceAction) extends FileChoiceEvent(src)
   
   private val chooser = new FileChooser {
-    title = name
+	  title = name
   }
 
   def apply {
-    import FileChooser.Result._
-	chooser.showOpenDialog(parent) match {
-	  case Approve => openFile(chooser.selectedFile)
-	  case Cancel  => publish(ChoiceCancelled(this))
-	  case Error   => publish(ChoiceError(this))
-    }
+	  import FileChooser.Result._
+	  chooser.showOpenDialog(parent) match {
+	  	case Approve => openFile(chooser.selectedFile)
+	  	case Cancel  => publish(ChoiceCancelled(this))
+	  	case Error   => publish(ChoiceError(this))
+	  }
   }
   
   def openFile(selected: File) = publish(FileChosen(this, selected))

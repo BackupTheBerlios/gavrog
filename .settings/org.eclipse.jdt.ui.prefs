@@ -1,5 +1,7 @@
-#Wed Feb 04 13:39:58 EST 2009
+#Wed Apr 08 17:56:09 EST 2009
 eclipse.preferences.version=1
+formatter_profile=_Scala
+formatter_settings_version=11
 org.eclipse.jdt.ui.exception.name=ex
 org.eclipse.jdt.ui.gettersetter.use.is=false
 org.eclipse.jdt.ui.javadoc=true
