@@ -161,26 +161,26 @@ with KeyPublisher with KeyDispatcher
   addKeySource(this)
   focusOnEnter(this)
   
-  bind("Ctrl-Left", "rotate counterclockwise",
+  bind("ctrl LEFT", "rotate counterclockwise",
        modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
-  bind("Ctrl-Right", "rotate clockwise",
+  bind("ctrl RIGHT", "rotate clockwise",
        modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
-  bind("Home", "reset view",
+  bind("HOME", "reset view",
        modify {
          viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
          encompass
        })
   bind("0",     "zoom on selection ",     modify { encompassSelected })
   
-  bind("Space", "deselect all",           modify { selection map deselect })
-  bind("b",     "push selected to back",  modify { selection map push_to_back })
-  bind("f",     "pull selected to front", modify { selection map pull_to_front })
-  bind("h",     "hide selected",
+  bind("SPACE", "deselect all",           modify { selection map deselect })
+  bind("B",     "push selected to back",  modify { selection map push_to_back })
+  bind("F",     "pull selected to front", modify { selection map pull_to_front })
+  bind("H",     "hide selected",
        if (selection.size > 0) modify {
          hidden = (Set() ++ selection) :: hidden
          selection map hide
        })
-  bind("u", "unhide last hidden",
+  bind("U", "unhide last hidden",
        hidden match {
          case last_batch :: rest => modify {
            last_batch map show

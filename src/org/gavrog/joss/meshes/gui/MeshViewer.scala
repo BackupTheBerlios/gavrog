@@ -60,20 +60,20 @@ with KeyPublisher with KeyDispatcher
   addKeySource(this)
   focusOnEnter(this)
   
-  bind("Ctrl-Left" , "rotate counterclockwise",
+  bind("ctrl LEFT" , "rotate counterclockwise",
        modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
-  bind("Ctrl-Right", "rotate clockwise",
+  bind("ctrl RIGHT", "rotate clockwise",
        modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
-  bind("Left"      , "rotate left",
+  bind("LEFT"      , "rotate left",
        modify { rotateScene(Vec3(0, 1, 0), -5 deg) })
-  bind("Right"     , "rotate right",
+  bind("RIGHT"     , "rotate right",
        modify { rotateScene(Vec3(0, 1, 0), +5 deg) })
-  bind("Up"        , "rotate up",
+  bind("UP"        , "rotate up",
        modify { rotateScene(Vec3(1, 0, 0), -5 deg) })
-  bind("Down"      , "rotate down",
+  bind("DOWN"      , "rotate down",
        modify { rotateScene(Vec3(1, 0, 0), +5 deg) })
 
-  bind("Home", "reset view", modify {
+  bind("HOME", "reset view", modify {
     viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
     fieldOfView = defaultFieldOfView
     encompass
@@ -83,17 +83,17 @@ with KeyPublisher with KeyDispatcher
     encompass
   })
   
-  bind("x", "view from +x",
+  bind("X", "view from +x",
        modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) })
-  bind("X", "view from -x",
+  bind("shift X", "view from -x",
        modify { viewFrom(Vec3(-1, 0, 0), Vec3(0, 1, 0)) })
-  bind("y", "view from y",
+  bind("Y", "view from y",
        modify { viewFrom(Vec3( 0, 1, 0), Vec3(0, 0,-1)) })
-  bind("Y", "view from -y",
+  bind("shift Y", "view from -y",
        modify { viewFrom(Vec3( 0,-1, 0), Vec3(0, 0, 1)) })
-  bind("z", "view from z",
+  bind("Z", "view from z",
        modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) })
-  bind("Z", "view from -z",
+  bind("shift Z", "view from -z",
        modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
   
   bind("F1", "show key bindings", showKeyBindings(this))

@@ -43,13 +43,13 @@ object View {
       }
       
       val meshLoader = new MeshLoadAction("Load mesh...", main) {
-        accelerator = "control O"
+        accelerator = "ctrl O"
       }
       import meshLoader._
       
       val screenShotSaver =
         new ScreenShotAction("Take Screen Shot...", main, sceneViewer) {
-          accelerator = "control I"
+          accelerator = "ctrl I"
         }
 
       listenTo(meshLoader, screenShotSaver)

@@ -18,7 +18,6 @@
 package org.gavrog.joss.meshes.gui
 
 import javax.swing.{KeyStroke, SwingUtilities}
-import scala.swing.{Action, MenuItem}
 
 object SwingSupport {
   implicit def asRunnable(body: => Unit) = new Runnable() { def run { body } }

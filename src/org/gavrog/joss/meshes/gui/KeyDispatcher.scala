@@ -18,8 +18,10 @@
 package org.gavrog.joss.meshes.gui
 
 import java.awt.Point
+import javax.swing.{JPopupMenu, KeyStroke}
 
-import scala.swing.{Alignment, GridPanel, Frame, Label, Reactor, UIElement}
+import scala.swing.{Action, Alignment, GridPanel,
+                    Frame, Label, Reactor, UIElement}
 import scala.swing.event.{MouseEntered, WindowClosed}
 import scala.util.Sorting
 
@@ -29,55 +31,54 @@ trait KeyDispatcher extends Reactor {
     override def toString = description
   }
   
-  private var bindings = Map[String, Binding]()
-  private var boundKeys = List[String]()
+  private var bindings = Map[KeyStroke, Binding]()
+  private var boundKeys = List[KeyStroke]()
   private var sources = List[KeyPublisher]()
   
   def addKeySource(src: KeyPublisher) {
     sources = src :: sources
-	listenTo(src.keyClicks, src.Mouse.moves)
+    listenTo(src.keyClicks, src.Mouse.moves)
   }
   
   def focusOnEnter(src: KeyPublisher) {
     reactions += { case MouseEntered(`src`, _, _) => src.requestFocus }
   }
   
-  def bind(keyStroke: String, description: String, code: => Unit) {
+  def bind(ksText: String, description: String, code: => Unit) {
+    KeyStroke.getKeyStroke(ksText) match {
+      case null => throw new Error("Unknown key stroke '%s'" format ksText)
+      case keyStroke => bind(keyStroke, description, code)
+    }
+  }
+  
+  def bind(keyStroke: KeyStroke, description: String, code: => Unit) {
     bindings += keyStroke -> new Binding(description, code)
     boundKeys = (boundKeys - keyStroke) ::: keyStroke :: Nil
   }
   
-  def unbind(keyStroke: String) {
+  def unbind(keyStroke: KeyStroke) {
     bindings  -= keyStroke
     boundKeys -= keyStroke
   }
   
   reactions += {
     case KeyPressed(src, modifiers, code, char) if (sources contains src) => {
-      val key =java.awt.event.KeyEvent.getKeyText(code)
-      val mod = java.awt.event.KeyEvent.getKeyModifiersText(modifiers)
-      val txt = if (char > 32 && char < 128)       "" + char
-                else if (mod.size > 0 && mod != key) mod + "-" + key
-                else                                 key
-      //print(txt + "\n")
-      if (boundKeys contains txt) bindings(txt).execute
+      val ks = KeyStroke.getKeyStroke(code, modifiers)
+      //print(ks + "\n")
+      if (boundKeys contains ks) bindings(ks).execute
     }
   }
   
   def bindingDescriptions = boundKeys.map(k => List(k, bindings(k).toString))
   
   def showKeyBindings(parent: UIElement) {
-    new Frame {
-      title = "Key Bindings"
-      setLocationRelativeTo(parent)
-      contents = new GridPanel(boundKeys.size, 2) {
-        for (k <- boundKeys; entry <- List(k, bindings(k).toString))
-          contents += new Label(entry, null, Alignment.Left)
-      }
-      pack
-      listenTo(this)
-      reactions += { case WindowClosed(w) if w == this => this.dispose }
-      visible = true
-    }
+    JPopupMenu.setDefaultLightWeightPopupEnabled(false)
+    new JPopupMenu("Key Bindings") {
+      setLightWeightPopupEnabled(false)
+      for (ks <- boundKeys) add(new Action(bindings(ks).toString) {
+        def apply = bindings(ks).execute
+        accelerator = Some(ks)
+      }.peer)
+    }.show(parent.peer, 0, 0)
   }
 }
