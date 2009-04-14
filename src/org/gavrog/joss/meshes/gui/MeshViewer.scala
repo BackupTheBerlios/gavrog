@@ -43,25 +43,25 @@ with KeyPublisher with KeyDispatcher
     
   size = (600, 800)
   setLight("Main Light", new DirectionalLight { setIntensity(0.8) },
-		   MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
+           MatrixBuilder.euclidean.rotateX(-30 deg).rotateY(-30 deg))
   setLight("Fill Light", new DirectionalLight { setIntensity(0.2) },
-		   MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
+           MatrixBuilder.euclidean.rotateX(10 deg).rotateY(20 deg))
 
   var center = Array(0.0, 0.0, 0.0, 1.0)
   override def computeCenter = center
 
   def setMesh(mesh: Mesh) = modify {
-	SceneGraphUtility.removeChildren(scene)
-	scene.addChild(new MeshGeometry(mesh))
-	center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
-	encompass
+    SceneGraphUtility.removeChildren(scene)
+    scene.addChild(new MeshGeometry(mesh))
+    center = (mesh.vertices.sum(_.pos) / mesh.numberOfVertices).toArray
+    encompass
   }
 
   addKeySource(this)
   focusOnEnter(this)
   
   bind("Ctrl-Left" , "rotate counterclockwise",
-	   modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
+       modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
   bind("Ctrl-Right", "rotate clockwise",
        modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
   bind("Left"      , "rotate left",
@@ -74,13 +74,13 @@ with KeyPublisher with KeyDispatcher
        modify { rotateScene(Vec3(1, 0, 0), +5 deg) })
 
   bind("Home", "reset view", modify {
-	viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-	fieldOfView = defaultFieldOfView
-	encompass
+    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+    fieldOfView = defaultFieldOfView
+    encompass
   })
   bind("0", "zoom on scene", modify {
-	fieldOfView = defaultFieldOfView
-	encompass
+    fieldOfView = defaultFieldOfView
+    encompass
   })
   
   bind("x", "view from +x",

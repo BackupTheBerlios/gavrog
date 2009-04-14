@@ -39,23 +39,23 @@ class PanTool extends AbstractTool {
   var lastAxis = Axis.None
   
   override def perform(tc: ToolContext) {
-	if (tc.getAxisState(activationSlot).isReleased) {
-	  restricted = false
-	  return
+    if (tc.getAxisState(activationSlot).isReleased) {
+      restricted = false
+      return
     }
-	if (restricted == false && tc.getAxisState(restrictionSlot).isPressed) {
-	  restricted = true
-	  lastAxis = Axis.None
+    if (restricted == false && tc.getAxisState(restrictionSlot).isPressed) {
+      restricted = true
+      lastAxis = Axis.None
     }
-	val evolution =
-	  new FactoredMatrix(tc.getTransformationMatrix(evolutionSlot))
-	val t = evolution.getTranslation
-	if (restricted) {
-	  if (lastAxis == Axis.None) lastAxis = (t(0).abs, t(1).abs) match {
-	    case (x, y) if x > y => Axis.X
-	    case (x, y) if x < y => Axis.Y
-	    case _               => return
-	  }
+    val evolution =
+      new FactoredMatrix(tc.getTransformationMatrix(evolutionSlot))
+    val t = evolution.getTranslation
+    if (restricted) {
+      if (lastAxis == Axis.None) lastAxis = (t(0).abs, t(1).abs) match {
+        case (x, y) if x > y => Axis.X
+        case (x, y) if x < y => Axis.Y
+        case _               => return
+      }
       if (lastAxis == Axis.X) {
         t(1) = 0.0
         t(2) = 0.0
@@ -63,7 +63,7 @@ class PanTool extends AbstractTool {
         t(0) = 0.0
         t(2) = 0.0
       }
-	}
+    }
     var path = tc.getRootToToolComponent
     MatrixBuilder.euclidean.translate(t)
       .times(path.getMatrix(null)).assignTo(path.getLastComponent)

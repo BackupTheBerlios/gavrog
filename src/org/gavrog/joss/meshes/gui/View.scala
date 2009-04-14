@@ -42,9 +42,9 @@ object View {
         add(statusLine, BorderPanel.Position.South)
       }
       
-	  val meshLoader = new MeshLoadAction("Load mesh...", main) {
-	    accelerator = "control O"
-	  }
+      val meshLoader = new MeshLoadAction("Load mesh...", main) {
+        accelerator = "control O"
+      }
       import meshLoader._
       
       val screenShotSaver =
@@ -52,26 +52,26 @@ object View {
           accelerator = "control I"
         }
 
-	  listenTo(meshLoader, screenShotSaver)
-	  reactions += {
-	    case MessageSent(src, text) => log(text)
-	    case MeshLoaded(src, mesh) => {
-	      sceneViewer.setMesh(mesh)
-	      uvMapViewer.setMesh(mesh)
-	    }
+      listenTo(meshLoader, screenShotSaver)
+      reactions += {
+        case MessageSent(src, text) => log(text)
+        case MeshLoaded(src, mesh) => {
+          sceneViewer.setMesh(mesh)
+          uvMapViewer.setMesh(mesh)
+        }
         case ChoiceCancelled(src) => log("Cancelled!")
-	    case ChoiceError(src) => log("Error in file chooser.")
-	  }
+        case ChoiceError(src) => log("Error in file chooser.")
+      }
   
-	  contents = main
+      contents = main
       menuBar = new MenuBar {
         contents += new Menu("File") {
           contents ++ List(
-    	    new MenuItem(meshLoader),
-    	    new Separator,
-    	    new MenuItem(screenShotSaver),
-    	    new Separator,
-    	    new MenuItem(Action("Exit") { System.exit(0) })
+            new MenuItem(meshLoader),
+            new Separator,
+            new MenuItem(screenShotSaver),
+            new Separator,
+            new MenuItem(Action("Exit") { System.exit(0) })
           )
         }
       }
