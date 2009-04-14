@@ -170,12 +170,17 @@ with KeyPublisher with KeyDispatcher
          viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
          encompass
        })
-  bind("0",     "zoom on selection ",     modify { encompassSelected })
-  
-  bind("SPACE", "deselect all",           modify { selection map deselect })
-  bind("B",     "push selected to back",  modify { selection map push_to_back })
-  bind("F",     "pull selected to front", modify { selection map pull_to_front })
-  bind("H",     "hide selected",
+  bind("0",     "zoom on selection ", modify { encompassSelected })
+  bind("SPACE", "deselect all",       modify { selection map deselect })
+  bind("I",     "invert selection",
+       modify {
+         val new_selection = front_to_back.filter(!selection.contains(_))
+         selection map deselect
+         new_selection map select
+       })
+  bind("B", "push selected to back",  modify { selection map push_to_back })
+  bind("F", "pull selected to front", modify { selection map pull_to_front })
+  bind("H", "hide selected",
        if (selection.size > 0) modify {
          hidden = (Set() ++ selection) :: hidden
          selection map hide
@@ -188,7 +193,6 @@ with KeyPublisher with KeyDispatcher
          }
          case Nil => ()
        })
-
   bind("F1", "show key bindings", showKeyBindings(this))
   
   class UVsGeometry(chart: Mesh.Chart, name: String)
