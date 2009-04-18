@@ -42,6 +42,7 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
+import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSCover;
@@ -358,8 +359,12 @@ public class Document extends DisplayList {
                 embedder.go(getEmbedderStepLimit());
             }
             embedder.normalize();
-            final CoordinateChange change = new CoordinateChange(LinearAlgebra
-                    .orthonormalRowBasis(embedder.getGramMatrix()));
+            final Matrix G = embedder.getGramMatrix();
+            if (!G.equals(G.transposed())) {
+              throw new RuntimeException("asymmetric Gram matrix:\n" + G);
+            }
+            final CoordinateChange change =
+              new CoordinateChange(LinearAlgebra.orthonormalRowBasis(G));
             final Map pos = getTiling().cornerPositions(embedder.getPositions());
             
             return (EmbedderOutput) cache.put(EMBEDDER_OUTPUT,
