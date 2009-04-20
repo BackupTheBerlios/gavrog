@@ -63,6 +63,11 @@ object View {
         case ChoiceError(src) => log("Error in file chooser.")
       }
   
+      listenTo(sceneViewer)
+      reactions += {
+        case MessageSent(_, text) => log(text)
+      }
+      
       contents = main
       menuBar = new MenuBar {
         contents += new Menu("File") {

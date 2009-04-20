@@ -59,6 +59,7 @@ with KeyPublisher with KeyDispatcher
 
   addKeySource(this)
   focusOnEnter(this)
+  enableContextMenu(this)
   
   bind("ctrl LEFT" , "rotate counterclockwise",
        modify { rotateScene(Vec3(0, 0, 1), +5 deg) })

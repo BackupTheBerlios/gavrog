@@ -18,14 +18,15 @@
 package org.gavrog.joss.meshes.gui
 
 import java.awt.Point
+import java.awt.event.InputEvent
 import javax.swing.{JPopupMenu, KeyStroke}
 
 import scala.swing.{Action, Alignment, GridPanel,
                     Frame, Label, Reactor, UIElement}
-import scala.swing.event.{MouseEntered, WindowClosed}
+import scala.swing.event.{MouseClicked, MouseEntered, MousePressed, WindowClosed}
 import scala.util.Sorting
 
-trait KeyDispatcher extends Reactor {
+trait KeyDispatcher extends Reactor with MessagePublisher {
   class Binding(description: String, code: => Unit) {
     def execute { code }
     override def toString = description
@@ -37,11 +38,22 @@ trait KeyDispatcher extends Reactor {
   
   def addKeySource(src: KeyPublisher) {
     sources = src :: sources
-    listenTo(src.keyClicks, src.Mouse.moves)
+    listenTo(src.keyClicks)
   }
   
   def focusOnEnter(src: KeyPublisher) {
+    listenTo(src.Mouse.moves)
     reactions += { case MouseEntered(`src`, _, _) => src.requestFocus }
+  }
+  
+  def enableContextMenu(src: KeyPublisher) {
+    listenTo(src.Mouse.clicks)
+    reactions += {
+      case MouseClicked(`src`, point, mods, _, _) => {
+        val mask = InputEvent.META_DOWN_MASK | InputEvent.BUTTON3_DOWN_MASK
+        if ((mods & mask) != 0) showKeyBindings(src)
+      }
+    }
   }
   
   def bind(ksText: String, description: String, code: => Unit) {
