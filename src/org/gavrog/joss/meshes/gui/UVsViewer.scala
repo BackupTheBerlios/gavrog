@@ -160,6 +160,7 @@ with KeyPublisher with KeyDispatcher
     
   addKeySource(this)
   focusOnEnter(this)
+  enableContextMenu(this)
   
   bind("ctrl LEFT", "rotate counterclockwise",
        modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
@@ -193,7 +194,6 @@ with KeyPublisher with KeyDispatcher
          }
          case Nil => ()
        })
-  bind("F1", "show key bindings", showKeyBindings(this))
   
   class UVsGeometry(chart: Mesh.Chart, name: String)
   extends SceneGraphComponent(name) {

@@ -17,7 +17,7 @@
 
 package org.gavrog.joss.meshes.gui
 
-import java.awt.Color
+import java.awt.{Color, Point}
 
 import de.jreality.geometry.IndexedFaceSetFactory
 import de.jreality.math.MatrixBuilder
@@ -96,8 +96,6 @@ with KeyPublisher with KeyDispatcher
        modify { viewFrom(Vec3( 0, 0, 1), Vec3(0, 1, 0)) })
   bind("shift Z", "view from -z",
        modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
-  
-  bind("F1", "show key bindings", showKeyBindings(this))
   
   class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
     import de.jreality.shader.CommonAttributes._

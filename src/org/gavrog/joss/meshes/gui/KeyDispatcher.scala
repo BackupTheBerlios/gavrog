@@ -51,7 +51,7 @@ trait KeyDispatcher extends Reactor with MessagePublisher {
     reactions += {
       case MouseClicked(`src`, point, mods, _, _) => {
         val mask = InputEvent.META_DOWN_MASK | InputEvent.BUTTON3_DOWN_MASK
-        if ((mods & mask) != 0) showKeyBindings(src)
+        if ((mods & mask) != 0) showKeyBindings(src, point)
       }
     }
   }
@@ -83,7 +83,7 @@ trait KeyDispatcher extends Reactor with MessagePublisher {
   
   def bindingDescriptions = boundKeys.map(k => List(k, bindings(k).toString))
   
-  def showKeyBindings(parent: UIElement) {
+  def showKeyBindings(parent: UIElement, pos: Point) {
     JPopupMenu.setDefaultLightWeightPopupEnabled(false)
     new JPopupMenu("Key Bindings") {
       setLightWeightPopupEnabled(false)
@@ -91,6 +91,6 @@ trait KeyDispatcher extends Reactor with MessagePublisher {
         def apply = bindings(ks).execute
         accelerator = Some(ks)
       }.peer)
-    }.show(parent.peer, 0, 0)
+    }.show(parent.peer, pos.x, pos.y)
   }
 }
