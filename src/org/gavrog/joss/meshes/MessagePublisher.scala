@@ -15,7 +15,7 @@
 */
 
 
-package org.gavrog.joss.meshes.gui
+package org.gavrog.joss.meshes
 
 import scala.swing.Publisher
 import scala.swing.event.Event
