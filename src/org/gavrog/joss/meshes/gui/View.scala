@@ -63,7 +63,7 @@ object View {
         case ChoiceError(src) => log("Error in file chooser.")
       }
   
-      listenTo(sceneViewer)
+      listenTo(sceneViewer, uvMapViewer)
       reactions += {
         case MessageSent(_, text) => log(text)
       }

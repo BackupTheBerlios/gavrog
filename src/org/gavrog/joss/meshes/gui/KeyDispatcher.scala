@@ -76,8 +76,8 @@ trait KeyDispatcher extends Reactor with MessagePublisher {
   reactions += {
     case KeyPressed(src, modifiers, code, char) if (sources contains src) => {
       val ks = KeyStroke.getKeyStroke(code, modifiers)
-      //print(ks + "\n")
       if (boundKeys contains ks) bindings(ks).execute
+      else send("Not bound: '%s'" format ks)
     }
   }
   
