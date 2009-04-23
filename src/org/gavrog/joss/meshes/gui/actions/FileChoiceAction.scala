@@ -35,11 +35,15 @@ extends Action(name) with Publisher
 	  title = name
   }
 
+  var openForWrite = false
+  
   def apply {
 	  import FileChooser.Result._
-	  chooser.showOpenDialog(parent) match {
-	  	case Approve => openFile(chooser.selectedFile)
-	  	case Cancel  => publish(ChoiceCancelled(this))
+	  val method = if (openForWrite) chooser.showSaveDialog _
+	               else chooser.showOpenDialog _
+	  method(parent) match {
+	    case Approve => openFile(chooser.selectedFile)
+	    case Cancel  => publish(ChoiceCancelled(this))
 	  	case Error   => publish(ChoiceError(this))
 	  }
   }

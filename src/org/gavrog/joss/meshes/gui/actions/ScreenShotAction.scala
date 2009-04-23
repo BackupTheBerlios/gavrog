@@ -26,6 +26,8 @@ class ScreenShotAction(name: String, parent: Component,
                        viewer: JRealityViewerComponent)
 extends FileChoiceAction(name, parent) with MessagePublisher
 {
+  openForWrite = true
+  
   override def openFile(selected: File) = run {
     send("Taking screenshot ...")
     val d = viewer.size

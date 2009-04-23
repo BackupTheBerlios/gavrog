@@ -162,16 +162,16 @@ with KeyPublisher with KeyDispatcher
   focusOnEnter(this)
   enableContextMenu(this)
   
-  bind("ctrl LEFT", "rotate counterclockwise",
-       modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
-  bind("ctrl RIGHT", "rotate clockwise",
-       modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
   bind("HOME", "reset view",
        modify {
          viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
          encompass
        })
   bind("0",     "zoom on selection ", modify { encompassSelected })
+  bind("ctrl LEFT", "rotate counterclockwise",
+       modify { rotateScene(Vec3(0, 0, 1), 5 deg) })
+  bind("ctrl RIGHT", "rotate clockwise",
+       modify { rotateScene(Vec3(0, 0, 1), -5 deg) })
   bind("SPACE", "deselect all",       modify { selection map deselect })
   bind("I",     "invert selection",
        modify {

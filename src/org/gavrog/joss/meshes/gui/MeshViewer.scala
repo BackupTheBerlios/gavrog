@@ -61,6 +61,16 @@ with KeyPublisher with KeyDispatcher
   focusOnEnter(this)
   enableContextMenu(this)
   
+  bind("HOME", "reset view", modify {
+    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
+    fieldOfView = defaultFieldOfView
+    encompass
+  })
+  bind("0", "zoom on scene", modify {
+    fieldOfView = defaultFieldOfView
+    encompass
+  })
+  
   bind("ctrl LEFT" , "rotate counterclockwise",
        modify { rotateScene(Vec3(0, 0, 1), +5 deg) })
   bind("ctrl RIGHT", "rotate clockwise",
@@ -74,16 +84,6 @@ with KeyPublisher with KeyDispatcher
   bind("DOWN"      , "rotate down",
        modify { rotateScene(Vec3(1, 0, 0), +5 deg) })
 
-  bind("HOME", "reset view", modify {
-    viewFrom(Vec3(0, 0, 1), Vec3(0, 1, 0))
-    fieldOfView = defaultFieldOfView
-    encompass
-  })
-  bind("0", "zoom on scene", modify {
-    fieldOfView = defaultFieldOfView
-    encompass
-  })
-  
   bind("X", "view from +x",
        modify { viewFrom(Vec3( 1, 0, 0), Vec3(0, 1, 0)) })
   bind("shift X", "view from -x",
