@@ -24,7 +24,7 @@ import SwingSupport._
 
 class ScreenShotAction(name: String, parent: Component,
                        viewer: JRealityViewerComponent)
-extends FileChoiceAction(name, parent) with MessagePublisher
+extends FileChoiceAction(name, parent) with MessageSource
 {
   openForWrite = true
   

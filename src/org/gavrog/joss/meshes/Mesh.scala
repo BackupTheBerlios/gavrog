@@ -591,7 +591,7 @@ object Mesh {
   }
 }
 
-class Mesh(s : String) {
+class Mesh(s : String) extends MessageSource {
   import Mesh._
 
   val name = s
@@ -1023,7 +1023,7 @@ class Mesh(s : String) {
   def coarsening : Mesh = coarsening(name)
   
   def coarsening(name: String) : Mesh = {
-    System.err.println("  classifying vertices...")
+    send("  classifying vertices...")
     val vc = new HashMap[Component, VertexClassification]
     for (p <- components) {
       var cost = Int.MaxValue
@@ -1045,7 +1045,7 @@ class Mesh(s : String) {
     val messages = new HashSet[String]
     
     // -- chambers and vertices on mesh or smoothing group borders
-    System.err.println("  finding borders...")
+    send("  finding borders...")
     val hard     = new HashSet[Chamber]; hard     ++ hardChambers
     val onBorder = new HashSet[Vertex] ; onBorder ++ hard.map(_.vertex)
 
@@ -1053,11 +1053,11 @@ class Mesh(s : String) {
     val done = new HashSet[Vertex]
 
     // -- initialize the new mesh
-    System.err.println("  initializing new mesh...")
+    send("  initializing new mesh...")
     val m = new Mesh(name)
     
     // -- define how old vertices map to new ones
-    System.err.println("  defining maps...")
+    send("  defining maps...")
     val mapV = new LazyMap((i: Int) => {
       val v = vertex(i)
       val k  = v.degree
@@ -1086,7 +1086,7 @@ class Mesh(s : String) {
       if (n != 0) m.addNormal(normal(n)).nr else 0)
     
     // -- create the faces of the new mesh along with necessary vertices etc.
-    System.err.println("  making faces...")
+    send("  making faces...")
     for (p <- components; f <- vc(p).wasFaceCenter) {
       val cs = f.cellChambers.toSeq
       val vs = cs.map(c => mapV(c.s0.s1.s0.vertexNr))
@@ -1120,10 +1120,10 @@ class Mesh(s : String) {
     }
     
     // -- print out the accumulated warning messages
-    for (msg <- messages) System.err.println("Warning: " + msg)
+    for (msg <- messages) send("Warning: " + msg)
     
     // -- compute final positions for the 3-pole vertices in waves
-    System.err.println("  handling 3-poles...")
+    send("  handling 3-poles...")
     val nextWave = new HashSet[Vertex]
     nextWave ++ done
     while (nextWave.size > 0) {
@@ -1148,6 +1148,7 @@ class Mesh(s : String) {
       }
       done ++ thisWave
     }
+    send("Done!")
     
     // -- return the new mesh
     m.mtllib ++ mtllib

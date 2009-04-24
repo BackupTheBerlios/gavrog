@@ -26,7 +26,7 @@ import scala.swing.{Action, Alignment, GridPanel,
 import scala.swing.event.{MouseClicked, MouseEntered, MousePressed, WindowClosed}
 import scala.util.Sorting
 
-trait KeyDispatcher extends Reactor with MessagePublisher {
+trait KeyDispatcher extends Reactor with MessageSource {
   class Binding(description: String, code: => Unit) {
     def execute { code }
     override def toString = description

@@ -31,7 +31,9 @@ object View {
   val sceneViewer = new MeshViewer
   val uvMapViewer = new UVsViewer
   
-  def log(message: String) = statusLine.text = message
+  def log(message: String) = invokeAndWait {
+    statusLine.text = message
+  }
   
   def main(args : Array[String]) {
     new MainFrame {
@@ -65,9 +67,11 @@ object View {
       var _mesh: Mesh = null
       def mesh = _mesh
       def mesh_=(new_mesh: Mesh) {
+        if (_mesh != null) deafTo(_mesh)
         _mesh = new_mesh
         sceneViewer.setMesh(_mesh)
         uvMapViewer.setMesh(_mesh)
+        listenTo(_mesh)
       }
       
       listenTo(meshLoader, screenShotSaver)
@@ -100,8 +104,10 @@ object View {
         }
         contents += new Menu("Mesh") {
           contents ++ List(
-            new MenuItem(Action("Subdivide") { mesh = mesh.subdivision }),
-            new MenuItem(Action("Coarsen") { mesh = mesh.coarsening })
+            new MenuItem(Action("Subdivide") { run {
+              mesh = mesh.subdivision }
+            }),
+            new MenuItem(Action("Coarsen") { run{ mesh = mesh.coarsening } })
           )
         }
       }

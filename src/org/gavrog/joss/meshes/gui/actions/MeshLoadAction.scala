@@ -24,7 +24,7 @@ import scala.swing.event.Event
 import SwingSupport._
 
 class MeshLoadAction(name: String, parent: Component)
-extends FileChoiceAction(name, parent) with MessagePublisher
+extends FileChoiceAction(name, parent) with MessageSource
 {
   case class MeshLoaded(src: MeshLoadAction, mesh: Mesh) extends Event
   
