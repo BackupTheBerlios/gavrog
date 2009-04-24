@@ -58,7 +58,10 @@ object View {
       val meshLoader = new FileChoiceAction("Load mesh...", main) {
         accelerator = "ctrl O"
         override def openFile(selected: File) = run {
+          log("Loading mesh...")
           mesh = Mesh.read(selected.getAbsolutePath, true)(0)
+          log("Mesh with %d vertices and %d faces loaded." format
+              (mesh.numberOfVertices, mesh.numberOfFaces))
         }
       }
       
@@ -115,16 +118,16 @@ object View {
         }
         contents += new Menu("Mesh") {
           contents ++ List(
-            new MenuItem(Action("Subdivide") {
+            new MenuItem(Action("Subdivide") { run { 
               log("Subdividing mesh...")
-              run { mesh = mesh.subdivision }
+              mesh = mesh.subdivision
               log("Subdivision complete!")
-            }),
-            new MenuItem(Action("Coarsen") {
+            }}),
+            new MenuItem(Action("Coarsen") { run { 
               log("Coarsening mesh...")
-              run { mesh = mesh.coarsening }
+              mesh = mesh.coarsening
               log("Coarsening complete!")
-            }),
+            }}),
             new MenuItem(morphLoader)
           )
         }

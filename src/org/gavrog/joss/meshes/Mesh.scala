@@ -836,7 +836,7 @@ class Mesh(s : String) extends MessageSource {
             seen  += e
           }
           val e = d.s2
-          if (!seen(e) && e.tVertex == t) {
+          if (e != null && !seen(e) && e.tVertex == t) {
             queue += e
             seen  += e
           }
