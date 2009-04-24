@@ -62,6 +62,16 @@ object View {
         }
       }
       
+      val morphLoader = new FileChoiceAction("Apply morph...", main) {
+        override def openFile(selected: File) = run {
+          log("Reading morph...")
+          val morph = Mesh.read(selected.getAbsolutePath, true)(0)
+          log("Applying morph...")
+          mesh = mesh.withMorphApplied(morph)
+          log("Morph applied!")
+        }
+      }
+      
       val meshSaver = new FileChoiceAction("Save mesh...", main) {
         accelerator = "ctrl S"
         openForWrite = true
@@ -105,10 +115,17 @@ object View {
         }
         contents += new Menu("Mesh") {
           contents ++ List(
-            new MenuItem(Action("Subdivide") { run {
-              mesh = mesh.subdivision }
+            new MenuItem(Action("Subdivide") {
+              log("Subdividing mesh...")
+              run { mesh = mesh.subdivision }
+              log("Subdivision complete!")
             }),
-            new MenuItem(Action("Coarsen") { run{ mesh = mesh.coarsening } })
+            new MenuItem(Action("Coarsen") {
+              log("Coarsening mesh...")
+              run { mesh = mesh.coarsening }
+              log("Coarsening complete!")
+            }),
+            new MenuItem(morphLoader)
           )
         }
       }

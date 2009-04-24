@@ -887,6 +887,37 @@ class Mesh(s : String) extends MessageSource {
     output
   }
   
+  def withMorphApplied(donor: Mesh) = {
+    val result = clone
+    val originals = result.components
+    
+    for (comp <- donor.components) {
+      send("Matching donor component with %d vertices and %d faces..."
+        format (comp.vertices.size, comp.faces.size))
+      var dist = Double.MaxValue
+      var map: Map[Mesh.Chamber, Mesh.Chamber] = null
+      var image: Mesh.Component = null
+      for (c <- originals) {
+        val candidate = Mesh.bestMatch(comp, c)
+        if (candidate != null) {
+          val d = Mesh.distance(candidate)
+          if (d < dist) {
+            dist = d
+            map = candidate
+            image = c
+          }
+        }
+      }
+      if (map != null) {
+        send("Match found. Applying morph...")
+        for ((c, d) <- map) d.vertex.moveTo(c.vertex.pos)
+      } else {
+        send("No match found.")
+      }
+    }
+    result
+  }
+  
   def subdivision : Mesh = subdivision(name)
   
   def subdivision(name: String) = {
@@ -1148,7 +1179,6 @@ class Mesh(s : String) extends MessageSource {
       }
       done ++ thisWave
     }
-    send("Done!")
     
     // -- return the new mesh
     m.mtllib ++ mtllib
