@@ -45,25 +45,6 @@ object View {
         add(statusLine, BorderPanel.Position.South)
       }
       
-      val meshLoader = new MeshLoadAction("Load mesh...", main) {
-        accelerator = "ctrl O"
-      }
-      import meshLoader._
-      
-      val meshSaver = new FileChoiceAction("Save mesh...", main) {
-        accelerator = "ctrl S"
-        openForWrite = true
-        override def openFile(selected: File) {
-          Mesh.write(new FileWriter(selected), Seq(mesh), null)
-    	  log("Wrote mesh to %s" format selected)
-    	}
-      }
-      
-      val screenShotSaver =
-        new ScreenShotAction("Take Screen Shot...", main, sceneViewer) {
-          accelerator = "ctrl I"
-        }
-
       var _mesh: Mesh = null
       def mesh = _mesh
       def mesh_=(new_mesh: Mesh) {
@@ -74,12 +55,32 @@ object View {
         listenTo(_mesh)
       }
       
+      val meshLoader = new FileChoiceAction("Load mesh...", main) {
+        accelerator = "ctrl O"
+        override def openFile(selected: File) = run {
+          mesh = Mesh.read(selected.getAbsolutePath, true)(0)
+        }
+      }
+      
+      val meshSaver = new FileChoiceAction("Save mesh...", main) {
+        accelerator = "ctrl S"
+        openForWrite = true
+        override def openFile(selected: File) = run {
+          Mesh.write(new FileWriter(selected), Seq(mesh), null)
+    	  log("Wrote mesh to %s" format selected)
+    	}
+      }
+      
+      val screenShotSaver =
+        new ScreenShotAction("Take Screen Shot...", main, sceneViewer) {
+          accelerator = "ctrl I"
+        }
+
       listenTo(meshLoader, screenShotSaver)
       reactions += {
         case MessageSent(src, text) => log(text)
-        case MeshLoaded(src, new_mesh) => mesh = new_mesh
-        case ChoiceCancelled(src) => log("Cancelled!")
-        case ChoiceError(src) => log("Error in file chooser.")
+        case FileChoiceAction.ChoiceCancelled(src) => log("Cancelled!")
+        case FileChoiceAction.ChoiceError(src) => log("Error in file chooser.")
       }
   
       listenTo(sceneViewer, uvMapViewer)

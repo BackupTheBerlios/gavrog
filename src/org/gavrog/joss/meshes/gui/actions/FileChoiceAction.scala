@@ -22,31 +22,32 @@ import java.io.File
 import scala.swing.{Action, Component, FileChooser, Publisher}
 import scala.swing.event.Event
 
-class FileChoiceAction(name: String, parent: Component)
-extends Action(name) with Publisher
-{
+object FileChoiceAction {
   abstract class FileChoiceEvent(src: FileChoiceAction) extends Event
   case class FileChosen(src: FileChoiceAction,
                         file: File) extends FileChoiceEvent(src)
   case class ChoiceCancelled(src: FileChoiceAction) extends FileChoiceEvent(src)
   case class ChoiceError(src: FileChoiceAction) extends FileChoiceEvent(src)
-  
-  private val chooser = new FileChooser {
-	  title = name
-  }
+}
 
+class FileChoiceAction(name: String, parent: Component)
+extends Action(name) with Publisher
+{
+  private val chooser = new FileChooser { title = name }
   var openForWrite = false
   
   def apply {
-	  import FileChooser.Result._
-	  val method = if (openForWrite) chooser.showSaveDialog _
-	               else chooser.showOpenDialog _
-	  method(parent) match {
-	    case Approve => openFile(chooser.selectedFile)
-	    case Cancel  => publish(ChoiceCancelled(this))
-	  	case Error   => publish(ChoiceError(this))
-	  }
+	import FileChooser.Result._
+	val method = if (openForWrite) chooser.showSaveDialog _
+				 else chooser.showOpenDialog _
+  	method(parent) match {
+  	  case Approve => openFile(chooser.selectedFile)
+  	  case Cancel  => publish(FileChoiceAction.ChoiceCancelled(this))
+  	  case Error   => publish(FileChoiceAction.ChoiceError(this))
+	}
   }
   
-  def openFile(selected: File) = publish(FileChosen(this, selected))
+  def openFile(selected: File) {
+    publish(FileChoiceAction.FileChosen(this, selected))
+  }
 }
