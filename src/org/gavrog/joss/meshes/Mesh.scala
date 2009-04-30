@@ -382,6 +382,12 @@ object Mesh {
     result
   }
 
+  def write(target: OutputStream, basename: String, meshes: Mesh*) : Unit =
+    write(target, meshes, basename)
+  
+  def write(target: Writer, basename: String, meshes: Mesh*) : Unit =
+    write(target, meshes, basename)
+  
   def write(target: OutputStream, meshes: Seq[Mesh], basename: String) : Unit =
     write(new OutputStreamWriter(target), meshes, basename)
 
@@ -893,26 +899,29 @@ class Mesh(s : String) extends MessageSource {
     
     for (comp <- donor.components) {
       send("Matching donor component with %d vertices and %d faces..."
-        format (comp.vertices.size, comp.faces.size))
+  		   format (comp.vertices.size, comp.faces.size))
       var dist = Double.MaxValue
       var map: Map[Mesh.Chamber, Mesh.Chamber] = null
       var image: Mesh.Component = null
-      for (c <- originals) {
-        val candidate = Mesh.bestMatch(comp, c)
-        if (candidate != null) {
-          val d = Mesh.distance(candidate)
-          if (d < dist) {
-            dist = d
-            map = candidate
-            image = c
+      try {
+        for (c <- originals) {
+          val candidate = Mesh.bestMatch(comp, c)
+          if (candidate != null) {
+            val d = Mesh.distance(candidate)
+            if (d < dist) {
+              dist = d
+              map = candidate
+              image = c
+            }
           }
         }
+        if (map == null) send("No match found.")
+      } catch {
+        case _ => send("Error while matching! Skipping this component.")
       }
       if (map != null) {
         send("Match found. Applying morph...")
         for ((c, d) <- map) d.vertex.moveTo(c.vertex.pos)
-      } else {
-        send("No match found.")
       }
     }
     result

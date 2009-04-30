@@ -17,8 +17,6 @@
 
 package org.gavrog.joss.meshes
 
-import scala.collection.mutable._
-
 object MakeMorph {
   def bail(message: String) {
     System.err.println(message)
@@ -27,39 +25,10 @@ object MakeMorph {
   
   def main(args: Array[String]) : Unit = {
     var i = 0
-
     if (args.size < i + 2) bail("need two .obj files as arguments")
-    val mesh  = Mesh.read(args(i), true)(0)
+    val original  = Mesh.read(args(i), true)(0)
     val donor = Mesh.read(args(i + 1), true)(0)
-
-    val originals = mesh.components
     
-    for (comp <- donor.components) {
-      var dist = Double.MaxValue
-      var map: Map[Mesh.Chamber, Mesh.Chamber] = null
-      var image: Mesh.Component = null
-      System.err.println( "Matching component with %d vertices and %d faces."
-                          format (comp.vertices.size, comp.faces.size))
-      try {
-        for (c <- originals) {
-          val candidate = Mesh.bestMatch(comp, c)
-          if (candidate != null) {
-            val d = Mesh.distance(candidate)
-            if (d < dist) {
-              dist = d
-              map = candidate
-              image = c
-            }
-          }
-        }
-      } catch {
-        case _ => System.err.println("Error during matching!")
-      }
-      if (map != null) {
-        System.err.println("Match found. Copying positions.")
-        for ((c, d) <- map) d.vertex.moveTo(c.vertex.pos)
-      }
-    }
-    Mesh.write(System.out, List(mesh), "materials")
+    Mesh.write(System.out, "materials", original.withMorphApplied(donor))
   }
 }
