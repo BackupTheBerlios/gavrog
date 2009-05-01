@@ -61,6 +61,8 @@ object Mesh {
       if (c != null && c.chamber == null) c.chamber = this
     }
     
+    def face = if (cell.isInstanceOf[Face]) cell.asInstanceOf[Face] else null
+    
     def this(v: Vertex, c: Cell) = {
       this()
       vertex = v
@@ -185,10 +187,6 @@ object Mesh {
   implicit def normal2vec3(n: Normal) = n.value
 
   class Cell {
-    var group    : Group    = null
-    var material : Material = null
-    var smoothingGroup : Int = 0
-    
     private var _ch : Chamber = null	
     def chamber = _ch
     def chamber_=(c: Chamber) {
@@ -203,9 +201,7 @@ object Mesh {
     }
     
     def vertices = vertexChambers.map(_.vertex)
-    def textureVertices = vertexChambers.map(_.tVertex)
-    def normals = vertexChambers.map(_.normal)
-    def degree = vertexChambers.size
+    def degree   = vertexChambers.size
     
     def formatVertices(v0 : Int, vt0 : Int, vn0 : Int) = {
       val buf = new StringBuilder(50)
@@ -217,21 +213,26 @@ object Mesh {
       buf.toString
     }
     
+    override def hashCode = chamber.hashCode
+    override def equals(that: Any) =
+      that.isInstanceOf[Cell] && that.asInstanceOf[Cell].chamber == this.chamber
+
     def formatVertices : String = formatVertices(0, 0, 0)
+  }
+  
+  class Face() extends Cell {
+    var group    : Group    = null
+    var material : Material = null
+    var smoothingGroup : Int = 0
     
+    def textureVertices = vertexChambers.map(_.tVertex)
+    def normals = vertexChambers.map(_.normal)
+
     override def toString = "Face(%s; group = '%s', material = '%s')" format
       (formatVertices, group.name, material.name)
   }
-  
-  case class Face() extends Cell {
-    override def hashCode = chamber.hashCode
-    override def equals(that: Any) =
-      that.isInstanceOf[Face] && that.asInstanceOf[Face].chamber == this.chamber
-  }
-  case class Hole() extends Cell {
-    override def hashCode = chamber.hashCode
-    override def equals(that: Any) =
-      that.isInstanceOf[Hole] && that.asInstanceOf[Hole].chamber == this.chamber
+  class Hole() extends Cell {
+    override def toString = "Hole(%s)" format formatVertices
   }
 
   case class Group(name : String) {
@@ -260,8 +261,10 @@ object Mesh {
         for (c <- v.cellChambers) {
           val d = c.s2
           if (c.tVertex != d.tVertex) n += 3
-          if (c.cell.material != d.cell.material) n += 1
-          if (c.cell.group != d.cell.group) n += 1
+          if (c.face != null) {
+        	if (c.face.material != d.face.material) n += 1
+        	if (c.face.group != d.face.group) n += 1
+          }
         }
       }
       n
@@ -668,12 +671,17 @@ class Mesh(s : String) extends MessageSource {
   def numberOfChambers = _chambers.size
   def chambers         = _chambers.elements
   def hardChambers     = {
-    val smoothing = !chambers.forall(_.cell.smoothingGroup == 0)
+    val smoothing =
+      !chambers.forall(c => c.face == null || c.face.smoothingGroup == 0)
     chambers.filter(c => {
-    val (f, g) = (c.cell, c.s2.cell)
-    f.isInstanceOf[Hole] || g.isInstanceOf[Hole] || smoothing &&
-      (f.smoothingGroup == 0 || g.smoothingGroup == 0 ||
-         f.smoothingGroup != g.smoothingGroup)
+      val (f, g) = (c.face, c.s2.face)
+      if (f == null || g == null)
+        true
+      else if (smoothing)
+        f.smoothingGroup == 0 || g.smoothingGroup == 0 ||
+        f.smoothingGroup != g.smoothingGroup
+      else
+        false
     })
   }
   
@@ -1139,7 +1147,7 @@ class Mesh(s : String) extends MessageSource {
       val sgroups   = new HashMap[Int, Int]
       var badUVs    = false
       for (c <- cs) {
-        val face = c.cell
+        val face = c.face
         groups(face.group) = groups.getOrElse(face.group, 0) + 1
         materials(face.material) = materials.getOrElse(face.material, 0) + 1
         sgroups(face.smoothingGroup) =
