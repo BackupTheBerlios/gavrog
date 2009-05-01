@@ -203,21 +203,18 @@ object Mesh {
     def vertices = vertexChambers.map(_.vertex)
     def degree   = vertexChambers.size
     
-    def formatVertices(v0 : Int, vt0 : Int, vn0 : Int) = {
-      val buf = new StringBuilder(50)
-      for (ch <- vertexChambers) {
-        val t = if (ch.tVertex != null) ch.tVertex.nr + vt0 else ""
-        val n = if (ch.normal  != null) ch.normal.nr  + vn0 else ""
-        buf.append(" %d/%s/%s" format (ch.start.nr + v0, t, n))
-      }
-      buf.toString
-    }
+    def formatVertices(v0: Int, vt0: Int, vn0: Int) =
+      vertexChambers.map(ch =>
+        "%d/%s/%s" format (ch.start.nr + v0,
+                           if (ch.tVertex != null) ch.tVertex.nr + vt0 else "",
+                           if (ch.normal  != null) ch.normal.nr  + vn0 else "")
+      ).mkString(" ")
+
+    def formatVertices: String = formatVertices(0, 0, 0)
     
     override def hashCode = chamber.hashCode
     override def equals(that: Any) =
       that.isInstanceOf[Cell] && that.asInstanceOf[Cell].chamber == this.chamber
-
-    def formatVertices : String = formatVertices(0, 0, 0)
   }
   
   class Face() extends Cell {
