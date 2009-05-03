@@ -126,17 +126,17 @@ object Transfer {
       }
       def newGroup(f: Face) = {
         val g = if (map == null || options.groups) f.group
-                else map(f.chamber).cell.group
+                else map(f.chamber).face.group
         result.group(if (g == null) "_default" else g.name)
       }
       def newMaterial(f: Face) = {
         val m = if (map == null || options.materials) f.material
-                else map(f.chamber).cell.material
+                else map(f.chamber).face.material
         result.material(if (m == null) "_default" else m.name)
       }
       def newSmoothing(f: Face) =
         if (map == null || options.smoothing) f.smoothingGroup
-        else map(f.chamber).cell.smoothingGroup
+        else map(f.chamber).face.smoothingGroup
         
       for (f <- part.faces) {
         val cs = f.vertexChambers.toSeq
