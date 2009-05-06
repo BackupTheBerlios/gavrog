@@ -80,6 +80,8 @@ public class FilterEuclidean {
             final FpGroup G = new FundamentalGroup(ds).getPresentation();
             System.out.println("#   " + n + ":  " + ds.canonical());
             System.out.println("#       " + G);
+            System.out.println("#       (abelian invariants: "
+                + G.abelianInvariants() + ")" );
         }
         System.out.println("### Running time was " + timer.format() + ".");
     }
