@@ -23,11 +23,20 @@ object MakeMorph {
     exit(1)
   }
   
+  sealed def iterate[A](x: A, f: A => A, n: Int) : A =
+    if (n <= 0) x else iterate(f(x), f, n-1)
+  
   def main(args: Array[String]) : Unit = {
     var i = 0
     if (args.size < i + 2) bail("need two .obj files as arguments")
     val original  = Mesh.read(args(i), true)(0)
-    val donor = Mesh.read(args(i + 1), true)(0)
+    val morphed = Mesh.read(args(i + 1), true)(0)
+    val subd = if (args.length > i + 2) args(i + 2).toInt else 0
+    val donor = subd match {
+      case n: Int if n > 0 => iterate(morphed, (s : Mesh) => s.subdivision, n)
+      case n: Int if n < 0 => iterate(morphed, (s : Mesh) => s.coarsening, -n)
+      case 0               => morphed
+    }
     
     Mesh.write(System.out, "materials", original.withMorphApplied(donor))
   }
