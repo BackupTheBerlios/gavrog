@@ -32,11 +32,14 @@ object MakeMorph {
     val original  = Mesh.read(args(i), true)(0)
     val morphed = Mesh.read(args(i + 1), true)(0)
     val subd = if (args.length > i + 2) args(i + 2).toInt else 0
-    val donor = subd match {
-      case n: Int if n > 0 => iterate(morphed, (s : Mesh) => s.subdivision, n)
-      case n: Int if n < 0 => iterate(morphed, (s : Mesh) => s.coarsening, -n)
-      case 0               => morphed
-    }
+    val tmp = if (args.length > i + 3) Mesh.read(args(i + 3), true)(0) else null
+    
+    val step = if (subd > 0) (s: Mesh) => s.subdivision
+               else          (s: Mesh) => s.coarsening
+    val donor = if (subd == 0) morphed
+                else iterate(if (tmp != null) tmp.withMorphApplied(morphed)
+                             else morphed,
+                             step, subd.abs)
     
     Mesh.write(System.out, "materials", original.withMorphApplied(donor))
   }
