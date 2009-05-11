@@ -23,23 +23,28 @@ object MakeMorph {
     exit(1)
   }
   
-  sealed def iterate[A](x: A, f: A => A, n: Int) : A =
-    if (n <= 0) x else iterate(f(x), f, n-1)
+  case class IteratedFunction[A](f: A => A, n: Int) {
+    def ^(m: Int) = IteratedFunction(f, n * m)
+    def apply(x: A) = {
+      def iter(x: A, m: Int): A = if (m <= 0) x else iter(f(x), m-1)
+      iter(x, n)
+    }
+  }
+  implicit def toRichFun[A](f: A => A) = new IteratedFunction(f, 1)
   
   def main(args: Array[String]) : Unit = {
     var i = 0
-    if (args.size < i + 2) bail("need two .obj files as arguments")
+    if (args.size < i + 2) bail("need at least two .obj files as arguments")
     val original  = Mesh.read(args(i), true)(0)
     val morphed = Mesh.read(args(i + 1), true)(0)
     val subd = if (args.length > i + 2) args(i + 2).toInt else 0
-    val tmp = if (args.length > i + 3) Mesh.read(args(i + 3), true)(0) else null
+    val base = if (args.length > i + 3)
+                 Mesh.read(args(i + 3), true)(0) withMorphApplied(morphed)
+               else
+                 morphed
     
-    val step = if (subd > 0) (s: Mesh) => s.subdivision
-               else          (s: Mesh) => s.coarsening
-    val donor = if (subd == 0) morphed
-                else iterate(if (tmp != null) tmp.withMorphApplied(morphed)
-                             else morphed,
-                             step, subd.abs)
+    val step: Mesh => Mesh = if (subd > 0) _.subdivision else _.coarsening
+    val donor = (step^subd.abs)(base)
     
     Mesh.write(System.out, "materials", original.withMorphApplied(donor))
   }
