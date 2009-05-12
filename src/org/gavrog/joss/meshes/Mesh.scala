@@ -25,7 +25,7 @@ import Sums._
 import Vectors._
 
 object Mesh {
-  class Chamber {
+  class Chamber(m: Mesh) {
     private var _vertex  : Vertex        = null
     private var _cell    : Cell          = null
     private var _tVertex : TextureVertex = null
@@ -33,6 +33,8 @@ object Mesh {
     private var _s0      : Chamber       = null
     private var _s1      : Chamber       = null
     private var _s2      : Chamber       = null
+    
+    def mesh = m
     
     def vertex = _vertex
     def vertexNr = if (vertex != null) vertex.nr else 0
@@ -63,8 +65,8 @@ object Mesh {
     
     def face = if (cell.isInstanceOf[Face]) cell.asInstanceOf[Face] else null
     
-    def this(v: Vertex, c: Cell) = {
-      this()
+    def this(m: Mesh, v: Vertex, c: Cell) = {
+      this(m)
       vertex = v
       cell = c
     }
@@ -105,11 +107,8 @@ object Mesh {
     override def toString = "Chamber(%s -> %s)" format (start, end)
   }
 
-  class Vertex(number : Int, xpos : Double, ypos : Double, zpos : Double) {
+  class Vertex(m: Mesh, number : Int) {
     var nr : Int     = number
-    var x  : Double  = xpos
-    var y  : Double  = ypos
-    var z  : Double  = zpos
 
     private var _ch : Chamber = null	
     def chamber = _ch
@@ -117,6 +116,8 @@ object Mesh {
       _ch = c
       if (c != null && c.vertex != this) c.vertex = this
     }
+    
+    def mesh = m
     
     def cellChambers = {
       def from(c: Chamber) : Stream[Chamber] =
@@ -128,10 +129,17 @@ object Mesh {
     def degree = cellChambers.size
     def neighbors = cellChambers.map(_.s0.vertex)
     
-    override def toString = "Vertex(%d: %f, %f, %f)" format (nr, x, y, z)
+    override def toString = "Vertex(%d: %f, %f, %f)" format (nr)
 
-    def pos = Vec3(x, y, z)
-    def moveTo(p: Vec3) { x = p.x; y = p.y; z = p.z }
+    def pos = mesh.vertex_positions(this)
+    def x = pos.x
+    def y = pos.y
+    def z = pos.z
+    
+    def moveTo(p: Vec3) { mesh.vertex_positions(this) = p }
+    def moveTo(x: Double, y: Double, z: Double) { moveTo(Vec3(x, y, z)) }
+    def pos_=(p: Vec3) { moveTo(p) }
+    def pos_=(p: (Double, Double, Double)) { moveTo(Vec3(p._1, p._2, p._3)) }
   }
   implicit def vertex2vec3(v: Vertex) = v.pos
 
@@ -146,6 +154,8 @@ object Mesh {
       _ch = c
       if (c != null && c.tVertex != this) c.tVertex = this
     }
+    
+    def mesh = chamber.mesh
     
     def cellChambers = chamber.vertex.cellChambers
     def faces = cellChambers.filter(_.tVertex == this).map(_.cell)
@@ -179,6 +189,8 @@ object Mesh {
       if (c != null && c.normal != this) c.normal = this
     }
     
+    def mesh = chamber.mesh
+    
     override def toString = "Normal(%d: %f, %f, %f)" format (nr, x, y, z)
 
     def value = Vec3(x, y, z)
@@ -193,6 +205,8 @@ object Mesh {
       _ch = c
       if (c != null && c.cell != this) c.cell = this
     }
+    
+    def mesh = chamber.mesh
     
     def vertexChambers = {
       def from(c: Chamber) : Stream[Chamber] =
@@ -611,6 +625,8 @@ class Mesh(s : String) extends MessageSource {
   private val _groups   = new LinkedHashMap[String, Group]
   private val _mats     = new LinkedHashMap[String, Material]
   private val _edges    = new HashMap[Edge, Chamber]
+  
+  var vertex_positions = new HashMap[Vertex, Vec3]
 
   val mtllib = new HashMap[String, String]
 
@@ -628,7 +644,8 @@ class Mesh(s : String) extends MessageSource {
   def addVertex(p : Vec3) : Vertex = addVertex(p.x, p.y, p.z)
   
   def addVertex(x : Double, y : Double, z : Double) : Vertex = {
-    val v = new Vertex(_vertices.size + 1, x, y, z)
+    val v = new Vertex(this, _vertices.size + 1)
+    v.pos = (x, y, z)
     _vertices += v
     v
   }
@@ -724,7 +741,7 @@ class Mesh(s : String) extends MessageSource {
     val f = new Face
     val chambers = new ArrayBuffer[Chamber]
     for (i <- 0 until n; j <- List(i, (i + 1) % n)) {
-      val c = new Chamber(vertex(verts(j)), f)
+      val c = new Chamber(this, vertex(verts(j)), f)
       c.tVertex = textureVertex(tverts(j))
       c.normal  = normal(normals(j))
       chambers  += c
@@ -773,7 +790,7 @@ class Mesh(s : String) extends MessageSource {
       seen ++ boundary
       val n = boundary.length
       val f = new Hole
-      val hole = boundary.map(d => new Chamber(d.vertex, f)).toSeq
+      val hole = boundary.map(d => new Chamber(this, d.vertex, f)).toSeq
       for (d <- hole) _chambers += d
       for (i <- 0 until n) {
         val d = hole(i)
@@ -926,7 +943,7 @@ class Mesh(s : String) extends MessageSource {
       }
       if (map != null) {
         send("Match found. Applying morph...")
-        for ((c, d) <- map) d.vertex.moveTo(c.vertex.pos)
+        for ((c, d) <- map) d.vertex.pos = c.vertex.pos
       }
     }
     result
@@ -991,14 +1008,14 @@ class Mesh(s : String) extends MessageSource {
     for (c <- _edges.values; val z = ch2ev(c) if !onBorder(z)) {
       val z = ch2ev(c)
       if (z.degree != 4) error("bad new vertex degree in subdivision()")
-      z.moveTo(z.cellChambers.sum(_.s0.vertex.pos) / 4)
+      z.pos = z.cellChambers.sum(_.s0.vertex.pos) / 4
     }
     
     // -- adjust positions of (copied) original non-border vertices
     for (n <- 1 to numberOfVertices; val v = subD.vertex(n) if !onBorder(v)) {
       val k = v.degree
       val cs = v.cellChambers.toSeq
-      v.moveTo((v * (k - 3)
+      v.pos = ((v * (k - 3)
                 + 4 * cs.sum(_.s0.vertex.pos) / k
                 - cs.sum(_.s0.s1.s0.vertex.pos) / k) / k)
     }
@@ -1008,7 +1025,7 @@ class Mesh(s : String) extends MessageSource {
     for (v <- onBorder if v.nr <= numberOfVertices) {
       val breaks = v.cellChambers.filter(hard).toSeq
       if (breaks.size == 2)
-        v.moveTo(breaks(0).s0.vertex / 4 + v / 2 + breaks(1).s0.vertex / 4)
+        v.pos = breaks(0).s0.vertex / 4 + v / 2 + breaks(1).s0.vertex / 4
     }
     
     // -- return the result
@@ -1189,7 +1206,7 @@ class Mesh(s : String) extends MessageSource {
             nextWave += w
           }
         }
-        if (!done(v)) vnew.moveTo(p / n)
+        if (!done(v)) vnew.pos = p / n
       }
       done ++ thisWave
     }
