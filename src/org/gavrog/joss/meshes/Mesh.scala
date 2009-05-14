@@ -131,12 +131,12 @@ object Mesh {
     
     override def toString = "Vertex(%d)" format (nr)
 
-    def pos = mesh.vertex_positions(this)
+    def pos = mesh.vertex_position(this)
     def x = pos.x
     def y = pos.y
     def z = pos.z
     
-    def moveTo(p: Vec3) { mesh.vertex_positions(this) = p }
+    def moveTo(p: Vec3) { mesh.vertex_position(this) = p }
     def moveTo(x: Double, y: Double, z: Double) { moveTo(Vec3(x, y, z)) }
     def pos_=(p: Vec3) { moveTo(p) }
     def pos_=(p: (Double, Double, Double)) { moveTo(Vec3(p._1, p._2, p._3)) }
@@ -633,10 +633,15 @@ class Mesh(s : String) extends MessageSource {
   private val _mats     = new LinkedHashMap[String, Material]
   private val _edges    = new HashMap[Edge, Chamber]
   
-  var vertex_positions  = new HashMap[Vertex, Vec3]
+  private val __vertex_pos  = new HashMap[Vertex, Vec3]
   var texture_positions = new HashMap[TextureVertex, Vec2]
   var normal_values     = new HashMap[Normal, Vec3]
 
+  object vertex_position {
+    def apply(v: Vertex) = __vertex_pos(v)
+    def update(v: Vertex, p: Vec3) { __vertex_pos(v) = p }
+  }
+  
   val mtllib = new HashMap[String, String]
 
   class Edge(v : Vertex, w : Vertex) {
