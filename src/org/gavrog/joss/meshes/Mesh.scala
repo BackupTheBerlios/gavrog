@@ -126,21 +126,18 @@ object Mesh {
     override def toString = "Vertex(%d)" format (nr)
   }
   
-  class TextureVertex(m: Mesh, number: Int) {
-    var nr = number
-   
-    private var _ch : Chamber = null	
-    def chamber = _ch
-    def chamber_=(c: Chamber) {
-      _ch = c
-      if (c != null && c.tVertex != this) c.tVertex = this
-    }
-    
-    def mesh = m
-    
+  trait TextureVertex {
+    def mesh   : Mesh
+    def nr     : Int
+    def chamber: Chamber
+    def pos    : Vec2
+
+    def pos_=(p: Vec2)
+    def chamber_=(c: Chamber)
+
     def cellChambers = chamber.cellChambers
-    def faces = cellChambers.filter(_.tVertex == this).map(_.cell)
-    def onBorder = cellChambers.exists(_.onTextureBorder)
+    def faces        = cellChambers.filter(_.tVertex == this).map(_.cell)
+    def onBorder     = cellChambers.exists(_.onTextureBorder)
 
     def degree = cellChambers.sum(c =>
       if (c.tVertex == this || c.s2.tVertex == this)
@@ -148,38 +145,31 @@ object Mesh {
         else 1
       else 0
     )
-    
-    override def toString = "TextureVertex(%d)" format (nr)
 
-    def pos = mesh.texture_position(this)
     def x = pos.x
     def y = pos.y
     
-    def pos_=(p: Vec2) { mesh.texture_position(this) = p }
     def pos_=(p: (Double, Double)) { pos = Vec2(p._1, p._2) }
+    
+    override def toString = "TextureVertex(%d)" format (nr)
   }
 
-  class Normal(m: Mesh, number: Int) {
-    var nr = number
-   
-    private var _ch : Chamber = null	
-    def chamber = _ch
-    def chamber_=(c: Chamber) {
-      _ch = c
-      if (c != null && c.normal != this) c.normal = this
-    }
-    
-    def mesh = m
-    
-    override def toString = "Normal(%d)" format (nr)
+  trait Normal {
+    def mesh   : Mesh
+    def nr     : Int
+    def chamber: Chamber
+    def value  : Vec3
 
-    def value = mesh.normal_value(this)
+    def value_=(p: Vec3)
+    def chamber_=(c: Chamber)
+
     def x = value.x
     def y = value.y
     def z = value.z
-    
-    def value_=(p: Vec3) { mesh.normal_value(this) = p }
+
     def value_=(p: (Double, Double, Double)) { value = Vec3(p._1, p._2, p._3) }
+
+    override def toString = "Normal(%d)" format (nr)
   }
 
   class Cell {
@@ -616,6 +606,7 @@ class Mesh(s : String) extends MessageSource {
   private val _edges    = new HashMap[Edge, Chamber]
   
   private val _chamber_at_vertex = new HashMap[Vertex, Chamber]
+  private val _chamber_at_tvertex = new HashMap[TextureVertex, Chamber]
   
   private val _vertex_pos  = new HashMap[Vertex, Vec3]
   private var _texture_pos = new HashMap[TextureVertex, Vec2]
@@ -664,7 +655,7 @@ class Mesh(s : String) extends MessageSource {
   
   def addVertex(_x: Double, _y: Double, _z: Double) = new Vertex {
     val mesh = Mesh.this
-    val nr = _vertices.size + 1
+    val nr = numberOfVertices + 1
     
     def chamber = _chamber_at_vertex(this)
     
@@ -680,36 +671,60 @@ class Mesh(s : String) extends MessageSource {
   def vertex(n : Int)  =
     if (n > 0 && n <= numberOfVertices) _vertices(n - 1) else null
   
-  def clearNormals = _normals.clear
-  
-  def addNormal(p: Vec3) : Normal = addNormal(p.x, p.y, p.z)
-  
-  def addNormal(_x: Double, _y: Double, _z: Double) =
-    new Normal(this, _normals.size + 1) {
-      _normals += this
-      value = (_x, _y, _z)
-    }
-  
-  def numberOfNormals  = _normals.size
-  def normals          = _normals.elements
-  def normal(n : Int)  =
-    if (n > 0 && n <= numberOfNormals) _normals(n - 1) else null
-
   def clearTextureVertices = _texverts.clear
 
   def addTextureVertex(p: Vec2) : TextureVertex = addTextureVertex(p.x, p.y)
   
-  def addTextureVertex(_x : Double, _y : Double) =
-    new TextureVertex(this, _texverts.size + 1) {
-      _texverts += this
-      pos = (_x, _y)
+  def addTextureVertex(_x : Double, _y : Double) = new TextureVertex {
+    val mesh = Mesh.this
+    val nr = numberOfTextureVertices + 1
+    
+    private var _ch : Chamber = null    
+    def chamber = _ch
+    def chamber_=(c: Chamber) {
+      _ch = c
+      if (c != null && c.tVertex != this) c.tVertex = this
     }
+    
+    def pos = texture_position(this)
+    def pos_=(p: Vec2) { texture_position(this) = p }
+
+    _texverts += this
+    pos = (_x, _y)
+  }
 
   def numberOfTextureVertices = _texverts.size
   def textureVertices         = _texverts.elements
   def textureVertex(n : Int)  =
     if (n > 0 && n <= numberOfTextureVertices) _texverts(n - 1) else null
   
+  def clearNormals = _normals.clear
+  
+  def addNormal(p: Vec3) : Normal = addNormal(p.x, p.y, p.z)
+  
+  def addNormal(_x: Double, _y: Double, _z: Double) = new Normal {
+    val mesh = Mesh.this
+    val nr = numberOfNormals + 1
+    
+    private var _ch : Chamber = null    
+    def chamber = _ch
+    def chamber_=(c: Chamber) {
+      _ch = c
+      if (c != null && c.normal != this) c.normal = this
+    }
+    
+    def value = normal_value(this)
+    def value_=(p: Vec3) { normal_value(this) = p }
+
+    _normals += this
+    value = (_x, _y, _z)
+  }
+  
+  def numberOfNormals  = _normals.size
+  def normals          = _normals.elements
+  def normal(n : Int)  =
+    if (n > 0 && n <= numberOfNormals) _normals(n - 1) else null
+
   def numberOfEdges    = _edges.size
   def edges            = _edges.keys
   
