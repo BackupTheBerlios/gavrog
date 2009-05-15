@@ -24,7 +24,7 @@ object Flip {
     val original  = Mesh.read(System.in, true)(0)
     val donor = original.clone
     
-    for (v <- donor.vertices)  v.moveTo(Vec3(-v.x, v.y, v.z))
+    for (v <- donor.vertices) v.pos = (-v.x, v.y, v.z)
     
     Mesh.write(System.out, "materials", original.withMorphApplied(donor))
   }

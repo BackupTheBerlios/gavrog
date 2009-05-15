@@ -136,10 +136,8 @@ object Mesh {
     def y = pos.y
     def z = pos.z
     
-    def moveTo(p: Vec3) { mesh.vertex_position(this) = p }
-    def moveTo(x: Double, y: Double, z: Double) { moveTo(Vec3(x, y, z)) }
-    def pos_=(p: Vec3) { moveTo(p) }
-    def pos_=(p: (Double, Double, Double)) { moveTo(Vec3(p._1, p._2, p._3)) }
+    def pos_=(p: Vec3) { mesh.vertex_position(this) = p }
+    def pos_=(p: (Double, Double, Double)) { pos = Vec3(p._1, p._2, p._3) }
   }
   implicit def vertex2vec3(v: Vertex) = v.pos
 
@@ -168,14 +166,12 @@ object Mesh {
     
     override def toString = "TextureVertex(%d)" format (nr)
 
-    def pos = mesh.texture_positions(this)
+    def pos = mesh.texture_position(this)
     def x = pos.x
     def y = pos.y
     
-    def moveTo(p: Vec2) { mesh.texture_positions(this) = p }
-    def moveTo(x: Double, y: Double) { moveTo(Vec2(x, y)) }
-    def pos_=(p: Vec2) { moveTo(p) }
-    def pos_=(p: (Double, Double)) { moveTo(Vec2(p._1, p._2)) }
+    def pos_=(p: Vec2) { mesh.texture_position(this) = p }
+    def pos_=(p: (Double, Double)) { pos = Vec2(p._1, p._2) }
   }
   implicit def tVertex2vec2(t: TextureVertex) = t.pos
 
@@ -193,15 +189,13 @@ object Mesh {
     
     override def toString = "Normal(%d)" format (nr)
 
-    def value = mesh.normal_values(this)
+    def value = mesh.normal_value(this)
     def x = value.x
     def y = value.y
     def z = value.z
     
-    def changeTo(p: Vec3) { mesh.normal_values(this) = p }
-    def changeTo(x: Double, y: Double, z: Double) { changeTo(Vec3(x, y, z)) }
-    def value_=(p: Vec3) { changeTo(p) }
-    def value_=(p: (Double, Double, Double)) { changeTo(p._1, p._2, p._3) }
+    def value_=(p: Vec3) { mesh.normal_value(this) = p }
+    def value_=(p: (Double, Double, Double)) { value = Vec3(p._1, p._2, p._3) }
   }
   implicit def normal2vec3(n: Normal) = n.value
 
@@ -634,12 +628,22 @@ class Mesh(s : String) extends MessageSource {
   private val _edges    = new HashMap[Edge, Chamber]
   
   private val __vertex_pos  = new HashMap[Vertex, Vec3]
-  var texture_positions = new HashMap[TextureVertex, Vec2]
-  var normal_values     = new HashMap[Normal, Vec3]
+  private var __texture_pos = new HashMap[TextureVertex, Vec2]
+  private var __normal_val  = new HashMap[Normal, Vec3]
 
   object vertex_position {
     def apply(v: Vertex) = __vertex_pos(v)
     def update(v: Vertex, p: Vec3) { __vertex_pos(v) = p }
+  }
+  
+  object texture_position {
+    def apply(t: TextureVertex) = __texture_pos(t)
+    def update(t: TextureVertex, p: Vec2) { __texture_pos(t) = p }
+  }
+  
+  object normal_value {
+    def apply(n: Normal) = __normal_val(n)
+    def update(n: Normal, p: Vec3) { __normal_val(n) = p }
   }
   
   val mtllib = new HashMap[String, String]
