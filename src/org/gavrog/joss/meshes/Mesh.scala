@@ -25,9 +25,13 @@ import Sums._
 import Vectors._
 
 object Mesh {
-  class Chamber {
-    private var _vertex  : Vertex        = null
-    private var _cell    : Cell          = null
+  class Chamber(v: Vertex, f: Cell) {
+    private var _vertex = v
+    private var _cell   = f
+
+    v.chamber = this
+    f.chamber = this
+    
     private var _tVertex : TextureVertex = null
     private var _normal  : Normal        = null
     private var _s0      : Chamber       = null
@@ -36,10 +40,6 @@ object Mesh {
     
     def vertex = _vertex
     def vertexNr = if (vertex != null) vertex.nr else 0
-    def vertex_=(v : Vertex) {
-      _vertex = v
-      if (v != null && v.chamber == null) v.chamber = this
-    }
     
     def mesh = vertex.mesh
     
@@ -58,18 +58,8 @@ object Mesh {
     }
     
     def cell = _cell
-    def cell_=(c : Cell) {
-      _cell = c
-      if (c != null && c.chamber == null) c.chamber = this
-    }
     
     def face = if (cell.isInstanceOf[Face]) cell.asInstanceOf[Face] else null
-    
-    def this(v: Vertex, c: Cell) = {
-      this()
-      vertex = v
-      cell = c
-    }
     
     def s0 = _s0
     def s0_=(ch : Chamber) {
@@ -104,30 +94,37 @@ object Mesh {
     
     def onTextureBorder = tVertex != s2.tVertex || s0.tVertex != s0.s2.tVertex
     
+    def orbit(next: Chamber => Chamber) = {
+      def from(c: Chamber): Stream[Chamber] =
+        if (c == this) Stream.empty else Stream.cons(c, from(next(c)))
+      Stream.cons(this, from(next(this)))
+    }
+    
+    def cellChambers = orbit(_.nextAtVertex)
+    def vertexChambers = orbit(_.nextAtFace)
+    
     override def toString = "Chamber(%s -> %s)" format (start, end)
   }
 
-  class Vertex(m: Mesh, number: Int) {
-    var nr = number
+  trait Node {
+    def chamber: Chamber
 
-    private var _ch : Chamber = null	
-    def chamber = _ch
-    def chamber_=(c: Chamber) {
-      _ch = c
-      if (c != null && c.vertex != this) c.vertex = this
-    }
-    
-    def mesh = m
-    
-    def cellChambers = {
-      def from(c: Chamber) : Stream[Chamber] =
-        if (c == _ch) Stream.empty else Stream.cons(c, from(c.nextAtVertex))
-      if (_ch == null) Stream.empty else Stream.cons(_ch, from(_ch.nextAtVertex))
-    }
-    
+    def cellChambers = chamber.cellChambers
     def faces = cellChambers.map(_.cell)
     def degree = cellChambers.size
     def neighbors = cellChambers.map(_.s0.vertex)
+  }
+  
+  class Vertex(m: Mesh, number: Int) extends Node {
+    var nr = number
+
+    private var _ch: Chamber = null	
+    def chamber = _ch
+    def chamber_=(c: Chamber) {
+      _ch = c
+    }
+    
+    def mesh = m
     
     override def toString = "Vertex(%d)" format (nr)
 
@@ -139,7 +136,6 @@ object Mesh {
     def pos_=(p: Vec3) { mesh.vertex_position(this) = p }
     def pos_=(p: (Double, Double, Double)) { pos = Vec3(p._1, p._2, p._3) }
   }
-  implicit def vertex2vec3(v: Vertex) = v.pos
 
   class TextureVertex(m: Mesh, number: Int) {
     var nr = number
@@ -153,7 +149,7 @@ object Mesh {
     
     def mesh = m
     
-    def cellChambers = chamber.vertex.cellChambers
+    def cellChambers = chamber.cellChambers
     def faces = cellChambers.filter(_.tVertex == this).map(_.cell)
     def onBorder = cellChambers.exists(_.onTextureBorder)
 
@@ -173,7 +169,6 @@ object Mesh {
     def pos_=(p: Vec2) { mesh.texture_position(this) = p }
     def pos_=(p: (Double, Double)) { pos = Vec2(p._1, p._2) }
   }
-  implicit def tVertex2vec2(t: TextureVertex) = t.pos
 
   class Normal(m: Mesh, number: Int) {
     var nr = number
@@ -197,24 +192,17 @@ object Mesh {
     def value_=(p: Vec3) { mesh.normal_value(this) = p }
     def value_=(p: (Double, Double, Double)) { value = Vec3(p._1, p._2, p._3) }
   }
-  implicit def normal2vec3(n: Normal) = n.value
 
   class Cell {
     private var _ch : Chamber = null	
     def chamber = _ch
     def chamber_=(c: Chamber) {
       _ch = c
-      if (c != null && c.cell != this) c.cell = this
     }
     
     def mesh = chamber.mesh
     
-    def vertexChambers = {
-      def from(c: Chamber) : Stream[Chamber] =
-        if (c == _ch) Stream.empty else Stream.cons(c, from(c.nextAtFace))
-      Stream.cons(_ch, from(_ch.nextAtFace))
-    }
-    
+    def vertexChambers = chamber.vertexChambers
     def vertices = vertexChambers.map(_.vertex)
     def degree   = vertexChambers.size
     
@@ -735,8 +723,6 @@ class Mesh(s : String) extends MessageSource {
   def numberOfGroups = _groups.size
   def groups         = _groups.values
   def clearGroups    = _groups.clear
-  implicit def group2string(g: Group) = g.name
-  implicit def string2group(s: String) = group(s)
   
   def material(name : String) = _mats.get(name) match {
     case Some(m) => m
@@ -745,8 +731,6 @@ class Mesh(s : String) extends MessageSource {
   def numberOfMaterials = _mats.size
   def materials         = _mats.values
   def clearMaterials    = _mats.clear
-  implicit def mat2string(m: Material) = m.name
-  implicit def string2mat(s: String) = material(s)
 
   override def clone = {
     val w = new StringWriter
@@ -899,15 +883,15 @@ class Mesh(s : String) extends MessageSource {
   
   def splitByGroup = {
     val parts = new HashMap[String, Buffer[Face]]
-    for (g <- _groups.values) parts(g) = new ArrayBuffer[Face]
-    for (f <- _faces) parts(f.group) += f
+    for (g <- _groups.values) parts(g.name) = new ArrayBuffer[Face]
+    for (f <- _faces) parts(f.group.name) += f
     split(parts)
   }
   
   def splitByMaterial = {
     val parts = new HashMap[String, Buffer[Face]]
-    for (m <- _mats.values) parts(m) = new ArrayBuffer[Face]
-    for (f <- _faces) parts(f.material) += f
+    for (m <- _mats.values) parts(m.name) = new ArrayBuffer[Face]
+    for (f <- _faces) parts(f.material.name) += f
     split(parts)
   }
   
@@ -915,19 +899,19 @@ class Mesh(s : String) extends MessageSource {
     val output = new ArrayBuffer[Mesh]
     for ((part_name, faces) <- parts) {
       val m = new Mesh("%s_%s" format (name, part_name))
-      val vMap = new LazyMap((v: Int) => m.addVertex(vertex(v)).nr)
+      val vMap = new LazyMap((v: Int) => m.addVertex(vertex(v).pos).nr)
       val nMap = new LazyMap((n: Int) =>
-        if (n == 0) 0 else m.addNormal(normal(n)).nr)
+        if (n == 0) 0 else m.addNormal(normal(n).value).nr)
       val tMap = new LazyMap((t: Int) =>
-        if (t == 0) 0 else m.addTextureVertex(textureVertex(t)).nr)
+        if (t == 0) 0 else m.addTextureVertex(textureVertex(t).pos).nr)
       for (f <- faces) {
         val cs = f.vertexChambers.toSeq
         val vs = cs.map(c => vMap(c.vertexNr))
         val vt = cs.map(c => tMap(c.tVertexNr))
         val vn = cs.map(c => nMap(c.normalNr))
         val g = m.addFace(vs, vt, vn)
-        g.material = m.material(f.material)
-        g.group = m.group(f.group)
+        g.material = m.material(f.material.name)
+        g.group = m.group(f.group.name)
         g.smoothingGroup = f.smoothingGroup
       }
       output += m
@@ -976,14 +960,14 @@ class Mesh(s : String) extends MessageSource {
     val subD = new Mesh(name)
     
     // -- copy the original vertices, texture vertices and normals
-    for (v <- vertices) subD.addVertex(v)
-    for (t <- textureVertices) subD.addTextureVertex(t)
-    for (n <- normals) subD.addNormal(n)
+    for (v <- vertices) subD.addVertex(v.pos)
+    for (t <- textureVertices) subD.addTextureVertex(t.pos)
+    for (n <- normals) subD.addNormal(n.value)
     
     // -- create edge centers
     val ch2ev = new HashMap[Chamber, Vertex]
     for (c <- _edges.values) {
-      val z = subD.addVertex((c.start + c.end) / 2)
+      val z = subD.addVertex((c.start.pos + c.end.pos) / 2)
       for (d <- List(c, c.s0, c.s2, c.s0.s2)) ch2ev(d) = z
     }
     
@@ -993,7 +977,7 @@ class Mesh(s : String) extends MessageSource {
       val t1 = c.tVertex
       val t2 = c.s0.tVertex
       if (t1 != null && t2 != null) {
-        val z = subD.addTextureVertex((t1 + t2) / 2)
+        val z = subD.addTextureVertex((t1.pos + t2.pos) / 2)
         for (d <- List(c, c.s0)) ch2etnr(d) = z.nr
       }
     }
@@ -1035,7 +1019,7 @@ class Mesh(s : String) extends MessageSource {
     for (n <- 1 to numberOfVertices; val v = subD.vertex(n) if !onBorder(v)) {
       val k = v.degree
       val cs = v.cellChambers.toSeq
-      v.pos = ((v * (k - 3)
+      v.pos = (((k - 3) * v.pos
                 + 4 * cs.sum(_.s0.vertex.pos) / k
                 - cs.sum(_.s0.s1.s0.vertex.pos) / k) / k)
     }
@@ -1045,7 +1029,8 @@ class Mesh(s : String) extends MessageSource {
     for (v <- onBorder if v.nr <= numberOfVertices) {
       val breaks = v.cellChambers.filter(hard).toSeq
       if (breaks.size == 2)
-        v.pos = breaks(0).s0.vertex / 4 + v / 2 + breaks(1).s0.vertex / 4
+        v.pos =
+          (breaks(0).s0.vertex.pos + breaks(1).s0.vertex.pos + 2 * v.pos) / 4
     }
     
     // -- return the result
@@ -1147,25 +1132,25 @@ class Mesh(s : String) extends MessageSource {
       val w = if (onBorder(v)) {
         done += v
         val breaks = cs.filter(hard).toSeq
-        if (breaks.size == 2)
-          m.addVertex(v * 2 - (breaks(0).s0.vertex + breaks(1).s0.vertex) / 2)
+        if (breaks.size == 2) m.addVertex(
+            v.pos * 2 - (breaks(0).s0.vertex.pos + breaks(1).s0.vertex.pos) / 2)
         else
-          m.addVertex(v)
+          m.addVertex(v.pos)
       } else if (k != 3) {
         done += v
-        m.addVertex((v * k + (cs.sum(_.s0.s1.s0.vertex.pos)
-                              - 4 * cs.sum(_.s0.vertex.pos)) / k) / (k - 3))
+        m.addVertex((v.pos * k + (cs.sum(_.s0.s1.s0.vertex.pos)
+                                  - 4 * cs.sum(_.s0.vertex.pos)) / k) / (k - 3))
       } else {
-        m.addVertex(v)
+        m.addVertex(v.pos)
       }
       w.nr
     })
     
     // -- do the same for texture vertices and normals
     val mapT = new LazyMap((t: Int) =>
-      if (t != 0) m.addTextureVertex(textureVertex(t)).nr else 0)
+      if (t != 0) m.addTextureVertex(textureVertex(t).pos).nr else 0)
     val mapN = new LazyMap((n: Int) =>
-      if (n != 0) m.addNormal(normal(n)).nr else 0)
+      if (n != 0) m.addNormal(normal(n).value).nr else 0)
     
     // -- create the faces of the new mesh along with necessary vertices etc.
     send("  making faces...")
@@ -1219,8 +1204,8 @@ class Mesh(s : String) extends MessageSource {
         for (c <- v.cellChambers if !hard(c)) {
           val w = c.s0.s1.s2.s1.s0.vertex
           if (done(w)) {
-            p += (4 * c.s0.vertex.pos - m.vertex(mapV(w.nr))
-                  - c.s0.s1.s0.vertex - c.s0.s2.s1.s0.vertex)
+            p += (4 * c.s0.vertex.pos - m.vertex(mapV(w.nr)).pos
+                  - c.s0.s1.s0.vertex.pos - c.s0.s2.s1.s0.vertex.pos)
             n += 1
           } else {
             nextWave += w

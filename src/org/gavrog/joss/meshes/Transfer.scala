@@ -103,9 +103,9 @@ object Transfer {
       }
       
       val vMap = new LazyMap((p: Pair[Mesh, int]) =>
-        result.addVertex(p._1.vertex(p._2)))
+        result.addVertex(p._1.vertex(p._2).pos))
       val tMap = new LazyMap((p: Pair[Mesh, int]) =>
-        result.addTextureVertex(p._1.textureVertex(p._2)))
+        result.addTextureVertex(p._1.textureVertex(p._2).pos))
 
       if (image != null) {
         val inv = new HashMap[Mesh.Chamber, Mesh.Chamber]
