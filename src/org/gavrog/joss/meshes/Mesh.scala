@@ -29,7 +29,6 @@ object Mesh {
     private var _vertex = v
     private var _cell   = f
 
-    v.chamber = this
     f.chamber = this
     
     private var _tVertex : TextureVertex = null
@@ -106,37 +105,27 @@ object Mesh {
     override def toString = "Chamber(%s -> %s)" format (start, end)
   }
 
-  trait Node {
+  trait Vertex {
+    def mesh   : Mesh
+    def nr     : Int
     def chamber: Chamber
+    def pos    : Vec3
+
+    def pos_=(p: Vec3)
 
     def cellChambers = chamber.cellChambers
-    def faces = cellChambers.map(_.cell)
-    def degree = cellChambers.size
-    def neighbors = cellChambers.map(_.s0.vertex)
-  }
-  
-  class Vertex(m: Mesh, number: Int) extends Node {
-    var nr = number
-
-    private var _ch: Chamber = null	
-    def chamber = _ch
-    def chamber_=(c: Chamber) {
-      _ch = c
-    }
-    
-    def mesh = m
-    
-    override def toString = "Vertex(%d)" format (nr)
-
-    def pos = mesh.vertex_position(this)
+    def degree       = cellChambers.size
+    def faces        = cellChambers.map(_.cell)
+    def neighbors    = cellChambers.map(_.s0.vertex)
     def x = pos.x
     def y = pos.y
     def z = pos.z
-    
-    def pos_=(p: Vec3) { mesh.vertex_position(this) = p }
-    def pos_=(p: (Double, Double, Double)) { pos = Vec3(p._1, p._2, p._3) }
-  }
 
+    def pos_=(p: (Double, Double, Double)) { pos = Vec3(p._1, p._2, p._3) }
+
+    override def toString = "Vertex(%d)" format (nr)
+  }
+  
   class TextureVertex(m: Mesh, number: Int) {
     var nr = number
    
@@ -235,6 +224,17 @@ object Mesh {
     override def toString = "Hole(%s)" format formatVertices
   }
 
+  class Edge(v : Vertex, w : Vertex) {
+    val (from, to) = if (v.nr <= w.nr) (v, w) else (w, v)
+    
+    override def equals (other : Any) = other.isInstanceOf[Edge] && {
+      val e = other.asInstanceOf[Edge]
+      e.from.nr == from.nr && e.to.nr == to.nr
+    }
+    
+    override def hashCode = from.nr * 37 + to.nr
+  }
+  
   case class Group(name : String) {
     override def toString = "Group(" + name + ")"
   }
@@ -615,80 +615,33 @@ class Mesh(s : String) extends MessageSource {
   private val _mats     = new LinkedHashMap[String, Material]
   private val _edges    = new HashMap[Edge, Chamber]
   
-  private val __vertex_pos  = new HashMap[Vertex, Vec3]
-  private var __texture_pos = new HashMap[TextureVertex, Vec2]
-  private var __normal_val  = new HashMap[Normal, Vec3]
+  private val _chamber_at_vertex = new HashMap[Vertex, Chamber]
+  
+  private val _vertex_pos  = new HashMap[Vertex, Vec3]
+  private var _texture_pos = new HashMap[TextureVertex, Vec2]
+  private var _normal_val  = new HashMap[Normal, Vec3]
 
   object vertex_position {
-    def apply(v: Vertex) = __vertex_pos(v)
-    def update(v: Vertex, p: Vec3) { __vertex_pos(v) = p }
+    def apply(v: Vertex) = _vertex_pos(v)
+    def update(v: Vertex, p: Vec3) { _vertex_pos(v) = p }
   }
   
   object texture_position {
-    def apply(t: TextureVertex) = __texture_pos(t)
-    def update(t: TextureVertex, p: Vec2) { __texture_pos(t) = p }
+    def apply(t: TextureVertex) = _texture_pos(t)
+    def update(t: TextureVertex, p: Vec2) { _texture_pos(t) = p }
   }
   
   object normal_value {
-    def apply(n: Normal) = __normal_val(n)
-    def update(n: Normal, p: Vec3) { __normal_val(n) = p }
+    def apply(n: Normal) = _normal_val(n)
+    def update(n: Normal, p: Vec3) { _normal_val(n) = p }
   }
   
   val mtllib = new HashMap[String, String]
 
-  class Edge(v : Vertex, w : Vertex) {
-    val (from, to) = if (v.nr <= w.nr) (v, w) else (w, v)
-    
-    override def equals (other : Any) = other.isInstanceOf[Edge] && {
-      val e = other.asInstanceOf[Edge]
-      e.from.nr == from.nr && e.to.nr == to.nr
-    }
-    
-    override def hashCode = from.nr * 37 + to.nr
+  private def addChamber(v: Vertex, f: Cell) = new Chamber(v, f) {
+    _chambers += this
+    if (_chamber_at_vertex.get(v) == None) _chamber_at_vertex(v) = this
   }
-  
-  def addVertex(p : Vec3) : Vertex = addVertex(p.x, p.y, p.z)
-  
-  def addVertex(x : Double, y : Double, z : Double) : Vertex = {
-    val v = new Vertex(this, _vertices.size + 1)
-    v.pos = (x, y, z)
-    _vertices += v
-    v
-  }
-  def numberOfVertices = _vertices.size
-  def vertices         = _vertices.elements
-  def vertex(n : Int)  =
-    if (n > 0 && n <= numberOfVertices) _vertices(n - 1) else null
-  
-  def clearNormals = _normals.clear
-  
-  def addNormal(p: Vec3) : Normal = addNormal(p.x, p.y, p.z)
-  
-  def addNormal(x : Double, y : Double, z : Double) : Normal = {
-    val n = new Normal(this, _normals.size + 1)
-    n.value = (x, y, z)
-    _normals += n
-    n
-  }
-  def numberOfNormals  = _normals.size
-  def normals          = _normals.elements
-  def normal(n : Int)  =
-    if (n > 0 && n <= numberOfNormals) _normals(n - 1) else null
-
-  def clearTextureVertices = _texverts.clear
-
-  def addTextureVertex(p: Vec2) : TextureVertex = addTextureVertex(p.x, p.y)
-  
-  def addTextureVertex(x : Double, y : Double) : TextureVertex = {
-    val t = new TextureVertex(this, _texverts.size + 1)
-    t.pos = (x, y)
-    _texverts += t
-    t
-  }
-  def numberOfTextureVertices = _texverts.size
-  def textureVertices         = _texverts.elements
-  def textureVertex(n : Int)  =
-    if (n > 0 && n <= numberOfTextureVertices) _texverts(n - 1) else null
   
   def numberOfChambers = _chambers.size
   def chambers         = _chambers.elements
@@ -706,6 +659,56 @@ class Mesh(s : String) extends MessageSource {
         false
     })
   }
+  
+  def addVertex(p: Vec3): Vertex = addVertex(p.x, p.y, p.z)
+  
+  def addVertex(_x: Double, _y: Double, _z: Double) = new Vertex {
+    val mesh = Mesh.this
+    val nr = _vertices.size + 1
+    
+    def chamber = _chamber_at_vertex(this)
+    
+    def pos = vertex_position(this)
+    def pos_=(p: Vec3) { vertex_position(this) = p }
+    
+    _vertices += this
+    pos = (_x, _y, _z)
+  }
+  
+  def numberOfVertices = _vertices.size
+  def vertices         = _vertices.elements
+  def vertex(n : Int)  =
+    if (n > 0 && n <= numberOfVertices) _vertices(n - 1) else null
+  
+  def clearNormals = _normals.clear
+  
+  def addNormal(p: Vec3) : Normal = addNormal(p.x, p.y, p.z)
+  
+  def addNormal(_x: Double, _y: Double, _z: Double) =
+    new Normal(this, _normals.size + 1) {
+      _normals += this
+      value = (_x, _y, _z)
+    }
+  
+  def numberOfNormals  = _normals.size
+  def normals          = _normals.elements
+  def normal(n : Int)  =
+    if (n > 0 && n <= numberOfNormals) _normals(n - 1) else null
+
+  def clearTextureVertices = _texverts.clear
+
+  def addTextureVertex(p: Vec2) : TextureVertex = addTextureVertex(p.x, p.y)
+  
+  def addTextureVertex(_x : Double, _y : Double) =
+    new TextureVertex(this, _texverts.size + 1) {
+      _texverts += this
+      pos = (_x, _y)
+    }
+
+  def numberOfTextureVertices = _texverts.size
+  def textureVertices         = _texverts.elements
+  def textureVertex(n : Int)  =
+    if (n > 0 && n <= numberOfTextureVertices) _texverts(n - 1) else null
   
   def numberOfEdges    = _edges.size
   def edges            = _edges.keys
@@ -745,11 +748,10 @@ class Mesh(s : String) extends MessageSource {
     val f = new Face
     val chambers = new ArrayBuffer[Chamber]
     for (i <- 0 until n; j <- List(i, (i + 1) % n)) {
-      val c = new Chamber(vertex(verts(j)), f)
+      val c = addChamber(vertex(verts(j)), f)
       c.tVertex = textureVertex(tverts(j))
       c.normal  = normal(normals(j))
       chambers  += c
-      _chambers += c
     }
     
     for (i <- 0 until n) {
@@ -794,8 +796,7 @@ class Mesh(s : String) extends MessageSource {
       seen ++ boundary
       val n = boundary.length
       val f = new Hole
-      val hole = boundary.map(d => new Chamber(d.vertex, f)).toSeq
-      for (d <- hole) _chambers += d
+      val hole = boundary.map(d => addChamber(d.vertex, f)).toSeq
       for (i <- 0 until n) {
         val d = hole(i)
         d.s2 = boundary(i)
