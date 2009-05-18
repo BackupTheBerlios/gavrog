@@ -916,6 +916,7 @@ class Mesh extends MessageSource {
         val vn = cs.map(c => nMap(c.normalNr))
         val g = m.addFace(vs, vt, vn)
         g.material = m.material(f.material.name)
+        g.obj = m.obj(f.obj.name)
         g.group = m.group(f.group.name)
         g.smoothingGroup = f.smoothingGroup
       }
