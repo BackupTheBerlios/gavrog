@@ -29,8 +29,6 @@ object Mesh {
     private var _vertex = v
     private var _cell   = f
 
-    f.chamber = this
-    
     private var _tVertex: TextureVertex = null
     private var _normal : Normal        = null
     private var _s0     : Chamber       = null
@@ -172,14 +170,9 @@ object Mesh {
     override def toString = "Normal(%d)" format (nr)
   }
 
-  class Cell {
-    private var _ch: Chamber = null	
-    def chamber = _ch
-    def chamber_=(c: Chamber) {
-      _ch = c
-    }
-    
-    def mesh = chamber.mesh
+  trait Cell {
+    def mesh   : Mesh
+    def chamber: Chamber
     
     def vertexChambers = chamber.vertexChambers
     def vertices = vertexChambers.map(_.vertex)
@@ -193,13 +186,9 @@ object Mesh {
       ).mkString(" ")
 
     def formatVertices: String = formatVertices(0, 0, 0)
-    
-    override def hashCode = chamber.hashCode
-    override def equals(that: Any) =
-      that.isInstanceOf[Cell] && that.asInstanceOf[Cell].chamber == this.chamber
   }
   
-  class Face() extends Cell {
+  trait Face extends Cell {
     var group   : Group    = null
     var material: Material = null
     var smoothingGroup: Int = 0
@@ -210,7 +199,7 @@ object Mesh {
     override def toString = "Face(%s; group = '%s', material = '%s')" format
       (formatVertices, group.name, material.name)
   }
-  class Hole() extends Cell {
+  trait Hole extends Cell {
     override def toString = "Hole(%s)" format formatVertices
   }
 
@@ -605,8 +594,9 @@ class Mesh(s: String) extends MessageSource {
   private val _mats     = new LinkedHashMap[String, Material]
   private val _edges    = new HashMap[Edge, Chamber]
   
-  private val _chamber_at_vertex = new HashMap[Vertex, Chamber]
+  private val _chamber_at_vertex  = new HashMap[Vertex, Chamber]
   private val _chamber_at_tvertex = new HashMap[TextureVertex, Chamber]
+  private val _chamber_at_cell    = new HashMap[Cell, Chamber]
   
   private val _vertex_pos  = new HashMap[Vertex, Vec3]
   private var _texture_pos = new HashMap[TextureVertex, Vec2]
@@ -632,6 +622,7 @@ class Mesh(s: String) extends MessageSource {
   private def addChamber(v: Vertex, f: Cell) = new Chamber(v, f) {
     _chambers += this
     if (_chamber_at_vertex.get(v) == None) _chamber_at_vertex(v) = this
+    if (_chamber_at_cell.get(f)   == None) _chamber_at_cell(f)   = this
   }
   
   def numberOfChambers = _chambers.size
@@ -756,16 +747,18 @@ class Mesh(s: String) extends MessageSource {
     Mesh.read(Source.fromString(w.toString))(0)
   }
 
-  def addFace(verts  : Seq[Int],
-              tverts : Seq[Int],
-              normals: Seq[Int]): Face = {
+  def addFace(verts   : Seq[Int], tverts  : Seq[Int], normvecs: Seq[Int]) = {
+    val f = new Face {
+      val mesh = Mesh.this
+      def chamber = _chamber_at_cell(this)
+    }
+    
     val n = verts.length
-    val f = new Face
     val chambers = new ArrayBuffer[Chamber]
     for (i <- 0 until n; j <- List(i, (i + 1) % n)) {
       val c = addChamber(vertex(verts(j)), f)
       c.tVertex = textureVertex(tverts(j))
-      c.normal  = normal(normals(j))
+      c.normal  = normal(normvecs(j))
       chambers  += c
     }
     
@@ -810,7 +803,12 @@ class Mesh(s: String) extends MessageSource {
       } while (d != c)
       seen ++ boundary
       val n = boundary.length
-      val f = new Hole
+      
+      val f = new Hole {
+        val mesh = Mesh.this
+        def chamber = _chamber_at_cell(this)
+      }
+
       val hole = boundary.map(d => addChamber(d.vertex, f)).toSeq
       for (i <- 0 until n) {
         val d = hole(i)
@@ -818,7 +816,6 @@ class Mesh(s: String) extends MessageSource {
         if (i % 2 == 0) d.s0 = hole(i + 1) else d.s1 = hole((i + 1) % n)
       }
       for (d <- hole) d.tVertex = null
-      _holes += f
     }
   }
   
