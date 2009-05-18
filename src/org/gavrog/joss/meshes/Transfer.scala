@@ -26,8 +26,7 @@ object Transfer {
     exit(1)
   }
   
-  class Options(p: Boolean, t: Boolean,
-                g: Boolean, m: Boolean, s: Boolean) {
+  class Options(p: Boolean, t: Boolean, g: Boolean, m: Boolean, s: Boolean) {
     def this() = this(false, false, false, false, false)
     
     var positions = p
@@ -36,41 +35,31 @@ object Transfer {
     var materials = m
     var smoothing = s
     
-    def any =
-      positions || texverts || groups || materials || smoothing
+    def any = positions || texverts || groups || materials || smoothing
   }
   
   def main(args: Array[String]) : Unit = {
     var i = 0
     var options: Options = new Options
     while (args(i).startsWith("-")) {
-      for (c <- args(i)) {
-        c match {
-          case '-' => {}
-          case 'p' => options.positions = true
-          case 't' => options.texverts  = true
-          case 'g' => options.groups    = true
-          case 'm' => options.materials = true
-          case 's' => options.smoothing = true
-          case _   =>
-            System.err.println("WARNING: unknown option %s" format c)
-        }
+      for (c <- args(i))  c match {
+        case '-' => {}
+        case 'p' => options.positions = true
+        case 't' => options.texverts  = true
+        case 'g' => options.groups    = true
+        case 'm' => options.materials = true
+        case 's' => options.smoothing = true
+        case _   => System.err.println("WARNING: unknown option %s" format c)
       }
       i += 1
     }
-    if (!options.any) options =
-      new Options(false, false, true, true, true)
+    if (!options.any) options = new Options(false, false, true, true, true)
     
     if (args.size < i + 2) bail("need two .obj files as arguments")
-    val originals = Mesh.read(args(i))
-    if (originals.size != 1) bail("original must have 1 body")
+    val mesh  = Mesh.read(args(i))
+    val donor = Mesh.read(args(i + 1))
     
-    val modified  = Mesh.read(args(i + 1))
-    if (modified.size != 1) bail("modified must have 1 body")
-    
-    val mesh = originals(0)
     val old = mesh.components
-    val donor = modified(0)
     val mod = donor.components
     
     val result = new Mesh(mesh.name)
@@ -155,6 +144,6 @@ object Transfer {
     result.mtllib ++ donor.mtllib
     System.err.println("Made %d transfers out of %d components."
                        format (count, mod.size))
-    Mesh.write(System.out, List(result), "materials")
+    Mesh.write(System.out, result, "materials")
   }
 }

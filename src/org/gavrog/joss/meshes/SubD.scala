@@ -17,22 +17,29 @@
 
 package org.gavrog.joss.meshes
 
-import System.{in, out, err}
-
 object SubD {
-  def iterate[A](x: A, f: A => A, n: Int) : A =
-    if (n > 0) iterate(f(x), f, n-1) else x
+  case class IteratedFunction[A](f: A => A, n: Int) {
+    def ^(m: Int) = IteratedFunction(f, n * m)
+    def apply(x: A) = {
+      def iter(x: A, m: Int): A = if (m <= 0) x else iter(f(x), m-1)
+      iter(x, n)
+    }
+  }
+  implicit def toRichFun[A](f: A => A) = new IteratedFunction(f, 1)
     
   def main(args : Array[String]) : Unit = {
     val n = if (args.length > 1) args(1).toInt else 1
-    err.println("Reading...")
-    val src = if (args.length > 0) Mesh.read(args(0)) else Mesh.read(in)
-    err.println("Processing...")
-    val dst = src.map(m =>
-      if (n >= 0) iterate(m, (s : Mesh) => s.subdivision, n)
-      else        iterate(m, (s : Mesh) => s.coarsening, -n))
-    err.println("Writing...")
-    Mesh.write(out, dst, "materials")
-    err.println("Done.")
+    
+    System.err.println("Reading...")
+    val src = if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
+
+    System.err.println("Processing...")
+    val step: Mesh => Mesh = if (n > 0) _.subdivision else _.coarsening
+    val dst = (step^n)(src)
+
+    System.err.println("Writing...")
+    Mesh.write(System.out, dst, "materials")
+
+    System.err.println("Done.")
   }
 }

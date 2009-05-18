@@ -27,7 +27,7 @@ import Vectors.{Vec2, Vec3}
 object CylinderMap {
   def main(args : Array[String]) : Unit = {
     err.println("Reading...")
-    val src = Mesh.read(args(0), true)(0)
+    val src = Mesh.read(args(0))
     
     err.println("Processing...")
     src.computeNormals
@@ -75,7 +75,7 @@ object CylinderMap {
     }
     
     err.println("Writing...")
-    Mesh.write(out, List(dst), "materials")
+    Mesh.write(out, dst, "materials")
     err.println("Done.")
   }
 }

@@ -29,8 +29,8 @@ object CopyUVs {
     var i = 0
 
     if (args.size < i + 2) bail("need two .obj files as arguments")
-    val mesh  = Mesh.read(args(i), true)(0)
-    val donor = Mesh.read(args(i + 1), true)(0)
+    val mesh  = Mesh.read(args(i))
+    val donor = Mesh.read(args(i + 1))
 
     val originals = mesh.charts
     
@@ -43,6 +43,6 @@ object CopyUVs {
         for ((c, d) <- map) d.tVertex.pos = c.tVertex.pos
       }
     }
-    Mesh.write(System.out, List(mesh), "materials")
+    Mesh.write(System.out, mesh, "materials")
   }
 }

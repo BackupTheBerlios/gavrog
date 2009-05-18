@@ -21,11 +21,11 @@ import Vectors._
 
 object Flip {
   def main(args: Array[String]) : Unit = {
-    val original  = Mesh.read(System.in, true)(0)
+    val original  = Mesh.read(System.in)
     val donor = original.clone
     
     for (v <- donor.vertices) v.pos = (-v.x, v.y, v.z)
     
-    Mesh.write(System.out, "materials", original.withMorphApplied(donor))
+    Mesh.write(System.out, original.withMorphApplied(donor), "materials")
   }
 }
