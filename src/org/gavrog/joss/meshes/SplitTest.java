@@ -17,8 +17,9 @@
 
 package org.gavrog.joss.meshes;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+
+import scala.collection.mutable.*;
 
 /**
  * @author Olaf Delgado
@@ -26,10 +27,14 @@ import java.io.IOException;
  */
 public class SplitTest {
   public static void main(final String argv[]) throws IOException {
-    final Mesh$ M = new Mesh$();
-    final FileWriter writer = new FileWriter("zSplit.obj");
-    M.write(writer, ((Mesh) M.read(argv[0]).first()).splitByGroup(), null);
-    writer.flush();
-    writer.close();
+    final Mesh mesh = new Mesh(new File(argv[0]));
+    final ArrayBuffer<Mesh> parts = mesh.splitByGroup();
+    for (int i = 0; i < mesh.splitByGroup().size(); ++i) {
+      final FileWriter writer =
+        new FileWriter(String.format("zSplit_%d.obj", i));
+      parts.apply(i).write((Writer) writer, "zSplit");
+      writer.flush();
+      writer.close();
+    }
   }
 }

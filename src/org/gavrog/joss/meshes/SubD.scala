@@ -17,6 +17,8 @@
 
 package org.gavrog.joss.meshes
 
+import scala.io.Source
+
 object SubD {
   case class IteratedFunction[A](f: A => A, n: Int) {
     def ^(m: Int) = IteratedFunction(f, n * m)
@@ -31,14 +33,15 @@ object SubD {
     val n = if (args.length > 1) args(1).toInt else 1
     
     System.err.println("Reading...")
-    val src = if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
+    val src = if (args.length > 0) new Mesh(Source fromFile args(0))
+              else new Mesh(System.in)
 
     System.err.println("Processing...")
     val step: Mesh => Mesh = if (n > 0) _.subdivision else _.coarsening
     val dst = (step^n)(src)
 
     System.err.println("Writing...")
-    Mesh.write(System.out, dst, "materials")
+    dst.write(System.out, "materials")
 
     System.err.println("Done.")
   }

@@ -59,7 +59,7 @@ object View {
         accelerator = "ctrl O"
         override def openFile(selected: File) = run {
           log("Loading mesh...")
-          mesh = Mesh.read(selected.getAbsolutePath)
+          mesh = new Mesh(selected)
           log("Mesh with %d vertices and %d faces loaded." format
               (mesh.numberOfVertices, mesh.numberOfFaces))
         }
@@ -68,7 +68,7 @@ object View {
       val morphLoader = new FileChoiceAction("Apply morph...", main) {
         override def openFile(selected: File) = run {
           log("Reading morph...")
-          val morph = Mesh.read(selected.getAbsolutePath)
+          val morph = new Mesh(selected)
           log("Applying morph...")
           mesh = mesh.withMorphApplied(morph)
           log("Morph applied!")
@@ -79,7 +79,7 @@ object View {
         accelerator = "ctrl S"
         openForWrite = true
         override def openFile(selected: File) = run {
-          Mesh.write(new FileWriter(selected), mesh, null)
+          mesh.write(new FileWriter(selected), null)
     	  log("Wrote mesh to %s" format selected)
     	}
       }

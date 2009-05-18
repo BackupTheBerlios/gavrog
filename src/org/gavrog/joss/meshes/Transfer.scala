@@ -18,7 +18,7 @@
 package org.gavrog.joss.meshes
 
 import scala.collection.mutable._
-import Mesh._
+import scala.io.Source
 
 object Transfer {
   def bail(message: String) {
@@ -56,8 +56,8 @@ object Transfer {
     if (!options.any) options = new Options(false, false, true, true, true)
     
     if (args.size < i + 2) bail("need two .obj files as arguments")
-    val mesh  = Mesh.read(args(i))
-    val donor = Mesh.read(args(i + 1))
+    val mesh  = new Mesh(Source fromFile args(i))
+    val donor = new Mesh(Source fromFile args(i + 1))
     
     val old = mesh.components
     val mod = donor.components
@@ -103,27 +103,27 @@ object Transfer {
           vMap(if (options.positions) (donor, inv(v.chamber).vertexNr)
                else (mesh, v.nr))
       }
-      def newVertex(c: Chamber) = {
+      def newVertex(c: Mesh.Chamber) = {
         val p = if (map == null || options.positions) (donor, c.vertexNr)
                 else (mesh, map(c).vertexNr)
         if (p._2 == 0) 0 else vMap(p).nr
       }
-      def newTexVert(c: Chamber) = {
+      def newTexVert(c: Mesh.Chamber) = {
         val p = if (map == null || options.texverts) (donor, c.tVertexNr)
                 else (mesh, map(c).tVertexNr)
         if (p._2 == 0) 0 else tMap(p).nr
       }
-      def newGroup(f: Face) = {
+      def newGroup(f: Mesh.Face) = {
         val g = if (map == null || options.groups) f.group
                 else map(f.chamber).face.group
         result.group(if (g == null) "_default" else g.name)
       }
-      def newMaterial(f: Face) = {
+      def newMaterial(f: Mesh.Face) = {
         val m = if (map == null || options.materials) f.material
                 else map(f.chamber).face.material
         result.material(if (m == null) "_default" else m.name)
       }
-      def newSmoothing(f: Face) =
+      def newSmoothing(f: Mesh.Face) =
         if (map == null || options.smoothing) f.smoothingGroup
         else map(f.chamber).face.smoothingGroup
         
@@ -144,6 +144,6 @@ object Transfer {
     result.mtllib ++ donor.mtllib
     System.err.println("Made %d transfers out of %d components."
                        format (count, mod.size))
-    Mesh.write(System.out, result, "materials")
+    result.write(System.out, "materials")
   }
 }

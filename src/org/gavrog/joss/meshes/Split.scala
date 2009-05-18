@@ -18,9 +18,10 @@
 package org.gavrog.joss.meshes
 
 import java.io.FileWriter
+import scala.io.Source
 
 object Split {
   def main(args : Array[String]) : Unit =
-    for (m <- Mesh.read(args(0)).splitByGroup)
-      Mesh.write(new FileWriter("%s.obj" format m.name), m, m.name)
+    for (m <- new Mesh(Source.fromFile(args(0))).splitByGroup)
+      m.write(new FileWriter("%s.obj" format m.name), m.name)
 }

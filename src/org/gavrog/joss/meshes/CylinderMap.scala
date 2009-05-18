@@ -18,6 +18,8 @@
 package org.gavrog.joss.meshes
 
 import collection.mutable.Queue
+import io.Source
+
 import Math.{abs, atan2, Pi}
 import System.{in, out, err}
 
@@ -27,7 +29,7 @@ import Vectors.{Vec2, Vec3}
 object CylinderMap {
   def main(args : Array[String]) : Unit = {
     err.println("Reading...")
-    val src = Mesh.read(args(0))
+    val src = new Mesh(Source.fromFile(args(0)))
     
     err.println("Processing...")
     src.computeNormals
@@ -75,7 +77,7 @@ object CylinderMap {
     }
     
     err.println("Writing...")
-    Mesh.write(out, dst, "materials")
+    dst.write(out, "materials")
     err.println("Done.")
   }
 }

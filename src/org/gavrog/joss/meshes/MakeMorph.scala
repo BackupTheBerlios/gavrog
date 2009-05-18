@@ -17,6 +17,8 @@
 
 package org.gavrog.joss.meshes
 
+import scala.io.Source
+
 object MakeMorph {
   def bail(message: String) {
     System.err.println(message)
@@ -35,17 +37,17 @@ object MakeMorph {
   def main(args: Array[String]) : Unit = {
     var i = 0
     if (args.size < i + 2) bail("need at least two .obj files as arguments")
-    val original  = Mesh.read(args(i))
-    val morphed = Mesh.read(args(i + 1))
+    val original  = new Mesh(Source fromFile args(i))
+    val morphed = new Mesh(Source fromFile args(i + 1))
     val subd = if (args.length > i + 2) args(i + 2).toInt else 0
     val base = if (args.length > i + 3)
-                 Mesh.read(args(i + 3)) withMorphApplied(morphed)
+                 new Mesh(Source fromFile args(i + 3)) withMorphApplied(morphed)
                else
                  morphed
     
     val step: Mesh => Mesh = if (subd > 0) _.subdivision else _.coarsening
     val donor = (step^subd.abs)(base)
     
-    Mesh.write(System.out, original.withMorphApplied(donor), "materials")
+    original.withMorphApplied(donor).write(System.out, "materials")
   }
 }

@@ -263,130 +263,6 @@ object Mesh {
     def isStrict = cost == 0
   }
 
-  def read(filename: String): Mesh = read(Source.fromFile(filename))
-  def read(in: java.io.InputStream): Mesh = read(Source.fromInputStream(in))
-  
-  def read(source: Source) = {
-    val mesh: Mesh = new Mesh("unnamed")
-    val faces = new ArrayBuffer[(Seq[Int], Seq[Int], Seq[Int],
-                                 Object, Group, Material, Int)]
-    var obj     : Object   = null
-    var group   : Group    = null
-    var material: Material = null
-    var smoothingGroup = 0
-    val mtllib = new HashMap[String, String]
-    
-    for(raw <- source.getLines; line = raw.trim
-        if line.length > 0 && !line.startsWith("#")) {
-      val fields: Seq[String] = line.split("\\s+")
-      val cmd = fields(0)
-      val pars = fields.slice(1, fields.length)
-
-      cmd match {
-      case "mtllib" => {
-        try {
-          var curmtl: String = null
-          for(raw <- Source.fromFile(pars(0)).getLines;
-              line = raw.trim
-              if line.length > 0 && !line.startsWith("#")) {
-            val fields: Seq[String] = line.split("\\s+")
-            if (fields(0) == "newmtl") {
-              curmtl = fields(1)
-              mtllib(curmtl) = ""
-            }
-            else mtllib(curmtl) += line + "\n"
-          }
-        } catch {
-          case e: FileNotFoundException => System.err.println(
-            "WARNING: material file %s not found." format pars(0))
-        }
-      }
-      case "v"  => {
-        mesh.addVertex(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
-      }
-      case "vn" => {
-        mesh.addNormal(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
-      }
-      case "vt" => {
-        mesh.addTextureVertex(pars(0).toDouble, pars(1).toDouble)
-      }
-      case "o" => {
-        if (pars.size > 0) obj = mesh obj pars(0)
-      }
-      case "g"  => {
-        if (pars.size > 0) group = mesh group pars(0)
-      }
-      case "usemtl"  => {
-        if (pars.size > 0) material = mesh material pars(0)
-      }
-      case "s" => {
-        if (pars.size > 0) smoothingGroup = pars(0).toInt
-      }
-      case "f"  => {
-        val n  = pars.length
-        val fc = new ArrayBuffer[Int]
-        val ft = new ArrayBuffer[Int]
-        val fn = new ArrayBuffer[Int]
-        pars.foreach { s =>
-          val parts = (s + "/0/0").split("/").map(
-            (s: String) => if (s.length == 0) 0 else s.toInt)
-          fc += parts(0)
-          ft += parts(1)
-          fn += parts(2)
-        }
-        if (obj == null) obj = mesh.obj("_default")
-        if (group == null) group = mesh.group("_default")
-        if (material == null) material = mesh.material("_default")
-        faces += (fc, ft, fn, obj, group, material, smoothingGroup)
-      }
-      case _ => println("?? " + cmd + "(" + pars.mkString(", ") + ")")
-      }
-    }
-    mesh.addFaces(faces)
-    mesh.fixHoles
-    mesh
-  }
-
-  def write(target: OutputStream, mesh: Mesh, basename: String) {
-    write(new OutputStreamWriter(target), mesh, basename)
-  }
-
-  def write(target: Writer, mesh: Mesh, basename: String) {
-    val writer = new BufferedWriter(target)
-    
-    if (basename != null) {
-      val mtl = new BufferedWriter(new FileWriter("%s.mtl" format basename))
-      for ((name, definition) <- mesh.mtllib)
-        mtl.write("newmtl %s\n%s\n" format (name, definition))
-      mtl.flush
-      mtl.close
-      writer.write("mtllib %s.mtl\n" format basename)
-    }
-    
-    writer.write("o %s\n" format mesh.name)
-    for (v <- mesh.vertices)
-      writer.write("v %f %f %f\n" format (v.x, v.y, v.z))
-    for (v <- mesh.normals)
-      writer.write("vn %f %f %f\n" format (v.x, v.y, v.z))
-    for (v <- mesh.textureVertices)
-      writer.write("vt %f %f\n" format (v.x, v.y))
-    
-    val parts = new LinkedHashMap[(Group, Material, Int), Buffer[Face]]
-    var useSmoothing = false
-    for (f <- mesh.faces) {
-      parts.getOrElseUpdate((f.group, f.material, f.smoothingGroup),
-                            new ArrayBuffer[Face]) += f
-      useSmoothing ||= (f.smoothingGroup != 0)
-    }
-    for (((group, material, smoothingGroup), faces) <- parts) {
-      writer.write("g %s\n" format group.name)
-      writer.write("usemtl %s\n" format material.name)
-      if (useSmoothing) writer.write("s %d\n" format smoothingGroup)
-      for (f <- faces) writer.write("f %s\n" format f.formatVertices)
-    }
-    writer.flush()
-  }
-  
   def matchTopologies(ch1: Chamber, ch2: Chamber,
                       uvs: Boolean): Map[Chamber, Chamber] = {
     val seen1 = new HashSet[Chamber]
@@ -592,6 +468,138 @@ class Mesh(s: String) extends MessageSource {
   
   val mtllib = new HashMap[String, String]
 
+  def this(source: Source) {
+    this("unnamed")
+    
+    {
+      val faces = new ArrayBuffer[(Seq[Int], Seq[Int], Seq[Int],
+                                   Object, Group, Material, Int)]
+      var obj     : Object   = null
+      var group   : Group    = null
+      var material: Material = null
+      var smoothingGroup = 0
+      val mtllib = new HashMap[String, String]
+      
+      for(raw <- source.getLines; line = raw.trim
+          if line.length > 0 && !line.startsWith("#")) {
+        val fields: Seq[String] = line.split("\\s+")
+        val cmd = fields(0)
+        val pars = fields.slice(1, fields.length)
+  
+        cmd match {
+        case "mtllib" => {
+          try {
+            var curmtl: String = null
+            for(raw <- Source.fromFile(pars(0)).getLines;
+                line = raw.trim
+                if line.length > 0 && !line.startsWith("#")) {
+              val fields: Seq[String] = line.split("\\s+")
+              if (fields(0) == "newmtl") {
+                curmtl = fields(1)
+                mtllib(curmtl) = ""
+              }
+              else mtllib(curmtl) += line + "\n"
+            }
+          } catch {
+            case e: FileNotFoundException => System.err.println(
+              "WARNING: material file %s not found." format pars(0))
+          }
+        }
+        case "v"  => {
+          addVertex(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
+        }
+        case "vn" => {
+          addNormal(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
+        }
+        case "vt" => {
+          addTextureVertex(pars(0).toDouble, pars(1).toDouble)
+        }
+        case "o" => {
+          if (pars.size > 0) obj = this obj(pars(0))
+        }
+        case "g"  => {
+          if (pars.size > 0) group = this group pars(0)
+        }
+        case "usemtl"  => {
+          if (pars.size > 0) material = this material pars(0)
+        }
+        case "s" => {
+          if (pars.size > 0) smoothingGroup = pars(0).toInt
+        }
+        case "f"  => {
+          val n  = pars.length
+          val fc = new ArrayBuffer[Int]
+          val ft = new ArrayBuffer[Int]
+          val fn = new ArrayBuffer[Int]
+          pars.foreach { s =>
+            val parts = (s + "/0/0").split("/").map(
+              (s: String) => if (s.length == 0) 0 else s.toInt)
+            fc += parts(0)
+            ft += parts(1)
+            fn += parts(2)
+          }
+          if (obj == null) obj = this.obj("_default")
+          if (group == null) group = this.group("_default")
+          if (material == null) material = this.material("_default")
+          faces += (fc, ft, fn, obj, group, material, smoothingGroup)
+        }
+        case _ => println("?? " + cmd + "(" + pars.mkString(", ") + ")")
+        }
+      }
+      addFaces(faces)
+      fixHoles
+    }
+  }
+
+  def this(in: java.io.InputStream) = this(Source.fromInputStream(in))
+  def this(file: File) = this(Source.fromFile(file.getAbsolutePath))
+  
+  def write(target: OutputStream, basename: String) {
+    write(new OutputStreamWriter(target), basename)
+  }
+
+  def write(target: Writer, basename: String) {
+    val writer = new BufferedWriter(target)
+    
+    if (basename != null) {
+      val mtl = new BufferedWriter(new FileWriter("%s.mtl" format basename))
+      for ((name, definition) <- mtllib)
+        mtl.write("newmtl %s\n%s\n" format (name, definition))
+      mtl.flush
+      mtl.close
+      writer.write("mtllib %s.mtl\n" format basename)
+    }
+    
+    writer.write("o %s\n" format name)
+    for (v <- vertices)
+      writer.write("v %f %f %f\n" format (v.x, v.y, v.z))
+    for (v <- normals)
+      writer.write("vn %f %f %f\n" format (v.x, v.y, v.z))
+    for (v <- textureVertices)
+      writer.write("vt %f %f\n" format (v.x, v.y))
+    
+    val parts = new LinkedHashMap[(Group, Material, Int), Buffer[Face]]
+    var useSmoothing = false
+    for (f <- faces) {
+      parts.getOrElseUpdate((f.group, f.material, f.smoothingGroup),
+                            new ArrayBuffer[Face]) += f
+      useSmoothing ||= (f.smoothingGroup != 0)
+    }
+    for (((group, material, smoothingGroup), faces) <- parts) {
+      writer.write("g %s\n" format group.name)
+      writer.write("usemtl %s\n" format material.name)
+      if (useSmoothing) writer.write("s %d\n" format smoothingGroup)
+      for (f <- faces) writer.write("f %s\n" format f.formatVertices)
+    }
+    writer.flush()
+  }
+  
+  override def clone = {
+    val w = new StringWriter
+    write(w, null)
+    new Mesh(Source.fromString(w.toString))
+  }
+
   private def addChamber(v: Vertex, f: Cell) = new Chamber(v, f) {
     _chambers += this
     if (_chamber_at_vertex.get(v) == None) _chamber_at_vertex(v) = this
@@ -721,12 +729,6 @@ class Mesh(s: String) extends MessageSource {
   def numberOfMaterials = _mats.size
   def materials         = _mats.values
   def clearMaterials    = _mats.clear
-
-  override def clone = {
-    val w = new StringWriter
-    Mesh.write(w, this, null)
-    Mesh.read(Source.fromString(w.toString))
-  }
 
   def addFace(verts   : Seq[Int], tverts  : Seq[Int], normvecs: Seq[Int]) = {
     val f = new Face {

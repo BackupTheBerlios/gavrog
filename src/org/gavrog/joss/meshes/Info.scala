@@ -18,11 +18,13 @@
 package org.gavrog.joss.meshes
 
 import scala.util.Sorting._
+import scala.io.Source
 import Sums._
 
 object Info {
   def main(args : Array[String]) : Unit = {
-    val mesh = if (args.length > 0) Mesh.read(args(0)) else Mesh.read(System.in)
+    val mesh = if (args.length > 0) new Mesh(Source fromFile args(0))
+               else new Mesh(System.in)
 
     val parts = mesh.components.toList.sort((a: Mesh.Component,
                                              b: Mesh.Component) =>
