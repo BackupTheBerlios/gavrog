@@ -31,11 +31,11 @@ object Mesh {
 
     f.chamber = this
     
-    private var _tVertex : TextureVertex = null
-    private var _normal  : Normal        = null
-    private var _s0      : Chamber       = null
-    private var _s1      : Chamber       = null
-    private var _s2      : Chamber       = null
+    private var _tVertex: TextureVertex = null
+    private var _normal : Normal        = null
+    private var _s0     : Chamber       = null
+    private var _s1     : Chamber       = null
+    private var _s2     : Chamber       = null
     
     def vertex = _vertex
     def vertexNr = if (vertex != null) vertex.nr else 0
@@ -44,14 +44,14 @@ object Mesh {
     
     def tVertex = _tVertex
     def tVertexNr = if (tVertex != null) tVertex.nr else 0
-    def tVertex_=(t : TextureVertex) {
+    def tVertex_=(t: TextureVertex) {
       _tVertex = t
       if (t != null && t.chamber == null) t.chamber = this
     }
     
     def normal = _normal
     def normalNr = if (normal != null) normal.nr else 0
-    def normal_=(n : Normal) {
+    def normal_=(n: Normal) {
       _normal = n
       if (n != null && n.chamber == null) n.chamber = this
     }
@@ -61,21 +61,21 @@ object Mesh {
     def face = if (cell.isInstanceOf[Face]) cell.asInstanceOf[Face] else null
     
     def s0 = _s0
-    def s0_=(ch : Chamber) {
+    def s0_=(ch: Chamber) {
       if (_s0 != null) _s0._s0 = null
       if (ch._s0 != null) ch._s0._s0 = null
       _s0 = ch
       ch._s0 = this
     }
     def s1 = _s1
-    def s1_=(ch : Chamber) {
+    def s1_=(ch: Chamber) {
       if (_s1 != null) _s1._s1 = null
       if (ch._s1 != null) ch._s1._s1 = null
       _s1 = ch
       ch._s1 = this
     }
     def s2 = _s2
-    def s2_=(ch : Chamber) {
+    def s2_=(ch: Chamber) {
       if (_s2 != null) _s2._s2 = null
       if (ch._s2 != null) ch._s2._s2 = null
       _s2 = ch
@@ -173,7 +173,7 @@ object Mesh {
   }
 
   class Cell {
-    private var _ch : Chamber = null	
+    private var _ch: Chamber = null	
     def chamber = _ch
     def chamber_=(c: Chamber) {
       _ch = c
@@ -200,9 +200,9 @@ object Mesh {
   }
   
   class Face() extends Cell {
-    var group    : Group    = null
-    var material : Material = null
-    var smoothingGroup : Int = 0
+    var group   : Group    = null
+    var material: Material = null
+    var smoothingGroup: Int = 0
     
     def textureVertices = vertexChambers.map(_.tVertex)
     def normals = vertexChambers.map(_.normal)
@@ -214,10 +214,10 @@ object Mesh {
     override def toString = "Hole(%s)" format formatVertices
   }
 
-  class Edge(v : Vertex, w : Vertex) {
+  class Edge(v: Vertex, w: Vertex) {
     val (from, to) = if (v.nr <= w.nr) (v, w) else (w, v)
     
-    override def equals (other : Any) = other.isInstanceOf[Edge] && {
+    override def equals (other: Any) = other.isInstanceOf[Edge] && {
       val e = other.asInstanceOf[Edge]
       e.from.nr == from.nr && e.to.nr == to.nr
     }
@@ -225,21 +225,21 @@ object Mesh {
     override def hashCode = from.nr * 37 + to.nr
   }
   
-  case class Group(name : String) {
+  case class Group(name: String) {
     override def toString = "Group(" + name + ")"
   }
   
-  case class Material(name : String) {
+  case class Material(name: String) {
     override def toString = "Material(" + name + ")"
   }
 
-  case class Component(mesh : Mesh, faces : Set[Face], vertices : Set[Vertex]) {
+  case class Component(mesh: Mesh, faces: Set[Face], vertices: Set[Vertex]) {
     def coarseningClassifications = faces.elements.next.vertices
       .map(mesh.classifyForCoarsening(_)).filter(null !=)
   }
   
-  case class Chart(mesh : Mesh,
-                   faces : Set[Face], vertices : Set[TextureVertex])
+  case class Chart(mesh: Mesh,
+                   faces: Set[Face], vertices: Set[TextureVertex])
   
   case class VertexClassification(wasVertex:     Set[Vertex],
                                   wasEdgeCenter: Set[Vertex],
@@ -260,30 +260,30 @@ object Mesh {
       n
     }
 
-    def cost : Int = wasFaceCenter.sum(cost(_))
+    def cost: Int = wasFaceCenter.sum(cost(_))
     def isStrict = cost == 0
   }
 
-  def read(filename : String, joinObjects: Boolean) : Seq[Mesh] =
+  def read(filename: String, joinObjects: Boolean): Seq[Mesh] =
     read(Source.fromFile(filename), joinObjects)
-  def read(filename : String) : Seq[Mesh] =
+  def read(filename: String): Seq[Mesh] =
     read(Source.fromFile(filename))
-  def read(in : java.io.InputStream, joinObjects: Boolean) : Seq[Mesh] =
+  def read(in: java.io.InputStream, joinObjects: Boolean): Seq[Mesh] =
     read(Source.fromInputStream(in), joinObjects)
-  def read(in : java.io.InputStream) : Seq[Mesh] =
+  def read(in: java.io.InputStream): Seq[Mesh] =
     read(Source.fromInputStream(in))
   
-  def read(source: Source) : Seq[Mesh] = read(source, false)
+  def read(source: Source): Seq[Mesh] = read(source, false)
   
-  def read(source: Source, joinObjects: Boolean) : Seq[Mesh] = {
-    var mesh : Mesh = new Mesh("unnamed")
+  def read(source: Source, joinObjects: Boolean): Seq[Mesh] = {
+    var mesh: Mesh = new Mesh("unnamed")
     val faces = new ArrayBuffer[Tuple6[Seq[Int], Seq[Int], Seq[Int],
                                        Mesh.Group, Mesh.Material, Int]]
     var v_base  = 0
     var vt_base = 0
     var vn_base = 0
-    var group    : Group    = null
-    var material : Material = null
+    var group   : Group    = null
+    var material: Material = null
     var smoothingGroup = 0
     val result = new ArrayBuffer[Mesh]
     val mtllib = new HashMap[String, String]
@@ -291,7 +291,7 @@ object Mesh {
     for(raw <- source.getLines;
         line = raw.trim
         if line.length > 0 && !line.startsWith("#")) {
-      val fields : Seq[String] = line.split("\\s+")
+      val fields: Seq[String] = line.split("\\s+")
       val cmd = fields(0)
       val pars = fields.slice(1, fields.length)
 
@@ -317,7 +317,7 @@ object Mesh {
           for(raw <- Source.fromFile(pars(0)).getLines;
               line = raw.trim
               if line.length > 0 && !line.startsWith("#")) {
-            val fields : Seq[String] = line.split("\\s+")
+            val fields: Seq[String] = line.split("\\s+")
             if (fields(0) == "newmtl") {
               curmtl = fields(1)
               mtllib(curmtl) = ""
@@ -354,7 +354,7 @@ object Mesh {
         val fn = new ArrayBuffer[Int]
         pars.foreach { s =>
           val parts = (s + "/0/0").split("/").map(
-            (s : String) => if (s.length == 0) 0 else s.toInt)
+            (s: String) => if (s.length == 0) 0 else s.toInt)
           fc += parts(0)
           ft += parts(1)
           fn += parts(2)
@@ -375,16 +375,16 @@ object Mesh {
     result
   }
 
-  def write(target: OutputStream, basename: String, meshes: Mesh*) : Unit =
+  def write(target: OutputStream, basename: String, meshes: Mesh*): Unit =
     write(target, meshes, basename)
   
-  def write(target: Writer, basename: String, meshes: Mesh*) : Unit =
+  def write(target: Writer, basename: String, meshes: Mesh*): Unit =
     write(target, meshes, basename)
   
-  def write(target: OutputStream, meshes: Seq[Mesh], basename: String) : Unit =
+  def write(target: OutputStream, meshes: Seq[Mesh], basename: String): Unit =
     write(new OutputStreamWriter(target), meshes, basename)
 
-  def write(target : Writer, meshes : Seq[Mesh], basename: String) {
+  def write(target: Writer, meshes: Seq[Mesh], basename: String) {
     val writer = new BufferedWriter(target)
     var v_base  = 0
     var vt_base = 0
@@ -432,7 +432,7 @@ object Mesh {
   }
   
   def matchTopologies(ch1: Chamber, ch2: Chamber,
-                      uvs: Boolean) : Map[Chamber, Chamber] = {
+                      uvs: Boolean): Map[Chamber, Chamber] = {
     val seen1 = new HashSet[Chamber]
     val seen2 = new HashSet[Chamber]
     val queue = new Queue[(Chamber, Chamber)]
@@ -468,8 +468,8 @@ object Mesh {
   }
   
   //TODO avoid code duplication in the following
-  def allMatches(c1 : Component,
-                 c2 : Component) : Seq[Map[Chamber, Chamber]] = {
+  def allMatches(c1: Component,
+                 c2: Component): Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
     if (c1.vertices.size != c2.vertices.size)
       return result
@@ -502,11 +502,11 @@ object Mesh {
     result
   }
   
-  def distance(map : Map[Chamber, Chamber]) : Double = {
+  def distance(map: Map[Chamber, Chamber]): Double = {
     val verts = new HashSet[Vertex]
     for ((c, d) <- map) verts += c.vertex
     
-    var dist : Double = 0
+    var dist: Double = 0
     for (v <- verts) {
       val w = map(v.chamber).start
       val (dx, dy, dz) = (w.x - v.x, w.y - v.y, w.z - v.z)
@@ -515,8 +515,8 @@ object Mesh {
     dist
   }
   
-  def bestMatch(c1 : Component, c2 : Component) : Map[Chamber, Chamber] = {
-    var best : Map[Chamber, Chamber] = null
+  def bestMatch(c1: Component, c2: Component): Map[Chamber, Chamber] = {
+    var best: Map[Chamber, Chamber] = null
     var dist = Double.MaxValue
     
     for (map <- allMatches(c1, c2)) {
@@ -529,7 +529,7 @@ object Mesh {
     best
   }
   
-  def allMatches(c1 : Chart, c2 : Chart) : Seq[Map[Chamber, Chamber]] = {
+  def allMatches(c1: Chart, c2: Chart): Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
     if (c1.vertices.size != c2.vertices.size)
       return result
@@ -562,11 +562,11 @@ object Mesh {
     result
   }
   
-  def textureDistance(map : Map[Chamber, Chamber]) : Double = {
+  def textureDistance(map: Map[Chamber, Chamber]): Double = {
     val verts = new HashSet[TextureVertex]
     for ((c, d) <- map) verts += c.tVertex
     
-    var dist : Double = 0
+    var dist: Double = 0
     for (v <- verts) {
       val w = map(v.chamber).tVertex
       val (dx, dy) = (w.x - v.x, w.y - v.y)
@@ -575,8 +575,8 @@ object Mesh {
     dist
   }
   
-  def bestMatch(c1 : Chart, c2 : Chart) : Map[Chamber, Chamber] = {
-    var best : Map[Chamber, Chamber] = null
+  def bestMatch(c1: Chart, c2: Chart): Map[Chamber, Chamber] = {
+    var best: Map[Chamber, Chamber] = null
     var dist = Double.MaxValue
     
     for (map <- allMatches(c1, c2)) {
@@ -590,7 +590,7 @@ object Mesh {
   }
 }
 
-class Mesh(s : String) extends MessageSource {
+class Mesh(s: String) extends MessageSource {
   import Mesh._
 
   val name = s
@@ -668,18 +668,18 @@ class Mesh(s : String) extends MessageSource {
   
   def numberOfVertices = _vertices.size
   def vertices         = _vertices.elements
-  def vertex(n : Int)  =
+  def vertex(n: Int)  =
     if (n > 0 && n <= numberOfVertices) _vertices(n - 1) else null
   
   def clearTextureVertices = _texverts.clear
 
-  def addTextureVertex(p: Vec2) : TextureVertex = addTextureVertex(p.x, p.y)
+  def addTextureVertex(p: Vec2): TextureVertex = addTextureVertex(p.x, p.y)
   
-  def addTextureVertex(_x : Double, _y : Double) = new TextureVertex {
+  def addTextureVertex(_x: Double, _y: Double) = new TextureVertex {
     val mesh = Mesh.this
     val nr = numberOfTextureVertices + 1
     
-    private var _ch : Chamber = null    
+    private var _ch: Chamber = null    
     def chamber = _ch
     def chamber_=(c: Chamber) {
       _ch = c
@@ -695,18 +695,18 @@ class Mesh(s : String) extends MessageSource {
 
   def numberOfTextureVertices = _texverts.size
   def textureVertices         = _texverts.elements
-  def textureVertex(n : Int)  =
+  def textureVertex(n: Int)  =
     if (n > 0 && n <= numberOfTextureVertices) _texverts(n - 1) else null
   
   def clearNormals = _normals.clear
   
-  def addNormal(p: Vec3) : Normal = addNormal(p.x, p.y, p.z)
+  def addNormal(p: Vec3): Normal = addNormal(p.x, p.y, p.z)
   
   def addNormal(_x: Double, _y: Double, _z: Double) = new Normal {
     val mesh = Mesh.this
     val nr = numberOfNormals + 1
     
-    private var _ch : Chamber = null    
+    private var _ch: Chamber = null    
     def chamber = _ch
     def chamber_=(c: Chamber) {
       _ch = c
@@ -722,7 +722,7 @@ class Mesh(s : String) extends MessageSource {
   
   def numberOfNormals  = _normals.size
   def normals          = _normals.elements
-  def normal(n : Int)  =
+  def normal(n: Int)  =
     if (n > 0 && n <= numberOfNormals) _normals(n - 1) else null
 
   def numberOfEdges    = _edges.size
@@ -734,7 +734,7 @@ class Mesh(s : String) extends MessageSource {
   def numberOfHoles    = _holes.size
   def holes            = _holes.elements
 
-  def group(name : String) = _groups.get(name) match {
+  def group(name: String) = _groups.get(name) match {
     case Some(g) => g
     case None    => val g = new Group(name); _groups.put(name, g); g
   }
@@ -742,7 +742,7 @@ class Mesh(s : String) extends MessageSource {
   def groups         = _groups.values
   def clearGroups    = _groups.clear
   
-  def material(name : String) = _mats.get(name) match {
+  def material(name: String) = _mats.get(name) match {
     case Some(m) => m
     case None    => val m = new Material(name); _mats.put(name, m); m
   }
@@ -756,9 +756,9 @@ class Mesh(s : String) extends MessageSource {
     Mesh.read(Source.fromString(w.toString))(0)
   }
 
-  def addFace(verts   : Seq[Int],
-              tverts  : Seq[Int],
-              normals : Seq[Int]) : Face = {
+  def addFace(verts  : Seq[Int],
+              tverts : Seq[Int],
+              normals: Seq[Int]): Face = {
     val n = verts.length
     val f = new Face
     val chambers = new ArrayBuffer[Chamber]
@@ -788,7 +788,7 @@ class Mesh(s : String) extends MessageSource {
     f
   }
   
-  def addFaces(faces : Seq[Tuple6[Seq[Int], Seq[Int], Seq[Int],
+  def addFaces(faces: Seq[Tuple6[Seq[Int], Seq[Int], Seq[Int],
                                   Mesh.Group, Mesh.Material, Int]]) =
     for ((fc, ft, fn, g, mtl, s) <- faces) {
       val f = addFace(fc, ft, fn)
@@ -969,7 +969,7 @@ class Mesh(s : String) extends MessageSource {
     result
   }
   
-  def subdivision : Mesh = subdivision(name)
+  def subdivision: Mesh = subdivision(name)
   
   def subdivision(name: String) = {
     // -- create a new empty mesh
@@ -1054,7 +1054,7 @@ class Mesh(s : String) extends MessageSource {
     subD
   }
 
-  def classifyForCoarsening(seed: Vertex) : VertexClassification = {
+  def classifyForCoarsening(seed: Vertex): VertexClassification = {
     val wasVertex     = new HashSet[Vertex]
     val wasEdgeCenter = new HashSet[Vertex]
     val wasFaceCenter = new HashSet[Vertex]
@@ -1103,9 +1103,9 @@ class Mesh(s : String) extends MessageSource {
     VertexClassification(wasVertex, wasEdgeCenter, wasFaceCenter)
   }
   
-  def coarsening : Mesh = coarsening(name)
+  def coarsening: Mesh = coarsening(name)
   
-  def coarsening(name: String) : Mesh = {
+  def coarsening(name: String): Mesh = {
     send("  classifying vertices...")
     val vc = new HashMap[Component, VertexClassification]
     for (p <- components) {
