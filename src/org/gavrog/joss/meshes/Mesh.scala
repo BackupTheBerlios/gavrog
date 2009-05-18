@@ -422,11 +422,9 @@ object Mesh {
   }
 }
 
-class Mesh(s: String) extends MessageSource {
+class Mesh extends MessageSource {
   import Mesh._
 
-  val name = s
-  
   private val _vertices = new ArrayBuffer[Vertex]
   private val _normals  = new ArrayBuffer[Normal]
   private val _texverts = new ArrayBuffer[TextureVertex]
@@ -469,7 +467,7 @@ class Mesh(s: String) extends MessageSource {
   val mtllib = new HashMap[String, String]
 
   def this(source: Source) {
-    this("unnamed")
+    this()
     
     {
       val faces = new ArrayBuffer[(Seq[Int], Seq[Int], Seq[Int],
@@ -515,7 +513,7 @@ class Mesh(s: String) extends MessageSource {
           addTextureVertex(pars(0).toDouble, pars(1).toDouble)
         }
         case "o" => {
-          if (pars.size > 0) obj = this obj(pars(0))
+          if (pars.size > 0) obj = this obj pars(0)
         }
         case "g"  => {
           if (pars.size > 0) group = this group pars(0)
@@ -552,7 +550,7 @@ class Mesh(s: String) extends MessageSource {
   }
 
   def this(in: java.io.InputStream) = this(Source.fromInputStream(in))
-  def this(file: File) = this(Source.fromFile(file.getAbsolutePath))
+  def this(file: File) = this(Source.fromFile(file))
   
   def write(target: OutputStream, basename: String) {
     write(new OutputStreamWriter(target), basename)
@@ -570,7 +568,6 @@ class Mesh(s: String) extends MessageSource {
       writer.write("mtllib %s.mtl\n" format basename)
     }
     
-    writer.write("o %s\n" format name)
     for (v <- vertices)
       writer.write("v %f %f %f\n" format (v.x, v.y, v.z))
     for (v <- normals)
@@ -578,14 +575,15 @@ class Mesh(s: String) extends MessageSource {
     for (v <- textureVertices)
       writer.write("vt %f %f\n" format (v.x, v.y))
     
-    val parts = new LinkedHashMap[(Group, Material, Int), Buffer[Face]]
+    val parts = new LinkedHashMap[(Object, Group, Material, Int), Buffer[Face]]
     var useSmoothing = false
     for (f <- faces) {
-      parts.getOrElseUpdate((f.group, f.material, f.smoothingGroup),
+      parts.getOrElseUpdate((f.obj, f.group, f.material, f.smoothingGroup),
                             new ArrayBuffer[Face]) += f
       useSmoothing ||= (f.smoothingGroup != 0)
     }
-    for (((group, material, smoothingGroup), faces) <- parts) {
+    for (((obj, group, material, smoothingGroup), faces) <- parts) {
+      writer.write("o %s\n" format obj.name)
       writer.write("g %s\n" format group.name)
       writer.write("usemtl %s\n" format material.name)
       if (useSmoothing) writer.write("s %d\n" format smoothingGroup)
@@ -905,7 +903,7 @@ class Mesh(s: String) extends MessageSource {
   def split(parts: Iterable[(String, Seq[Face])]) = {
     val output = new ArrayBuffer[Mesh]
     for ((part_name, faces) <- parts) {
-      val m = new Mesh("%s_%s" format (name, part_name))
+      val m = new Mesh()
       val vMap = new LazyMap((v: Int) => m.addVertex(vertex(v).pos).nr)
       val nMap = new LazyMap((n: Int) =>
         if (n == 0) 0 else m.addNormal(normal(n).value).nr)
@@ -960,11 +958,9 @@ class Mesh(s: String) extends MessageSource {
     result
   }
   
-  def subdivision: Mesh = subdivision(name)
-  
-  def subdivision(name: String) = {
+  def subdivision = {
     // -- create a new empty mesh
-    val subD = new Mesh(name)
+    val subD = new Mesh
     
     // -- copy the original vertices, texture vertices and normals
     for (v <- vertices) subD.addVertex(v.pos)
@@ -1004,6 +1000,7 @@ class Mesh(s: String) extends MessageSource {
           List(c.vertexNr,  ch2ev(c).nr, z, ch2ev(c.s1).nr),
           List(t, ch2etnr.getOrElse(c, 0), tz, ch2etnr.getOrElse(c.s1, 0)),
           List(n, n, n, n))
+        g.obj      = subD.obj(f.obj.name)
         g.material = subD.material(f.material.name)
         g.group    = subD.group(f.group.name)
         g.smoothingGroup = f.smoothingGroup
@@ -1094,9 +1091,7 @@ class Mesh(s: String) extends MessageSource {
     VertexClassification(wasVertex, wasEdgeCenter, wasFaceCenter)
   }
   
-  def coarsening: Mesh = coarsening(name)
-  
-  def coarsening(name: String): Mesh = {
+  def coarsening: Mesh = {
     send("  classifying vertices...")
     val vc = new HashMap[Component, VertexClassification]
     for (p <- components) {
@@ -1109,10 +1104,10 @@ class Mesh(s: String) extends MessageSource {
       if (best == null) error("mesh cannot be coarsened")
       vc(p) = best
     }
-    coarsening(vc, name)
+    coarsening(vc)
   }
   
-  def coarsening(vc: Component => VertexClassification, name: String) = {
+  def coarsening(vc: Component => VertexClassification) = {
     //TODO resolve conflicts (texture vertices, materials, groups)
 
     // -- warning messages
@@ -1128,7 +1123,7 @@ class Mesh(s: String) extends MessageSource {
 
     // -- initialize the new mesh
     send("  initializing new mesh...")
-    val m = new Mesh(name)
+    val m = new Mesh
     
     // -- define how old vertices map to new ones
     send("  defining maps...")
@@ -1168,12 +1163,14 @@ class Mesh(s: String) extends MessageSource {
       val vn = cs.map(c => mapN(c.s0.s1.s0.normalNr))
       val face = m.addFace(vs.reverse, vt.reverse, vn.reverse)
       
+      val objects   = new HashMap[Object, Int]
       val groups    = new HashMap[Group, Int]
       val materials = new HashMap[Material, Int]
       val sgroups   = new HashMap[Int, Int]
       var badUVs    = false
       for (c <- cs) {
         val face = c.face
+        objects(face.obj) = objects.getOrElse(face.obj, 0) + 1
         groups(face.group) = groups.getOrElse(face.group, 0) + 1
         materials(face.material) = materials.getOrElse(face.material, 0) + 1
         sgroups(face.smoothingGroup) =
@@ -1183,11 +1180,14 @@ class Mesh(s: String) extends MessageSource {
       }
       if (badUVs)
           messages += ("Inconsistent texture vertices: %s" format groups)
+      if (objects.size > 1)
+        messages += ("Inconsistent objects: %s" format objects)
       if (groups.size > 1)
         messages += ("Inconsistent grouping: %s" format groups)
       if (materials.size > 1)
         messages += ("Inconsistent materials: %s" format materials)
       if (sgroups.size > 1) messages += "Inconsistent smoothing groups."
+      face.obj = objects.keys.next
       face.group = groups.keys.next
       face.material = materials.keys.next
       face.smoothingGroup = sgroups.keys.next

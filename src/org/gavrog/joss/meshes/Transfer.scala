@@ -62,7 +62,7 @@ object Transfer {
     val old = mesh.components
     val mod = donor.components
     
-    val result = new Mesh(mesh.name)
+    val result = new Mesh
     
     var count = 0
     for (part <- mod) {

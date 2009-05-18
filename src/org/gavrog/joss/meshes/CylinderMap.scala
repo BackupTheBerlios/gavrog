@@ -33,7 +33,7 @@ object CylinderMap {
     
     err.println("Processing...")
     src.computeNormals
-    val dst = new Mesh(src.name)
+    val dst = new Mesh
     val vMap = new LazyMap((t: TextureVertex) => dst.addVertex(t.x, t.y, 0.0))
     val tMap = new LazyMap((t: TextureVertex) => {
       val v = t.chamber.vertex

@@ -97,7 +97,7 @@ with KeyPublisher with KeyDispatcher
   bind("shift Z", "view from -z",
        modify { viewFrom(Vec3( 0, 0,-1), Vec3(0, 1, 0)) })
   
-  class MeshGeometry(mesh: Mesh) extends SceneGraphComponent(mesh.name) {
+  class MeshGeometry(mesh: Mesh) extends SceneGraphComponent {
     import de.jreality.shader.CommonAttributes._
     
     setGeometry(new IndexedFaceSetFactory {

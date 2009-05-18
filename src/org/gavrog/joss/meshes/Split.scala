@@ -22,6 +22,8 @@ import scala.io.Source
 
 object Split {
   def main(args : Array[String]) : Unit =
-    for (m <- new Mesh(Source.fromFile(args(0))).splitByGroup)
-      m.write(new FileWriter("%s.obj" format m.name), m.name)
+    for (m <- new Mesh(Source.fromFile(args(0))).splitByGroup) {
+      val name = m.groups.next.name
+      m.write(new FileWriter("%s.obj" format name), name)
+    }
 }

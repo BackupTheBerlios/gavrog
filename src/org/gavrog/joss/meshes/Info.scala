@@ -30,7 +30,6 @@ object Info {
                                              b: Mesh.Component) =>
       a.vertices.size < b.vertices.size)
     println
-    println("Mesh '%s':"          format mesh.name)
     println("  %5d components"    format parts.size)
     for (p <- parts) {
       print("       %5d vertices" format p.vertices.size)
