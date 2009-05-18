@@ -189,9 +189,15 @@ object Mesh {
   }
   
   trait Face extends Cell {
-    var group   : Group    = null
-    var material: Material = null
-    var smoothingGroup: Int = 0
+    def obj           : Object
+    def group         : Group
+    def material      : Material
+    def smoothingGroup: Int
+    
+    def obj_=           (o: Object)
+    def group_=         (g: Group)
+    def material_=      (m: Material)
+    def smoothingGroup_=(s: Int)
     
     def textureVertices = vertexChambers.map(_.tVertex)
     def normals = vertexChambers.map(_.normal)
@@ -212,6 +218,10 @@ object Mesh {
     }
     
     override def hashCode = from.nr * 37 + to.nr
+  }
+  
+  case class Object(name: String) {
+    override def toString = "Object(" + name + ")"
   }
   
   case class Group(name: String) {
@@ -590,6 +600,7 @@ class Mesh(s: String) extends MessageSource {
   private val _faces    = new ArrayBuffer[Face]
   private val _holes    = new ArrayBuffer[Hole]
   private val _chambers = new ArrayBuffer[Chamber]
+  private val _objects  = new LinkedHashMap[String, Object]
   private val _groups   = new LinkedHashMap[String, Group]
   private val _mats     = new LinkedHashMap[String, Material]
   private val _edges    = new HashMap[Edge, Chamber]
@@ -599,8 +610,13 @@ class Mesh(s: String) extends MessageSource {
   private val _chamber_at_cell    = new HashMap[Cell, Chamber]
   
   private val _vertex_pos  = new HashMap[Vertex, Vec3]
-  private var _texture_pos = new HashMap[TextureVertex, Vec2]
-  private var _normal_val  = new HashMap[Normal, Vec3]
+  private val _texture_pos = new HashMap[TextureVertex, Vec2]
+  private val _normal_val  = new HashMap[Normal, Vec3]
+  
+  private val _object_for_face          = new HashMap[Face, Object]
+  private val _group_for_face           = new HashMap[Face, Group]
+  private val _material_for_face        = new HashMap[Face, Material]
+  private val _smoothing_group_for_face = new HashMap[Face, Int]
 
   object vertex_position {
     def apply(v: Vertex) = _vertex_pos(v)
@@ -725,6 +741,14 @@ class Mesh(s: String) extends MessageSource {
   def numberOfHoles    = _holes.size
   def holes            = _holes.elements
 
+  def obj(name: String) = _objects.get(name) match {
+    case Some(o) => o
+    case None    => val o = new Object(name); _objects.put(name, o); o
+  }
+  def numberOfObjects = _objects.size
+  def objects         = _objects.values
+  def clearObjects    = _objects.clear
+  
   def group(name: String) = _groups.get(name) match {
     case Some(g) => g
     case None    => val g = new Group(name); _groups.put(name, g); g
@@ -751,6 +775,16 @@ class Mesh(s: String) extends MessageSource {
     val f = new Face {
       val mesh = Mesh.this
       def chamber = _chamber_at_cell(this)
+      
+      def obj            = _object_for_face(this)
+      def group          = _group_for_face(this)
+      def material       = _material_for_face(this)
+      def smoothingGroup = _smoothing_group_for_face(this)
+      
+      def obj_=(o: Object)         { _object_for_face(this) = o }
+      def group_=(g: Group)        { _group_for_face(this) = g }
+      def material_=(m: Material)  { _material_for_face(this) = m }
+      def smoothingGroup_=(s: Int) { _smoothing_group_for_face(this) = s }
     }
     
     val n = verts.length
@@ -785,8 +819,8 @@ class Mesh(s: String) extends MessageSource {
                                   Mesh.Group, Mesh.Material, Int]]) =
     for ((fc, ft, fn, g, mtl, s) <- faces) {
       val f = addFace(fc, ft, fn)
-      f.group    = g
-      f.material = mtl
+      f.group          = g
+      f.material       = mtl
       f.smoothingGroup = s
     }
   
