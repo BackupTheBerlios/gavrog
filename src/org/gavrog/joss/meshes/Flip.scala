@@ -17,14 +17,20 @@
 
 package org.gavrog.joss.meshes
 
+import scala.swing.Reactor
 import Vectors._
 
-object Flip {
+object Flip extends Reactor {
   def main(args: Array[String]) : Unit = {
     val original  = new Mesh(System.in)
     val donor = original.clone
     
     for (v <- donor.vertices) v.pos = (-v.x, v.y, v.z)
+    
+    listenTo(original)
+    reactions += {
+      case MessageSent(src, txt) => System.err.println(txt)
+    }
     
     original.withMorphApplied(donor).write(System.out, "materials")
   }

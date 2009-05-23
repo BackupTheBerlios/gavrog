@@ -335,12 +335,11 @@ object Mesh {
   }
   
   def distance(map: Map[Chamber, Chamber]): Double = {
-    val verts = new HashSet[Vertex]
-    for ((c, d) <- map) verts += c.vertex
+    val verts = new HashSet[(Vertex, Vertex)]
+    for ((c, d) <- map) verts += ((c.vertex, d.vertex))
     
     var dist: Double = 0
-    for (v <- verts) {
-      val w = map(v.chamber).start
+    for ((v, w) <- verts) {
       val (dx, dy, dz) = (w.x - v.x, w.y - v.y, w.z - v.z)
       dist += dx * dx + dy * dy + dz * dz
     }
@@ -395,12 +394,11 @@ object Mesh {
   }
   
   def textureDistance(map: Map[Chamber, Chamber]): Double = {
-    val verts = new HashSet[TextureVertex]
-    for ((c, d) <- map) verts += c.tVertex
+    val verts = new HashSet[(TextureVertex, TextureVertex)]
+    for ((c, d) <- map) verts += ((c.tVertex, d.tVertex))
     
     var dist: Double = 0
-    for (v <- verts) {
-      val w = map(v.chamber).tVertex
+    for ((v, w) <- verts) {
       val (dx, dy) = (w.x - v.x, w.y - v.y)
       dist += dx * dx + dy * dy
     }
@@ -949,7 +947,9 @@ class Mesh extends MessageSource {
         }
         if (map == null) send("No match found.")
       } catch {
-        case _ => send("Error while matching! Skipping this component.")
+        case ex: Throwable =>
+          send("Error while matching! Skipping this component.\n"
+               + ex.getMessage + "\n" + ex.getStackTraceString)
       }
       if (map != null) {
         send("Match found. Applying morph...")
