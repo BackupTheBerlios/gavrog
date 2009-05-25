@@ -38,8 +38,8 @@ object CopyUVs {
       val map = Mesh.closest(Mesh.allMatches(chart, c), _.tVertex)
       if (map != null) {
         System.err.println(
-          "Transferring data for chart with %d vertices and %d faces."
-          format (chart.vertices.size, chart.faces.size))
+          "Transferring data for chart with %d chambers."
+          format (chart.chambers.size))
         for ((c, d) <- map) d.tVertex.pos = c.tVertex.pos
       }
     }

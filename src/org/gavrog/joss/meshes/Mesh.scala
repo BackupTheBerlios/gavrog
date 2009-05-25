@@ -235,12 +235,16 @@ object Mesh {
   }
 
   case class Component(mesh: Mesh, chambers: Set[Chamber]) {
+    lazy val vertices = new HashSet[Vertex] ++ chambers.map (_.vertex)
+    lazy val faces = new HashSet[Face] ++ chambers.map (_.face)
     def coarseningClassifications = chambers.elements.next.face.vertices
       .map(mesh.classifyForCoarsening(_)).filter(null !=)
   }
   
-  case class Chart(mesh: Mesh,
-                   faces: Set[Face], vertices: Set[TextureVertex])
+  case class Chart(mesh: Mesh, chambers: Set[Chamber]) {
+    lazy val vertices = new HashSet[TextureVertex] ++ chambers.map (_.tVertex)
+    lazy val faces = new HashSet[Face] ++ chambers.map (_.face)
+  }
   
   case class VertexClassification(wasVertex:     Set[Vertex],
                                   wasEdgeCenter: Set[Vertex],
@@ -337,15 +341,13 @@ object Mesh {
     
     val degree = new HashMap[Vertex, Int]
     val count = new HashMap[Int, Int]
-    for (ch <- c1.chambers; v = ch.vertex; if degree.get(v) == None) {
+    for (v <- c1.vertices) {
       degree(v) = v.degree
       count(degree(v)) = count.getOrElse(degree(v), 0) + 1
     }
-    for (ch <- c2.chambers; v = ch.vertex; if degree.get(v) == None)
-      degree(v) = v.degree
+    for (v <- c2.vertices) degree(v) = v.degree
 
-    val bestD =
-      count.keys reduceLeft ((a, b) => if (count(a) <= count(b)) a else b)
+    val bestD = count.keys.toList.sort((a, b) => count(a) < count(b))(0)
 
     val ch1 = c1.chambers.find(ch => degree(ch.vertex) == bestD).get
     for (ch2 <- c2.chambers if degree(ch2.vertex) == bestD)
@@ -359,29 +361,24 @@ object Mesh {
   
   def allMatches(c1: Chart, c2: Chart): Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
-    if (c1.vertices.size != c2.vertices.size)
-      return result
+    if (c1.chambers.size != c2.chambers.size) return result
     
-    val counts = new HashMap[Int, Int]
-    for (v <- c1.vertices if v.onBorder) {
-      val d = v.degree
-      counts(d) = counts.getOrElse(d, 0) + 1
+    val degree = new HashMap[TextureVertex, Int]
+    val count = new HashMap[Int, Int] { this(0) = c1.chambers.size }
+    for (t <- c1.vertices) {
+      degree(t) = if (t.onBorder) t.degree else 0
+      count(degree(t)) = count.getOrElse(degree(t), 0) + 1
     }
-    val bestD =
-      counts.keys reduceLeft ((a, b) => if (counts(a) <= counts(b)) a else b)
+    for (t <- c2.vertices) degree(t) = if (t.onBorder) t.degree else 0
+    
+    val bestD = count.keys.toList.sort((a, b) => count(a) < count(b))(0)
 
-    val v1 =
-      c1.vertices.filter(v => v.onBorder && v.degree == bestD).elements.next
-    val ch1 = v1.chamber
-    for (v2 <- c2.vertices.filter(v => v.degree == bestD && v.onBorder)) {
-      for (ch2 <- v2.cellChambers;
-           d <- List(ch2, ch2.s1)
-           if (d.cell.isInstanceOf[Face]
-               && c2.faces.contains(d.cell.asInstanceOf[Face]))) {
-        val map = matchTopologies(ch1, d, true)
-        if (map != null) result += map
+    val ch1 = c1.chambers.find(ch => degree(ch.tVertex) == bestD).get
+    for (ch2 <- c2.chambers if degree(ch2.tVertex) == bestD)
+      matchTopologies(ch1, ch2, false) match {
+        case null => ()
+        case map  => result += map
       }
-    }
     
     result
   }
@@ -818,8 +815,7 @@ class Mesh extends MessageSource {
     val seen   = new HashSet[Chamber]
     
     for (c <- chambers if !seen(c) && c.tVertex != null) {
-      val faces  = new HashSet[Face]
-      val tVerts = new HashSet[TextureVertex]
+      val chambers  = new HashSet[Chamber]
       val queue  = new Queue[Chamber]
       queue += c
       seen  += c
@@ -828,9 +824,8 @@ class Mesh extends MessageSource {
         val d = queue.dequeue
         val t = d.tVertex
         if (t != null) {
-          tVerts += t
+          chambers += d
           val f = d.cell
-          if (f.isInstanceOf[Face]) faces += f.asInstanceOf[Face]
           for (e <- List(d.s0, d.s1) if !seen(e)) {
             queue += e
             seen  += e
@@ -843,7 +838,7 @@ class Mesh extends MessageSource {
         }
       }
       
-      result += Chart(this, faces, tVerts)
+      result += Chart(this, chambers)
     }
     
     result

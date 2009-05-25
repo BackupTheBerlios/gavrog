@@ -37,12 +37,10 @@ object Info {
       print(" (%1d strict)"       format c.count(_.isStrict))
       println
     }
-    val charts = mesh.charts.toList.sort((a: Mesh.Chart, b: Mesh.Chart) =>
-      a.vertices.size < b.vertices.size)
+    val charts = mesh.charts.toList.sort(_.chambers.size < _.chambers.size)
     println("  %5d charts"        format charts.size)
     for (p <- charts) {
-      print("       %5d vertices" format p.vertices.size)
-      print(", %5d faces"         format p.faces.size)
+      print("       %5d chambers" format p.chambers.size)
       print(", %3d symmetries"    format Mesh.allMatches(p, p).size)
       println
     }
