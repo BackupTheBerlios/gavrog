@@ -26,14 +26,11 @@ object Info {
     val mesh = if (args.length > 0) new Mesh(Source fromFile args(0))
                else new Mesh(System.in)
 
-    val parts = mesh.components.toList.sort((a: Mesh.Component,
-                                             b: Mesh.Component) =>
-      a.vertices.size < b.vertices.size)
+    val parts = mesh.components.toList.sort(_.chambers.size < _.chambers.size)
     println
     println("  %5d components"    format parts.size)
     for (p <- parts) {
-      print("       %5d vertices" format p.vertices.size)
-      print(", %5d faces"         format p.faces.size)
+      print("       %5d chambers" format p.chambers.size)
       print(", %3d symmetries"    format Mesh.allMatches(p, p).size)
       val c = p.coarseningClassifications
       print(", %1d coarsenings"   format c.size)

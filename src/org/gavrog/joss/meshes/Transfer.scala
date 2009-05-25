@@ -82,13 +82,13 @@ object Transfer {
       }
       if (map != null) {
         System.err.println(
-          "Transferring data for component with %d vertices and %d faces."
-          format (part.vertices.size, part.faces.size))
+          "Transferring data for component with %d chambers."
+          format (part.chambers.size))
         count += 1
       } else {
         System.err.println(
-          "Copying unmatched component with %d vertices and %d faces."
-          format (part.vertices.size, part.faces.size))
+          "Copying unmatched component with %d chambers."
+          format (part.chambers.size))
       }
       
       val vMap = new LazyMap((p: Pair[Mesh, int]) =>
@@ -99,7 +99,7 @@ object Transfer {
       if (image != null) {
         val inv = new HashMap[Mesh.Chamber, Mesh.Chamber]
         for ((c, d) <- map) inv(d) = c 
-        for (v <- mesh.vertices if image.vertices.contains(v))
+        for (v <- mesh.vertices if image.chambers.contains(v.chamber))
           vMap(if (options.positions) (donor, inv(v.chamber).vertexNr)
                else (mesh, v.nr))
       }
@@ -127,7 +127,9 @@ object Transfer {
         if (map == null || options.smoothing) f.smoothingGroup
         else map(f.chamber).face.smoothingGroup
         
-      for (f <- part.faces) {
+      val faces = new HashSet[Mesh.Face]
+      for (ch <- part.chambers) faces += ch.face
+      for (f <- faces) {
         val cs = f.vertexChambers.toSeq
         val vs = cs.map(newVertex)
         val vt = cs.map(newTexVert)

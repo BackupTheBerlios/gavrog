@@ -234,8 +234,8 @@ object Mesh {
     override def toString = "Material(" + name + ")"
   }
 
-  case class Component(mesh: Mesh, faces: Set[Face], vertices: Set[Vertex]) {
-    def coarseningClassifications = faces.elements.next.vertices
+  case class Component(mesh: Mesh, chambers: Set[Chamber]) {
+    def coarseningClassifications = chambers.elements.next.face.vertices
       .map(mesh.classifyForCoarsening(_)).filter(null !=)
   }
   
@@ -331,32 +331,28 @@ object Mesh {
   }
 
   //TODO avoid code duplication in the following
-  def allMatches(c1: Component,
-                 c2: Component): Seq[Map[Chamber, Chamber]] = {
+  def allMatches(c1: Component, c2: Component): Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
-    if (c1.vertices.size != c2.vertices.size)
-      return result
+    if (c1.chambers.size != c2.chambers.size) return result
     
-    val counts = new HashMap[Int, Int]
-    for (v <- c1.vertices) {
-      val d = v.degree
-      counts(d) = counts.getOrElse(d, 0) + 1
+    val degree = new HashMap[Vertex, Int]
+    val count = new HashMap[Int, Int]
+    for (ch <- c1.chambers; v = ch.vertex; if degree.get(v) == None) {
+      degree(v) = v.degree
+      count(degree(v)) = count.getOrElse(degree(v), 0) + 1
     }
-    val bestD =
-      counts.keys reduceLeft ((a, b) => if (counts(a) <= counts(b)) a else b)
+    for (ch <- c2.chambers; v = ch.vertex; if degree.get(v) == None)
+      degree(v) = v.degree
 
-    val v1 = c1.vertices.filter(_.degree == bestD).elements.next
-    val ch1 = v1.chamber
-    for (v2 <- c2.vertices.filter(_.degree == bestD)) {
-      var ch2 = v2.chamber
-      do {
-        for (d <- List(ch2, ch2.s1)) {
-          val map = matchTopologies(ch1, d, false)
-          if (map != null) result += map
-        }
-        ch2 = ch2.nextAtVertex
-      } while (ch2 != v2.chamber)
-    }
+    val bestD =
+      count.keys reduceLeft ((a, b) => if (count(a) <= count(b)) a else b)
+
+    val ch1 = c1.chambers.find(ch => degree(ch.vertex) == bestD).get
+    for (ch2 <- c2.chambers if degree(ch2.vertex) == bestD)
+      matchTopologies(ch1, ch2, false) match {
+        case null => ()
+        case map  => result += map
+      }
     
     result
   }
@@ -796,24 +792,22 @@ class Mesh extends MessageSource {
     val seen   = new HashSet[Chamber]
     
     for (c <- chambers if !seen(c)) {
-      val faces    = new HashSet[Face]
-      val vertices = new HashSet[Vertex]
+      val chambers = new HashSet[Chamber]
       val queue    = new Queue[Chamber]
       queue += c
       seen  += c
       
       while (queue.length > 0) {
         val d = queue.dequeue
-        vertices += d.vertex
+        chambers += d
         val f = d.cell
-        if (f.isInstanceOf[Face]) faces += f.asInstanceOf[Face]
         for (e <- List(d.s0, d.s1, d.s2) if !seen(e)) {
           queue += e
           seen  += e
         }
       }
       
-      result += Component(this, faces, vertices)
+      result += Component(this, chambers)
     }
     
     result
@@ -899,8 +893,8 @@ class Mesh extends MessageSource {
     val originals = result.components
     
     for (comp <- donor.components) {
-      send("Matching donor component with %d vertices and %d faces..."
-  		   format (comp.vertices.size, comp.faces.size))
+      send("Matching donor component with %d chambers..."
+           format (comp.chambers.size))
       var dist = Double.MaxValue
       var map: Map[Chamber, Chamber] = null
       var image: Component = null
