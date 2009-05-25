@@ -277,11 +277,10 @@ object Mesh {
     map(ch1) = ch2
     
     def neighbors(c: Chamber) =
-      List(c.s0, c.s1, if (!(uvs && c.onTextureBorder)) c.s2 else null)
+      List(c.s0, c.s1, if (uvs && c.onTextureBorder) null else c.s2)
     
     while (queue.length > 0) {
       val (d1, d2) = queue.dequeue
-      //if (d1.start.degree != d2.start.degree) return null
       for ((e1, e2) <- neighbors(d1).zip(neighbors(d2))) {
         if ((e1 == null) != (e2 == null)) return null
         if (e1 != null) {
@@ -343,12 +342,8 @@ object Mesh {
       val d = v.degree
       counts(d) = counts.getOrElse(d, 0) + 1
     }
-    var (bestD, minN) = (0, c1.vertices.size + 1)
-    for ((d, n) <- counts)
-      if (n > 0 && n < minN) {
-        bestD = d
-        minN = n
-      }
+    val bestD =
+      counts.keys reduceLeft ((a, b) => if (counts(a) <= counts(b)) a else b)
 
     val v1 = c1.vertices.filter(_.degree == bestD).elements.next
     val ch1 = v1.chamber
@@ -376,12 +371,8 @@ object Mesh {
       val d = v.degree
       counts(d) = counts.getOrElse(d, 0) + 1
     }
-    var (bestD, minN) = (0, c1.vertices.size + 1)
-    for ((d, n) <- counts)
-      if (n > 0 && n < minN) {
-        bestD = d
-        minN = n
-      }
+    val bestD =
+      counts.keys reduceLeft ((a, b) => if (counts(a) <= counts(b)) a else b)
 
     val v1 =
       c1.vertices.filter(v => v.onBorder && v.degree == bestD).elements.next
