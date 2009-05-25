@@ -70,9 +70,9 @@ object Transfer {
       var map: Map[Mesh.Chamber, Mesh.Chamber] = null
       var image: Mesh.Component = null
       for (c <- old) {
-        val candidate = Mesh.bestMatch(part, c)
+        val candidate = Mesh.closest(Mesh.allMatches(part, c), _.vertex)
         if (candidate != null) {
-          val d = Mesh.distance(candidate)
+          val d = Mesh.distance(candidate, _.vertex)
           if (d < dist) {
             dist = d
             map = candidate

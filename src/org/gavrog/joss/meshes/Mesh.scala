@@ -19,6 +19,7 @@ package org.gavrog.joss.meshes
 
 import java.io._
 
+import scala.Math
 import scala.collection.mutable._
 import scala.io.Source
 import Sums._
@@ -146,6 +147,7 @@ object Mesh {
 
     def x = pos.x
     def y = pos.y
+    def z = 0.0
     
     def pos_=(p: (Double, Double)) { pos = Vec2(p._1, p._2) }
     
@@ -299,6 +301,36 @@ object Mesh {
     map
   }
   
+  def distance[T <: { def x: Double; def y: Double; def z: Double }](
+    map: Map[Chamber, Chamber], v: Chamber => T) =
+  {
+    val verts = new HashSet[(T, T)]
+    for ((c, d) <- map) verts += ((v(c), v(d)))
+    
+    var dist: Double = 0
+    for ((v, w) <- verts) {
+      val (dx, dy, dz) = (w.x - v.x, w.y - v.y, w.z - v.z)
+      dist += dx * dx + dy * dy + dz * dz
+    }
+    dist
+  }
+  
+  def closest[T <: { def x: Double; def y: Double; def z: Double }](
+    maps: Seq[Map[Chamber, Chamber]], v: Chamber => T) =
+  {
+    var best: Map[Chamber, Chamber] = null
+    var dist = Double.MaxValue
+    
+    for (map <- maps) {
+      val d = distance(map, v)
+      if (d < dist) {
+        dist = d
+        best = map
+      }
+    }
+    best
+  }
+
   //TODO avoid code duplication in the following
   def allMatches(c1: Component,
                  c2: Component): Seq[Map[Chamber, Chamber]] = {
@@ -334,32 +366,6 @@ object Mesh {
     result
   }
   
-  def distance(map: Map[Chamber, Chamber]): Double = {
-    val verts = new HashSet[(Vertex, Vertex)]
-    for ((c, d) <- map) verts += ((c.vertex, d.vertex))
-    
-    var dist: Double = 0
-    for ((v, w) <- verts) {
-      val (dx, dy, dz) = (w.x - v.x, w.y - v.y, w.z - v.z)
-      dist += dx * dx + dy * dy + dz * dz
-    }
-    dist
-  }
-  
-  def bestMatch(c1: Component, c2: Component): Map[Chamber, Chamber] = {
-    var best: Map[Chamber, Chamber] = null
-    var dist = Double.MaxValue
-    
-    for (map <- allMatches(c1, c2)) {
-      val d = distance(map)
-      if (d < dist) {
-        dist = d
-        best = map
-      }
-    }
-    best
-  }
-  
   def allMatches(c1: Chart, c2: Chart): Seq[Map[Chamber, Chamber]] = {
     val result = new ArrayBuffer[Map[Chamber, Chamber]]
     if (c1.vertices.size != c2.vertices.size)
@@ -391,32 +397,6 @@ object Mesh {
     }
     
     result
-  }
-  
-  def textureDistance(map: Map[Chamber, Chamber]): Double = {
-    val verts = new HashSet[(TextureVertex, TextureVertex)]
-    for ((c, d) <- map) verts += ((c.tVertex, d.tVertex))
-    
-    var dist: Double = 0
-    for ((v, w) <- verts) {
-      val (dx, dy) = (w.x - v.x, w.y - v.y)
-      dist += dx * dx + dy * dy
-    }
-    dist
-  }
-  
-  def bestMatch(c1: Chart, c2: Chart): Map[Chamber, Chamber] = {
-    var best: Map[Chamber, Chamber] = null
-    var dist = Double.MaxValue
-    
-    for (map <- allMatches(c1, c2)) {
-      val d = textureDistance(map)
-      if (d < dist) {
-        dist = d
-        best = map
-      }
-    }
-    best
   }
 }
 
@@ -931,13 +911,13 @@ class Mesh extends MessageSource {
       send("Matching donor component with %d vertices and %d faces..."
   		   format (comp.vertices.size, comp.faces.size))
       var dist = Double.MaxValue
-      var map: Map[Mesh.Chamber, Mesh.Chamber] = null
-      var image: Mesh.Component = null
+      var map: Map[Chamber, Chamber] = null
+      var image: Component = null
       try {
         for (c <- originals) {
-          val candidate = Mesh.bestMatch(comp, c)
+          val candidate = closest(allMatches(comp, c), _.vertex)
           if (candidate != null) {
-            val d = Mesh.distance(candidate)
+            val d = distance(candidate, _.vertex)
             if (d < dist) {
               dist = d
               map = candidate

@@ -35,7 +35,7 @@ object CopyUVs {
     val originals = mesh.charts
     
     for (chart <- donor.charts; c <- originals) {
-      val map = Mesh.bestMatch(chart, c)
+      val map = Mesh.closest(Mesh.allMatches(chart, c), _.tVertex)
       if (map != null) {
         System.err.println(
           "Transferring data for chart with %d vertices and %d faces."
