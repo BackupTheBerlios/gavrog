@@ -3,8 +3,6 @@ package org.gavrog.scratch
 import java.io.{BufferedInputStream, DataInputStream, EOFException, InputStream}
 import java.lang.ProcessBuilder
 
-import scala.collection.mutable.HashMap
-import scala.collection.immutable.TreeSet
 import scala.util.Sorting._
 
 trait SimpleIterator[A] extends Iterator[A] {
@@ -64,17 +62,17 @@ object Cyclo {
           case Some(x) => {
             def next: Int = if (x == 0) src.readUnsignedShort else src.readByte
             val size: Int = if (x == 0) next else x
-            val adj = new HashMap[Int, List[Int]]
+            var adj = Map[Int, List[Int]]()
             var i = 1
             while (i < size) {
               val j = next
               if (j == 0) i += 1
               else {
-                adj(i) = j :: adj.getOrElse(i, Nil)
-                adj(j) = i :: adj.getOrElse(j, Nil)
+                adj += (i -> (j :: adj.getOrElse(i, Nil)))
+                adj += (j -> (i :: adj.getOrElse(j, Nil)))
               }
             }
-            Some(Map(adj.toSeq: _*))
+            Some(adj)
           }
         }
       }
@@ -90,19 +88,19 @@ object Cyclo {
         new_edges = (neighbors(0), neighbors(1)) :: new_edges
       else old2new += (i -> (old2new.size + 1))
     
-    val output = new HashMap[Int, List[Int]]
+    var output = Map[Int, List[Int]]()
     
     for ((i, neighbors) <- gr if old2new(i) != 0)
-      output(old2new(i)) = neighbors map old2new filter (0 !=)
+      output += (old2new(i) -> (neighbors map old2new filter (0 !=)))
     
     for ((i, j) <- new_edges) {
       val a = old2new(i)
       val b = old2new(j)
-      output(a) = b :: output(a)
-      if (a != b) output(b) = a :: output(b)
+      output += (a -> (b :: output(a)))
+      if (a != b) output += (b -> (a :: output(b)))
     }
     
-    Map(output.toSeq: _*)
+    output
   }
   
   def edges(gr: Graph) = for ((i, nb) <- gr; j <- nb if i <= j) yield (i, j)
@@ -113,28 +111,28 @@ object Cyclo {
     var time   = 0
     var dfsnum = Map[Int, Int]().withDefaultValue(0)
     var low    = Map[Int, Int]().withDefaultValue(0)
-    var is_art = Set[Int]()
     var result = Nil: List[Edge]
+    var stack  = Nil: List[Edge]
     
     def art(v: Int, u: Int) {
       time += 1
       low += (v -> time)
       dfsnum += (v -> time)
       
-      for (w <- gr(v) if w != u)
+      for (w <- gr(v) if w != u) {
+        if (dfsnum(w) < dfsnum(v)) stack = (v, w) :: stack
         if (dfsnum(w) == 0) {
           art(w, v)
-          if (low(w) < low(v)) low += (v -> low(w))
-          if ((dfsnum(v) == 1 &&
-                 (dfsnum(w) != 2 || !gr(v).forall(dfsnum(_) > 0)))
-              || (dfsnum(v) != 1 && low(w) >= dfsnum(v))
-          ) {
-            is_art += v
-            if (is_art(w) && gr(v).filter(w ==).size == 1)
+          low += (v -> low(v).min(low(w)))
+          if (low(w) >= dfsnum(v)) {
+            if (stack.head == (v, w) && gr(v).filter(w==).size == 1)
               result = (v, w) :: result
+            while (stack.head != (v, w)) stack = stack.tail
+            stack = stack.tail
           }
         } else
-          if (dfsnum(w) < low(v)) low += (v -> dfsnum(w))
+          low += (v -> low(v).min(dfsnum(w)))
+      }
     }
     
     art(gr.keys.next, 0)
