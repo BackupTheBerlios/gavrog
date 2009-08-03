@@ -183,7 +183,7 @@ public class SystreCmdline extends EventSource {
         }
         
         // --- print some information on net as given
-        out.println("   Structure of dimension " + d + ".");
+        out.println("   Input structure described as " + d + "-periodic.");
         out.println("   Given space group is " + givenGroup + ".");
         out.flush();
         final int n = G.numberOfNodes();
