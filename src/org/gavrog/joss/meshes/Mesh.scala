@@ -26,60 +26,30 @@ import Sums._
 import Vectors._
 
 object Mesh {
-  class Chamber(v: Vertex, f: Cell) {
-    private var _vertex = v
-    private var _cell   = f
+  trait Chamber {
+    def s0: Chamber
+    def s1: Chamber
+    def s2: Chamber
+    
+    def vertex: Vertex
+    def tVertex: TextureVertex
+    def normal: Normal
+    def cell: Cell
 
-    private var _tVertex: TextureVertex = null
-    private var _normal : Normal        = null
-    private var _s0     : Chamber       = null
-    private var _s1     : Chamber       = null
-    private var _s2     : Chamber       = null
-    
-    def vertex = _vertex
-    def vertexNr = if (vertex != null) vertex.nr else 0
-    
+    def s0_=(ch: Chamber)
+    def s1_=(ch: Chamber)
+    def s2_=(ch: Chamber)
+
+    def tVertex_=(t: TextureVertex)
+    def normal_=(n: Normal)
+
     def mesh = vertex.mesh
     
-    def tVertex = _tVertex
+    def vertexNr = if (vertex != null) vertex.nr else 0
     def tVertexNr = if (tVertex != null) tVertex.nr else 0
-    def tVertex_=(t: TextureVertex) {
-      _tVertex = t
-      if (t != null && t.chamber == null) t.chamber = this
-    }
-    
-    def normal = _normal
     def normalNr = if (normal != null) normal.nr else 0
-    def normal_=(n: Normal) {
-      _normal = n
-      if (n != null && n.chamber == null) n.chamber = this
-    }
-    
-    def cell = _cell
     
     def face = if (cell.isInstanceOf[Face]) cell.asInstanceOf[Face] else null
-    
-    def s0 = _s0
-    def s0_=(ch: Chamber) {
-      if (_s0 != null) _s0._s0 = null
-      if (ch._s0 != null) ch._s0._s0 = null
-      _s0 = ch
-      ch._s0 = this
-    }
-    def s1 = _s1
-    def s1_=(ch: Chamber) {
-      if (_s1 != null) _s1._s1 = null
-      if (ch._s1 != null) ch._s1._s1 = null
-      _s1 = ch
-      ch._s1 = this
-    }
-    def s2 = _s2
-    def s2_=(ch: Chamber) {
-      if (_s2 != null) _s2._s2 = null
-      if (ch._s2 != null) ch._s2._s2 = null
-      _s2 = ch
-      ch._s2 = this
-    }
     
     def nextAtFace   = s0.s1
     def prevAtFace   = s1.s0
@@ -101,9 +71,9 @@ object Mesh {
     def cellChambers = orbit(_.nextAtVertex)
     def vertexChambers = orbit(_.nextAtFace)
     
-    override def toString = "Chamber(%s -> %s)" format (start, end)
+    //override def toString = "Chamber(%s -> %s)" format (start, end)
   }
-
+  
   trait Vertex {
     def mesh   : Mesh
     def nr     : Int
@@ -398,6 +368,10 @@ class Mesh extends MessageSource {
   private val _mats     = new LinkedHashMap[String, Material]
   private val _edges    = new HashMap[Edge, Chamber]
   
+  private val _s0 = new HashMap[Chamber, Chamber]
+  private val _s1 = new HashMap[Chamber, Chamber]
+  private val _s2 = new HashMap[Chamber, Chamber]
+  
   private val _chamber_at_vertex  = new HashMap[Vertex, Chamber]
   private val _chamber_at_tvertex = new HashMap[TextureVertex, Chamber]
   private val _chamber_at_cell    = new HashMap[Cell, Chamber]
@@ -431,84 +405,82 @@ class Mesh extends MessageSource {
   def this(source: Source) {
     this()
     
-    {
-      val faces = new ArrayBuffer[(Seq[Int], Seq[Int], Seq[Int],
-                                   Object, Group, Material, Int)]
-      var obj     : Object   = null
-      var group   : Group    = null
-      var material: Material = null
-      var smoothingGroup = 0
-      val mtllib = new HashMap[String, String]
-      
-      for(raw <- source.getLines; line = raw.trim
-          if line.length > 0 && !line.startsWith("#")) {
-        val fields: Seq[String] = line.split("\\s+")
-        val cmd = fields(0)
-        val pars = fields.slice(1, fields.length)
-  
-        cmd match {
-        case "mtllib" => {
-          try {
-            var curmtl: String = null
-            for(raw <- Source.fromFile(pars(0)).getLines;
-                line = raw.trim
-                if line.length > 0 && !line.startsWith("#")) {
-              val fields: Seq[String] = line.split("\\s+")
-              if (fields(0) == "newmtl") {
-                curmtl = fields(1)
-                mtllib(curmtl) = ""
-              }
-              else mtllib(curmtl) += line + "\n"
+    val faces = new ArrayBuffer[(Seq[Int], Seq[Int], Seq[Int],
+                                 Object, Group, Material, Int)]
+    var obj     : Object   = null
+    var group   : Group    = null
+    var material: Material = null
+    var smoothingGroup = 0
+    val mtllib = new HashMap[String, String]
+    
+    for(raw <- source.getLines; line = raw.trim
+        if line.length > 0 && !line.startsWith("#")) {
+      val fields: Seq[String] = line.split("\\s+")
+      val cmd = fields(0)
+      val pars = fields.slice(1, fields.length)
+
+      cmd match {
+      case "mtllib" => {
+        try {
+          var curmtl: String = null
+          for(raw <- Source.fromFile(pars(0)).getLines;
+              line = raw.trim
+              if line.length > 0 && !line.startsWith("#")) {
+            val fields: Seq[String] = line.split("\\s+")
+            if (fields(0) == "newmtl") {
+              curmtl = fields(1)
+              mtllib(curmtl) = ""
             }
-          } catch {
-            case e: FileNotFoundException => System.err.println(
-              "WARNING: material file %s not found." format pars(0))
+            else mtllib(curmtl) += line + "\n"
           }
-        }
-        case "v"  => {
-          addVertex(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
-        }
-        case "vn" => {
-          addNormal(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
-        }
-        case "vt" => {
-          addTextureVertex(pars(0).toDouble, pars(1).toDouble)
-        }
-        case "o" => {
-          if (pars.size > 0) obj = this obj pars(0)
-        }
-        case "g"  => {
-          if (pars.size > 0) group = this group pars(0)
-        }
-        case "usemtl"  => {
-          if (pars.size > 0) material = this material pars(0)
-        }
-        case "s" => {
-          if (pars.size > 0) smoothingGroup = pars(0).toInt
-        }
-        case "f"  => {
-          val n  = pars.length
-          val fc = new ArrayBuffer[Int]
-          val ft = new ArrayBuffer[Int]
-          val fn = new ArrayBuffer[Int]
-          pars.foreach { s =>
-            val parts = (s + "/0/0").split("/").map(
-              (s: String) => if (s.length == 0) 0 else s.toInt)
-            fc += parts(0)
-            ft += parts(1)
-            fn += parts(2)
-          }
-          if (obj == null) obj = this.obj("_default")
-          if (group == null) group = this.group("_default")
-          if (material == null) material = this.material("_default")
-          faces += (fc, ft, fn, obj, group, material, smoothingGroup)
-        }
-        case _ => println("?? " + cmd + "(" + pars.mkString(", ") + ")")
+        } catch {
+          case e: FileNotFoundException => System.err.println(
+            "WARNING: material file %s not found." format pars(0))
         }
       }
-      addFaces(faces)
-      fixHoles
+      case "v"  => {
+        addVertex(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
+      }
+      case "vn" => {
+        addNormal(pars(0).toDouble, pars(1).toDouble, pars(2).toDouble)
+      }
+      case "vt" => {
+        addTextureVertex(pars(0).toDouble, pars(1).toDouble)
+      }
+      case "o" => {
+        if (pars.size > 0) obj = this obj pars(0)
+      }
+      case "g"  => {
+        if (pars.size > 0) group = this group pars(0)
+      }
+      case "usemtl"  => {
+        if (pars.size > 0) material = this material pars(0)
+      }
+      case "s" => {
+        if (pars.size > 0) smoothingGroup = pars(0).toInt
+      }
+      case "f"  => {
+        val n  = pars.length
+        val fc = new ArrayBuffer[Int]
+        val ft = new ArrayBuffer[Int]
+        val fn = new ArrayBuffer[Int]
+        pars.foreach { s =>
+          val parts = (s + "/0/0").split("/").map(
+            (s: String) => if (s.length == 0) 0 else s.toInt)
+          fc += parts(0)
+          ft += parts(1)
+          fn += parts(2)
+        }
+        if (obj == null) obj = this.obj("_default")
+        if (group == null) group = this.group("_default")
+        if (material == null) material = this.material("_default")
+        faces += (fc, ft, fn, obj, group, material, smoothingGroup)
+      }
+      case _ => println("?? " + cmd + "(" + pars.mkString(", ") + ")")
+      }
     }
+    addFaces(faces)
+    fixHoles
   }
 
   def this(in: java.io.InputStream) = this(Source.fromInputStream(in))
@@ -560,7 +532,47 @@ class Mesh extends MessageSource {
     new Mesh(Source.fromString(w.toString))
   }
 
-  private def addChamber(v: Vertex, f: Cell) = new Chamber(v, f) {
+  private def addChamber(v: Vertex, f: Cell) = new Chamber {
+    private var _vertex = v
+    private var _cell   = f
+
+    private var _tVertex: TextureVertex = null
+    private var _normal : Normal        = null
+    
+    def vertex = _vertex
+    
+    def tVertex = _tVertex
+    def tVertex_=(t: TextureVertex) {
+      _tVertex = t
+      if (t != null && t.chamber == null) t.chamber = this
+    }
+    
+    def normal = _normal
+    def normal_=(n: Normal) {
+      _normal = n
+      if (n != null && n.chamber == null) n.chamber = this
+    }
+    
+    def cell = _cell
+    
+    def s0 = _s0.getOrElse(this, null)
+    def s1 = _s1.getOrElse(this, null)
+    def s2 = _s2.getOrElse(this, null)
+    
+    def setOperator(s: Map[Chamber, Chamber], ch: Chamber) {
+      if (s.contains(this)) s.removeKey(s(this))
+      if (ch == null) s.removeKey(this)
+      else {
+    	if (s.contains(ch)) s.removeKey(s(ch))
+    	s(this) = ch
+    	s(ch) = this
+      }
+    }
+    
+    def s0_=(ch: Chamber) { setOperator(_s0, ch) }
+    def s1_=(ch: Chamber) { setOperator(_s1, ch) }
+    def s2_=(ch: Chamber) { setOperator(_s2, ch) }
+    
     _chambers += this
     if (_chamber_at_vertex.get(v) == None) _chamber_at_vertex(v) = this
     if (_chamber_at_cell.get(f)   == None) _chamber_at_cell(f)   = this
