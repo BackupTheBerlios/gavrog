@@ -883,7 +883,7 @@ class Mesh extends MessageSource {
     output
   }
   
-  def withMorphApplied(donor: Mesh) = {
+  def withDonorData(donor: Mesh, f: Map[Chamber, Chamber] => boolean) = {
     val result = clone
     val originals = result.components
     
@@ -912,12 +912,28 @@ class Mesh extends MessageSource {
                + ex.getMessage + "\n" + ex.getStackTraceString)
       }
       if (map != null) {
-        send("Match found. Applying morph...")
-        for ((c, d) <- map) d.vertex.pos = c.vertex.pos
+        send("Match found. Applying donor data...")
+        f(map)
       }
     }
     result
   }
+  
+  def withMorphApplied(donor: Mesh) =
+    withDonorData(donor, map => {
+      for ((c, d) <- map) d.vertex.pos = c.vertex.pos
+      true
+    })
+  
+  def withGroupingFrom(donor: Mesh) =
+    withDonorData(donor, map => {
+      for ((c, d) <- map) {
+        val f = c.face
+        val g = d.face
+        if (f != null) g.group = d.mesh.group(f.group.name)
+      }
+      true
+    })
   
   def subdivision = {
     // -- create a new empty mesh

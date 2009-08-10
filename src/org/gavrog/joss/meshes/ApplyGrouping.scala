@@ -20,7 +20,7 @@ package org.gavrog.joss.meshes
 import scala.io.Source
 import scala.swing.Reactor
 
-object MakeMorph extends Reactor {
+object ApplyGrouping extends Reactor {
   def bail(message: String) {
     System.err.println(message)
     exit(1)
@@ -54,6 +54,6 @@ object MakeMorph extends Reactor {
       case MessageSent(src, txt) => System.err.println(txt)
     }
     
-    original.withMorphApplied(donor).write(System.out, "materials")
+    original.withGroupingFrom(donor).write(System.out, "materials")
   }
 }
