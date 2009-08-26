@@ -503,11 +503,11 @@ class Mesh extends MessageSource {
     }
     
     for (v <- vertices)
-      writer.write("v %f %f %f\n" format (v.x, v.y, v.z))
+      writer.write("v %.8f %.8f %.8f\n" format (v.x, v.y, v.z))
     for (v <- normals)
-      writer.write("vn %f %f %f\n" format (v.x, v.y, v.z))
+      writer.write("vn %.8f %.8f %.8f\n" format (v.x, v.y, v.z))
     for (v <- textureVertices)
-      writer.write("vt %f %f\n" format (v.x, v.y))
+      writer.write("vt %.8f %.8f\n" format (v.x, v.y))
     
     val parts = new LinkedHashMap[(Object, Group, Material, Int), Buffer[Face]]
     var useSmoothing = false
@@ -934,6 +934,18 @@ class Mesh extends MessageSource {
   def withMorphApplied(donor: Mesh) =
     withDonorData(donor, map => {
       for ((c, d) <- map) d.vertex.pos = c.vertex.pos
+      true
+    })
+  
+  def withMorphAtStrength(donor: Mesh, f: Double) =
+    withDonorData(donor, map => {
+      var seen = new HashSet[Vertex]
+      for ((c, d) <- map) {
+        if (!seen(d.vertex)) {
+          d.vertex.pos = (1 - f) * d.vertex.pos + f * c.vertex.pos
+          seen += d.vertex
+        }
+      }
       true
     })
   

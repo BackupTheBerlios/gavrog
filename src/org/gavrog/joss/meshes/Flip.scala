@@ -31,7 +31,10 @@ object Flip extends Reactor {
     reactions += {
       case MessageSent(src, txt) => System.err.println(txt)
     }
-    
-    original.withMorphApplied(donor).write(System.out, "materials")
+
+    val f = if (args.length > 0) args(0).toDouble else 1.0
+    System.err.println("factor = " + f)
+
+    original.withMorphAtStrength(donor, f).write(System.out, "materials")
   }
 }
