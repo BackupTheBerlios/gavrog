@@ -216,6 +216,7 @@ public class Main extends EventSource {
     private int minZ = 0;
     private int maxZ = 0;
     private boolean clearOnFill = true;
+    private boolean usePrimitiveCell = false;
     
 	// --- material options
 	private double ambientCoefficient = 0.0;
@@ -2587,6 +2588,8 @@ public class Main extends EventSource {
 		log("    Generating scene...");
 		startTimer(timer);
 
+		doc().setUsePrimitiveCell(getUsePrimitiveCell());
+		
 		final List<Vector> vecs = replicationVectors();
 		for (final Tile b : doc().getTiles()) {
 			for (final Vector s : doc().centerIntoUnitCell(b)) {
@@ -2612,14 +2615,14 @@ public class Main extends EventSource {
     	final int hiZ = Math.max(minZ, getMaxZ()) + 1;
     	
     	final List<Vector> result = new ArrayList<Vector>();
-    	for (int x = loX; x < hiX; ++x) {
-    		for (int y = loY; y < hiY; ++y) {
-    			for (int z = loZ; z < hiZ; ++z) {
-    				result.add((Vector) (vx.times(x)).plus(vy.times(y)).plus(
-							vz.times(z)));
-    			}
-    		}
-    	}
+      	for (int x = loX; x < hiX; ++x) {
+      		for (int y = loY; y < hiY; ++y) {
+      			for (int z = loZ; z < hiZ; ++z) {
+      				result.add((Vector) (vx.times(x)).plus(vy.times(y)).plus(
+  							vz.times(z)));
+      			}
+      		}
+      	}
     	return result;
     }
     
@@ -3101,6 +3104,8 @@ public class Main extends EventSource {
     	try {
     		options.add(new OptionCheckBox("Clear Existing", this,
     				"clearOnFill"));
+    		options.add(new OptionCheckBox("Primitive Cell", this,
+    		        "usePrimitiveCell"));
     		options.add(new OptionRangeSliderBox("x Range", this, "minX",
 					"maxX", -2, 2, 1, 1, 1));
     		options.add(new OptionRangeSliderBox("y Range", this, "minY",
@@ -3787,6 +3792,14 @@ public class Main extends EventSource {
 	
 	public void setClearOnFill(final boolean value) {
 		_setField("clearOnFill", value);
+	}
+	
+	public boolean getUsePrimitiveCell() {
+	    return this.usePrimitiveCell; 
+	}
+	
+	public void setUsePrimitiveCell(final boolean value) {
+	  _setField("usePrimitiveCell", value);
 	}
 	
 	public int getEmbedderStepLimit() {

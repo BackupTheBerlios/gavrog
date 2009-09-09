@@ -116,6 +116,9 @@ public class Document extends DisplayList {
     private int embedderStepLimit = 10000;
     private boolean useBarycentricPositions = false;
 
+    // --- cell choice options
+    private boolean usePrimitiveCell = false;
+    
     // --- saved user options
     private Properties  properties = new Properties();
     
@@ -303,16 +306,20 @@ public class Document extends DisplayList {
 		try {
 			return (List<Vector>) cache.get(CENTERING_VECTORS);
 		} catch (Cache.NotFoundException ex) {
-			final int dim = getEffectiveSymbol().dim();
-			final String name = getFinder().getExtendedGroupName();
-			final CoordinateChange fromStd = getFinder().getFromStd();
-			final List<Vector> result = new ArrayList<Vector>();
-			for (final Operator op : (List<Operator>) SpaceGroupCatalogue
-					.operators(dim, name)) {
-				if (op.linearPart().isOne()) {
-					result.add((Vector) op.translationalPart().times(fromStd));
-				}
-			}
+		    final List<Vector> result = new ArrayList<Vector>();
+		    if (getUsePrimitiveCell()) {
+		        result.add(Vector.zero(3));
+		    } else {
+    			final int dim = getEffectiveSymbol().dim();
+    			final String name = getFinder().getExtendedGroupName();
+    			final CoordinateChange fromStd = getFinder().getFromStd();
+    			for (final Operator op : (List<Operator>) SpaceGroupCatalogue
+    					.operators(dim, name)) {
+    				if (op.linearPart().isOne()) {
+    					result.add((Vector) op.translationalPart().times(fromStd));
+    				}
+    			}
+		    }
 			return (List<Vector>) cache.put(CENTERING_VECTORS, result);
 		}
 	}
@@ -843,6 +850,17 @@ public class Document extends DisplayList {
         }
     }
 
+    public boolean getUsePrimitiveCell() {
+        return this.usePrimitiveCell; 
+    }
+  
+    public void setUsePrimitiveCell(final boolean value) {
+        if (usePrimitiveCell != this.usePrimitiveCell) {
+          cache.remove(CENTERING_VECTORS);
+        }
+        this.usePrimitiveCell = value;
+    }
+  
     public Properties getProperties() {
     	return (Properties) this.properties.clone();
 	}
