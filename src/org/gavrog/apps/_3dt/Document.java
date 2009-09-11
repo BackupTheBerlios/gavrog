@@ -301,29 +301,6 @@ public class Document extends DisplayList {
 		}
 	}
     
-    @SuppressWarnings("unchecked")
-	private List<Vector> getCenteringVectors() {
-		try {
-			return (List<Vector>) cache.get(CENTERING_VECTORS);
-		} catch (Cache.NotFoundException ex) {
-		    final List<Vector> result = new ArrayList<Vector>();
-		    if (getUsePrimitiveCell()) {
-		        result.add(Vector.zero(3));
-		    } else {
-    			final int dim = getEffectiveSymbol().dim();
-    			final String name = getFinder().getExtendedGroupName();
-    			final CoordinateChange fromStd = getFinder().getFromStd();
-    			for (final Operator op : (List<Operator>) SpaceGroupCatalogue
-    					.operators(dim, name)) {
-    				if (op.linearPart().isOne()) {
-    					result.add((Vector) op.translationalPart().times(fromStd));
-    				}
-    			}
-		    }
-			return (List<Vector>) cache.put(CENTERING_VECTORS, result);
-		}
-	}
-    
     private Embedder getEmbedder() {
         try {
             return (Embedder) cache.get(EMBEDDER);
@@ -459,8 +436,15 @@ public class Document extends DisplayList {
     
     public List<Vector> pointIntoUnitCell(final Point p0) {
     	final int dim = p0.getDimension();
-    	final CoordinateChange toStd = getFinder().getToStd();
-    	final CoordinateChange fromStd = getFinder().getFromStd();
+    	final CoordinateChange toStd;
+    	final CoordinateChange fromStd;
+    	if (getUsePrimitiveCell()) {
+    	  toStd = new CoordinateChange(Operator.identity(dim));
+    	  fromStd = toStd;
+    	} else {
+    	  toStd = getFinder().getToStd();
+    	  fromStd = getFinder().getFromStd();
+    	}
     	
     	final List<Vector> result = new ArrayList<Vector>();
     	for (final Vector s : getCenteringVectors()) {
@@ -606,12 +590,21 @@ public class Document extends DisplayList {
     	}
     }
     
+    public CoordinateChange getCellToEmbedder() {
+        try {
+            return (CoordinateChange) cache.get(CELL_TO_EMBEDDER);
+        } catch (Cache.NotFoundException ex) {
+            final CoordinateChange cc = getFinder().getToStd();
+            return (CoordinateChange) cache.put(CELL_TO_EMBEDDER, cc.inverse());
+        }
+    }
+  
     public CoordinateChange getCellToWorld() {
 		try {
 			return (CoordinateChange) cache.get(CELL_TO_WORLD);
 		} catch (Cache.NotFoundException ex) {
-			return (CoordinateChange) cache.put(CELL_TO_WORLD, getFinder()
-					.getToStd().inverse().times(getEmbedderToWorld()));
+		    return (CoordinateChange) cache.put(
+		        CELL_TO_WORLD, getCellToEmbedder().times(getEmbedderToWorld()));
 		}
 	}
     
@@ -619,26 +612,23 @@ public class Document extends DisplayList {
     	try {
     		return (CoordinateChange) cache.get(WORLD_TO_CELL);
     	} catch (Cache.NotFoundException ex) {
-    		return (CoordinateChange) cache.put(WORLD_TO_CELL, getCellToWorld()
-					.inverse());
+    		return (CoordinateChange) cache.put(
+    		    WORLD_TO_CELL, getCellToWorld().inverse());
     	}
-    }
-    
-    public CoordinateChange getCellToEmbedder() {
-		try {
-			return (CoordinateChange) cache.get(CELL_TO_EMBEDDER);
-		} catch (Cache.NotFoundException ex) {
-			return (CoordinateChange) cache.put(CELL_TO_EMBEDDER, getFinder()
-					.getToStd().inverse());
-		}
     }
     
     public double[][] getUnitCellVectors() {
     	final int dim = getEffectiveSymbol().dim();
+        final CoordinateChange toStd = getFinder().getToStd();
 		final double result[][] = new double[dim][];
 		for (int i = 0; i < dim; ++i) {
-			final Vector v = (Vector) Vector.unit(dim, i).times(
-					getCellToWorld());
+			final Vector v;
+			if (getUsePrimitiveCell()) {
+              v = (Vector)
+                Vector.unit(dim, i).times(toStd).times(getCellToWorld());
+			} else {
+			  v = (Vector) Vector.unit(dim, i).times(getCellToWorld());
+			}
 			result[i] = v.getCoordinates().asDoubleArray()[0];
 		}
 		return result;
@@ -646,16 +636,51 @@ public class Document extends DisplayList {
 
     public Vector[] getUnitCellVectorsInEmbedderCoordinates() {
     	final int dim = getEffectiveSymbol().dim();
+        final CoordinateChange toStd = getFinder().getToStd();
 		final Vector result[] = new Vector[dim];
 		for (int i = 0; i < dim; ++i) {
-			result[i] = (Vector) Vector.unit(dim, i).times(getCellToEmbedder());
+          final Vector v;
+          if (getUsePrimitiveCell()) {
+              v = (Vector) Vector.unit(dim, i).times(toStd);
+          } else {
+              v = (Vector) Vector.unit(dim, i);
+          }
+          result[i] = (Vector) v.times(getCellToEmbedder());
 		}
 		return result;
 	}
 
+    @SuppressWarnings("unchecked")
+    private List<Vector> getCenteringVectors() {
+        try {
+            return (List<Vector>) cache.get(CENTERING_VECTORS);
+        } catch (Cache.NotFoundException ex) {
+            final List<Vector> result = new ArrayList<Vector>();
+            final CoordinateChange fromStd = getFinder().getFromStd();
+            final int dim = getEffectiveSymbol().dim();
+            if (getUsePrimitiveCell()) {
+                result.add(Vector.zero(dim));
+            } else {
+                for (final Operator op : (List<Operator>) SpaceGroupCatalogue
+                        .operators(dim, getFinder().getExtendedGroupName())) {
+                    if (op.linearPart().isOne()) {
+                        result.add((Vector) op.translationalPart().times(fromStd));
+                    }
+                }
+            }
+            return (List<Vector>) cache.put(CENTERING_VECTORS, result);
+        }
+    }
+    
 	public double[] getOrigin() {
 		final int dim = getEffectiveSymbol().dim();
-		final Point o = (Point) Point.origin(dim).times(getCellToWorld());
+        final CoordinateChange toStd = getFinder().getToStd();
+		final Point o;
+		if (getUsePrimitiveCell()) {
+          o = (Point) Point.origin(dim).times(toStd).times(getCellToWorld());
+		} else {
+		  o = (Point) Point.origin(dim).times(getCellToWorld());
+		}
 		return o.getCoordinates().asDoubleArray()[0];
 	}
     
@@ -855,10 +880,10 @@ public class Document extends DisplayList {
     }
   
     public void setUsePrimitiveCell(final boolean value) {
-        if (usePrimitiveCell != this.usePrimitiveCell) {
+        if (value != this.usePrimitiveCell) {
           cache.remove(CENTERING_VECTORS);
+          this.usePrimitiveCell = value;
         }
-        this.usePrimitiveCell = value;
     }
   
     public Properties getProperties() {

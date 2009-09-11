@@ -2280,6 +2280,7 @@ public class Main extends EventSource {
     	
     	log("    Determining unit cell");
     	startTimer(timer);
+    	doc().setUsePrimitiveCell(getUsePrimitiveCell());
     	final double origin[] = doc().getOrigin();
     	final double cellVecs[][] = doc().getUnitCellVectors();
     	log("      " + getTimer(timer));
@@ -2588,8 +2589,7 @@ public class Main extends EventSource {
 		log("    Generating scene...");
 		startTimer(timer);
 
-		doc().setUsePrimitiveCell(getUsePrimitiveCell());
-		
+        doc().setUsePrimitiveCell(getUsePrimitiveCell());
 		final List<Vector> vecs = replicationVectors();
 		for (final Tile b : doc().getTiles()) {
 			for (final Vector s : doc().centerIntoUnitCell(b)) {
@@ -3129,6 +3129,8 @@ public class Main extends EventSource {
 								doc().removeAllTiles();
 							}
 							makeCopies();
+					        makeUnitCell();
+					        unitCell.setVisible(getShowUnitCell());
 							resumeRendering();
 						}
 						saveOptions();
