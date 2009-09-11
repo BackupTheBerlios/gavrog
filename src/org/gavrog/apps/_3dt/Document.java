@@ -434,31 +434,40 @@ public class Document extends DisplayList {
     	return pointIntoUnitCell((Point) getPositions().get(new DSPair(0, D)));
     }
     
-    public List<Vector> pointIntoUnitCell(final Point p0) {
-    	final int dim = p0.getDimension();
+    private Vector shifted(final Point p0, final Vector s,
+        final CoordinateChange c)
+    {
+        final int dim = p0.getDimension();
+        final Point p = (Point) p0.plus(s).times(c);
+        final Real a[] = new Real[dim];
+        for (int i = 0; i < dim; ++i) {
+            a[i] = (Real) p.get(i).plus(0.001).mod(Whole.ONE);
+        }
+        final Vector v = (Vector)
+            new Point(a).minus(p).times(c.inverse());
+        final Whole b[] = new Whole[dim];
+        for (int i = 0; i < dim; ++i) {
+            b[i] = (Whole) v.get(i).round();
+        }
+        return (Vector) new Vector(b).plus(s);
+    }
+    
+    public List<Vector> pointIntoUnitCell(final Point p) {
+    	final int dim = p.getDimension();
     	final CoordinateChange toStd;
-    	final CoordinateChange fromStd;
     	if (getUsePrimitiveCell()) {
     	  toStd = new CoordinateChange(Operator.identity(dim));
-    	  fromStd = toStd;
     	} else {
     	  toStd = getFinder().getToStd();
-    	  fromStd = getFinder().getFromStd();
     	}
     	
     	final List<Vector> result = new ArrayList<Vector>();
     	for (final Vector s : getCenteringVectors()) {
-			final Point p = (Point) p0.plus(s).times(toStd);
-			final Real a[] = new Real[dim];
-			for (int i = 0; i < dim; ++i) {
-				a[i] = (Real) p.get(i).plus(0.001).mod(Whole.ONE);
-			}
-			final Vector v = (Vector) new Point(a).minus(p).times(fromStd);
-			final Whole b[] = new Whole[dim];
-			for (int i = 0; i < dim; ++i) {
-				b[i] = (Whole) v.get(i).round();
-			}
-			result.add((Vector) new Vector(b).plus(s));
+    	    Vector v = shifted(p, s, toStd);
+    	    if (getUsePrimitiveCell()) {
+  	            v = (Vector) v.plus(originShiftForPrimitive());
+    	    }
+    	    result.add(v);
 		}
     	return result;
     }
@@ -672,12 +681,26 @@ public class Document extends DisplayList {
         }
     }
     
+    private Vector originShiftForPrimitive() {
+        final int dim = getEffectiveSymbol().dim();
+        Point p = Point.origin(dim);
+        for (final Vector v: getUnitCellVectorsInEmbedderCoordinates()) {
+            p = (Point) p.plus(v);
+        }
+        p = (Point) p.dividedBy(2);
+        return shifted(p, Vector.zero(dim), getFinder().getToStd());
+    }
+    
 	public double[] getOrigin() {
 		final int dim = getEffectiveSymbol().dim();
-        final CoordinateChange toStd = getFinder().getToStd();
+		final CoordinateChange toStd = getFinder().getToStd();
+		final CoordinateChange id = new CoordinateChange(Operator.identity(dim));
 		final Point o;
 		if (getUsePrimitiveCell()) {
-          o = (Point) Point.origin(dim).times(toStd).times(getCellToWorld());
+		  final Point p = (Point) Point.origin(dim).times(toStd.inverse());
+          o = (Point) p.plus(shifted(p, Vector.zero(dim), id))
+                       .plus(originShiftForPrimitive())
+                       .times(toStd).times(getCellToWorld());
 		} else {
 		  o = (Point) Point.origin(dim).times(getCellToWorld());
 		}
