@@ -47,6 +47,7 @@ object CylinderMap {
       val vt = cs.map(tMap(_).nr)
       val vn = cs.map(v => 0)
       val g = dst.addFace(vs, vt, vn)
+      g.obj            = dst.obj("default")
       g.group          = dst.group(f.group.name)
       g.material       = dst.material(f.material.name)
       g.smoothingGroup = f.smoothingGroup

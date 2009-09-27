@@ -38,7 +38,7 @@ object SubD {
 
     System.err.println("Processing...")
     val step: Mesh => Mesh = if (n > 0) _.subdivision else _.coarsening
-    val dst = (step^n)(src)
+    val dst = (step^(n abs))(src)
 
     System.err.println("Writing...")
     dst.write(System.out, "materials")
