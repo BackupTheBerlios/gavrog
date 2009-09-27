@@ -245,7 +245,7 @@ with KeyPublisher with KeyDispatcher
         Array( 8, 12), Array( 9, 13), Array(10, 14), Array(11, 15)))
       update
     }.getIndexedLineSet)
-    setPickable(false)
+    //setPickable(false)
     
     setAppearance(new RichAppearance(
       FACE_DRAW                                -> false,
