@@ -1,4 +1,4 @@
-#Fri Apr 24 13:06:20 EST 2009
+#Sun Sep 13 17:31:20 EST 2009
 eclipse.preferences.version=1
 org.eclipse.jdt.core.builder.cleanOutputFolder=ignore
 org.eclipse.jdt.core.builder.resourceCopyExclusionFilter=*.scala
@@ -70,7 +70,7 @@ org.eclipse.jdt.core.compiler.problem.unusedParameterWhenOverridingConcrete=disa
 org.eclipse.jdt.core.compiler.problem.unusedPrivateMember=warning
 org.eclipse.jdt.core.compiler.problem.varargsArgumentNeedCast=warning
 org.eclipse.jdt.core.compiler.source=1.5
-org.eclipse.jdt.core.formatter.align_type_members_on_columns=true
+org.eclipse.jdt.core.formatter.align_type_members_on_columns=false
 org.eclipse.jdt.core.formatter.alignment_for_arguments_in_allocation_expression=16
 org.eclipse.jdt.core.formatter.alignment_for_arguments_in_enum_constant=16
 org.eclipse.jdt.core.formatter.alignment_for_arguments_in_explicit_constructor_call=16
@@ -127,8 +127,8 @@ org.eclipse.jdt.core.formatter.comment.insert_new_line_before_root_tags=insert
 org.eclipse.jdt.core.formatter.comment.insert_new_line_for_parameter=insert
 org.eclipse.jdt.core.formatter.comment.line_length=80
 org.eclipse.jdt.core.formatter.compact_else_if=true
-org.eclipse.jdt.core.formatter.continuation_indentation=2
-org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer=2
+org.eclipse.jdt.core.formatter.continuation_indentation=4
+org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer=4
 org.eclipse.jdt.core.formatter.format_guardian_clause_on_one_line=false
 org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_annotation_declaration_header=true
 org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_enum_constant_header=true
@@ -139,7 +139,7 @@ org.eclipse.jdt.core.formatter.indent_empty_lines=false
 org.eclipse.jdt.core.formatter.indent_statements_compare_to_block=true
 org.eclipse.jdt.core.formatter.indent_statements_compare_to_body=true
 org.eclipse.jdt.core.formatter.indent_switchstatements_compare_to_cases=true
-org.eclipse.jdt.core.formatter.indent_switchstatements_compare_to_switch=true
+org.eclipse.jdt.core.formatter.indent_switchstatements_compare_to_switch=false
 org.eclipse.jdt.core.formatter.indentation.size=4
 org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_local_variable=insert
 org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_member=insert
@@ -323,6 +323,6 @@ org.eclipse.jdt.core.formatter.number_of_blank_lines_at_beginning_of_method_body
 org.eclipse.jdt.core.formatter.number_of_empty_lines_to_preserve=1
 org.eclipse.jdt.core.formatter.put_empty_statement_on_new_line=true
 org.eclipse.jdt.core.formatter.tabulation.char=space
-org.eclipse.jdt.core.formatter.tabulation.size=2
+org.eclipse.jdt.core.formatter.tabulation.size=4
 org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentations=false
 org.eclipse.jdt.core.formatter.wrap_before_binary_operator=true
