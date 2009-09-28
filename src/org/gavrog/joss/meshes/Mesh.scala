@@ -959,6 +959,19 @@ class Mesh extends MessageSource {
       true
     })
   
+  def withUVsFrom(donor: Mesh) =
+    withDonorData(donor, map => {
+      val tMap = new HashMap[TextureVertex, TextureVertex]
+      for ((c, d) <- map) {
+        val t = c.tVertex
+        if (t != null) {
+        	if (!tMap.contains(t)) tMap(t) = d.mesh.addTextureVertex(t.pos)
+        	d.tVertex = tMap(t)
+        }
+      }
+      true
+    })
+  
   def subdivision = {
     // -- create a new empty mesh
     val subD = new Mesh
