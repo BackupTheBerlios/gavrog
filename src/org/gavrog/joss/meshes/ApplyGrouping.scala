@@ -42,7 +42,7 @@ object ApplyGrouping extends Reactor {
     val morphed = new Mesh(Source fromFile args(i + 1))
     val subd = if (args.length > i + 2) args(i + 2).toInt else 0
     val base = if (args.length > i + 3)
-                 new Mesh(Source fromFile args(i + 3)) withMorphApplied(morphed)
+                 new Mesh(Source fromFile args(i + 3)) withGroupingFrom(morphed)
                else
                  morphed
     
