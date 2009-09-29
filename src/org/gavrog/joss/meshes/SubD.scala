@@ -18,8 +18,9 @@
 package org.gavrog.joss.meshes
 
 import scala.io.Source
+import scala.swing.Reactor
 
-object SubD {
+object SubD extends Reactor {
   case class IteratedFunction[A](f: A => A, n: Int) {
     def ^(m: Int) = IteratedFunction(f, n * m)
     def apply(x: A) = {
@@ -36,6 +37,11 @@ object SubD {
     val src = if (args.length > 0) new Mesh(Source fromFile args(0))
               else new Mesh(System.in)
 
+    listenTo(src)
+    reactions += {
+      case MessageSent(src, txt) => System.err.println(txt)
+    }
+    
     System.err.println("Processing...")
     val step: Mesh => Mesh = if (n > 0) _.subdivision else _.coarsening
     val dst = (step^(n abs))(src)

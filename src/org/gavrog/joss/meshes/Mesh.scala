@@ -206,8 +206,8 @@ object Mesh {
 
   case class Component(mesh: Mesh, chambers: Set[Chamber]) {
     lazy val vertices = new HashSet[Vertex] ++ chambers.map (_.vertex)
-    lazy val faces = new HashSet[Face] ++ chambers.map (_.face)
-    def coarseningClassifications = chambers.elements.next.face.vertices
+    lazy val faces = new HashSet[Face] ++ chambers.map(_.face).filter(null !=)
+    def coarseningClassifications = faces.elements.next.vertices
       .map(mesh.classifyForCoarsening(_)).filter(null !=)
   }
   
@@ -782,6 +782,8 @@ class Mesh extends MessageSource {
         if (i % 2 == 0) d.s0 = hole(i + 1) else d.s1 = hole((i + 1) % n)
       }
       for (d <- hole) d.tVertex = null
+      
+      _holes += f
     }
   }
   
@@ -1111,11 +1113,12 @@ class Mesh extends MessageSource {
     for (p <- components) {
       var cost = Int.MaxValue
       var best: VertexClassification = null
-      for (c <- p.coarseningClassifications if c.cost < cost) {
-        cost = c.cost
-        best = c
-      }
-      if (best == null) error("mesh cannot be coarsened")
+      for (c <- p.coarseningClassifications)
+        if (c.cost < cost) {
+          cost = c.cost
+          best = c
+        }
+      if (best == null) send("component cannot be coarsened")
       vc(p) = best
     }
     coarsening(vc)
@@ -1170,7 +1173,7 @@ class Mesh extends MessageSource {
     
     // -- create the faces of the new mesh along with necessary vertices etc.
     send("  making faces...")
-    for (p <- components; f <- vc(p).wasFaceCenter) {
+    for (p <- components if vc(p) != null; f <- vc(p).wasFaceCenter) {
       val cs = f.cellChambers.toSeq
       val vs = cs.map(c => mapV(c.s0.s1.s0.vertexNr))
       val vt = cs.map(c => mapT(c.s0.s1.s0.tVertexNr))
