@@ -951,12 +951,16 @@ class Mesh extends MessageSource {
       true
     })
   
-  def withGroupingFrom(donor: Mesh) =
+  def withGroupingFrom(donor: Mesh, flags: String) =
     withDonorData(donor, map => {
       for ((c, d) <- map) {
         val f = c.face
         val g = d.face
-        if (f != null) g.group = d.mesh.group(f.group.name)
+        if (f != null) {
+          if (flags.contains('g')) g.group = d.mesh.group(f.group.name)
+          if (flags.contains('m')) g.material = d.mesh.material(f.material.name)
+          if (flags.contains('s')) g.smoothingGroup = f.smoothingGroup
+        }
       }
       true
     })

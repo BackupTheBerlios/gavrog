@@ -37,14 +37,16 @@ object ApplyGrouping extends Reactor {
   
   def main(args: Array[String]) : Unit = {
     var i = 0
+    var flags = "g"
+    if (args(0).startsWith("-")) {
+      i += 1
+      flags = args(0).drop(1)
+    }
+    
     if (args.size < i + 2) bail("need at least two .obj files as arguments")
     val original  = new Mesh(Source fromFile args(i))
-    val morphed = new Mesh(Source fromFile args(i + 1))
+    val base = new Mesh(Source fromFile args(i + 1))
     val subd = if (args.length > i + 2) args(i + 2).toInt else 0
-    val base = if (args.length > i + 3)
-                 new Mesh(Source fromFile args(i + 3)) withGroupingFrom(morphed)
-               else
-                 morphed
     
     val step: Mesh => Mesh = if (subd > 0) _.subdivision else _.coarsening
     val donor = (step^subd.abs)(base)
@@ -54,6 +56,6 @@ object ApplyGrouping extends Reactor {
       case MessageSent(src, txt) => System.err.println(txt)
     }
     
-    original.withGroupingFrom(donor).write(System.out, "materials")
+    original.withGroupingFrom(donor, flags).write(System.out, "materials")
   }
 }
