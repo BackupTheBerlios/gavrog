@@ -467,9 +467,9 @@ class Mesh extends MessageSource {
         pars.foreach { s =>
           val parts = (s + "/0/0").split("/").map(
             (s: String) => if (s.length == 0) 0 else s.toInt)
-          fc += parts(0)
-          ft += parts(1)
-          fn += parts(2)
+          fc += parts(0) + (if (parts(0) < 0) numberOfVertices + 1 else 0)
+          ft += parts(1) + (if (parts(1) < 0) numberOfTextureVertices + 1 else 0)
+          fn += parts(2) + (if (parts(2) < 0) numberOfNormals + 1 else 0)
         }
         if (obj == null) obj = this.obj("_default")
         if (group == null) group = this.group("_default")
