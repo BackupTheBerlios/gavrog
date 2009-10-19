@@ -876,11 +876,18 @@ class Mesh extends MessageSource {
     val output = new ArrayBuffer[Mesh]
     for ((part_name, faces) <- parts) {
       val m = new Mesh()
-      val vMap = new LazyMap((v: Int) => m.addVertex(vertex(v).pos).nr)
-      val nMap = new LazyMap((n: Int) =>
-        if (n == 0) 0 else m.addNormal(normal(n).value).nr)
-      val tMap = new LazyMap((t: Int) =>
-        if (t == 0) 0 else m.addTextureVertex(textureVertex(t).pos).nr)
+      val vSet = Set() ++ faces.flatMap(_.vertices)
+      val vMap = new HashMap[Int, Int]
+      for (v <- vertices if vSet contains v)
+        vMap(v.nr) = m.addVertex(v.pos).nr
+      val tSet = Set() ++ faces.flatMap(_.textureVertices)
+      val tMap = new HashMap[Int, Int]
+      for (t <- textureVertices if tSet contains t)
+        tMap(t.nr) = m.addTextureVertex(t.pos).nr
+      val nSet = Set() ++ faces.flatMap(_.normals)
+      val nMap = new HashMap[Int, Int]
+      for (n <- normals if nSet contains n)
+        nMap(n.nr) = m.addNormal(n.value).nr
       for (f <- faces) {
         val cs = f.vertexChambers.toSeq
         val vs = cs.map(c => vMap(c.vertexNr))
