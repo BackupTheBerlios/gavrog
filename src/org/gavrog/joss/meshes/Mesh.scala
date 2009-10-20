@@ -872,9 +872,8 @@ class Mesh extends MessageSource {
     split(parts)
   }
   
-  def split(parts: Iterable[(String, Seq[Face])]) = {
-    val output = new ArrayBuffer[Mesh]
-    for ((part_name, faces) <- parts if faces.size > 0) {
+  def split(parts: Iterable[(String, Seq[Face])]) =
+    for ((part_name, faces) <- parts if faces.size > 0) yield {
       val m = new Mesh()
       val vMap = Map(0 -> 0) ++ {
     	val vSet = Set() ++ faces.flatMap(_.vertices).filter(null !=)
@@ -900,10 +899,8 @@ class Mesh extends MessageSource {
         g.group = m.group(f.group.name)
         g.smoothingGroup = f.smoothingGroup
       }
-      output += m
+      m
     }
-    output
-  }
   
   def withDonorData(donor: Mesh, f: Map[Chamber, Chamber] => boolean) = {
     val result = clone
