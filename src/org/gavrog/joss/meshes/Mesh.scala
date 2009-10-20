@@ -874,20 +874,21 @@ class Mesh extends MessageSource {
   
   def split(parts: Iterable[(String, Seq[Face])]) = {
     val output = new ArrayBuffer[Mesh]
-    for ((part_name, faces) <- parts) {
+    for ((part_name, faces) <- parts if faces.size > 0) {
       val m = new Mesh()
-      val vSet = Set() ++ faces.flatMap(_.vertices)
-      val vMap = new HashMap[Int, Int]
-      for (v <- vertices if vSet contains v)
-        vMap(v.nr) = m.addVertex(v.pos).nr
-      val tSet = Set() ++ faces.flatMap(_.textureVertices)
-      val tMap = new HashMap[Int, Int]
-      for (t <- textureVertices if tSet contains t)
-        tMap(t.nr) = m.addTextureVertex(t.pos).nr
-      val nSet = Set() ++ faces.flatMap(_.normals)
-      val nMap = new HashMap[Int, Int]
-      for (n <- normals if nSet contains n)
-        nMap(n.nr) = m.addNormal(n.value).nr
+      val vMap = Map(0 -> 0) ++ {
+    	val vSet = Set() ++ faces.flatMap(_.vertices).filter(null !=)
+        vertices.filter(vSet contains).map(v => (v.nr, m.addVertex(v.pos).nr))
+      }
+      val tMap = Map(0 -> 0) ++ {
+    	val tSet = Set() ++ faces.flatMap(_.textureVertices).filter(null !=)
+        textureVertices.filter(tSet contains)
+          .map(t => (t.nr, m.addTextureVertex(t.pos).nr))
+      }
+      val nMap = Map(0 -> 0) ++ {
+    	val nSet = Set() ++ faces.flatMap(_.normals).filter(null !=)
+        normals.filter(nSet contains).map(n => (n.nr, m.addNormal(n.value).nr))
+      }
       for (f <- faces) {
         val cs = f.vertexChambers.toSeq
         val vs = cs.map(c => vMap(c.vertexNr))
