@@ -1,5 +1,5 @@
 /*
-Copyright 2008 Olaf Delgado-Friedrichs
+Copyright 2009 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -526,6 +526,8 @@ public class SystreCmdline extends EventSource {
         // --- compute an embedding
         if (getComputeEmbedding()) {
         	embedGraph(G, name, node2name, finder);
+        } else {
+        	setLastStructure(new ProcessedNet(G, name, node2name, finder, null));
         }
     }
 
