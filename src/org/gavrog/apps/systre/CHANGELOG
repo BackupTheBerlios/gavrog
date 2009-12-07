@@ -3,6 +3,7 @@ Systre 1.1.6:
   Bug fixes:
     - Archive output was empty with embedding disabled.
 
+- The .tgs extension (from 2dtiler) is now supported for D-symbol files.
 - RCSR archive is current as of 2009-10-21.
 
 Systre 1.1.5:

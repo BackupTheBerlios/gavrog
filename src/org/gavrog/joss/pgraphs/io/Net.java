@@ -143,7 +143,7 @@ public class Net extends PeriodicGraph {
                     throw new UnsupportedOperationException("not supported");
                 }
             };
-        } else if ("ds".equals(extension)) {
+        } else if ("ds".equals(extension) || "tgs".equals(extension)) {
             return new FilteredIterator(new InputIterator(reader)) {
                 public Object filter(Object x) {
                     final DelaneySymbol ds = (DelaneySymbol) x;

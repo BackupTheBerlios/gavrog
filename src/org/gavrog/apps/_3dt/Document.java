@@ -779,7 +779,7 @@ public class Document extends DisplayList {
 					++discarded;
 				}
 			}
-		} else if (ext.equals("ds")){
+		} else if (ext.equals("ds") || ext.equals("tgs")){
 			final StringBuffer buffer = new StringBuffer(200);
 			String name = null;
 			while (true) {

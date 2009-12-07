@@ -189,8 +189,8 @@ public class SystreGUI extends BFrame {
         saveButton.setEnabled(false);
         
         final JFileChooser inchsr = (JFileChooser) inFileChooser.getComponent();
-        inchsr.addChoosableFileFilter(new ExtensionFilter("ds",
-				"Delaney-Dress Symbol Files"));
+        inchsr.addChoosableFileFilter(new ExtensionFilter(new String[] {
+        		"ds", "tgs" }, "Delaney-Dress Symbol Files"));
         inchsr.addChoosableFileFilter(new ExtensionFilter("arc", "Systre Archives"));
         inchsr.addChoosableFileFilter(new ExtensionFilter(new String[] {"cgd", "pgr" },
         		"Systre Input Files"));

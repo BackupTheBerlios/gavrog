@@ -485,14 +485,14 @@ public class Main extends EventSource {
     
     private void setupFileChoosers() {
     	inFileChooser.setTitle("Open data file");
-		inFileChooser.addChoosableFileFilter(new ExtensionFilter("ds",
-				"Delaney-Dress Symbol Files"));
+		inFileChooser.addChoosableFileFilter(new ExtensionFilter(new String[] {
+				"ds", "tgs" }, "Delaney-Dress Symbol Files"));
 		inFileChooser.addChoosableFileFilter(new ExtensionFilter("cgd",
 				"Geometric Description Files"));
 		inFileChooser.addChoosableFileFilter(new ExtensionFilter("gsl",
 				"Gavrog Scene Files"));
 		inFileChooser.addChoosableFileFilter(new ExtensionFilter(new String[] {
-				"cgd", "ds", "gsl" }, "All 3dt Files"));
+				"cgd", "ds", "tgs", "gsl" }, "All 3dt Files"));
 
 		outNetChooser.setTitle("Save net");
 		outNetChooser.addChoosableFileFilter(new ExtensionFilter("pgr",

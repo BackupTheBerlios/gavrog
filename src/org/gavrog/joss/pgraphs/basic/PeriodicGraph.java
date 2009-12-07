@@ -1387,7 +1387,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param pos associates d-dimensional coordinates to nodes.
      * @return an iterator over all good edge combinations.
      */
-    private Iterator goodCombinations(final List edges, final Map pos) {
+    public Iterator goodCombinations(final List edges, final Map pos) {
         final int d = getDimension();
         final int n = edges.size();
         if (n < d || d == 0) {
