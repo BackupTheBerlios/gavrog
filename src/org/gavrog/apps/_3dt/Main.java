@@ -1783,19 +1783,23 @@ public class Main extends EventSource {
 				"handleDisplayListEvent");
 				
 		// -- update the info display
-		Invoke.later(new Runnable() {
-			public void run() {
-				final DSymbol ds = doc().getSymbol();
-				setTInfo("size", ds.size());
-				setTInfo("dim", ds.dim());
-				setTInfo("transitivity", doc().getTransitivity());
-				setTInfo("minimal", ds.isMinimal());
-				setTInfo("selfdual", ds.equals(ds.dual()));
-				setTInfo("signature", "pending...");
-				setTInfo("group", "pending...");
-				setTInfo("net", "pending...");
-			}
-		});
+		try {
+			final DSymbol ds = doc().getSymbol();
+			setTInfo("size", ds.size());
+			setTInfo("dim", ds.dim());
+			setTInfo("transitivity", doc().getTransitivity());
+			setTInfo("minimal", ds.isMinimal());
+			setTInfo("selfdual", ds.equals(ds.dual()));
+			setTInfo("signature", "pending...");
+			setTInfo("group", "pending...");
+			setTInfo("net", "pending...");
+		} catch (final UnsupportedOperationException ex) {
+			System.out.println(ex);
+			return;
+		} catch (final Exception ex) {
+			ex.printStackTrace();
+			return;
+		}
 
 		// -- render new tiling
         suspendRendering();
@@ -1806,6 +1810,7 @@ public class Main extends EventSource {
 		} catch (final Exception ex) {
 			clearSceneGraph();
 			ex.printStackTrace();
+			return;
 		}
 		log("  " + getTimer(timer));
 

@@ -1,5 +1,6 @@
 3dt 0.5.1:
 
+2009-12-12: Two-dimensional periodic nets are allowed as input.
 2009-12-07: Delaney symbol files with the .tgs extension are now recognized.
 
 3dt 0.5.0:

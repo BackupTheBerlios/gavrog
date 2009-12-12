@@ -62,6 +62,7 @@ import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.io.GenericParser;
+import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.tilings.FaceList;
 import org.gavrog.joss.tilings.Tiling;
@@ -95,9 +96,10 @@ public class Document extends DisplayList {
     }
     final static public Object TILING_3D = new Type("3d Tiling");
     final static public Object TILING_2D = new Type("2d Tiling");
+    final static public Object NET       = new Type("Net");
     
     // --- The type of this instance and its source data
-    final private Object type;
+    private Object type;
     final private String name;
     private DSymbol symbol = null;
     private DSymbol effective_symbol = null;
@@ -189,6 +191,93 @@ public class Document extends DisplayList {
 		return new DSymbol(tmp);
 	}
 	
+	// --- construct the 2d Delaney symbol for a given periodic net
+	private DSymbol symbolForNet(final Net net) {
+		// -- check if the argument is supported
+		if (net.getDimension() != 2) {
+			throw new UnsupportedOperationException(
+					"Only nets of dimension 2 are supported");
+		}
+		
+		// -- helper class for sorting neighbors by angle
+		class Neighbor implements Comparable {
+			final private IEdge edge;
+			final private double angle;
+			
+			public Neighbor(final IEdge e, final double a) {
+				this.edge = e;
+				this.angle = a;
+			}
+			
+			public int compareTo(final Object arg) {
+	            if (arg instanceof Neighbor) {
+	                final Neighbor other = (Neighbor) arg;
+	                if (this.angle < other.angle) {
+	                    return -1;
+	                } else if (this.angle > other.angle) {
+	                    return 1;
+	                } else {
+	                    return 0;
+	                }
+	            } else {
+	                throw new IllegalArgumentException("Neighbor expected");
+	            }
+			}
+		}
+		
+		// -- initialize the Delaney symbol; map oriented net edges to chambers
+		final Map<IEdge, Object> edge2chamber = new HashMap<IEdge, Object>();
+		final DynamicDSymbol ds = new DynamicDSymbol(2);
+		for (final Iterator iter = net.edges(); iter.hasNext();) {
+			final IEdge e = ((IEdge) iter.next()).oriented();
+			final List elms = ds.grow(4);
+			edge2chamber.put(e, elms.get(0));
+			edge2chamber.put(e.reverse(), elms.get(2));
+			ds.redefineOp(2, elms.get(0), elms.get(1));
+			ds.redefineOp(2, elms.get(2), elms.get(3));
+			ds.redefineOp(0, elms.get(0), elms.get(3));
+			ds.redefineOp(0, elms.get(1), elms.get(2));
+		}
+		
+		// -- connect the edge orbits of the Delaney symbol
+		final Map pos = net.barycentricPlacement();
+		for (final Iterator iter = net.nodes(); iter.hasNext();) {
+			final INode v = (INode) iter.next();
+			final List<IEdge> incidences = (List<IEdge>) net.allIncidences(v);
+			if (!net.goodCombinations(incidences, pos).hasNext()) {
+				throw new UnsupportedOperationException(
+					"Only convex tilings are currently supported");
+			}
+			
+			final Point p = (Point) pos.get(v);
+			final List<Neighbor> neighbors = new ArrayList<Neighbor>();
+			for (final IEdge e: incidences) {
+				final Vector d =
+					(Vector) net.getShift(e).plus(pos.get(e.target())).minus(p);
+				final double[] a = d.getCoordinates().asDoubleArray()[0];
+				neighbors.add(new Neighbor(e, Math.atan2(a[1], a[0])));
+			}
+			Collections.sort(neighbors);
+			neighbors.add(neighbors.get(0));
+			for (int i = 0; i < neighbors.size() - 1; ++i) {
+				final IEdge e = neighbors.get(i).edge;
+				final IEdge f = neighbors.get(i + 1).edge;
+				ds.redefineOp(1,
+						ds.op(2, edge2chamber.get(e)), edge2chamber.get(f));
+			}
+		}
+		
+		// -- set branching to one everywhere
+		for (final Iterator iter = ds.elements(); iter.hasNext();) {
+			final Object D = iter.next();
+			ds.redefineV(0, 1, D, 1);
+			ds.redefineV(1, 2, D, 1);
+		}
+		
+		// -- return the result
+		return new DSymbol(ds);
+	}
+	
     /**
      * Constructs a tiling instance.
      * @param ds the Delaney symbol for the tiling.
@@ -222,10 +311,12 @@ public class Document extends DisplayList {
     }
     
     public Document(final GenericParser.Block block, final String defaultName) {
-    	if (! block.getType().equalsIgnoreCase("TILING")) {
-    		throw new UnsupportedOperationException("only type TILING supported");
+    	final String type = block.getType().toLowerCase();
+    	if (type.equals("tiling")) {
+        	this.type = TILING_3D;
+    	} else {
+    		this.type = NET;
     	}
-    	this.type = TILING_3D;
     	final String name = block.getEntriesAsString("name");
     	if (name == null || name.length() == 0) {
     		this.name = defaultName;
@@ -250,7 +341,19 @@ public class Document extends DisplayList {
     public DSymbol getSymbol() {
     	if (this.symbol == null) {
     		if (this.data != null) {
-                this.symbol = new FaceList(this.data).getSymbol();
+    			if (this.type == TILING_3D) {
+    				this.symbol = new FaceList(this.data).getSymbol();
+    			} else {
+    				final Net net =
+    					new NetParser((BufferedReader) null).parseNet(this.data);
+    				if (net.getDimension() != 2) {
+    					throw new UnsupportedOperationException(
+    							"Only nets of dimension 2 are supported.");
+    				}
+    				this.symbol = symbolForNet(net);
+    				this.effective_symbol = extrusion(this.symbol);
+    				this.type = TILING_2D;
+    			}
     		}
     	}
         return this.symbol;
@@ -768,16 +871,11 @@ public class Document extends DisplayList {
 		final BufferedReader reader = new BufferedReader(input);
 		final List<Document> result = new ArrayList<Document>();
 
-		if (ext.equals("cgd")) {
+		if (ext.equals("cgd") || ext.equals("pgr")) {
 			final GenericParser parser = new NetParser(reader);
-			int discarded = 0;
 			while (!parser.atEnd()) {
 				final GenericParser.Block data = parser.parseDataBlock();
-				if (data.getType().equalsIgnoreCase("TILING")) {
-					result.add(new Document(data, "#" + (result.size() + 1)));
-				} else {
-					++discarded;
-				}
+				result.add(new Document(data, "#" + (result.size() + 1)));
 			}
 		} else if (ext.equals("ds") || ext.equals("tgs")){
 			final StringBuffer buffer = new StringBuffer(200);
