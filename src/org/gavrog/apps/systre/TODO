@@ -8,6 +8,7 @@ Open bugs/issues:
 
 Planned/requested features:
 
+- Better phrasing when component has multiple translates.
 - Command line version can write cgd files.
 - Option to simplify graphs with 1- or 2-coordinated nodes.
 - Check for edge intersections and similar problems.
