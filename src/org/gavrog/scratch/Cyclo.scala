@@ -135,7 +135,7 @@ object Cyclo {
       }
     }
     
-    art(gr.keys.first, 0)
+    art(gr.keys.next, 0)
     result
   }
   
