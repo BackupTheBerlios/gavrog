@@ -9,10 +9,7 @@ Open bugs:
 
 Planned/requested features:
 
-- Support periodic graphs as input in 2d.
-
 - Report number of tiles per repeat unit / unit cell.
-- Optionally work with repeat unit instead of unit cell.
 - Undo/Redo.
 - Extend to support nets in all reasonable ways.
 - Allow separate colors and visibility for individual faces.

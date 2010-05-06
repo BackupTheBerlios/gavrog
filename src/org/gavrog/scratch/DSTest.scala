@@ -4,8 +4,8 @@ import org.gavrog.joss.dsyms.basic._
 import org.gavrog.joss.dsyms.derived._
 
 object DSTest {
-  implicit def toIList(x: (int, int)) = new IndexList(x._1, x._2)
-  implicit def toIList(x: (int, int, int)) = new IndexList(x._1, x._2, x._3)
+  implicit def toIList(x: (Int, Int)) = new IndexList(x._1, x._2)
+  implicit def toIList(x: (Int, Int, Int)) = new IndexList(x._1, x._2, x._3)
   implicit def wrapIter[T](it: java.util.Iterator[T]) = new Iterator[T] {
     def hasNext = it.hasNext
     def next = it.next
