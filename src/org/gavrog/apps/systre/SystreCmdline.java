@@ -1,5 +1,5 @@
 /*
-Copyright 2009 Olaf Delgado-Friedrichs
+Copyright 2010 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -74,7 +74,6 @@ import buoy.event.EventSource;
  * The basic commandlne version of Gavrog Systre.
  * 
  * @author Olaf Delgado
- * @version $Id: SystreCmdline.java,v 1.11 2008/07/12 08:46:14 odf Exp $
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -92,6 +91,7 @@ public class SystreCmdline extends EventSource {
     
     // --- the various archives
     private final Archive builtinArchive;
+    private final Archive zeoliteArchive;
     private final Map name2archive = new HashMap();
     private final Archive internalArchive = new Archive("1.0");
     
@@ -120,6 +120,7 @@ public class SystreCmdline extends EventSource {
      */
     public SystreCmdline() {
         builtinArchive = new Archive("1.0");
+        zeoliteArchive = new Archive("1.0");
 
         // --- read the default archives
         final Package pkg = this.getClass().getPackage();
@@ -130,7 +131,7 @@ public class SystreCmdline extends EventSource {
         builtinArchive.addAll(new InputStreamReader(rcsrStream));
         final String zeoPath = packagePath + "/zeolites.arc";
         final InputStream zeoStream = ClassLoader.getSystemResourceAsStream(zeoPath);
-        builtinArchive.addAll(new InputStreamReader(zeoStream));
+        zeoliteArchive.addAll(new InputStreamReader(zeoStream));
     }
     
     /**
@@ -459,12 +460,19 @@ public class SystreCmdline extends EventSource {
         Archive.Entry found = null;
         if (this.useBuiltinArchive) {
             found = builtinArchive.getByKey(invariant);
-        }
-        if (found != null) {
-            ++countMatches;
-            out.println("   Structure was found in builtin archive:");
-            writeEntry(out, found);
-            out.println();
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure was identified with RCSR symbol:");
+                writeEntry(out, found);
+                out.println();
+            }
+            found = zeoliteArchive.getByKey(invariant);
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure was identified as zoelite framework type:");
+                writeEntry(out, found);
+                out.println();
+            }
         }
         for (Iterator iter = this.name2archive.keySet().iterator(); iter.hasNext();) {
             final String arcName = (String) iter.next();
